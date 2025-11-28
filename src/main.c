@@ -39,9 +39,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
-  if (event->type == SDL_EVENT_QUIT) {
-    return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
+  switch (event->type) {
+  case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
+  case SDL_EVENT_WINDOW_RESIZED:
+    SDL_SetRenderLogicalPresentation(renderer, event->window.data1,
+                                     event->window.data2,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    break;
   }
+
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
@@ -61,6 +68,13 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   /* clear the window to the draw color. */
   SDL_RenderClear(renderer);
+
+  SDL_SetRenderDrawColorFloat(
+      renderer, 1.0, 1.0, 1.0,
+      SDL_ALPHA_OPAQUE_FLOAT); /* new color, full alpha. */
+
+  struct SDL_FRect rect = {.x = 100.0, .y = 100.0, .h = 200.0, .w = 200.0};
+  SDL_RenderFillRect(renderer, &rect);
 
   /* put the newly-cleared rendering on the screen. */
   SDL_RenderPresent(renderer);
