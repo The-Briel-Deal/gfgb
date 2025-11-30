@@ -4,15 +4,19 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-/* We will use this renderer to draw into this window every frame. */
+#define GB_DISPLAY_WIDTH 160
+#define GB_DISPLAY_HEIGHT 144
 struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
+
+  uint8_t display[GB_DISPLAY_HEIGHT][GB_DISPLAY_WIDTH];
 };
 
 void gb_state_init(struct gb_state *gb_state) {
   gb_state->sdl_window = NULL;
   gb_state->sdl_renderer = NULL;
+  SDL_zero(gb_state->display);
 }
 
 /* This function runs once at startup. */
