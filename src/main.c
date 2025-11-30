@@ -1,12 +1,5 @@
 #include "common.h"
 
-void gb_state_init(struct gb_state *gb_state) {
-  gb_state->sdl_window = NULL;
-  gb_state->sdl_renderer = NULL;
-  SDL_zero(gb_state->display);
-  SDL_zero(gb_state->regs);
-}
-
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   struct gb_state *gb_state = SDL_malloc(sizeof(struct gb_state));

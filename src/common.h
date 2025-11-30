@@ -1,3 +1,6 @@
+#ifndef GB_COMMON_H
+#define GB_COMMON_H
+
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -28,3 +31,5 @@ static void gb_state_init(struct gb_state *gb_state) {
   SDL_zero(gb_state->display);
   SDL_zero(gb_state->regs);
 }
+
+#endif // GB_COMMON_H
