@@ -1,20 +1,10 @@
-#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-
-#define GB_DISPLAY_WIDTH 160
-#define GB_DISPLAY_HEIGHT 144
-struct gb_state {
-  SDL_Window *sdl_window;
-  SDL_Renderer *sdl_renderer;
-
-  uint8_t display[GB_DISPLAY_WIDTH][GB_DISPLAY_HEIGHT];
-};
+#include "common.h"
 
 void gb_state_init(struct gb_state *gb_state) {
   gb_state->sdl_window = NULL;
   gb_state->sdl_renderer = NULL;
   SDL_zero(gb_state->display);
+  SDL_zero(gb_state->regs);
 }
 
 /* This function runs once at startup. */
