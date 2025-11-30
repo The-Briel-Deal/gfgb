@@ -1,5 +1,3 @@
-#include <SDL3/SDL_assert.h>
-#include <SDL3/SDL_stdinc.h>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -10,7 +8,7 @@ struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
 
-  uint8_t display[GB_DISPLAY_HEIGHT][GB_DISPLAY_WIDTH];
+  uint8_t display[GB_DISPLAY_WIDTH][GB_DISPLAY_HEIGHT];
 };
 
 void gb_state_init(struct gb_state *gb_state) {
@@ -33,13 +31,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 640, 480,
+  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 1600, 1440,
                                    SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
                                    &gb_state->sdl_renderer)) {
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
-  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 640, 480,
+  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
   return SDL_APP_CONTINUE; /* carry on with the program! */
@@ -60,34 +58,42 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
-/* This function runs once per frame, and is the heart of the program. */
-SDL_AppResult SDL_AppIterate(void *appstate) {
-  struct gb_state *gb_state = appstate;
-  /* convert from milliseconds to seconds. */
-  const double now = ((double)SDL_GetTicks()) / 1000.0;
-
-  /* choose the color for the frame we will draw. The sine wave
-   * trick makes it fade between colors smoothly. */
-  const float red = (float)(0.5 + 0.5 * SDL_sin(now));
-  const float green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-  const float blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-  SDL_SetRenderDrawColorFloat(
-      gb_state->sdl_renderer, red, green, blue,
-      SDL_ALPHA_OPAQUE_FLOAT); /* new color, full alpha. */
+void gb_draw(struct gb_state *gb_state) {
+  SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0,
+                              SDL_ALPHA_OPAQUE_FLOAT);
 
   /* clear the window to the draw color. */
   SDL_RenderClear(gb_state->sdl_renderer);
+  for (int y = 0; y < GB_DISPLAY_HEIGHT; y++) {
+    for (int x = 0; x < GB_DISPLAY_WIDTH; x++) {
+      uint8_t pixel = gb_state->display[x][y];
+      // The original gameboy had 4 shades of grey, these are represented by
+      // 0,1,2,3. Anything greater is invalid.
+      SDL_assert(pixel < 4);
 
-  SDL_SetRenderDrawColorFloat(
-      gb_state->sdl_renderer, 1.0, 1.0, 1.0,
-      SDL_ALPHA_OPAQUE_FLOAT); /* new color, full alpha. */
+      float grey_shade = (float)pixel / 3.0;
 
-  struct SDL_FRect rect = {.x = 100.0, .y = 100.0, .h = 200.0, .w = 200.0};
-  SDL_RenderFillRect(gb_state->sdl_renderer, &rect);
+      SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, grey_shade,
+                                  grey_shade, grey_shade,
+                                  SDL_ALPHA_OPAQUE_FLOAT);
+      int w, h;
+      SDL_GetRenderLogicalPresentation(gb_state->sdl_renderer, &w, &h, NULL);
+      float pixel_w = (float)w / (float)GB_DISPLAY_WIDTH;
+      float pixel_h = (float)h / (float)GB_DISPLAY_HEIGHT;
 
+      struct SDL_FRect rect = {
+          .x = pixel_w * x, .y = pixel_h * y, .w = pixel_w, .h = pixel_h};
+      SDL_RenderFillRect(gb_state->sdl_renderer, &rect);
+    }
+  }
   /* put the newly-cleared rendering on the screen. */
   SDL_RenderPresent(gb_state->sdl_renderer);
+}
 
+/* This function runs once per frame, and is the heart of the program. */
+SDL_AppResult SDL_AppIterate(void *appstate) {
+  struct gb_state *gb_state = appstate;
+  gb_draw(gb_state);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
