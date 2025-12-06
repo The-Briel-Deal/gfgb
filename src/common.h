@@ -79,13 +79,30 @@ static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
     NOT_IMPLEMENTED("Everything after Work RAM is not yet implemented");
   }
 }
+
 static uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
   return val;
 }
+
 static void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   *val_ptr = val;
+}
+
+static void gb_state_init(struct gb_state *gb_state) {
+  gb_state->sdl_window = NULL;
+  gb_state->sdl_renderer = NULL;
+  SDL_zero(gb_state->display);
+  SDL_zero(gb_state->regs);
+  // In reality the pc should be initialized to 0x0000 where the boot rom
+  // starts, but practically it's fine to just skip the boot rom and start at
+  // our programs location at 0x0100.
+  gb_state->regs.pc = 0x0100;
+  // It looks like this was originally at the top of HRAM, but some emulators
+  // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
+  // going with the latter approach for now.
+  gb_state->regs.sp = WRAM_END;
 }
 #undef ROM0_START
 #undef ROM0_END
@@ -101,17 +118,5 @@ static void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
 
 #undef WRAM_START
 #undef WRAM_END
-
-static void gb_state_init(struct gb_state *gb_state) {
-  gb_state->sdl_window = NULL;
-  gb_state->sdl_renderer = NULL;
-  SDL_zero(gb_state->display);
-  SDL_zero(gb_state->regs);
-  // In reality the pc should be initialized to 0x0000 where the boot rom
-  // starts, but practically it's fine to just skip the boot rom and start at
-  // our programs location at 0x0100.
-  gb_state->regs.pc = 0x0100;
-  gb_state->regs.sp = 0xFFFE;
-}
 
 #endif // GB_COMMON_H
