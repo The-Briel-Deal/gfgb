@@ -13,13 +13,13 @@
 
 #define KB(n)             (1024 * n)
 
-#define NIBBLE0(byte)     byte & (0xF0 >> (4 * 0))
-#define NIBBLE1(byte)     byte & (0xF0 >> (4 * 1))
+#define NIBBLE0(byte)     ((byte & (0xF0 >> 0)) >> 4)
+#define NIBBLE1(byte)     ((byte & (0xF0 >> 4)) >> 0)
 
-#define CRUMB0(byte)      byte & (0b11000000 >> 2 * 0)
-#define CRUMB1(byte)      byte & (0b11000000 >> 2 * 1)
-#define CRUMB2(byte)      byte & (0b11000000 >> 2 * 2)
-#define CRUMB3(byte)      byte & (0b11000000 >> 2 * 3)
+#define CRUMB0(byte)      ((byte & (0b11000000 >> 0)) >> 6)
+#define CRUMB1(byte)      ((byte & (0b11000000 >> 2)) >> 4)
+#define CRUMB2(byte)      ((byte & (0b11000000 >> 4)) >> 2)
+#define CRUMB3(byte)      ((byte & (0b11000000 >> 6)) >> 0)
 
 #define GB_DISPLAY_WIDTH  160
 #define GB_DISPLAY_HEIGHT 144
