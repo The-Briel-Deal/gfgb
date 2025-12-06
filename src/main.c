@@ -1,5 +1,8 @@
 #include "common.h"
 
+#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
+#include <SDL3/SDL_main.h>
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   struct gb_state *gb_state = SDL_malloc(sizeof(struct gb_state));
