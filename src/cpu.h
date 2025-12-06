@@ -3,19 +3,25 @@
 
 #include "common.h"
 
-union inst_param {
-  uint8_t r16;
-  uint16_t imm16;
+struct inst_param {
+  enum inst_param_type {
+    R16,
+    IMM16,
+  } type;
+  union {
+    uint8_t r16;
+    uint16_t imm16;
+  };
 };
 
 struct inst {
   enum inst_type {
     // Block 0
     NOP,
-    LD_r16_imm16,
+    LD,
   } inst_type;
-  union inst_param p1;
-  union inst_param p2;
+  struct inst_param p1;
+  struct inst_param p2;
 };
 
 struct inst fetch(struct gb_state *gb_state);

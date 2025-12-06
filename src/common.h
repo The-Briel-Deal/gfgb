@@ -85,6 +85,11 @@ static uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   return val;
 }
 
+static uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
+  uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
+  return val;
+}
+
 static void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   *val_ptr = val;
