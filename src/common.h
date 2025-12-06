@@ -11,17 +11,17 @@
                   "This functionality is not yet implemented: %s", msg);       \
   exit(1)
 
-#define KB(n) (1024 * n)
+#define KB(n)             (1024 * n)
 
-#define NIBBLE0(byte) byte & (0xF0 >> (4 * 0))
-#define NIBBLE1(byte) byte & (0xF0 >> (4 * 1))
+#define NIBBLE0(byte)     byte & (0xF0 >> (4 * 0))
+#define NIBBLE1(byte)     byte & (0xF0 >> (4 * 1))
 
-#define CRUMB0(byte) byte & (0b11000000 >> 2 * 0)
-#define CRUMB1(byte) byte & (0b11000000 >> 2 * 1)
-#define CRUMB2(byte) byte & (0b11000000 >> 2 * 2)
-#define CRUMB3(byte) byte & (0b11000000 >> 2 * 3)
+#define CRUMB0(byte)      byte & (0b11000000 >> 2 * 0)
+#define CRUMB1(byte)      byte & (0b11000000 >> 2 * 1)
+#define CRUMB2(byte)      byte & (0b11000000 >> 2 * 2)
+#define CRUMB3(byte)      byte & (0b11000000 >> 2 * 3)
 
-#define GB_DISPLAY_WIDTH 160
+#define GB_DISPLAY_WIDTH  160
 #define GB_DISPLAY_HEIGHT 144
 #define COMBINED_REG(regs, r1, r2)                                             \
   ((uint16_t)regs.r1 << 8 | (uint16_t)regs.r2 << 0)
@@ -47,37 +47,45 @@ struct gb_state {
 };
 
 #define ROM0_START 0x0000
-#define ROM0_END 0x3FFF
+#define ROM0_END   0x3FFF
 
 #define ROMN_START 0x4000
-#define ROMN_END 0x7FFF
+#define ROMN_END   0x7FFF
 
 // VRAM on CGB is switchable accross 2 8KB banks, on DMG this is just one 8KB
 // block. I won't worry about this until DMG is finished.
 #define VRAM_START 0x8000
-#define VRAM_END 0x9FFF
+#define VRAM_END   0x9FFF
 
 #define ERAM_START 0xA000
-#define ERAM_END 0xBFFF
+#define ERAM_END   0xBFFF
 
 // This is split in two on the CGB and the second half is switchable. I'm just
 // worrying about DMG for now.
 #define WRAM_START 0xC000
-#define WRAM_END 0xDFFF
-static uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+#define WRAM_END   0xDFFF
+static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   if (addr <= ROM0_END) {
-    return gb_state->rom0[addr - ROM0_START];
+    return &gb_state->rom0[addr - ROM0_START];
   } else if (addr <= ROMN_END) {
     NOT_IMPLEMENTED("Rom Bank 01-NN not implemented");
   } else if (addr <= VRAM_END) {
-    return gb_state->vram[addr - VRAM_START];
+    return &gb_state->vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
     NOT_IMPLEMENTED("External RAM not implemented");
   } else if (addr <= WRAM_END) {
-    return gb_state->wram[addr - WRAM_START];
+    return &gb_state->wram[addr - WRAM_START];
   } else {
     NOT_IMPLEMENTED("Everything after Work RAM is not yet implemented");
   }
+}
+static uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+  uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
+  return val;
+}
+static void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
+  uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
+  *val_ptr = val;
 }
 #undef ROM0_START
 #undef ROM0_END

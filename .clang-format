@@ -1,2 +1,3 @@
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
