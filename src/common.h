@@ -107,6 +107,11 @@ static void gb_state_init(struct gb_state *gb_state) {
   gb_state->sdl_renderer = NULL;
   SDL_zero(gb_state->display);
   SDL_zero(gb_state->regs);
+  // In reality the pc should be initialized to 0x0000 where the boot rom
+  // starts, but practically it's fine to just skip the boot rom and start at
+  // our programs location at 0x0100.
+  gb_state->regs.pc = 0x0100;
+  gb_state->regs.sp = 0xFFFE;
 }
 
 #endif // GB_COMMON_H

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "cpu.h"
 
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL_main.h>
@@ -79,6 +80,8 @@ void gb_draw(struct gb_state *gb_state) {
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
+  struct inst inst = fetch(gb_state);
+
   gb_draw(gb_state);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }

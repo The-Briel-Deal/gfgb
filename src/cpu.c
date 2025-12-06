@@ -1,21 +1,5 @@
+#include "cpu.h"
 #include "common.h"
-#include <SDL3/SDL_log.h>
-#include <stdint.h>
-
-union inst_param {
-  uint8_t r16;
-  uint16_t imm16;
-};
-
-struct inst {
-  enum inst_type {
-    // Block 0
-    NOP,
-    LD_r16_imm16,
-  } inst_type;
-  union inst_param p1;
-  union inst_param p2;
-};
 
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = read_mem8(gb_state, gb_state->regs.pc);
