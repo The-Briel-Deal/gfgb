@@ -3,22 +3,36 @@
 
 #include <assert.h>
 
-struct inst fetch(struct gb_state *gb_state) {
-  uint8_t curr_byte = read_mem8(gb_state, gb_state->regs.pc);
+#define R16_PARAM(r)                                                           \
+  (struct inst_param) { .type = R16, .r16 = r }
+#define IMM16_PARAM(imm)                                                       \
+  (struct inst_param) { .type = IMM16, .imm16 = imm }
+
+static inline uint8_t next8(struct gb_state *gb_state) {
+  assert(gb_state->regs.pc < sizeof(gb_state->rom0));
+  uint8_t val = read_mem8(gb_state, gb_state->regs.pc);
   gb_state->regs.pc += 1;
+  return val;
+}
+
+static inline uint16_t next16(struct gb_state *gb_state) {
+  assert(gb_state->regs.pc < sizeof(gb_state->rom0));
+  uint16_t val = read_mem16(gb_state, gb_state->regs.pc);
+  gb_state->regs.pc += 2;
+  return val;
+}
+
+struct inst fetch(struct gb_state *gb_state) {
+  uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
   case 0:
     if (curr_byte == 0b00000000) return (struct inst){.inst_type = NOP};
     switch (NIBBLE1(curr_byte)) {
     case 0b0001: {
-      struct inst inst = {.inst_type = LD,
-                          .p1.type = R16,
-                          .p1.r16 = CRUMB1(curr_byte),
-                          .p2.type = IMM16,
-                          .p2.imm16 = read_mem16(gb_state, gb_state->regs.pc)};
-      gb_state->regs.pc += 2;
-      return inst;
+      return (struct inst){.inst_type = LD,
+                           .p1 = R16_PARAM(CRUMB1(curr_byte)),
+                           .p2 = IMM16_PARAM(next16(gb_state))};
     }
     }
     break;
