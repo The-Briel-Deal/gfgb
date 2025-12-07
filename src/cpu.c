@@ -23,43 +23,31 @@ static inline uint16_t next16(struct gb_state *gb_state) {
   return val;
 }
 
-static inline uint16_t get_r16(struct gb_state *gb_state, uint8_t r16) {
+enum r16 {
+  R16_BC = 0,
+  R16_DE = 1,
+  R16_HL = 2,
+  R16_SP = 3,
+};
+
+static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   switch (r16) {
-  case 0: // bc
-    return COMBINED_REG(gb_state->regs, b, c);
-  case 1: // de
-    return COMBINED_REG(gb_state->regs, d, e);
-  case 2: // hl
-    return COMBINED_REG(gb_state->regs, h, l);
-  case 3: // sp
-    return gb_state->regs.sp;
-  default:
-    // bc, de, hl, and sp are the only valid r16 registers.
-    exit(1);
+  case R16_BC: return COMBINED_REG(gb_state->regs, b, c);
+  case R16_DE: return COMBINED_REG(gb_state->regs, d, e);
+  case R16_HL: return COMBINED_REG(gb_state->regs, h, l);
+  case R16_SP: return gb_state->regs.sp;
+  default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
-static inline void set_r16(struct gb_state *gb_state, uint8_t r16,
+static inline void set_r16(struct gb_state *gb_state, enum r16 r16,
                            uint16_t val) {
   switch (r16) {
-  case 0: // bc
-    gb_state->regs.b = (0x00FF & val) >> 0;
-    gb_state->regs.c = (0xFF00 & val) >> 8;
-    return;
-  case 1: // de
-    gb_state->regs.d = (0x00FF & val) >> 0;
-    gb_state->regs.e = (0xFF00 & val) >> 8;
-    return;
-  case 2: // hl
-    gb_state->regs.h = (0x00FF & val) >> 0;
-    gb_state->regs.l = (0xFF00 & val) >> 8;
-    return;
-  case 3: // sp
-    gb_state->regs.sp = val;
-    return;
-  default:
-    // bc, de, hl, and sp are the only valid r16 registers.
-    exit(1);
+  case R16_BC: SET_COMBINED_REG(gb_state->regs, b, c, val); return;
+  case R16_DE: SET_COMBINED_REG(gb_state->regs, d, e, val); return;
+  case R16_HL: SET_COMBINED_REG(gb_state->regs, h, l, val); return;
+  case R16_SP: gb_state->regs.sp = val; return;
+  default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
