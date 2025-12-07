@@ -80,12 +80,12 @@ static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-static uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
   return val;
 }
 
-static uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
+static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr = unmap_address(gb_state, addr);
   uint16_t val = 0x0000;
   val |= val_ptr[0] << 0;
@@ -93,19 +93,20 @@ static uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
   return val;
 }
 
-static void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
+static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
+                              uint8_t val) {
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   *val_ptr = val;
 }
-static void write_mem16(struct gb_state *gb_state, uint16_t addr,
-                        uint16_t val) {
+static inline void write_mem16(struct gb_state *gb_state, uint16_t addr,
+                               uint16_t val) {
   // little endian
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   val_ptr[0] = (val & 0x00FF) >> 0;
   val_ptr[1] = (val & 0xFF00) >> 8;
 }
 
-static void gb_state_init(struct gb_state *gb_state) {
+static inline void gb_state_init(struct gb_state *gb_state) {
   SDL_zerop(gb_state);
   // In reality the pc should be initialized to 0x0000 where the boot rom
   // starts, but practically it's fine to just skip the boot rom and start at

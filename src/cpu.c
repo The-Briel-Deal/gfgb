@@ -45,9 +45,7 @@ struct inst fetch(struct gb_state *gb_state) {
                curr_byte);
   NOT_IMPLEMENTED("Instruction not implemented.");
 }
-void execute(struct gb_state *gb_state, struct inst inst) {
-
-}
+void execute(struct gb_state *gb_state, struct inst inst) {}
 
 #ifdef RUN_TESTS
 
@@ -66,7 +64,7 @@ void test_fetch() {
   assert(inst.p2.imm16 == 452);
 }
 
-int main() { 
+int main() {
   printf("Starting CPU tests.\n");
   test_fetch();
   printf("CPU tests succeeded\n");
