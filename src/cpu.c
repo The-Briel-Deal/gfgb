@@ -41,7 +41,7 @@ struct inst fetch(struct gb_state *gb_state) {
   case 2: break;
   case 3: break;
   }
-  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%0.4x.",
+  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4x.",
                curr_byte);
   NOT_IMPLEMENTED("Instruction not implemented.");
 }
