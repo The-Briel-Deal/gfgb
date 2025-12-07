@@ -86,7 +86,10 @@ static uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
 }
 
 static uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
-  uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
+  uint8_t *val_ptr = unmap_address(gb_state, addr);
+  uint16_t val = 0x0000;
+  val |= val_ptr[0] << 0;
+  val |= val_ptr[1] << 8;
   return val;
 }
 
@@ -94,12 +97,16 @@ static void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   *val_ptr = val;
 }
+static void write_mem16(struct gb_state *gb_state, uint16_t addr,
+                        uint16_t val) {
+  // little endian
+  uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
+  val_ptr[0] = (val & 0x00FF) >> 0;
+  val_ptr[1] = (val & 0xFF00) >> 8;
+}
 
 static void gb_state_init(struct gb_state *gb_state) {
-  gb_state->sdl_window = NULL;
-  gb_state->sdl_renderer = NULL;
-  SDL_zero(gb_state->display);
-  SDL_zero(gb_state->regs);
+  SDL_zerop(gb_state);
   // In reality the pc should be initialized to 0x0000 where the boot rom
   // starts, but practically it's fine to just skip the boot rom and start at
   // our programs location at 0x0100.

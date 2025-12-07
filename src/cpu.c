@@ -1,6 +1,8 @@
 #include "cpu.h"
 #include "common.h"
 
+#include <assert.h>
+
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = read_mem8(gb_state, gb_state->regs.pc);
   gb_state->regs.pc += 1;
@@ -29,3 +31,24 @@ struct inst fetch(struct gb_state *gb_state) {
   NOT_IMPLEMENTED("Instruction not implemented.");
 }
 void execute(struct gb_state *gb_state, struct inst inst) {}
+
+#ifdef RUN_TESTS
+
+void test_fetch() {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+
+  write_mem8(&gb_state, 0x100, 0b00100001);
+  write_mem16(&gb_state, 0x101, 452);
+
+  struct inst inst = fetch(&gb_state);
+  assert(inst.inst_type == LD);
+  assert(inst.p1.type == R16);
+  assert(inst.p1.r16 == 0b10);
+  assert(inst.p2.type == IMM16);
+  assert(inst.p2.imm16 == 452);
+}
+
+int main() { test_fetch(); }
+
+#endif
