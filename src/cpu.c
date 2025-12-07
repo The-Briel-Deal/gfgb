@@ -124,9 +124,9 @@ void test_execute() {
   write_mem16(&gb_state, 0x101, 452);
 
   struct inst inst = fetch(&gb_state);
-  assert(COMBINED_REG(gb_state.regs, b, c) == 0);
+  assert(get_r16(&gb_state, R16_BC) == 0);
   execute(&gb_state, inst);
-  assert(COMBINED_REG(gb_state.regs, b, c) == 452);
+  assert(get_r16(&gb_state, R16_BC) == 452);
 }
 
 int main() {
