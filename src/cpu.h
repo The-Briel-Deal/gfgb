@@ -19,7 +19,7 @@ struct inst {
     // Block 0
     NOP,
     LD,
-  } inst_type;
+  } type;
   struct inst_param p1;
   struct inst_param p2;
 };

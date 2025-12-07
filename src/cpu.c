@@ -28,10 +28,10 @@ struct inst fetch(struct gb_state *gb_state) {
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
   case 0:
-    if (curr_byte == 0b00000000) return (struct inst){.inst_type = NOP};
+    if (curr_byte == 0b00000000) return (struct inst){.type = NOP};
     switch (NIBBLE1(curr_byte)) {
     case 0b0001: {
-      return (struct inst){.inst_type = LD,
+      return (struct inst){.type = LD,
                            .p1 = R16_PARAM(CRUMB1(curr_byte)),
                            .p2 = IMM16_PARAM(next16(gb_state))};
     }
@@ -45,7 +45,9 @@ struct inst fetch(struct gb_state *gb_state) {
                curr_byte);
   NOT_IMPLEMENTED("Instruction not implemented.");
 }
-void execute(struct gb_state *gb_state, struct inst inst) {}
+void execute(struct gb_state *gb_state, struct inst inst) {
+
+}
 
 #ifdef RUN_TESTS
 
@@ -57,7 +59,7 @@ void test_fetch() {
   write_mem16(&gb_state, 0x101, 452);
 
   struct inst inst = fetch(&gb_state);
-  assert(inst.inst_type == LD);
+  assert(inst.type == LD);
   assert(inst.p1.type == R16);
   assert(inst.p1.r16 == 0b10);
   assert(inst.p2.type == IMM16);
