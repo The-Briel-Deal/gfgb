@@ -27,6 +27,20 @@ static inline uint16_t next16(struct gb_state *gb_state) {
   return val;
 }
 
+static inline uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
+  switch (r8) {
+  case R8_B: return gb_state->regs.b;
+  case R8_C: return gb_state->regs.c;
+  case R8_D: return gb_state->regs.d;
+  case R8_E: return gb_state->regs.e;
+  case R8_H: return gb_state->regs.h;
+  case R8_L: return gb_state->regs.l;
+  case R8_HL_DREF: NOT_IMPLEMENTED("R8_HL_DREF not yet implemented.");
+  case R8_A: return gb_state->regs.a;
+  default: exit(1);
+  }
+}
+
 static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   switch (r16) {
   case R16_BC: return COMBINED_REG(gb_state->regs, b, c);
@@ -55,7 +69,7 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
   case R16_BC: mem_offset = COMBINED_REG(gb_state->regs, b, c); break;
   case R16_DE: mem_offset = COMBINED_REG(gb_state->regs, d, e); break;
   case R16_HL: mem_offset = COMBINED_REG(gb_state->regs, h, l); break;
-  case R16_SP: mem_offset = gb_state->regs.sp;
+  case R16_SP: mem_offset = gb_state->regs.sp; break;
   default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
   write_mem8(gb_state, mem_offset, val);
@@ -104,7 +118,7 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
-    set_r16_mem(gb_state, dest.r16, src.r8);
+    set_r16_mem(gb_state, dest.r16, get_r8(gb_state, src.r8));
     return;
   }
 }
@@ -155,11 +169,20 @@ void test_execute() {
   // LD r16=BC imm16=452
   write_mem8(&gb_state, 0x100, 0b00000001);
   write_mem16(&gb_state, 0x101, 452);
-
-  struct inst inst = fetch(&gb_state);
+  struct inst inst;
+  inst = fetch(&gb_state);
   assert(get_r16(&gb_state, R16_BC) == 0);
   execute(&gb_state, inst);
   assert(get_r16(&gb_state, R16_BC) == 452);
+
+  // LD r16_mem=*BC r8=a
+  set_r16(&gb_state, R16_BC, 0xC000);
+  gb_state.regs.a = 42;
+  write_mem8(&gb_state, 0x103, 0b00000010);
+  inst = fetch(&gb_state);
+  assert(read_mem8(&gb_state, 0xC000) == 0);
+  execute(&gb_state, inst);
+  assert(read_mem8(&gb_state, 0xC000) == 42);
 }
 
 int main() {
