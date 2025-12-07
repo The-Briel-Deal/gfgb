@@ -7,9 +7,11 @@
 #include <stdlib.h>
 
 #define NOT_IMPLEMENTED(msg)                                                   \
-  SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,                                \
-                  "This functionality is not yet implemented: %s", msg);       \
-  exit(1)
+  {                                                                            \
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,                              \
+                    "This functionality is not yet implemented: %s", msg);     \
+    exit(1);                                                                   \
+  }
 
 #define KB(n)             (1024 * n)
 
@@ -29,8 +31,8 @@
   (((uint16_t)regs.r2 << 8) | ((uint16_t)regs.r1 << 0))
 #define SET_COMBINED_REG(regs, r1, r2, val)                                    \
   {                                                                            \
-    regs.r1 = (0x00FF & val) >> 0;                                    \
-    regs.r2 = (0xFF00 & val) >> 8;                                    \
+    regs.r1 = (0x00FF & val) >> 0;                                             \
+    regs.r2 = (0xFF00 & val) >> 8;                                             \
   }
 
 struct gb_state {
