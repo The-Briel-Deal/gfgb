@@ -45,14 +45,18 @@ static inline void set_r16(struct gb_state *gb_state, uint8_t r16,
   case 0: // bc
     gb_state->regs.b = (0x00FF & val) >> 0;
     gb_state->regs.c = (0xFF00 & val) >> 8;
+    return;
   case 1: // de
     gb_state->regs.d = (0x00FF & val) >> 0;
     gb_state->regs.e = (0xFF00 & val) >> 8;
+    return;
   case 2: // hl
     gb_state->regs.h = (0x00FF & val) >> 0;
     gb_state->regs.l = (0xFF00 & val) >> 8;
+    return;
   case 3: // sp
     gb_state->regs.sp = val;
+    return;
   default:
     // bc, de, hl, and sp are the only valid r16 registers.
     exit(1);
@@ -123,10 +127,27 @@ void test_fetch() {
   assert(inst.p2.imm16 == 452);
 }
 
+void test_execute() {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+
+  // LD r16=BC imm16=452
+  write_mem8(&gb_state, 0x100, 0b00000001);
+  write_mem16(&gb_state, 0x101, 452);
+
+  struct inst inst = fetch(&gb_state);
+  assert(COMBINED_REG(gb_state.regs, b, c) == 0);
+  execute(&gb_state, inst);
+  assert(COMBINED_REG(gb_state.regs, b, c) == 452);
+}
+
 int main() {
-  SDL_Log("Starting CPU tests.\n");
+  SDL_Log("Starting CPU tests.");
+  SDL_Log("running `test_fetch()`");
   test_fetch();
-  SDL_Log("CPU tests succeeded.\n");
+  SDL_Log("running `test_execute()`");
+  test_execute();
+  SDL_Log("CPU tests succeeded.");
 }
 
 #endif

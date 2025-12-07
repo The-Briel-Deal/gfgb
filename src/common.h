@@ -23,8 +23,9 @@
 
 #define GB_DISPLAY_WIDTH  160
 #define GB_DISPLAY_HEIGHT 144
+// This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2)                                             \
-  ((uint16_t)regs.r1 << 8 | (uint16_t)regs.r2 << 0)
+  (((uint16_t)regs.r2 << 8) | ((uint16_t)regs.r1 << 0))
 struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
