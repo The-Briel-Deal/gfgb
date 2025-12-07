@@ -41,6 +41,20 @@ static inline uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
   }
 }
 
+static inline void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
+  switch (r8) {
+  case R8_B: gb_state->regs.b = val; return;
+  case R8_C: gb_state->regs.c = val; return;
+  case R8_D: gb_state->regs.d = val; return;
+  case R8_E: gb_state->regs.e = val; return;
+  case R8_H: gb_state->regs.h = val; return;
+  case R8_L: gb_state->regs.l = val; return;
+  case R8_HL_DREF: NOT_IMPLEMENTED("R8_HL_DREF not yet implemented.");
+  case R8_A: gb_state->regs.a = val; return;
+  default: exit(1);
+  }
+}
+
 static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   switch (r16) {
   case R16_BC: return COMBINED_REG(gb_state->regs, b, c);
@@ -94,6 +108,12 @@ struct inst fetch(struct gb_state *gb_state) {
           .p1 = R16_MEM_PARAM(CRUMB1(curr_byte)),
           .p2 = R8_PARAM(R8_A),
       };
+    case 0b1010:
+      return (struct inst){
+          .type = LD,
+          .p1 = R8_PARAM(R8_A),
+          .p2 = R16_MEM_PARAM(CRUMB1(curr_byte)),
+      };
     }
     break;
   case 1: break;
@@ -119,6 +139,10 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
     set_r16_mem(gb_state, dest.r16, get_r8(gb_state, src.r8));
+    return;
+  }
+  if (IS_R8(dest) && IS_R16_MEM(src)) {
+    set_r8(gb_state, dest.r8, read_mem8(gb_state, get_r16(gb_state, src.r16)));
     return;
   }
 }
