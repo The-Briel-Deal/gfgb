@@ -4,8 +4,12 @@
 #include <assert.h>
 #include <stdint.h>
 
+#define R8_PARAM(r)                                                            \
+  (struct inst_param) { .type = R8, .r8 = r }
 #define R16_PARAM(r)                                                           \
   (struct inst_param) { .type = R16, .r16 = r }
+#define R16_MEM_PARAM(r)                                                       \
+  (struct inst_param) { .type = R16_MEM, .r16 = r }
 #define IMM16_PARAM(imm)                                                       \
   (struct inst_param) { .type = IMM16, .imm16 = imm }
 
@@ -22,13 +26,6 @@ static inline uint16_t next16(struct gb_state *gb_state) {
   gb_state->regs.pc += 2;
   return val;
 }
-
-enum r16 {
-  R16_BC = 0,
-  R16_DE = 1,
-  R16_HL = 2,
-  R16_SP = 3,
-};
 
 static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   switch (r16) {
@@ -51,6 +48,19 @@ static inline void set_r16(struct gb_state *gb_state, enum r16 r16,
   }
 }
 
+static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
+                               uint8_t val) {
+  uint16_t mem_offset;
+  switch (r16) {
+  case R16_BC: mem_offset = COMBINED_REG(gb_state->regs, b, c); break;
+  case R16_DE: mem_offset = COMBINED_REG(gb_state->regs, d, e); break;
+  case R16_HL: mem_offset = COMBINED_REG(gb_state->regs, h, l); break;
+  case R16_SP: mem_offset = gb_state->regs.sp;
+  default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
+  }
+  write_mem8(gb_state, mem_offset, val);
+}
+
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
@@ -58,11 +68,18 @@ struct inst fetch(struct gb_state *gb_state) {
   case 0:
     if (curr_byte == 0b00000000) return (struct inst){.type = NOP};
     switch (NIBBLE1(curr_byte)) {
-    case 0b0001: {
-      return (struct inst){.type = LD,
-                           .p1 = R16_PARAM(CRUMB1(curr_byte)),
-                           .p2 = IMM16_PARAM(next16(gb_state))};
-    }
+    case 0b0001:
+      return (struct inst){
+          .type = LD,
+          .p1 = R16_PARAM(CRUMB1(curr_byte)),
+          .p2 = IMM16_PARAM(next16(gb_state)),
+      };
+    case 0b0010:
+      return (struct inst){
+          .type = LD,
+          .p1 = R16_MEM_PARAM(CRUMB1(curr_byte)),
+          .p2 = R8_PARAM(R8_A),
+      };
     }
     break;
   case 1: break;
@@ -73,25 +90,34 @@ struct inst fetch(struct gb_state *gb_state) {
                curr_byte);
   NOT_IMPLEMENTED("Instruction not implemented.");
 }
+
+#define IS_R16(param)     (param.type == R16)
+#define IS_R16_MEM(param) (param.type == R16_MEM)
+#define IS_R8(param)      (param.type == R8)
+#define IS_IMM16(param)   (param.type == IMM16)
+
+void ex_ld(struct gb_state *gb_state, struct inst inst) {
+  struct inst_param dest = inst.p1;
+  struct inst_param src = inst.p2;
+  if (IS_R16(dest) && IS_IMM16(src)) {
+    set_r16(gb_state, dest.r16, src.imm16);
+    return;
+  }
+  if (IS_R16_MEM(dest) && IS_R8(src)) {
+    set_r16_mem(gb_state, dest.r16, src.r8);
+    return;
+  }
+}
+
+#undef IS_R16
+#undef IS_R16_MEM
+#undef IS_R8
+#undef IS_IMM16
+
 void execute(struct gb_state *gb_state, struct inst inst) {
   switch (inst.type) {
   case NOP: return;
-  case LD:
-    switch (inst.p1.type) {
-    case R16: {
-      uint8_t reg_dest = inst.p1.r16;
-      switch (inst.p2.type) {
-      case IMM16: {
-        uint16_t src_val = inst.p2.imm16;
-        set_r16(gb_state, reg_dest, src_val);
-        return;
-      }
-      default: break;
-      }
-    }
-    default: break;
-    }
-    break;
+  case LD: ex_ld(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
@@ -102,17 +128,24 @@ void execute(struct gb_state *gb_state, struct inst inst) {
 
 void test_fetch() {
   struct gb_state gb_state;
+  struct inst inst;
+
   gb_state_init(&gb_state);
 
   write_mem8(&gb_state, 0x100, 0b00100001);
   write_mem16(&gb_state, 0x101, 452);
-
-  struct inst inst = fetch(&gb_state);
+  inst = fetch(&gb_state);
   assert(inst.type == LD);
   assert(inst.p1.type == R16);
-  assert(inst.p1.r16 == 0b10);
+  assert(inst.p1.r16 == R16_HL);
   assert(inst.p2.type == IMM16);
   assert(inst.p2.imm16 == 452);
+
+  write_mem8(&gb_state, 0x103, 0b00010010);
+  inst = fetch(&gb_state);
+  assert(inst.type == LD);
+  assert(inst.p1.type == R16_MEM);
+  assert(inst.p1.r16 == R16_DE);
 }
 
 void test_execute() {
