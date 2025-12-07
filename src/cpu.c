@@ -2,7 +2,6 @@
 #include "common.h"
 
 #include <assert.h>
-#include <stdio.h>
 
 #define R16_PARAM(r)                                                           \
   (struct inst_param) { .type = R16, .r16 = r }
@@ -65,9 +64,9 @@ void test_fetch() {
 }
 
 int main() {
-  printf("Starting CPU tests.\n");
+  SDL_Log("Starting CPU tests.\n");
   test_fetch();
-  printf("CPU tests succeeded\n");
+  SDL_Log("CPU tests succeeded.\n");
 }
 
 #endif

@@ -6,6 +6,8 @@
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  (void)argc;
+  (void)argv;
   struct gb_state *gb_state = SDL_malloc(sizeof(struct gb_state));
   *appstate = gb_state;
   SDL_assert(appstate != NULL);
@@ -81,6 +83,7 @@ void gb_draw(struct gb_state *gb_state) {
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
   struct inst inst = fetch(gb_state);
+  execute(gb_state, inst);
 
   gb_draw(gb_state);
   return SDL_APP_CONTINUE; /* carry on with the program! */
@@ -88,6 +91,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+  (void)result;
   /* SDL will clean up the window/renderer for us. */
   SDL_free(appstate);
 }
