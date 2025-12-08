@@ -186,28 +186,33 @@ void test_fetch() {
   assert(inst.p1.r16 == R16_DE);
 }
 
-void test_execute() {
+void test_execute_load() {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
-
-  // LD r16=BC imm16=452
-  write_mem8(&gb_state, 0x100, 0b00000001);
-  write_mem16(&gb_state, 0x101, 452);
   struct inst inst;
-  inst = fetch(&gb_state);
-  assert(get_r16(&gb_state, R16_BC) == 0);
+
+  // Load IMM16 into reg BC
+  inst = (struct inst){
+      .type = LD,
+      .p1 = R16_PARAM(R16_BC),
+      .p2 = IMM16_PARAM(452),
+  };
   execute(&gb_state, inst);
   assert(get_r16(&gb_state, R16_BC) == 452);
 
-  // LD r16_mem=*BC r8=a
+  // Load reg A into addr in reg BC
+  inst = (struct inst){
+      .type = LD,
+      .p1 = R16_MEM_PARAM(R16_BC),
+      .p2 = R8_PARAM(R8_A),
+  };
   set_r16(&gb_state, R16_BC, 0xC000);
   gb_state.regs.a = 42;
-  write_mem8(&gb_state, 0x103, 0b00000010);
-  inst = fetch(&gb_state);
-  assert(read_mem8(&gb_state, 0xC000) == 0);
   execute(&gb_state, inst);
   assert(read_mem8(&gb_state, 0xC000) == 42);
 }
+
+void test_execute() { test_execute_load(); }
 
 int main() {
   SDL_Log("Starting CPU tests.");
