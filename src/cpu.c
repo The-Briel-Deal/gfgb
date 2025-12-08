@@ -210,6 +210,16 @@ void test_execute_load() {
   gb_state.regs.a = 42;
   execute(&gb_state, inst);
   assert(read_mem8(&gb_state, 0xC000) == 42);
+
+  // Load contents of addr in reg BC into reg A
+  inst = (struct inst){
+      .type = LD,
+      .p1 = R8_PARAM(R8_A),
+      .p2 = R16_MEM_PARAM(R16_BC),
+  };
+  write_mem8(&gb_state, 0xC000, 134);
+  execute(&gb_state, inst);
+  assert(gb_state.regs.a == 134);
 }
 
 void test_execute() { test_execute_load(); }
