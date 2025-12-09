@@ -184,6 +184,16 @@ void test_fetch() {
   assert(inst.type == LD);
   assert(inst.p1.type == R16_MEM);
   assert(inst.p1.r16 == R16_DE);
+  assert(inst.p2.type == R8);
+  assert(inst.p2.r8 == R8_A);
+
+  write_mem8(&gb_state, 0x104, 0b00011010);
+  inst = fetch(&gb_state);
+  assert(inst.type == LD);
+  assert(inst.p1.type == R8);
+  assert(inst.p1.r8 == R8_A);
+  assert(inst.p2.type == R16_MEM);
+  assert(inst.p2.r16 == R16_DE);
 }
 
 void test_execute_load() {
@@ -231,6 +241,7 @@ int main() {
   SDL_Log("running `test_execute()`");
   test_execute();
   SDL_Log("CPU tests succeeded.");
+  SDL_Quit();
 }
 
 #endif
