@@ -27,6 +27,7 @@ struct inst_param {
     R16,
     R16_MEM,
     IMM16,
+    IMM16_MEM,
   } type;
   union {
     enum r8 r8;

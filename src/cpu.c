@@ -12,6 +12,8 @@
   (struct inst_param) { .type = R16_MEM, .r16 = r }
 #define IMM16_PARAM(imm)                                                       \
   (struct inst_param) { .type = IMM16, .imm16 = imm }
+#define IMM16_MEM_PARAM(imm)                                                   \
+  (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
 
 static inline uint8_t next8(struct gb_state *gb_state) {
   assert(gb_state->regs.pc < sizeof(gb_state->rom0));
@@ -114,6 +116,14 @@ struct inst fetch(struct gb_state *gb_state) {
           .p1 = R8_PARAM(R8_A),
           .p2 = R16_MEM_PARAM(CRUMB1(curr_byte)),
       };
+    case 0b1000:
+      if (CRUMB1(curr_byte) == 0b00)
+        return (struct inst){
+            .type = LD,
+            .p1 = IMM16_MEM_PARAM(next16(gb_state)),
+            .p2 = R16_PARAM(R16_SP),
+        };
+      break;
     }
     break;
   case 1: break;
@@ -125,10 +135,11 @@ struct inst fetch(struct gb_state *gb_state) {
   NOT_IMPLEMENTED("Instruction not implemented.");
 }
 
-#define IS_R16(param)     (param.type == R16)
-#define IS_R16_MEM(param) (param.type == R16_MEM)
-#define IS_R8(param)      (param.type == R8)
-#define IS_IMM16(param)   (param.type == IMM16)
+#define IS_R16(param)       (param.type == R16)
+#define IS_R16_MEM(param)   (param.type == R16_MEM)
+#define IS_R8(param)        (param.type == R8)
+#define IS_IMM16(param)     (param.type == IMM16)
+#define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 
 void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
@@ -143,6 +154,10 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R8(dest) && IS_R16_MEM(src)) {
     set_r8(gb_state, dest.r8, read_mem8(gb_state, get_r16(gb_state, src.r16)));
+    return;
+  }
+  if (IS_IMM16_MEM(dest) && IS_R16(src)) {
+    write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
     return;
   }
 }
@@ -194,6 +209,15 @@ void test_fetch() {
   assert(inst.p1.r8 == R8_A);
   assert(inst.p2.type == R16_MEM);
   assert(inst.p2.r16 == R16_DE);
+
+  write_mem8(&gb_state, 0x105, 0b00001000);
+  write_mem16(&gb_state, 0x106, 10403);
+  inst = fetch(&gb_state);
+  assert(inst.type == LD);
+  assert(inst.p1.type == IMM16_MEM);
+  assert(inst.p1.imm16 == 10403);
+  assert(inst.p2.type == R16);
+  assert(inst.p2.r16 == R16_SP);
 }
 
 void test_execute_load() {
@@ -230,6 +254,17 @@ void test_execute_load() {
   write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
   assert(gb_state.regs.a == 134);
+
+  // Load stack pointer into addr at IMM16
+  inst = (struct inst){
+      .type = LD,
+      .p1 = IMM16_MEM_PARAM(0xC010),
+      .p2 = R16_PARAM(R16_SP),
+  };
+  set_r16(&gb_state, R16_SP, 0xD123);
+  execute(&gb_state, inst);
+  assert(gb_state.regs.sp == 0xD123);
+  assert(read_mem16(&gb_state, 0xC010) == 0xD123);
 }
 
 void test_execute() { test_execute_load(); }
