@@ -21,6 +21,13 @@ enum r16 {
   R16_SP = 3,
 };
 
+enum r16_mem {
+  R16_MEM_BC = 0,
+  R16_MEM_DE = 1,
+  R16_MEM_HLI = 2,
+  R16_MEM_HLD = 3,
+};
+
 struct inst_param {
   enum inst_param_type {
     R8,
@@ -32,6 +39,7 @@ struct inst_param {
   union {
     enum r8 r8;
     enum r16 r16;
+    enum r16_mem r16_mem;
     uint16_t imm16;
   };
 };

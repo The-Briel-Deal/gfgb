@@ -9,7 +9,7 @@
 #define R16_PARAM(r)                                                           \
   (struct inst_param) { .type = R16, .r16 = r }
 #define R16_MEM_PARAM(r)                                                       \
-  (struct inst_param) { .type = R16_MEM, .r16 = r }
+  (struct inst_param) { .type = R16_MEM, .r16_mem = r }
 #define IMM16_PARAM(imm)                                                       \
   (struct inst_param) { .type = IMM16, .imm16 = imm }
 #define IMM16_MEM_PARAM(imm)                                                   \
@@ -91,6 +91,23 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
   write_mem8(gb_state, mem_offset, val);
 }
 
+static inline uint8_t *get_r16_mem_addr(struct gb_state *gb_state,
+                                        enum r16_mem r16_mem) {
+  uint16_t addr;
+  switch (r16_mem) {
+  case R16_MEM_BC: return unmap_address(gb_state, get_r16(gb_state, R16_BC));
+  case R16_MEM_DE: return unmap_address(gb_state, get_r16(gb_state, R16_DE));
+  case R16_MEM_HLI: // Increment HL after deref
+    addr = get_r16(gb_state, R16_HL);
+    set_r16(gb_state, R16_HL, addr + 1);
+    return unmap_address(gb_state, addr);
+  case R16_MEM_HLD: // Decrement HL after deref
+    addr = get_r16(gb_state, R16_HL);
+    set_r16(gb_state, R16_HL, addr - 1);
+    return unmap_address(gb_state, addr);
+  }
+}
+
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
@@ -149,11 +166,11 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
-    set_r16_mem(gb_state, dest.r16, get_r8(gb_state, src.r8));
+    *get_r16_mem_addr(gb_state, dest.r16_mem) = get_r8(gb_state, src.r8);
     return;
   }
   if (IS_R8(dest) && IS_R16_MEM(src)) {
-    set_r8(gb_state, dest.r8, read_mem8(gb_state, get_r16(gb_state, src.r16)));
+    set_r8(gb_state, dest.r8, *get_r16_mem_addr(gb_state, src.r16_mem));
     return;
   }
   if (IS_IMM16_MEM(dest) && IS_R16(src)) {
@@ -166,6 +183,7 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
 #undef IS_R16_MEM
 #undef IS_R8
 #undef IS_IMM16
+#undef IS_IMM16_MEM
 
 void execute(struct gb_state *gb_state, struct inst inst) {
   switch (inst.type) {
@@ -237,7 +255,7 @@ void test_execute_load() {
   // Load reg A into addr in reg BC
   inst = (struct inst){
       .type = LD,
-      .p1 = R16_MEM_PARAM(R16_BC),
+      .p1 = R16_MEM_PARAM(R16_MEM_BC),
       .p2 = R8_PARAM(R8_A),
   };
   set_r16(&gb_state, R16_BC, 0xC000);
@@ -249,11 +267,33 @@ void test_execute_load() {
   inst = (struct inst){
       .type = LD,
       .p1 = R8_PARAM(R8_A),
-      .p2 = R16_MEM_PARAM(R16_BC),
+      .p2 = R16_MEM_PARAM(R16_MEM_BC),
   };
   write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
   assert(gb_state.regs.a == 134);
+
+  // Load contents of addr in reg HL into reg A and increment the pointer.
+  inst = (struct inst){
+      .type = LD,
+      .p1 = R8_PARAM(R8_A),
+      .p2 = R16_MEM_PARAM(R16_MEM_HLI),
+  };
+  set_r16(&gb_state, R16_HL, 0xC000);
+  write_mem8(&gb_state, 0xC000, 134);
+  execute(&gb_state, inst);
+  assert(get_r16(&gb_state, R16_HL) == 0xC001);
+  assert(gb_state.regs.a == 134);
+  // Then load contents of reg A into the addr in reg HL.
+  inst = (struct inst){
+      .type = LD,
+      .p1 = R16_MEM_PARAM(R16_MEM_HLD),
+      .p2 = R8_PARAM(R8_A),
+  };
+  set_r8(&gb_state, R8_A, 21);
+  execute(&gb_state, inst);
+  assert(read_mem8(&gb_state, 0xC001) == 21);
+  assert(get_r16(&gb_state, R16_HL) == 0xC000);
 
   // Load stack pointer into addr at IMM16
   inst = (struct inst){
