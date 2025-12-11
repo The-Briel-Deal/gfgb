@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define R8_PARAM(r)                                                            \
   (struct inst_param) { .type = R8, .r8 = r }
@@ -39,7 +40,7 @@ static inline uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
   case R8_L: return gb_state->regs.l;
   case R8_HL_DREF: NOT_IMPLEMENTED("R8_HL_DREF not yet implemented.");
   case R8_A: return gb_state->regs.a;
-  default: exit(1);
+  default: abort();
   }
 }
 
@@ -53,7 +54,7 @@ static inline void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
   case R8_L: gb_state->regs.l = val; return;
   case R8_HL_DREF: NOT_IMPLEMENTED("R8_HL_DREF not yet implemented.");
   case R8_A: gb_state->regs.a = val; return;
-  default: exit(1);
+  default: abort();
   }
 }
 
@@ -63,7 +64,7 @@ static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   case R16_DE: return COMBINED_REG(gb_state->regs, d, e);
   case R16_HL: return COMBINED_REG(gb_state->regs, h, l);
   case R16_SP: return gb_state->regs.sp;
-  default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
+  default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
@@ -74,7 +75,7 @@ static inline void set_r16(struct gb_state *gb_state, enum r16 r16,
   case R16_DE: SET_COMBINED_REG(gb_state->regs, d, e, val); return;
   case R16_HL: SET_COMBINED_REG(gb_state->regs, h, l, val); return;
   case R16_SP: gb_state->regs.sp = val; return;
-  default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
+  default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
@@ -93,6 +94,7 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
 
 static inline uint8_t *get_r16_mem_addr(struct gb_state *gb_state,
                                         enum r16_mem r16_mem) {
+  assert(r16_mem <= R16_MEM_HLD);
   uint16_t addr;
   switch (r16_mem) {
   case R16_MEM_BC: return unmap_address(gb_state, get_r16(gb_state, R16_BC));
@@ -106,6 +108,7 @@ static inline uint8_t *get_r16_mem_addr(struct gb_state *gb_state,
     set_r16(gb_state, R16_HL, addr - 1);
     return unmap_address(gb_state, addr);
   }
+  abort(); // This should never happen unless something is very wrong.
 }
 
 struct inst fetch(struct gb_state *gb_state) {
