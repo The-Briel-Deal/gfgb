@@ -1,6 +1,9 @@
 SECTION "Header", ROM0[$100]
-  jp TestFunc
+  jp SimpleSprite
   ds $150 - @, 0
-SECTION "My Code"
-TestFunc:
-  ld a, $03
+SimpleSprite:
+  ld HL, $C000
+  ld a, $3D
+  ld [HL+], a
+  ld a, $4D
+  ld [HL+], a
