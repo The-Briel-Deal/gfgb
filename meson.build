@@ -30,3 +30,30 @@ cpu_test_exe = executable(
 )
 
 test('cpu tests', cpu_test_exe)
+
+rgbasm = find_program('rgbasm')
+rgblink = find_program('rgblink')
+rgbfix = find_program('rgbfix')
+
+simple_sprite_obj = custom_target('simple_sprite_obj',
+  output : 'simple_sprite.o',
+  input : 'progs/simple_sprite/simple_sprite.asm',
+  command: [rgbasm, '@INPUT@', '-o', '@OUTPUT@'],
+  install : true,
+  install_dir : 'simple_sprite',
+)
+simple_sprite_unfixed_gb = custom_target('simple_sprite_unfixed_gb',
+  output : 'simple_sprite_unfixed.gb',
+  input : simple_sprite_obj,
+  command: [rgblink, '@INPUT@', '-o', '@OUTPUT@'],
+  install : true,
+  install_dir : 'simple_sprite',
+)
+
+simple_sprite_gb = custom_target('simple_sprite_gb',
+  output : 'simple_sprite.gb',
+  input : simple_sprite_unfixed_gb,
+  command: [rgbfix, '-v', '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT@'],
+  install : true,
+  install_dir : 'simple_sprite',
+)
