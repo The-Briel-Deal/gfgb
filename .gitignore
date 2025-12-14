@@ -2,3 +2,5 @@ gb_emu
 *.gb
 *.map
 *.o
+*.bin
+*.png

@@ -38,7 +38,7 @@ rgbfix = find_program('rgbfix')
 simple_sprite_obj = custom_target('simple_sprite_obj',
   output : 'simple_sprite.o',
   input : 'progs/simple_sprite/simple_sprite.asm',
-  command: [rgbasm, '@INPUT@', '-o', '@OUTPUT@'],
+  command: [rgbasm, '-Iprogs/gb_include/', '-Iassets/', '@INPUT@', '-o', '@OUTPUT@'],
   install : true,
   install_dir : 'simple_sprite',
 )
