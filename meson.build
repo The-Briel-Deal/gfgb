@@ -35,10 +35,13 @@ rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
 rgbfix = find_program('rgbfix')
 
+current_src_dir = meson.current_source_dir()
+
+# TODO: Generate asset bin's with meson
 simple_sprite_obj = custom_target('simple_sprite_obj',
   output : 'simple_sprite.o',
   input : 'progs/simple_sprite/simple_sprite.asm',
-  command: [rgbasm, '-Iprogs/gb_include/', '-Iassets/', '@INPUT@', '-o', '@OUTPUT@'],
+  command: [rgbasm, '-I', current_src_dir / 'progs/gb_include/', '-I', current_src_dir / 'assets/', '@INPUT@', '-o', '@OUTPUT@'],
   install : true,
   install_dir : 'simple_sprite',
 )
