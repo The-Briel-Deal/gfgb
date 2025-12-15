@@ -12,10 +12,17 @@ SimpleSprite:
 
   call LCDOff
 
-  ld d, 16
+  ld a, 16
+  push af
+
   ld hl, $9010
+
+
   ld bc, DoggoSprite
+  
   call CopySprite
+
+  pop af
 
   call LCDOn
 
@@ -34,11 +41,13 @@ WaitForVBlank:
 
 
 CopySprite:
-  ld A, [BC]
-  ld [HLI], A
-  inc BC
-  dec D
-  jr NZ, CopySprite
+  ld hl, sp + 1
+  ld d, [hl]
+  ld a, [bc]
+  ld [hli], a
+  inc bc
+  dec d
+  jr nz, CopySprite
   ret
   
 
