@@ -48,7 +48,7 @@ simple_sprite_obj = custom_target('simple_sprite_obj',
 simple_sprite_unfixed_gb = custom_target('simple_sprite_unfixed_gb',
   output : 'simple_sprite_unfixed.gb',
   input : simple_sprite_obj,
-  command: [rgblink, '@INPUT@', '-o', '@OUTPUT@'],
+  command: [rgblink, '@INPUT@', '-o', '@OUTPUT@', '-m', 'simple_sprite.map', '-n', 'simple_sprite.sym'],
   install : true,
   install_dir : 'simple_sprite',
 )
