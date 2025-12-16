@@ -40,6 +40,9 @@ WaitForVBlank:
   ret
 
 
+/* d: the number of bytes to copy, lowest arg stored on stack.
+ * TODO: Store the other arguments on the stack (destination and source addr)
+ */
 CopySprite:
   push hl
   ld hl, sp + 5
