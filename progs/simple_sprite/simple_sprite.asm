@@ -57,6 +57,14 @@ CopySprite:
   ret
   
 
+/* args: 
+ *   addr: The address to start filling at. (goes into HL)
+ *   fill_byte: The byte to fill the memory with. (goes into B)
+ *   len: The number of bytes to fill. (C)
+ * TODO: implement
+ */
+ClearMem:
+
 LCDOff:
   ld a, 0
   ld [rLCDC], a
