@@ -61,7 +61,7 @@ LCDOff:
 
 
 LCDOn:
-  ld a, LCDCF_ON | LCDCF_BGON
+  ld a, LCDCF_ON | LCDCF_BGON | LCDCF_BG9800 | LCDCF_BG8800
   ld [rLCDC], a
   ret
 
