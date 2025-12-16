@@ -41,13 +41,16 @@ WaitForVBlank:
 
 
 CopySprite:
-  ld hl, sp + 1
+  push hl
+  ld hl, sp + 5
   ld d, [hl]
+  pop hl
+  .loop:
   ld a, [bc]
   ld [hli], a
   inc bc
   dec d
-  jr nz, CopySprite
+  jr nz, .loop
   ret
   
 

@@ -1,6 +1,7 @@
 gb_emu
 *.gb
 *.map
+*.sym
 *.o
 *.bin
 *.png
