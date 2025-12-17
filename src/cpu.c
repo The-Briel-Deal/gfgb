@@ -173,7 +173,7 @@ static void print_inst(const struct inst inst) {
   printf("\n");
 }
 
-static void disassemble_rom(FILE *rom) {
+void disassemble_rom(FILE *rom) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
 

@@ -1,35 +1,91 @@
 #include "common.h"
 #include "cpu.h"
+#include <SDL3/SDL_init.h>
+#include <ctype.h>
+#include <stdio.h>
 
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL_main.h>
 
+#include <getopt.h>
+
+enum run_mode {
+  UNSET = 0,
+  EXECUTE,
+  DISASSEMBLE,
+};
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  (void)argc;
-  (void)argv;
-  struct gb_state *gb_state = SDL_malloc(sizeof(struct gb_state));
-  *appstate = gb_state;
-  SDL_assert(appstate != NULL);
-  gb_state_init(*appstate);
-  SDL_SetAppMetadata("Example Renderer Clear", "1.0",
-                     "com.example.renderer-clear");
+  enum run_mode run_mode = UNSET;
 
-  if (!SDL_Init(SDL_INIT_VIDEO)) {
-    SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+  int c;
+  char *filename = NULL;
+
+  while ((c = getopt(argc, argv, "edf:")) != -1)
+    switch (c) {
+    case 'e':
+      if (run_mode != UNSET) {
+        fprintf(stderr,
+                "Option `e` and `d` specified, these are mutually exclusive\n");
+        return 1;
+      }
+      run_mode = EXECUTE;
+      break;
+    case 'd':
+      if (run_mode != UNSET) {
+        fprintf(stderr,
+                "Option `e` and `d` specified, these are mutually exclusive\n");
+        return 1;
+      }
+      run_mode = DISASSEMBLE;
+      break;
+    case 'f': filename = optarg; break;
+    case '?':
+      if (optopt == 'f')
+        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+      else if (isprint(optopt))
+        fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+      else
+        fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+      return 1;
+    default: abort();
+    }
+
+  switch (run_mode) {
+  case EXECUTE: {
+    struct gb_state *gb_state = SDL_malloc(sizeof(struct gb_state));
+    *appstate = gb_state;
+    SDL_assert(appstate != NULL);
+    gb_state_init(*appstate);
+    SDL_SetAppMetadata("GF-GB", "1.0", "com.gf.gameboy-emu");
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+      SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+      return SDL_APP_FAILURE;
+    }
+
+    if (!SDL_CreateWindowAndRenderer(
+            "examples/renderer/clear", 1600, 1440, SDL_WINDOW_RESIZABLE,
+            &gb_state->sdl_window, &gb_state->sdl_renderer)) {
+      SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+      return SDL_APP_FAILURE;
+    }
+    SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    return SDL_APP_CONTINUE; /* carry on with the program! */
+  };
+  case DISASSEMBLE:
+
+    disassemble_rom(fopen(filename, "r"));
+    return SDL_APP_SUCCESS;
+  case UNSET:
+    fprintf(stderr, "Run Mode unset, please specify either `-e` to execute or "
+                    "`-d` to disassemble.\n");
     return SDL_APP_FAILURE;
+  default: return SDL_APP_FAILURE;
   }
-
-  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 1600, 1440,
-                                   SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
-                                   &gb_state->sdl_renderer)) {
-    SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-    return SDL_APP_FAILURE;
-  }
-  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
-  return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
