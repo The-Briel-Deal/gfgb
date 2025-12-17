@@ -27,7 +27,7 @@ SimpleSprite:
   ld bc, _SCRN0 
   push bc
   ; ClearMem - fill byte (f is just padding to keep stack 2 byte aligned)
-  ld a, $00
+  ld a, $01
   push af
   ; ClearMem - len
   ld bc, 32 * 32
@@ -100,13 +100,16 @@ ClearMem:
 
   ld h, d
   ld l, e
+  ld d, a
 
   .loop
+  ld a, d
   ld [hli], a
   dec bc
-  push af
-  cp a, d
-  pop af
+
+  ld a, 0
+  or a, b
+  or a, c
   jr nz, .loop
 
   ret
