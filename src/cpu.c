@@ -156,7 +156,8 @@ struct inst fetch(struct gb_state *gb_state) {
   }
   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4x.",
                curr_byte);
-  return (struct inst){.type = UNKNOWN_INST, .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte)};
+  return (struct inst){.type = UNKNOWN_INST,
+                       .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte)};
 }
 
 #define IS_R16(param)       (param.type == R16)
@@ -169,7 +170,7 @@ static void print_inst(const struct inst inst) {
   switch (inst.type) {
   case NOP: printf("NOP"); break;
   case LD: printf("LD"); break;
-  case UNKNOWN_INST: printf("UNKNOWN"); break;
+  case UNKNOWN_INST: printf("UNKNOWN 0x%.2x", inst.p1.unknown_inst_byte); break;
   }
 
   printf("\n");
