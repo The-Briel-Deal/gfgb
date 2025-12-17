@@ -1,8 +1,6 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
-#include "cpu.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_log.h>
 #include <stdint.h>
