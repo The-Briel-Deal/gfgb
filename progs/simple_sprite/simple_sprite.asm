@@ -17,12 +17,26 @@ SimpleSprite:
 
   ld hl, $9010
 
-
   ld bc, DoggoSprite
   
   call CopySprite
 
   pop af
+
+  ; ClearMem - addr
+  ld bc, _SCRN0 
+  push bc
+  ; ClearMem - fill byte (f is just padding to keep stack 2 byte aligned)
+  ld a, $00
+  push af
+  ; ClearMem - len
+  ld bc, 32 * 32
+  push bc
+
+  call ClearMem
+  pop bc ; ClearMem - addr
+  pop af ; ClearMem - fill byte
+  pop bc ; ClearMem - len
 
   call LCDOn
 
@@ -58,12 +72,44 @@ CopySprite:
   
 
 /* args: 
- *   addr: The address to start filling at. (goes into HL)
- *   fill_byte: The byte to fill the memory with. (goes into B)
- *   len: The number of bytes to fill. (C)
- * TODO: implement
+ *   addr: The address to start filling at. (goes into DE then HL at the end)
+ *   fill byte: The byte to fill the memory with. (goes into A)
+ *   len: The number of bytes to fill. (goes into BC)
  */
 ClearMem:
+  ld hl, sp+2
+
+  ; len -> BC
+  ld a, [hli]
+  ld c, a
+  ld a, [hli]
+  ld b, a
+
+  ; fill byte -> A
+  ld a, [hli] ; padding
+  ld a, [hli]
+  push af
+
+  ; addr -> DE (goes into hl after everything is loaded)
+  ld a, [hli]
+  ld e, a
+  ld a, [hli]
+  ld d, a
+
+  pop af
+
+  ld h, d
+  ld l, e
+
+  .loop
+  ld [hli], a
+  dec bc
+  push af
+  cp a, d
+  pop af
+  jr nz, .loop
+
+  ret
 
 LCDOff:
   ld a, 0
