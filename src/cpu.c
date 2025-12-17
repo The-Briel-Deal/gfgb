@@ -186,6 +186,7 @@ void disassemble_rom(FILE *rom) {
       fread(gb_state.rom0, sizeof(*gb_state.rom0), max_rom_size, rom);
   if (ferror(rom) != 0) abort();
   while (gb_state.regs.pc < size_read) {
+    printf("0x%.4x: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(inst);
   }
