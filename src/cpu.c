@@ -17,6 +17,8 @@
   (struct inst_param) { .type = IMM16, .imm16 = imm }
 #define IMM16_MEM_PARAM(imm)                                                   \
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
+#define UNKNOWN_INST_BYTE_PARAM(b)                                             \
+  (struct inst_param) { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
 
 static inline uint8_t next8(struct gb_state *gb_state) {
   assert(gb_state->regs.pc < sizeof(gb_state->rom0));
@@ -154,7 +156,7 @@ struct inst fetch(struct gb_state *gb_state) {
   }
   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4x.",
                curr_byte);
-  NOT_IMPLEMENTED("Instruction not implemented.");
+  return (struct inst){.type = UNKNOWN_INST, .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte)};
 }
 
 #define IS_R16(param)       (param.type == R16)

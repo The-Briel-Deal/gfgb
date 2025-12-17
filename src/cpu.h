@@ -37,12 +37,14 @@ struct inst_param {
     R16_MEM,
     IMM16,
     IMM16_MEM,
+    UNKNOWN_INST_BYTE,
   } type;
   union {
     enum r8 r8;
     enum r16 r16;
     enum r16_mem r16_mem;
     uint16_t imm16;
+    uint8_t unknown_inst_byte;
   };
 };
 
