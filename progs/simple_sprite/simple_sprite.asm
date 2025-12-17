@@ -1,3 +1,5 @@
+; this rom should show a blank screen with a single background tile of a widdle dog in the fourth column
+
 INCLUDE "hardware.inc"
 
 SECTION "Header", ROM0[$100]
@@ -27,7 +29,7 @@ SimpleSprite:
   ld bc, _SCRN0 
   push bc
   ; ClearMem - fill byte (f is just padding to keep stack 2 byte aligned)
-  ld a, $01
+  ld a, $00
   push af
   ; ClearMem - len
   ld bc, 32 * 32
@@ -37,6 +39,9 @@ SimpleSprite:
   pop bc ; ClearMem - addr
   pop af ; ClearMem - fill byte
   pop bc ; ClearMem - len
+
+  ld hl, $9804
+  ld [hl], 1
 
   call LCDOn
 
