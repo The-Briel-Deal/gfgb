@@ -2,6 +2,7 @@
 #define GB_CPU_H
 
 #include "common.h"
+#include <stdint.h>
 
 enum r8 {
   R8_B = 0,

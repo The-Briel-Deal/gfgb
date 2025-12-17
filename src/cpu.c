@@ -2,6 +2,7 @@
 #include "common.h"
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -170,6 +171,22 @@ static void print_inst(const struct inst inst) {
   }
 
   printf("\n");
+}
+
+static void disassemble_rom(FILE *rom) {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+
+  // 16KB is the size of ROM bank 0 without any banks mapped via the mapper.
+  // TODO: Make this work for mapped banks once they are implemented.
+  uint16_t max_rom_size = KB(16);
+  size_t size_read =
+      fread(gb_state.rom0, sizeof(*gb_state.rom0), max_rom_size, rom);
+  if (ferror(rom) != 0) abort();
+  while (gb_state.regs.pc < size_read) {
+    struct inst inst = fetch(&gb_state);
+    print_inst(inst);
+  }
 }
 
 void ex_ld(struct gb_state *gb_state, struct inst inst) {
