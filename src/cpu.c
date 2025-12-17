@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define R8_PARAM(r)                                                            \
@@ -160,6 +161,16 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_R8(param)        (param.type == R8)
 #define IS_IMM16(param)     (param.type == IMM16)
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
+
+static void print_inst(const struct inst inst) {
+  switch (inst.type) {
+  case NOP: printf("NOP"); break;
+  case LD: printf("LD"); break;
+  case UNKNOWN_INST: printf("UNKNOWN"); break;
+  }
+
+  printf("\n");
+}
 
 void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;

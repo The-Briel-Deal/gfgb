@@ -49,6 +49,7 @@ struct inst {
     // Block 0
     NOP,
     LD,
+    UNKNOWN_INST,
   } type;
   struct inst_param p1;
   struct inst_param p2;
