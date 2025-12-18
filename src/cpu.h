@@ -54,6 +54,7 @@ struct inst {
     // Block 0
     NOP,
     LD,
+    JP,
     UNKNOWN_INST,
   } type;
   struct inst_param p1;

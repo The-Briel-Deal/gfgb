@@ -155,7 +155,11 @@ struct inst fetch(struct gb_state *gb_state) {
     break;
   case 1: break;
   case 2: break;
-  case 3: break;
+  case 3:
+    if (curr_byte == 0b11000011)
+      return (struct inst){
+          .type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+    break;
   }
   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4x.",
                curr_byte);
@@ -189,21 +193,21 @@ static void print_inst_param(const struct inst_param inst_param) {
     return;
   case R16:
   case R16_MEM:
-  case IMM16:
-  case IMM16_MEM:
+  case IMM16: printf(" 0x%.4x", inst_param.imm16); return;
+  case IMM16_MEM: printf(" [0x%.4x]", inst_param.imm16); return;
   case UNKNOWN_INST_BYTE:
-  case VOID_PARAM_TYPE:
+    printf(" 0x%.2x", inst_param.unknown_inst_byte);
     return;
+  case VOID_PARAM_TYPE: return;
   }
 }
 
 static void print_inst(const struct inst inst) {
   switch (inst.type) {
-  case NOP: printf("NOP\n"); return;
+  case NOP: printf("NOP"); break;
   case LD: printf("LD"); break;
-  case UNKNOWN_INST:
-    printf("UNKNOWN 0x%.2x\n", inst.p1.unknown_inst_byte);
-    return;
+  case JP: printf("JP"); break;
+  case UNKNOWN_INST: printf("UNKNOWN"); break;
   }
   print_inst_param(inst.p1);
   print_inst_param(inst.p2);
