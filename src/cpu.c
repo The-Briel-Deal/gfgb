@@ -166,12 +166,41 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16(param)     (param.type == IMM16)
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 
+#define PRINT_ENUM_CASE(enum_case)                                             \
+  case enum_case: printf(" " #enum_case); break;
+
+static void print_inst_param(const struct inst_param inst_param) {
+  switch (inst_param.type) {
+  case R8:
+    switch (inst_param.r8) {
+      PRINT_ENUM_CASE(R8_B)
+      PRINT_ENUM_CASE(R8_C)
+      PRINT_ENUM_CASE(R8_D)
+      PRINT_ENUM_CASE(R8_E)
+      PRINT_ENUM_CASE(R8_H)
+      PRINT_ENUM_CASE(R8_L)
+      PRINT_ENUM_CASE(R8_HL_DREF)
+      PRINT_ENUM_CASE(R8_A)
+    }
+    return;
+  case R16:
+  case R16_MEM:
+  case IMM16:
+  case IMM16_MEM:
+  case UNKNOWN_INST_BYTE:
+  }
+}
+
 static void print_inst(const struct inst inst) {
   switch (inst.type) {
-  case NOP: printf("NOP"); break;
+  case NOP: printf("NOP\n"); return;
   case LD: printf("LD"); break;
-  case UNKNOWN_INST: printf("UNKNOWN 0x%.2x", inst.p1.unknown_inst_byte); break;
+  case UNKNOWN_INST:
+    printf("UNKNOWN 0x%.2x\n", inst.p1.unknown_inst_byte);
+    return;
   }
+  print_inst_param(inst.p1);
+  print_inst_param(inst.p2);
 
   printf("\n");
 }
@@ -179,6 +208,8 @@ static void print_inst(const struct inst inst) {
 void disassemble_rom(FILE *rom) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
+  // PC should start at 0 since we want to read the entire rom
+  gb_state.regs.pc = 0;
 
   // 16KB is the size of ROM bank 0 without any banks mapped via the mapper.
   // TODO: Make this work for mapped banks once they are implemented.
