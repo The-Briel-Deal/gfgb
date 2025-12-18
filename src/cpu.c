@@ -19,6 +19,8 @@
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
 #define UNKNOWN_INST_BYTE_PARAM(b)                                             \
   (struct inst_param) { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
+#define VOID_PARAM                                                             \
+  (struct inst_param) { .type = VOID_PARAM_TYPE }
 
 static inline uint8_t next8(struct gb_state *gb_state) {
   assert(gb_state->regs.pc < sizeof(gb_state->rom0));
@@ -120,7 +122,8 @@ struct inst fetch(struct gb_state *gb_state) {
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
   case 0:
-    if (curr_byte == 0b00000000) return (struct inst){.type = NOP};
+    if (curr_byte == 0b00000000)
+      return (struct inst){.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     switch (NIBBLE1(curr_byte)) {
     case 0b0001:
       return (struct inst){
@@ -157,7 +160,8 @@ struct inst fetch(struct gb_state *gb_state) {
   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4x.",
                curr_byte);
   return (struct inst){.type = UNKNOWN_INST,
-                       .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte)};
+                       .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte),
+                       .p2 = VOID_PARAM};
 }
 
 #define IS_R16(param)       (param.type == R16)
@@ -188,6 +192,8 @@ static void print_inst_param(const struct inst_param inst_param) {
   case IMM16:
   case IMM16_MEM:
   case UNKNOWN_INST_BYTE:
+  case VOID_PARAM_TYPE:
+    return;
   }
 }
 

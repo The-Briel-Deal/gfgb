@@ -38,6 +38,7 @@ struct inst_param {
     IMM16,
     IMM16_MEM,
     UNKNOWN_INST_BYTE,
+    VOID_PARAM_TYPE,
   } type;
   union {
     enum r8 r8;
