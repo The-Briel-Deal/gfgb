@@ -219,7 +219,7 @@ void disassemble_rom(FILE *rom) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   // PC should start at 0 since we want to read the entire rom
-  gb_state.regs.pc = 0;
+  gb_state.regs.pc = 0x150;
 
   // 16KB is the size of ROM bank 0 without any banks mapped via the mapper.
   // TODO: Make this work for mapped banks once they are implemented.

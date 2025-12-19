@@ -6,7 +6,6 @@ SECTION "Header", ROM0[$100]
   JP SimpleSprite
   DS $150 - @, 0
 
-SECTION "Game", ROM0[$150]
 SimpleSprite:
   ; Shut down audio circuitry
   ld a, 0
