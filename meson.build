@@ -43,16 +43,12 @@ doggo_png = custom_target('doggo_png',
   output : 'doggo.png',
   input : 'assets/doggo.aseprite',
   command : [aseprite, '@INPUT@', '--save-as=@OUTPUT@', '--batch'],
-  install : true,
-  install_dir : 'simple_sprite',
 )
 
 doggo_bin = custom_target('doggo_bin',
   output : 'doggo.bin',
   input : doggo_png,
   command : [rgbgfx, '@INPUT@', '-o', '@OUTPUT@'],
-  install : true,
-  install_dir : 'simple_sprite',
 )
 
 simple_sprite_obj = custom_target('simple_sprite_obj',
@@ -60,16 +56,12 @@ simple_sprite_obj = custom_target('simple_sprite_obj',
   input : 'progs/simple_sprite/simple_sprite.asm',
   depends : doggo_bin,
   command : [rgbasm, '-I', current_src_dir / 'progs/gb_include/', '@INPUT@', '-o', '@OUTPUT@'],
-  install : true,
-  install_dir : 'simple_sprite',
 )
 
 simple_sprite_unfixed_gb = custom_target('simple_sprite_unfixed_gb',
   output : 'simple_sprite_unfixed.gb',
   input : simple_sprite_obj,
   command : [rgblink, '@INPUT@', '-o', '@OUTPUT@', '-m', 'simple_sprite.map', '-n', 'simple_sprite.sym'],
-  install : true,
-  install_dir : 'simple_sprite',
 )
 
 simple_sprite_gb = custom_target('simple_sprite_gb',
