@@ -34,21 +34,31 @@ test('cpu tests', cpu_test_exe)
 rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
 rgbfix = find_program('rgbfix')
+rgbgfx = find_program('rgbgfx')
 
 current_src_dir = meson.current_source_dir()
 
-# TODO: Generate asset bin's with meson
-simple_sprite_obj = custom_target('simple_sprite_obj',
-  output : 'simple_sprite.o',
-  input : 'progs/simple_sprite/simple_sprite.asm',
-  command: [rgbasm, '-I', current_src_dir / 'progs/gb_include/', '-I', current_src_dir / 'assets/', '@INPUT@', '-o', '@OUTPUT@'],
+doggo_bin = custom_target('doggo_bin',
+  output : 'doggo.bin',
+  input : 'assets/doggo.png',
+  command : [rgbgfx, '@INPUT@', '-o', '@OUTPUT@'],
   install : true,
   install_dir : 'simple_sprite',
 )
+
+simple_sprite_obj = custom_target('simple_sprite_obj',
+  output : 'simple_sprite.o',
+  input : 'progs/simple_sprite/simple_sprite.asm',
+  depends : doggo_bin,
+  command : [rgbasm, '-I', current_src_dir / 'progs/gb_include/', '@INPUT@', '-o', '@OUTPUT@'],
+  install : true,
+  install_dir : 'simple_sprite',
+)
+
 simple_sprite_unfixed_gb = custom_target('simple_sprite_unfixed_gb',
   output : 'simple_sprite_unfixed.gb',
   input : simple_sprite_obj,
-  command: [rgblink, '@INPUT@', '-o', '@OUTPUT@', '-m', 'simple_sprite.map', '-n', 'simple_sprite.sym'],
+  command : [rgblink, '@INPUT@', '-o', '@OUTPUT@', '-m', 'simple_sprite.map', '-n', 'simple_sprite.sym'],
   install : true,
   install_dir : 'simple_sprite',
 )
@@ -56,7 +66,7 @@ simple_sprite_unfixed_gb = custom_target('simple_sprite_unfixed_gb',
 simple_sprite_gb = custom_target('simple_sprite_gb',
   output : 'simple_sprite.gb',
   input : simple_sprite_unfixed_gb,
-  command: [rgbfix, '-v', '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT@'],
+  command : [rgbfix, '-v', '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT@'],
   install : true,
   install_dir : 'simple_sprite',
 )
