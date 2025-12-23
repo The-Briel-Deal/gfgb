@@ -76,10 +76,19 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
     return SDL_APP_CONTINUE; /* carry on with the program! */
   };
-  case DISASSEMBLE:
+  case DISASSEMBLE: {
+    FILE *f;
 
-    disassemble_rom(fopen(filename, "r"));
+    f = fopen(filename, "r");
+    uint8_t bytes[KB(16)];
+
+    int len = fread(bytes, sizeof(uint8_t), KB(16), f);
+    if (ferror(f)) return SDL_APP_FAILURE;
+    fclose(f);
+    disassemble_rom(bytes, len);
+
     return SDL_APP_SUCCESS;
+  }
   case UNSET:
     fprintf(stderr, "Run Mode unset, please specify either `-e` to execute or "
                     "`-d` to disassemble.\n");

@@ -215,19 +215,12 @@ static void print_inst(const struct inst inst) {
   printf("\n");
 }
 
-void disassemble_rom(FILE *rom) {
+void disassemble_rom(uint8_t *rom_bytes, int rom_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
-  // PC should start at 0 since we want to read the entire rom
-  gb_state.regs.pc = 0x150;
+  memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
 
-  // 16KB is the size of ROM bank 0 without any banks mapped via the mapper.
-  // TODO: Make this work for mapped banks once they are implemented.
-  uint16_t max_rom_size = KB(16);
-  size_t size_read =
-      fread(gb_state.rom0, sizeof(*gb_state.rom0), max_rom_size, rom);
-  if (ferror(rom) != 0) abort();
-  while (gb_state.regs.pc < size_read) {
+  while (gb_state.regs.pc < rom_bytes_len) {
     printf("0x%.4x: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(inst);
@@ -382,6 +375,15 @@ void test_execute_load() {
   assert(gb_state.regs.sp == 0xD123);
   assert(read_mem16(&gb_state, 0xC010) == 0xD123);
 }
+
+static const unsigned char _test_disasm_section[] = {
+    0x3e, 0x00, 0xea, 0x26, 0xff, 0xcd, 0x89, 0x01, 0xcd, 0xb9, 0x01, 0x3e,
+    0x10, 0xf5, 0x21, 0x10, 0x90, 0x01, 0xc8, 0x01, 0xcd, 0x92, 0x01, 0xf1,
+    0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd,
+    0x9e, 0x01, 0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf,
+    0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
+static const unsigned int _test_disasm_section_len = 57;
+void test_disasm() {}
 
 void test_execute() { test_execute_load(); }
 
