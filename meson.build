@@ -49,7 +49,7 @@ doggo_png = custom_target('doggo_png',
 
 doggo_bin = custom_target('doggo_bin',
   output : 'doggo.bin',
-  input : 'assets/doggo.png',
+  input : doggo_png,
   command : [rgbgfx, '@INPUT@', '-o', '@OUTPUT@'],
   install : true,
   install_dir : 'simple_sprite',
