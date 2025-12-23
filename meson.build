@@ -35,8 +35,17 @@ rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
 rgbfix = find_program('rgbfix')
 rgbgfx = find_program('rgbgfx')
+aseprite = find_program('aseprite')
 
 current_src_dir = meson.current_source_dir()
+
+doggo_png = custom_target('doggo_png',
+  output : 'doggo.png',
+  input : 'assets/doggo.aseprite',
+  command : [aseprite, '@INPUT@', '--save-as=@OUTPUT@', '--batch'],
+  install : true,
+  install_dir : 'simple_sprite',
+)
 
 doggo_bin = custom_target('doggo_bin',
   output : 'doggo.bin',
