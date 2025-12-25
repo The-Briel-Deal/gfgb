@@ -85,7 +85,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     int len = fread(bytes, sizeof(uint8_t), KB(16), f);
     if (ferror(f)) return SDL_APP_FAILURE;
     fclose(f);
-    disassemble_rom(bytes, len);
+    disassemble_rom(stdout, bytes, len);
 
     return SDL_APP_SUCCESS;
   }

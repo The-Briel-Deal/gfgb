@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include <stdint.h>
+#include <stdio.h>
 
 enum r8 {
   R8_B = 0,
@@ -60,7 +61,8 @@ struct inst {
   struct inst_param p2;
 };
 
-void disassemble_rom(uint8_t *rom_bytes, int rom_bytes_len);
+void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
+                     const int rom_bytes_len);
 struct inst fetch(struct gb_state *gb_state);
 void execute(struct gb_state *gb_state, struct inst inst);
 

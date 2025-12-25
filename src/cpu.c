@@ -175,9 +175,9 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
-  case enum_case: printf(" " #enum_case); break;
+  case enum_case: fprintf(stream, " " #enum_case); break;
 
-static void print_inst_param(const struct inst_param inst_param) {
+static void print_inst_param(FILE *stream, const struct inst_param inst_param) {
   switch (inst_param.type) {
   case R8:
     switch (inst_param.r8) {
@@ -193,37 +193,38 @@ static void print_inst_param(const struct inst_param inst_param) {
     return;
   case R16:
   case R16_MEM:
-  case IMM16: printf(" 0x%.4x", inst_param.imm16); return;
-  case IMM16_MEM: printf(" [0x%.4x]", inst_param.imm16); return;
+  case IMM16: fprintf(stream, " 0x%.4x", inst_param.imm16); return;
+  case IMM16_MEM: fprintf(stream, " [0x%.4x]", inst_param.imm16); return;
   case UNKNOWN_INST_BYTE:
-    printf(" 0x%.2x", inst_param.unknown_inst_byte);
+    fprintf(stream, " 0x%.2x", inst_param.unknown_inst_byte);
     return;
   case VOID_PARAM_TYPE: return;
   }
 }
 
-static void print_inst(const struct inst inst) {
+static void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
-  case NOP: printf("NOP"); break;
-  case LD: printf("LD"); break;
-  case JP: printf("JP"); break;
-  case UNKNOWN_INST: printf("UNKNOWN"); break;
+  case NOP: fprintf(stream, "NOP"); break;
+  case LD: fprintf(stream, "LD"); break;
+  case JP: fprintf(stream, "JP"); break;
+  case UNKNOWN_INST: fprintf(stream, "UNKNOWN"); break;
   }
-  print_inst_param(inst.p1);
-  print_inst_param(inst.p2);
+  print_inst_param(stream, inst.p1);
+  print_inst_param(stream, inst.p2);
 
-  printf("\n");
+  fprintf(stream, "\n");
 }
 
-void disassemble_rom(uint8_t *rom_bytes, int rom_bytes_len) {
+void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
+                     const int rom_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
 
   while (gb_state.regs.pc < rom_bytes_len) {
-    printf("0x%.4x: ", gb_state.regs.pc);
+    fprintf(stream, "0x%.4x: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
-    print_inst(inst);
+    print_inst(stream, inst);
   }
 }
 
@@ -376,14 +377,64 @@ void test_execute_load() {
   assert(read_mem16(&gb_state, 0xC010) == 0xD123);
 }
 
+/*
+ *** This below test data corresponds to this portion of the SimpleSprite rom.
+ * SimpleSprite:
+ *   ; Shut down audio circuitry
+ *   ld a, 0
+ *   ld [rNR52], a
+ *   call WaitForVBlank
+ *
+ *   call LCDOff
+ *
+ *   ld a, 16
+ *   push af
+ *
+ *   ld hl, $9010
+ *
+ *   ld bc, DoggoSprite
+ *
+ *   call CopySprite
+ *
+ *   pop af
+ *
+ *   ; ClearMem - addr
+ *   ld bc, _SCRN0
+ *   push bc
+ *   ; ClearMem - fill byte (f is just padding to keep stack 2 byte aligned)
+ *   ld a, $00
+ *   push af
+ *   ; ClearMem - len
+ *   ld bc, 32 * 32
+ *   push bc
+ *
+ *   call ClearMem
+ *   pop bc ; ClearMem - addr
+ *   pop af ; ClearMem - fill byte
+ *   pop bc ; ClearMem - len
+ *
+ *   ld hl, $9804
+ *   ld [hl], 1
+ *
+ *   call LCDOn
+ *
+ *   ; During the first (blank) frame, initialize display registers
+ *   ld a, %11100100
+ *   ld [rBGP], a
+ *
+ *   call Done
+ */
 static const unsigned char _test_disasm_section[] = {
     0x3e, 0x00, 0xea, 0x26, 0xff, 0xcd, 0x89, 0x01, 0xcd, 0xb9, 0x01, 0x3e,
     0x10, 0xf5, 0x21, 0x10, 0x90, 0x01, 0xc8, 0x01, 0xcd, 0x92, 0x01, 0xf1,
     0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd,
     0x9e, 0x01, 0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf,
     0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
-static const unsigned int _test_disasm_section_len = 57;
-void test_disasm() {}
+static const unsigned int _test_disasm_section_len =
+    sizeof(_test_disasm_section);
+void test_disasm() {
+  disassemble_rom(stdout, _test_disasm_section, _test_disasm_section_len);
+}
 
 void test_execute() { test_execute_load(); }
 
