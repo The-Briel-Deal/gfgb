@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define R8_PARAM(r)                                                            \
   (struct inst_param) { .type = R8, .r8 = r }
@@ -215,6 +216,7 @@ static void print_inst(FILE *stream, const struct inst inst) {
   fprintf(stream, "\n");
 }
 
+// copies rom to the start of memory and start disassembly at 0x100 since the boot rom goes before that.
 void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
                      const int rom_bytes_len) {
   struct gb_state gb_state;
@@ -222,6 +224,20 @@ void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
   memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
 
   while (gb_state.regs.pc < rom_bytes_len) {
+    fprintf(stream, "0x%.4x: ", gb_state.regs.pc);
+    struct inst inst = fetch(&gb_state);
+    print_inst(stream, inst);
+  }
+}
+// copies rom to the start of memory and start disassembly at 0x0 since we're just looking at 1 section.
+void disassemble_section(FILE *stream, const uint8_t *section_bytes,
+                     const int section_bytes_len) {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+  gb_state.regs.pc = 0;
+  memcpy(gb_state.rom0, section_bytes, section_bytes_len);
+
+  while (gb_state.regs.pc < section_bytes_len) {
     fprintf(stream, "0x%.4x: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(stream, inst);
@@ -430,10 +446,27 @@ static const unsigned char _test_disasm_section[] = {
     0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd,
     0x9e, 0x01, 0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf,
     0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
-static const unsigned int _test_disasm_section_len =
-    sizeof(_test_disasm_section);
+static const int _test_disasm_section_len = sizeof(_test_disasm_section);
+
+static const char _test_expected_disasm_output[] = "";
+static const int _test_expected_disasm_output_len =
+    sizeof(_test_expected_disasm_output);
 void test_disasm() {
-  disassemble_rom(stdout, _test_disasm_section, _test_disasm_section_len);
+  FILE *stream = tmpfile();
+  char buf[KB(10)];
+  disassemble_section(stream, _test_disasm_section, _test_disasm_section_len);
+  rewind(stream);
+  int bytes_read = fread(buf, sizeof(*buf), sizeof(buf), stream);
+  fprintf(stderr, "bytes read %d\n", bytes_read);
+  assert(ferror(stream) == 0);
+  assert(feof(stream) != 0);
+  fclose(stream);
+  if (_test_expected_disasm_output_len != bytes_read ||
+      strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
+    fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n",
+            _test_expected_disasm_output, bytes_read, buf);
+    abort();
+  }
 }
 
 void test_execute() { test_execute_load(); }
@@ -444,6 +477,9 @@ int main() {
   test_fetch();
   SDL_Log("running `test_execute()`");
   test_execute();
+  SDL_Log("CPU tests succeeded.");
+  SDL_Log("running `test_disasm()`");
+  test_disasm();
   SDL_Log("CPU tests succeeded.");
   SDL_Quit();
 }
