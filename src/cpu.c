@@ -167,9 +167,13 @@ struct inst fetch(struct gb_state *gb_state) {
     if (curr_byte == 0b11000011)
       return (struct inst){
           .type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+
+    if (curr_byte == 0b11101010)
+      return (struct inst){
+          .type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), R8_PARAM(R8_A)};
     break;
   }
-  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4x.",
+  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4X.",
                curr_byte);
   return (struct inst){.type = UNKNOWN_INST,
                        .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte),
@@ -216,11 +220,11 @@ static void print_inst_param(char *inst_param_str,
       PRINT_ENUM_CASE(R16_MEM_HLD)
     }
     break;
-  case IMM8: sprintf(inst_param_str, "0x%.2x", inst_param.imm8); break;
-  case IMM16: sprintf(inst_param_str, "0x%.4x", inst_param.imm16); break;
-  case IMM16_MEM: sprintf(inst_param_str, "[0x%.4x]", inst_param.imm16); break;
+  case IMM8: sprintf(inst_param_str, "0x%.2X", inst_param.imm8); break;
+  case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
+  case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
   case UNKNOWN_INST_BYTE:
-    sprintf(inst_param_str, "0x%.2x", inst_param.unknown_inst_byte);
+    sprintf(inst_param_str, "0x%.2X", inst_param.unknown_inst_byte);
     break;
   case VOID_PARAM_TYPE: sprintf(inst_param_str, "(void)"); break;
   }
@@ -254,7 +258,7 @@ void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
   memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
 
   while (gb_state.regs.pc < rom_bytes_len) {
-    fprintf(stream, "0x%.4x: ", gb_state.regs.pc);
+    fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(stream, inst);
   }
@@ -269,7 +273,7 @@ void disassemble_section(FILE *stream, const uint8_t *section_bytes,
   memcpy(gb_state.rom0, section_bytes, section_bytes_len);
 
   while (gb_state.regs.pc < section_bytes_len) {
-    fprintf(stream, "0x%.4x: ", gb_state.regs.pc);
+    fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(stream, inst);
   }
@@ -481,39 +485,36 @@ static const int _test_disasm_section_len = sizeof(_test_disasm_section);
 
 static const char _test_expected_disasm_output[] =
     "0x0000: LD        R8_A        0x00\n"
-    "0x0002: UNKNOWN   0xea        (void)\n"
-    "0x0003: LD        R8_H        0xff\n"
-    "0x0005: UNKNOWN   0xcd        (void)\n"
+    "0x0002: LD        [0xFF26]    R8_A\n"
+    "0x0005: UNKNOWN   0xCD        (void)\n"
     "0x0006: UNKNOWN   0x89        (void)\n"
-    "0x0007: LD        R16_BC      0xb9cd\n"
-    "0x000a: LD        R16_BC      0x103e\n"
-    "0x000d: UNKNOWN   0xf5        (void)\n"
-    "0x000e: LD        R16_HL      0x9010\n"
-    "0x0011: LD        R16_BC      0x01c8\n"
-    "0x0014: UNKNOWN   0xcd        (void)\n"
+    "0x0007: LD        R16_BC      0xB9CD\n"
+    "0x000A: LD        R16_BC      0x103E\n"
+    "0x000D: UNKNOWN   0xF5        (void)\n"
+    "0x000E: LD        R16_HL      0x9010\n"
+    "0x0011: LD        R16_BC      0x01C8\n"
+    "0x0014: UNKNOWN   0xCD        (void)\n"
     "0x0015: UNKNOWN   0x92        (void)\n"
-    "0x0016: LD        R16_BC      0x01f1\n"
+    "0x0016: LD        R16_BC      0x01F1\n"
     "0x0019: NOP       (void)      (void)\n"
-    "0x001a: UNKNOWN   0x98        (void)\n"
-    "0x001b: UNKNOWN   0xc5        (void)\n"
-    "0x001c: LD        R8_A        0x00\n"
-    "0x001e: UNKNOWN   0xf5        (void)\n"
-    "0x001f: LD        R16_BC      0x0400\n"
-    "0x0022: UNKNOWN   0xc5        (void)\n"
-    "0x0023: UNKNOWN   0xcd        (void)\n"
-    "0x0024: UNKNOWN   0x9e        (void)\n"
-    "0x0025: LD        R16_BC      0xf1c1\n"
-    "0x0028: UNKNOWN   0xc1        (void)\n"
+    "0x001A: UNKNOWN   0x98        (void)\n"
+    "0x001B: UNKNOWN   0xC5        (void)\n"
+    "0x001C: LD        R8_A        0x00\n"
+    "0x001E: UNKNOWN   0xF5        (void)\n"
+    "0x001F: LD        R16_BC      0x0400\n"
+    "0x0022: UNKNOWN   0xC5        (void)\n"
+    "0x0023: UNKNOWN   0xCD        (void)\n"
+    "0x0024: UNKNOWN   0x9E        (void)\n"
+    "0x0025: LD        R16_BC      0xF1C1\n"
+    "0x0028: UNKNOWN   0xC1        (void)\n"
     "0x0029: LD        R16_HL      0x9804\n"
-    "0x002c: LD        R8_HL_DREF  0x01\n"
-    "0x002e: UNKNOWN   0xcd        (void)\n"
-    "0x002f: UNKNOWN   0xbf        (void)\n"
-    "0x0030: LD        R16_BC      0xe43e\n"
-    "0x0033: UNKNOWN   0xea        (void)\n"
-    "0x0034: UNKNOWN   0x47        (void)\n"
-    "0x0035: UNKNOWN   0xff        (void)\n"
-    "0x0036: UNKNOWN   0xcd        (void)\n"
-    "0x0037: UNKNOWN   0xc5        (void)\n"
+    "0x002C: LD        R8_HL_DREF  0x01\n"
+    "0x002E: UNKNOWN   0xCD        (void)\n"
+    "0x002F: UNKNOWN   0xBF        (void)\n"
+    "0x0030: LD        R16_BC      0xE43E\n"
+    "0x0033: LD        [0xFF47]    R8_A\n"
+    "0x0036: UNKNOWN   0xCD        (void)\n"
+    "0x0037: UNKNOWN   0xC5        (void)\n"
     "0x0038: LD        R16_BC      0x0000\n";
 
 static const int _test_expected_disasm_output_len =
