@@ -183,9 +183,10 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
-  case enum_case: fprintf(stream, " " #enum_case); break;
+  case enum_case: sprintf(inst_param_str, "%s", #enum_case); break;
 
-static void print_inst_param(FILE *stream, const struct inst_param inst_param) {
+static void print_inst_param(char *inst_param_str,
+                             const struct inst_param inst_param) {
   switch (inst_param.type) {
   case R8:
     switch (inst_param.r8) {
@@ -198,7 +199,7 @@ static void print_inst_param(FILE *stream, const struct inst_param inst_param) {
       PRINT_ENUM_CASE(R8_HL_DREF)
       PRINT_ENUM_CASE(R8_A)
     }
-    return;
+    break;
   case R16:
     switch (inst_param.r16) {
       PRINT_ENUM_CASE(R16_BC)
@@ -206,7 +207,7 @@ static void print_inst_param(FILE *stream, const struct inst_param inst_param) {
       PRINT_ENUM_CASE(R16_HL)
       PRINT_ENUM_CASE(R16_SP)
     }
-    return;
+    break;
   case R16_MEM:
     switch (inst_param.r16_mem) {
       PRINT_ENUM_CASE(R16_MEM_BC)
@@ -214,29 +215,35 @@ static void print_inst_param(FILE *stream, const struct inst_param inst_param) {
       PRINT_ENUM_CASE(R16_MEM_HLI)
       PRINT_ENUM_CASE(R16_MEM_HLD)
     }
-    return; // TODO
-  case IMM8: fprintf(stream, " 0x%.2x", inst_param.imm8); return;
-  case IMM16: fprintf(stream, " 0x%.4x", inst_param.imm16); return;
-  case IMM16_MEM: fprintf(stream, " [0x%.4x]", inst_param.imm16); return;
+    break;
+  case IMM8: sprintf(inst_param_str, "0x%.2x", inst_param.imm8); break;
+  case IMM16: sprintf(inst_param_str, "0x%.4x", inst_param.imm16); break;
+  case IMM16_MEM: sprintf(inst_param_str, "[0x%.4x]", inst_param.imm16); break;
   case UNKNOWN_INST_BYTE:
-    fprintf(stream, " 0x%.2x", inst_param.unknown_inst_byte);
-    return;
-  case VOID_PARAM_TYPE: return;
+    sprintf(inst_param_str, "0x%.2x", inst_param.unknown_inst_byte);
+    break;
+  case VOID_PARAM_TYPE: sprintf(inst_param_str, "(void)"); break;
   }
 }
+#undef PRINT_ENUM_CASE
+
+#define PRINT_INST_NAME(stream, inst_name) fprintf(stream, "%-10s", inst_name)
 
 static void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
-  case NOP: fprintf(stream, "NOP"); break;
-  case LD: fprintf(stream, "LD"); break;
-  case JP: fprintf(stream, "JP"); break;
-  case UNKNOWN_INST: fprintf(stream, "UNKNOWN"); break;
+  case NOP: PRINT_INST_NAME(stream, "NOP"); break;
+  case LD: PRINT_INST_NAME(stream, "LD"); break;
+  case JP: PRINT_INST_NAME(stream, "JP"); break;
+  case UNKNOWN_INST: PRINT_INST_NAME(stream, "UNKNOWN"); break;
   }
-  print_inst_param(stream, inst.p1);
-  print_inst_param(stream, inst.p2);
-
-  fprintf(stream, "\n");
+  char inst_param_str[16];
+  print_inst_param(inst_param_str, inst.p1);
+  fprintf(stream, "%-12s", inst_param_str);
+  print_inst_param(inst_param_str, inst.p2);
+  fprintf(stream, "%s\n", inst_param_str);
 }
+
+#undef PRINT_INST_NAME
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
@@ -473,41 +480,41 @@ static const unsigned char _test_disasm_section[] = {
 static const int _test_disasm_section_len = sizeof(_test_disasm_section);
 
 static const char _test_expected_disasm_output[] =
-    "0x0000: LD R8_A 0x00\n"
-    "0x0002: UNKNOWN 0xea\n"
-    "0x0003: LD R8_H 0xff\n"
-    "0x0005: UNKNOWN 0xcd\n"
-    "0x0006: UNKNOWN 0x89\n"
-    "0x0007: LD R16_BC 0xb9cd\n"
-    "0x000a: LD R16_BC 0x103e\n"
-    "0x000d: UNKNOWN 0xf5\n"
-    "0x000e: LD R16_HL 0x9010\n"
-    "0x0011: LD R16_BC 0x01c8\n"
-    "0x0014: UNKNOWN 0xcd\n"
-    "0x0015: UNKNOWN 0x92\n"
-    "0x0016: LD R16_BC 0x01f1\n"
-    "0x0019: NOP\n"
-    "0x001a: UNKNOWN 0x98\n"
-    "0x001b: UNKNOWN 0xc5\n"
-    "0x001c: LD R8_A 0x00\n"
-    "0x001e: UNKNOWN 0xf5\n"
-    "0x001f: LD R16_BC 0x0400\n"
-    "0x0022: UNKNOWN 0xc5\n"
-    "0x0023: UNKNOWN 0xcd\n"
-    "0x0024: UNKNOWN 0x9e\n"
-    "0x0025: LD R16_BC 0xf1c1\n"
-    "0x0028: UNKNOWN 0xc1\n"
-    "0x0029: LD R16_HL 0x9804\n"
-    "0x002c: LD R8_HL_DREF 0x01\n"
-    "0x002e: UNKNOWN 0xcd\n"
-    "0x002f: UNKNOWN 0xbf\n"
-    "0x0030: LD R16_BC 0xe43e\n"
-    "0x0033: UNKNOWN 0xea\n"
-    "0x0034: UNKNOWN 0x47\n"
-    "0x0035: UNKNOWN 0xff\n"
-    "0x0036: UNKNOWN 0xcd\n"
-    "0x0037: UNKNOWN 0xc5\n"
-    "0x0038: LD R16_BC 0x0000\n";
+    "0x0000: LD        R8_A        0x00\n"
+    "0x0002: UNKNOWN   0xea        (void)\n"
+    "0x0003: LD        R8_H        0xff\n"
+    "0x0005: UNKNOWN   0xcd        (void)\n"
+    "0x0006: UNKNOWN   0x89        (void)\n"
+    "0x0007: LD        R16_BC      0xb9cd\n"
+    "0x000a: LD        R16_BC      0x103e\n"
+    "0x000d: UNKNOWN   0xf5        (void)\n"
+    "0x000e: LD        R16_HL      0x9010\n"
+    "0x0011: LD        R16_BC      0x01c8\n"
+    "0x0014: UNKNOWN   0xcd        (void)\n"
+    "0x0015: UNKNOWN   0x92        (void)\n"
+    "0x0016: LD        R16_BC      0x01f1\n"
+    "0x0019: NOP       (void)      (void)\n"
+    "0x001a: UNKNOWN   0x98        (void)\n"
+    "0x001b: UNKNOWN   0xc5        (void)\n"
+    "0x001c: LD        R8_A        0x00\n"
+    "0x001e: UNKNOWN   0xf5        (void)\n"
+    "0x001f: LD        R16_BC      0x0400\n"
+    "0x0022: UNKNOWN   0xc5        (void)\n"
+    "0x0023: UNKNOWN   0xcd        (void)\n"
+    "0x0024: UNKNOWN   0x9e        (void)\n"
+    "0x0025: LD        R16_BC      0xf1c1\n"
+    "0x0028: UNKNOWN   0xc1        (void)\n"
+    "0x0029: LD        R16_HL      0x9804\n"
+    "0x002c: LD        R8_HL_DREF  0x01\n"
+    "0x002e: UNKNOWN   0xcd        (void)\n"
+    "0x002f: UNKNOWN   0xbf        (void)\n"
+    "0x0030: LD        R16_BC      0xe43e\n"
+    "0x0033: UNKNOWN   0xea        (void)\n"
+    "0x0034: UNKNOWN   0x47        (void)\n"
+    "0x0035: UNKNOWN   0xff        (void)\n"
+    "0x0036: UNKNOWN   0xcd        (void)\n"
+    "0x0037: UNKNOWN   0xc5        (void)\n"
+    "0x0038: LD        R16_BC      0x0000\n";
 
 static const int _test_expected_disasm_output_len =
     sizeof(_test_expected_disasm_output);
