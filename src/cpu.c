@@ -216,7 +216,8 @@ static void print_inst(FILE *stream, const struct inst inst) {
   fprintf(stream, "\n");
 }
 
-// copies rom to the start of memory and start disassembly at 0x100 since the boot rom goes before that.
+// copies rom to the start of memory and start disassembly at 0x100 since the
+// boot rom goes before that.
 void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
                      const int rom_bytes_len) {
   struct gb_state gb_state;
@@ -229,9 +230,10 @@ void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
     print_inst(stream, inst);
   }
 }
-// copies rom to the start of memory and start disassembly at 0x0 since we're just looking at 1 section.
+// copies rom to the start of memory and start disassembly at 0x0 since we're
+// just looking at 1 section.
 void disassemble_section(FILE *stream, const uint8_t *section_bytes,
-                     const int section_bytes_len) {
+                         const int section_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   gb_state.regs.pc = 0;
@@ -448,7 +450,43 @@ static const unsigned char _test_disasm_section[] = {
     0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
 static const int _test_disasm_section_len = sizeof(_test_disasm_section);
 
-static const char _test_expected_disasm_output[] = "";
+static const char _test_expected_disasm_output[] = "0x0000: UNKNOWN 0x3e\n"
+                                                   "0x0001: NOP\n"
+                                                   "0x0002: UNKNOWN 0xea\n"
+                                                   "0x0003: UNKNOWN 0x26\n"
+                                                   "0x0004: UNKNOWN 0xff\n"
+                                                   "0x0005: UNKNOWN 0xcd\n"
+                                                   "0x0006: UNKNOWN 0x89\n"
+                                                   "0x0007: LD 0x0000 0xb9cd\n"
+                                                   "0x000a: LD 0x0000 0x103e\n"
+                                                   "0x000d: UNKNOWN 0xf5\n"
+                                                   "0x000e: LD 0x0002 0x9010\n"
+                                                   "0x0011: LD 0x0000 0x01c8\n"
+                                                   "0x0014: UNKNOWN 0xcd\n"
+                                                   "0x0015: UNKNOWN 0x92\n"
+                                                   "0x0016: LD 0x0000 0x01f1\n"
+                                                   "0x0019: NOP\n"
+                                                   "0x001a: UNKNOWN 0x98\n"
+                                                   "0x001b: UNKNOWN 0xc5\n"
+                                                   "0x001c: UNKNOWN 0x3e\n"
+                                                   "0x001d: NOP\n"
+                                                   "0x001e: UNKNOWN 0xf5\n"
+                                                   "0x001f: LD 0x0000 0x0400\n"
+                                                   "0x0022: UNKNOWN 0xc5\n"
+                                                   "0x0023: UNKNOWN 0xcd\n"
+                                                   "0x0024: UNKNOWN 0x9e\n"
+                                                   "0x0025: LD 0x0000 0xf1c1\n"
+                                                   "0x0028: UNKNOWN 0xc1\n"
+                                                   "0x0029: LD 0x0002 0x9804\n"
+                                                   "0x002c: UNKNOWN 0x36\n"
+                                                   "0x002d: LD 0x0000 0xbfcd\n"
+                                                   "0x0030: LD 0x0000 0xe43e\n"
+                                                   "0x0033: UNKNOWN 0xea\n"
+                                                   "0x0034: UNKNOWN 0x47\n"
+                                                   "0x0035: UNKNOWN 0xff\n"
+                                                   "0x0036: UNKNOWN 0xcd\n"
+                                                   "0x0037: UNKNOWN 0xc5\n"
+                                                   "0x0038: LD 0x0000 0x0000\n";
 static const int _test_expected_disasm_output_len =
     sizeof(_test_expected_disasm_output);
 void test_disasm() {
@@ -461,7 +499,7 @@ void test_disasm() {
   assert(ferror(stream) == 0);
   assert(feof(stream) != 0);
   fclose(stream);
-  if (_test_expected_disasm_output_len != bytes_read ||
+  if (_test_expected_disasm_output_len - 1 != bytes_read ||
       strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
     fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n",
             _test_expected_disasm_output, bytes_read, buf);
