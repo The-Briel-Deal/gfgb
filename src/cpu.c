@@ -164,11 +164,15 @@ struct inst fetch(struct gb_state *gb_state) {
   case 1: break;
   case 2: break;
   case 3:
-    if (curr_byte == 0b11000011)
+    if (curr_byte == 0b11000011) // Unconditional jump
       return (struct inst){
           .type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
-    if (curr_byte == 0b11101010)
+    if (curr_byte == 0b11001101) // Unconditional call
+      return (struct inst){
+          .type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+
+    if (curr_byte == 0b11101010) // LD [IMM16], A
       return (struct inst){
           .type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), R8_PARAM(R8_A)};
     break;
@@ -238,6 +242,7 @@ static void print_inst(FILE *stream, const struct inst inst) {
   case NOP: PRINT_INST_NAME(stream, "NOP"); break;
   case LD: PRINT_INST_NAME(stream, "LD"); break;
   case JP: PRINT_INST_NAME(stream, "JP"); break;
+  case CALL: PRINT_INST_NAME(stream, "CALL"); break;
   case UNKNOWN_INST: PRINT_INST_NAME(stream, "UNKNOWN"); break;
   }
   char inst_param_str[16];
@@ -484,38 +489,33 @@ static const unsigned char _test_disasm_section[] = {
 static const int _test_disasm_section_len = sizeof(_test_disasm_section);
 
 static const char _test_expected_disasm_output[] =
-    "0x0000: LD        R8_A        0x00\n"
-    "0x0002: LD        [0xFF26]    R8_A\n"
-    "0x0005: UNKNOWN   0xCD        (void)\n"
-    "0x0006: UNKNOWN   0x89        (void)\n"
-    "0x0007: LD        R16_BC      0xB9CD\n"
-    "0x000A: LD        R16_BC      0x103E\n"
-    "0x000D: UNKNOWN   0xF5        (void)\n"
-    "0x000E: LD        R16_HL      0x9010\n"
-    "0x0011: LD        R16_BC      0x01C8\n"
-    "0x0014: UNKNOWN   0xCD        (void)\n"
-    "0x0015: UNKNOWN   0x92        (void)\n"
-    "0x0016: LD        R16_BC      0x01F1\n"
-    "0x0019: NOP       (void)      (void)\n"
-    "0x001A: UNKNOWN   0x98        (void)\n"
-    "0x001B: UNKNOWN   0xC5        (void)\n"
-    "0x001C: LD        R8_A        0x00\n"
-    "0x001E: UNKNOWN   0xF5        (void)\n"
-    "0x001F: LD        R16_BC      0x0400\n"
-    "0x0022: UNKNOWN   0xC5        (void)\n"
-    "0x0023: UNKNOWN   0xCD        (void)\n"
-    "0x0024: UNKNOWN   0x9E        (void)\n"
-    "0x0025: LD        R16_BC      0xF1C1\n"
-    "0x0028: UNKNOWN   0xC1        (void)\n"
-    "0x0029: LD        R16_HL      0x9804\n"
-    "0x002C: LD        R8_HL_DREF  0x01\n"
-    "0x002E: UNKNOWN   0xCD        (void)\n"
-    "0x002F: UNKNOWN   0xBF        (void)\n"
-    "0x0030: LD        R16_BC      0xE43E\n"
-    "0x0033: LD        [0xFF47]    R8_A\n"
-    "0x0036: UNKNOWN   0xCD        (void)\n"
-    "0x0037: UNKNOWN   0xC5        (void)\n"
-    "0x0038: LD        R16_BC      0x0000\n";
+"0x0000: LD        R8_A        0x00\n"
+"0x0002: LD        [0xFF26]    R8_A\n"
+"0x0005: CALL      0x0189      (void)\n"
+"0x0008: CALL      0x01B9      (void)\n"
+"0x000B: LD        R8_A        0x10\n"
+"0x000D: UNKNOWN   0xF5        (void)\n"
+"0x000E: LD        R16_HL      0x9010\n"
+"0x0011: LD        R16_BC      0x01C8\n"
+"0x0014: CALL      0x0192      (void)\n"
+"0x0017: UNKNOWN   0xF1        (void)\n"
+"0x0018: LD        R16_BC      0x9800\n"
+"0x001B: UNKNOWN   0xC5        (void)\n"
+"0x001C: LD        R8_A        0x00\n"
+"0x001E: UNKNOWN   0xF5        (void)\n"
+"0x001F: LD        R16_BC      0x0400\n"
+"0x0022: UNKNOWN   0xC5        (void)\n"
+"0x0023: CALL      0x019E      (void)\n"
+"0x0026: UNKNOWN   0xC1        (void)\n"
+"0x0027: UNKNOWN   0xF1        (void)\n"
+"0x0028: UNKNOWN   0xC1        (void)\n"
+"0x0029: LD        R16_HL      0x9804\n"
+"0x002C: LD        R8_HL_DREF  0x01\n"
+"0x002E: CALL      0x01BF      (void)\n"
+"0x0031: LD        R8_A        0xE4\n"
+"0x0033: LD        [0xFF47]    R8_A\n"
+"0x0036: CALL      0x01C5      (void)\n";
+
 
 static const int _test_expected_disasm_output_len =
     sizeof(_test_expected_disasm_output);
@@ -526,7 +526,6 @@ void test_disasm() {
   disassemble_section(stream, _test_disasm_section, _test_disasm_section_len);
   rewind(stream);
   int bytes_read = fread(buf, sizeof(*buf), sizeof(buf), stream);
-  fprintf(stderr, "bytes read %d\n", bytes_read);
   assert(ferror(stream) == 0);
   assert(feof(stream) != 0);
   fclose(stream);

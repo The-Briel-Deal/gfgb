@@ -57,6 +57,7 @@ struct inst {
     NOP,
     LD,
     JP,
+    CALL,
     UNKNOWN_INST,
   } type;
   struct inst_param p1;
