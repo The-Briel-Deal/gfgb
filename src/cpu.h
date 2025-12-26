@@ -36,6 +36,7 @@ struct inst_param {
     R16,
     R16_MEM,
     IMM16,
+    IMM8,
     IMM16_MEM,
     UNKNOWN_INST_BYTE,
     VOID_PARAM_TYPE,
@@ -44,6 +45,7 @@ struct inst_param {
     enum r8 r8;
     enum r16 r16;
     enum r16_mem r16_mem;
+    uint8_t imm8;
     uint16_t imm16;
     uint8_t unknown_inst_byte;
   };
