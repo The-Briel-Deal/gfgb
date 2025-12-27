@@ -23,14 +23,24 @@ exe = executable(
 
 cpu_test_exe = executable(
   'cpu_test_exe',
-  ['src/cpu.c', 'src/disassemble.c'],
-  c_args : '-DRUN_TESTS=1',
+  ['src/cpu.c'],
+  c_args : '-DRUN_CPU_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
   install : true,
 )
 
-test('cpu tests', cpu_test_exe)
+disasm_test_exe = executable(
+  'disasm_test_exe',
+  ['src/cpu.c', 'src/disassemble.c'],
+  c_args : '-DRUN_DISASSEMBLE_TESTS=1',
+  include_directories : include_directories(['src/']),
+  dependencies : dependencies,
+  install : true,
+)
+
+test('cpu_test', cpu_test_exe)
+test('disasm_test', disasm_test_exe)
 
 rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')

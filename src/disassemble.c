@@ -147,3 +147,118 @@ void disassemble_section(FILE *stream, const uint8_t *section_bytes,
     print_inst(stream, inst);
   }
 }
+
+#ifdef RUN_DISASSEMBLE_TESTS
+
+/*
+ *** This below test data corresponds to this portion of the SimpleSprite rom.
+ * SimpleSprite:
+ *   ; Shut down audio circuitry
+ *   ld a, 0
+ *   ld [rNR52], a
+ *   call WaitForVBlank
+ *
+ *   call LCDOff
+ *
+ *   ld a, 16
+ *   push af
+ *
+ *   ld hl, $9010
+ *
+ *   ld bc, DoggoSprite
+ *
+ *   call CopySprite
+ *
+ *   pop af
+ *
+ *   ; ClearMem - addr
+ *   ld bc, _SCRN0
+ *   push bc
+ *   ; ClearMem - fill byte (f is just padding to keep stack 2 byte aligned)
+ *   ld a, $00
+ *   push af
+ *   ; ClearMem - len
+ *   ld bc, 32 * 32
+ *   push bc
+ *
+ *   call ClearMem
+ *   pop bc ; ClearMem - addr
+ *   pop af ; ClearMem - fill byte
+ *   pop bc ; ClearMem - len
+ *
+ *   ld hl, $9804
+ *   ld [hl], 1
+ *
+ *   call LCDOn
+ *
+ *   ; During the first (blank) frame, initialize display registers
+ *   ld a, %11100100
+ *   ld [rBGP], a
+ *
+ *   call Done
+ */
+static const unsigned char _test_disasm_section[] = {
+    0x3e, 0x00, 0xea, 0x26, 0xff, 0xcd, 0x89, 0x01, 0xcd, 0xb9, 0x01, 0x3e,
+    0x10, 0xf5, 0x21, 0x10, 0x90, 0x01, 0xc8, 0x01, 0xcd, 0x92, 0x01, 0xf1,
+    0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd,
+    0x9e, 0x01, 0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf,
+    0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
+static const int _test_disasm_section_len = sizeof(_test_disasm_section);
+
+static const char _test_expected_disasm_output[] =
+    "0x0000: LD        R8_A        0x00\n"
+    "0x0002: LD        [0xFF26]    R8_A\n"
+    "0x0005: CALL      0x0189      (void)\n"
+    "0x0008: CALL      0x01B9      (void)\n"
+    "0x000B: LD        R8_A        0x10\n"
+    "0x000D: PUSH      R16_STK_AF  (void)\n"
+    "0x000E: LD        R16_HL      0x9010\n"
+    "0x0011: LD        R16_BC      0x01C8\n"
+    "0x0014: CALL      0x0192      (void)\n"
+    "0x0017: POP       R16_STK_AF  (void)\n"
+    "0x0018: LD        R16_BC      0x9800\n"
+    "0x001B: PUSH      R16_STK_BC  (void)\n"
+    "0x001C: LD        R8_A        0x00\n"
+    "0x001E: PUSH      R16_STK_AF  (void)\n"
+    "0x001F: LD        R16_BC      0x0400\n"
+    "0x0022: PUSH      R16_STK_BC  (void)\n"
+    "0x0023: CALL      0x019E      (void)\n"
+    "0x0026: POP       R16_STK_BC  (void)\n"
+    "0x0027: POP       R16_STK_AF  (void)\n"
+    "0x0028: POP       R16_STK_BC  (void)\n"
+    "0x0029: LD        R16_HL      0x9804\n"
+    "0x002C: LD        R8_HL_DREF  0x01\n"
+    "0x002E: CALL      0x01BF      (void)\n"
+    "0x0031: LD        R8_A        0xE4\n"
+    "0x0033: LD        [0xFF47]    R8_A\n"
+    "0x0036: CALL      0x01C5      (void)\n";
+
+static const int _test_expected_disasm_output_len =
+    sizeof(_test_expected_disasm_output);
+
+void test_disasm() {
+  FILE *stream = tmpfile();
+  char buf[KB(10)];
+  disassemble_section(stream, _test_disasm_section, _test_disasm_section_len);
+  rewind(stream);
+  int bytes_read = fread(buf, sizeof(*buf), sizeof(buf), stream);
+  assert(ferror(stream) == 0);
+  assert(feof(stream) != 0);
+  fclose(stream);
+  if (_test_expected_disasm_output_len - 1 != bytes_read ||
+      strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
+    fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n",
+            _test_expected_disasm_output, bytes_read, buf);
+    abort();
+  }
+}
+
+int main() {
+  SDL_Log("Starting Disassemble tests.");
+  SDL_Log("running `test_disasm()`");
+  test_disasm();
+  SDL_Log("Disassemble tests succeeded.");
+  SDL_Quit();
+}
+
+#endif
