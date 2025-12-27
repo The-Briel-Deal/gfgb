@@ -8,6 +8,7 @@ project(
 
 dependencies = dependency('sdl3')
 sources = [
+  'src/disassemble.c',
   'src/cpu.c',
   'src/main.c',
 ]
@@ -22,7 +23,7 @@ exe = executable(
 
 cpu_test_exe = executable(
   'cpu_test_exe',
-  ['src/cpu.c'],
+  ['src/cpu.c', 'src/disassemble.c'],
   c_args : '-DRUN_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,

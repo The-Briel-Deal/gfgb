@@ -1,6 +1,7 @@
 #include "common.h"
 #include "cpu.h"
-#include <SDL3/SDL_init.h>
+#include "disassemble.h"
+
 #include <ctype.h>
 #include <stdio.h>
 
