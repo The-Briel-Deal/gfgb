@@ -14,6 +14,8 @@
   (struct inst_param) { .type = R16, .r16 = r }
 #define R16_MEM_PARAM(r)                                                       \
   (struct inst_param) { .type = R16_MEM, .r16_mem = r }
+#define R16_STK_PARAM(r)                                                       \
+  (struct inst_param) { .type = R16_STK, .r16_stk = r }
 #define IMM16_PARAM(imm)                                                       \
   (struct inst_param) { .type = IMM16, .imm16 = imm }
 #define IMM8_PARAM(imm)                                                        \

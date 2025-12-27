@@ -30,11 +30,19 @@ enum r16_mem {
   R16_MEM_HLD = 3,
 };
 
+enum r16_stk {
+  R16_STK_BC = 0,
+  R16_STK_DE = 1,
+  R16_STK_HL = 2,
+  R16_STK_AF = 3,
+};
+
 struct inst_param {
   enum inst_param_type {
     R8,
     R16,
     R16_MEM,
+    R16_STK,
     IMM16,
     IMM8,
     IMM16_MEM,
@@ -45,6 +53,7 @@ struct inst_param {
     enum r8 r8;
     enum r16 r16;
     enum r16_mem r16_mem;
+    enum r16_stk r16_stk;
     uint8_t imm8;
     uint16_t imm16;
     uint8_t unknown_inst_byte;
@@ -58,6 +67,8 @@ struct inst {
     LD,
     JP,
     CALL,
+    PUSH,
+    POP,
     UNKNOWN_INST,
   } type;
   struct inst_param p1;
