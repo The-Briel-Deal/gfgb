@@ -1,6 +1,6 @@
-
 #include "common.h"
 #include "cpu.h"
+
 #include <stdio.h>
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
@@ -112,6 +112,16 @@ static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 
     strncpy(syms->syms[syms->len].name, &line[8],
             sizeof(syms->syms[syms->len].name));
+    // Probably not the best way to do this but, I need this to be null
+    // terminated instead of newline terminated.
+    for (uint32_t i = 0; i < sizeof(syms->syms[syms->len].name); i++) {
+      if (syms->syms[syms->len].name[i] == '\n') {
+        syms->syms[syms->len].name[i] = '\0';
+      }
+      if (syms->syms[syms->len].name[i] == '\0') {
+        break;
+      }
+    }
 
     syms->len++;
     // TODO: dynamically grow beyond starting capacity.
@@ -278,8 +288,10 @@ void test_parse_debug_sym() {
   parse_syms(&syms, stream);
   fclose(stream);
 
-  assert(syms.syms[0].bank == 0);
-  assert(syms.syms[0].start_offset == 0x150);
+  assert(syms.syms[0].bank == 0x00);
+  assert(syms.syms[0].start_offset == 0x0150);
+  assert(strncmp(syms.syms[0].name, "SimpleSprite",
+                 sizeof(syms.syms[0].name)) == 0);
 }
 
 int main() {
