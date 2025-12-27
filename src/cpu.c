@@ -126,7 +126,7 @@ struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
-  case 0:
+  case /* block */ 0:
     if (curr_byte == 0b00000000)
       return (struct inst){.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     switch (NIBBLE1(curr_byte)) {
@@ -163,9 +163,17 @@ struct inst fetch(struct gb_state *gb_state) {
                            .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
                            .p2 = IMM8_PARAM(next8(gb_state))};
     break;
-  case 1: break;
-  case 2: break;
-  case 3:
+  case /* block */ 1: break;
+  case /* block */ 2: break;
+  case /* block */ 3:
+    if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
+      return (struct inst){.type = POP,
+                           .p1 = R16_STK_PARAM(CRUMB1(curr_byte)),
+                           .p2 = VOID_PARAM};
+    if (NIBBLE1(curr_byte) == 0b0101) // Push r16stk
+      return (struct inst){.type = PUSH,
+                           .p1 = R16_STK_PARAM(CRUMB1(curr_byte)),
+                           .p2 = VOID_PARAM};
     if (curr_byte == 0b11000011) // Unconditional jump
       return (struct inst){
           .type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
@@ -226,6 +234,14 @@ static void print_inst_param(char *inst_param_str,
       PRINT_ENUM_CASE(R16_MEM_HLD)
     }
     break;
+  case R16_STK:
+    switch (inst_param.r16_stk) {
+      PRINT_ENUM_CASE(R16_STK_BC)
+      PRINT_ENUM_CASE(R16_STK_DE)
+      PRINT_ENUM_CASE(R16_STK_HL)
+      PRINT_ENUM_CASE(R16_STK_AF)
+    }
+    break;
   case IMM8: sprintf(inst_param_str, "0x%.2X", inst_param.imm8); break;
   case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
   case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
@@ -237,15 +253,18 @@ static void print_inst_param(char *inst_param_str,
 }
 #undef PRINT_ENUM_CASE
 
-#define PRINT_INST_NAME(stream, inst_name) fprintf(stream, "%-10s", inst_name)
+#define PRINT_INST_NAME(stream, inst_name)                                     \
+  case inst_name: fprintf(stream, "%-10s", #inst_name); break;
 
 static void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
-  case NOP: PRINT_INST_NAME(stream, "NOP"); break;
-  case LD: PRINT_INST_NAME(stream, "LD"); break;
-  case JP: PRINT_INST_NAME(stream, "JP"); break;
-  case CALL: PRINT_INST_NAME(stream, "CALL"); break;
-  case UNKNOWN_INST: PRINT_INST_NAME(stream, "UNKNOWN"); break;
+    PRINT_INST_NAME(stream, NOP)
+    PRINT_INST_NAME(stream, LD)
+    PRINT_INST_NAME(stream, JP)
+    PRINT_INST_NAME(stream, CALL)
+    PRINT_INST_NAME(stream, POP)
+    PRINT_INST_NAME(stream, PUSH)
+    PRINT_INST_NAME(stream, UNKNOWN_INST)
   }
   char inst_param_str[16];
   print_inst_param(inst_param_str, inst.p1);
