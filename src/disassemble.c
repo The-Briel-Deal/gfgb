@@ -77,6 +77,47 @@ static void print_inst(FILE *stream, const struct inst inst) {
 
 #undef PRINT_INST_NAME
 
+// I'm treating sections and labels the same in the parsed data structure.
+struct debug_symbol_list {
+  struct debug_symbol {
+    char name[16];
+    uint8_t bank;
+    uint16_t start_offset;
+    uint16_t len;
+  } *syms;
+  uint16_t len;
+  uint16_t capacity;
+};
+
+// TODO: free syms when done using
+static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
+  syms->len = 0;
+  syms->capacity = 12;
+  syms->syms = calloc(syms->capacity, sizeof(*syms->syms));
+  char line[KB(1)];
+  char *ret;
+  while (!feof(sym_file)) {
+    ret = fgets(line, sizeof(line), sym_file);
+    if (ret == NULL) {
+      if (ferror(sym_file)) abort();
+      continue;
+    }
+    if (line[0] == ';') continue;
+    char *endptr;
+    syms->syms[syms->len].bank = strtol(&line[0], &endptr, 16);
+    assert(endptr == &line[2]);
+    syms->syms[syms->len].start_offset = strtol(&line[3], &endptr, 16);
+    assert(endptr == &line[7]);
+
+    strncpy(syms->syms[syms->len].name, &line[8],
+            sizeof(syms->syms[syms->len].name));
+
+    syms->len++;
+    // TODO: dynamically grow beyond starting capacity.
+    assert(syms->len < syms->capacity);
+  }
+}
+
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
 void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,

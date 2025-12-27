@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 #define NOT_IMPLEMENTED(msg)                                                   \
   {                                                                            \
