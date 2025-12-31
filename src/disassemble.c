@@ -1,8 +1,10 @@
 #include "common.h"
 #include "cpu.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
@@ -98,7 +100,13 @@ static void alloc_symbol_list(struct debug_symbol_list *syms) {
   syms->syms = calloc(syms->capacity, sizeof(*syms->syms));
 }
 
-// TODO: free syms when done using
+static void free_symbol_list(struct debug_symbol_list *syms) {
+  assert(syms->capacity != 0);
+  free(syms->syms);
+  syms->capacity = 0;
+  syms->len = 0;
+}
+
 static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
   char line[KB(1)];
   char *ret;
@@ -158,6 +166,28 @@ void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
     fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(stream, inst);
+  }
+}
+
+// copies rom to the start of memory and start disassembly at 0x100 since the
+// boot rom goes before that.
+void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
+                              const int rom_bytes_len,
+                              const struct debug_symbol_list *syms) {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+  memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
+
+  const struct debug_symbol *curr_sym;
+  for (int i = 0; i < syms->len; i++) {
+    fprintf(stream, "%s:\n", curr_sym->name);
+    curr_sym = &syms->syms[i];
+    gb_state.regs.pc = curr_sym->start_offset;
+    while (gb_state.regs.pc < curr_sym->start_offset + rom_bytes_len) {
+      fprintf(stream, "  0x%.4X: ", gb_state.regs.pc);
+      struct inst inst = fetch(&gb_state);
+      print_inst(stream, inst);
+    }
   }
 }
 // copies rom to the start of memory and start disassembly at 0x0 since we're
@@ -364,6 +394,8 @@ void test_parse_debug_sym() {
   assert_eq(syms.syms[9].start_offset, 0x01C8);
   assert_eq(syms.syms[9].len, 0x0000);
   assert_eq(syms.syms[9].name, "DoggoSprite");
+
+  free_symbol_list(&syms);
 }
 
 int main() {
