@@ -87,7 +87,8 @@ struct debug_symbol_list {
     uint16_t start_offset;
     uint16_t len;
   } *syms;
-  uint16_t len;
+  // I need the sign bit to indicate if the length is unknown (the last symbol has an unknown len)
+  int32_t len;
   uint16_t capacity;
 };
 
@@ -113,6 +114,8 @@ static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 
     curr_sym->start_offset = strtol(&line[3], &endptr, 16);
     assert(endptr == &line[7]);
+
+    curr_sym->len = -1;
 
     if (syms->len > 0) {
       struct debug_symbol *prev_sym = &syms->syms[syms->len - 1];
