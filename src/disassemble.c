@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
   case enum_case: sprintf(inst_param_str, "%s", #enum_case); break;
@@ -87,16 +88,18 @@ struct debug_symbol_list {
     uint16_t start_offset;
     uint16_t len;
   } *syms;
-  // I need the sign bit to indicate if the length is unknown (the last symbol has an unknown len)
-  int32_t len;
+  uint16_t len;
   uint16_t capacity;
 };
 
-// TODO: free syms when done using
-static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
+static void alloc_symbol_list(struct debug_symbol_list *syms) {
   syms->len = 0;
   syms->capacity = 12;
   syms->syms = calloc(syms->capacity, sizeof(*syms->syms));
+}
+
+// TODO: free syms when done using
+static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
   char line[KB(1)];
   char *ret;
   while (!feof(sym_file)) {
@@ -107,7 +110,7 @@ static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     }
     if (line[0] == ';') continue;
     char *endptr;
-    struct debug_symbol *curr_sym = &syms->syms[syms->len]; 
+    struct debug_symbol *curr_sym = &syms->syms[syms->len];
 
     curr_sym->bank = strtol(&line[0], &endptr, 16);
     assert(endptr == &line[2]);
@@ -115,7 +118,7 @@ static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     curr_sym->start_offset = strtol(&line[3], &endptr, 16);
     assert(endptr == &line[7]);
 
-    curr_sym->len = -1;
+    curr_sym->len = 0;
 
     if (syms->len > 0) {
       struct debug_symbol *prev_sym = &syms->syms[syms->len - 1];
@@ -123,7 +126,9 @@ static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     }
 
     strncpy(syms->syms[syms->len].name, &line[8],
-            sizeof(syms->syms[syms->len].name));
+            sizeof(syms->syms[syms->len].name) - 1);
+    // In case the string is longer than the sym.name arr
+    syms->syms[syms->len].name[sizeof(syms->syms[syms->len].name) - 1] = '\0';
     // Probably not the best way to do this but, I need this to be null
     // terminated instead of newline terminated.
     for (uint32_t i = 0; i < sizeof(syms->syms[syms->len].name); i++) {
@@ -288,7 +293,9 @@ static const char _test_parse_debug_sym_input[] =
     "00:01af ClearMem.loop\n"
     "00:01b9 LCDOff\n"
     "00:01bf LCDOn\n"
-    "00:01c5 Done\n"
+    "00:01c5 "
+    "ThisIsALongSymbolNameToTestSymbolsLongerThanTheSizeOfTheSymbolStructsNameA"
+    "rray\n"
     "00:01c8 DoggoSprite";
 
 void test_parse_debug_sym() {
@@ -299,13 +306,66 @@ void test_parse_debug_sym() {
   rewind(stream);
   struct debug_symbol_list syms;
 
+  alloc_symbol_list(&syms);
+  // Initializing bits to 1 so that this test catches un-terminated strings.
+  memset(syms.syms, 0xFF, sizeof(*syms.syms) * syms.capacity);
   parse_syms(&syms, stream);
   fclose(stream);
+
+  assert_eq(syms.len, 10);
 
   assert_eq(syms.syms[0].bank, 0x00);
   assert_eq(syms.syms[0].start_offset, 0x0150);
   assert_eq(syms.syms[0].len, 0x0039);
   assert_eq(syms.syms[0].name, "SimpleSprite");
+
+  assert_eq(syms.syms[1].bank, 0x00);
+  assert_eq(syms.syms[1].start_offset, 0x0189);
+  assert_eq(syms.syms[1].len, 0x0009);
+  assert_eq(syms.syms[1].name, "WaitForVBlank");
+
+  assert_eq(syms.syms[2].bank, 0x00);
+  assert_eq(syms.syms[2].start_offset, 0x0192);
+  assert_eq(syms.syms[2].len, 0x0005);
+  assert_eq(syms.syms[2].name, "CopySprite");
+
+  assert_eq(syms.syms[3].bank, 0x00);
+  assert_eq(syms.syms[3].start_offset, 0x0197);
+  assert_eq(syms.syms[3].len, 0x0007);
+  assert_eq(syms.syms[3].name, "CopySprite.loop");
+
+  assert_eq(syms.syms[4].bank, 0x00);
+  assert_eq(syms.syms[4].start_offset, 0x019E);
+  assert_eq(syms.syms[4].len, 0x0011);
+  assert_eq(syms.syms[4].name, "ClearMem");
+
+  assert_eq(syms.syms[5].bank, 0x00);
+  assert_eq(syms.syms[5].start_offset, 0x01AF);
+  assert_eq(syms.syms[5].len, 0x000A);
+  assert_eq(syms.syms[5].name, "ClearMem.loop");
+
+  assert_eq(syms.syms[6].bank, 0x00);
+  assert_eq(syms.syms[6].start_offset, 0x01B9);
+  assert_eq(syms.syms[6].len, 0x0006);
+  assert_eq(syms.syms[6].name, "LCDOff");
+
+  assert_eq(syms.syms[7].bank, 0x00);
+  assert_eq(syms.syms[7].start_offset, 0x01BF);
+  assert_eq(syms.syms[7].len, 0x0006);
+  assert_eq(syms.syms[7].name, "LCDOn");
+
+  assert_eq(syms.syms[8].bank, 0x00);
+  assert_eq(syms.syms[8].start_offset, 0x01C5);
+  assert_eq(syms.syms[8].len, 0x0003);
+  // Truncated to 15 chars (the 16th is a null terminator).
+  assert_eq(syms.syms[8].name, "ThisIsALongSymb");
+
+  // Since this is the last symbol, it has an unknown len, due to this we leave
+  // the length as 0.
+  assert_eq(syms.syms[9].bank, 0x00);
+  assert_eq(syms.syms[9].start_offset, 0x01C8);
+  assert_eq(syms.syms[9].len, 0x0000);
+  assert_eq(syms.syms[9].name, "DoggoSprite");
 }
 
 int main() {
