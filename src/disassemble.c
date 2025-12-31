@@ -161,6 +161,8 @@ void disassemble_section(FILE *stream, const uint8_t *section_bytes,
 
 #ifdef RUN_DISASSEMBLE_TESTS
 
+#include "test_asserts.h"
+
 /*
  *** This below test data corresponds to this portion of the SimpleSprite rom.
  * SimpleSprite:
@@ -290,6 +292,7 @@ void test_parse_debug_sym() {
 
   assert(syms.syms[0].bank == 0x00);
   assert(syms.syms[0].start_offset == 0x0150);
+  assert_eq(syms.syms[0].len, 0x0039);
   assert(strncmp(syms.syms[0].name, "SimpleSprite",
                  sizeof(syms.syms[0].name)) == 0);
 }
