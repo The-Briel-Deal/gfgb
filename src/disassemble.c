@@ -293,9 +293,7 @@ static const char _test_parse_debug_sym_input[] =
     "00:01af ClearMem.loop\n"
     "00:01b9 LCDOff\n"
     "00:01bf LCDOn\n"
-    "00:01c5 "
-    "ThisIsALongSymbolNameToTestSymbolsLongerThanTheSizeOfTheSymbolStructsNameA"
-    "rray\n"
+    "00:01c5 ThisIsALongSymbolNameToTestTruncation\n"
     "00:01c8 DoggoSprite";
 
 void test_parse_debug_sym() {
