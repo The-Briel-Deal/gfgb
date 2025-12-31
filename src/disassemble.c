@@ -1,6 +1,7 @@
 #include "common.h"
 #include "cpu.h"
 
+#include <stdint.h>
 #include <stdio.h>
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
@@ -105,10 +106,18 @@ static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     }
     if (line[0] == ';') continue;
     char *endptr;
-    syms->syms[syms->len].bank = strtol(&line[0], &endptr, 16);
+    struct debug_symbol *curr_sym = &syms->syms[syms->len]; 
+
+    curr_sym->bank = strtol(&line[0], &endptr, 16);
     assert(endptr == &line[2]);
-    syms->syms[syms->len].start_offset = strtol(&line[3], &endptr, 16);
+
+    curr_sym->start_offset = strtol(&line[3], &endptr, 16);
     assert(endptr == &line[7]);
+
+    if (syms->len > 0) {
+      struct debug_symbol *prev_sym = &syms->syms[syms->len - 1];
+      prev_sym->len = curr_sym->start_offset - prev_sym->start_offset;
+    }
 
     strncpy(syms->syms[syms->len].name, &line[8],
             sizeof(syms->syms[syms->len].name));
@@ -290,8 +299,8 @@ void test_parse_debug_sym() {
   parse_syms(&syms, stream);
   fclose(stream);
 
-  assert(syms.syms[0].bank == 0x00);
-  assert(syms.syms[0].start_offset == 0x0150);
+  assert_eq(syms.syms[0].bank, 0x00);
+  assert_eq(syms.syms[0].start_offset, 0x0150);
   assert_eq(syms.syms[0].len, 0x0039);
   assert_eq(syms.syms[0].name, "SimpleSprite");
 }
