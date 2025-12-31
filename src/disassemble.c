@@ -293,8 +293,7 @@ void test_parse_debug_sym() {
   assert(syms.syms[0].bank == 0x00);
   assert(syms.syms[0].start_offset == 0x0150);
   assert_eq(syms.syms[0].len, 0x0039);
-  assert(strncmp(syms.syms[0].name, "SimpleSprite",
-                 sizeof(syms.syms[0].name)) == 0);
+  assert_eq(syms.syms[0].name, "SimpleSprite");
 }
 
 int main() {

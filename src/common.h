@@ -5,7 +5,6 @@
 #include <SDL3/SDL_log.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
 
 #define NOT_IMPLEMENTED(msg)                                                   \
