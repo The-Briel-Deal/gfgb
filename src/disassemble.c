@@ -81,7 +81,6 @@ static void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
     PRINT_INST_NAME(stream, NOP)
     PRINT_INST_NAME(stream, LD)
-    PRINT_INST_NAME(stream, CP)
     PRINT_INST_NAME(stream, JP)
     PRINT_INST_NAME(stream, JR)
     PRINT_INST_NAME(stream, CALL)
@@ -90,7 +89,15 @@ static void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, PUSH)
     PRINT_INST_NAME(stream, INC)
     PRINT_INST_NAME(stream, DEC)
+    PRINT_INST_NAME(stream, ADD)
+    PRINT_INST_NAME(stream, ADC)
+    PRINT_INST_NAME(stream, SUB)
+    PRINT_INST_NAME(stream, SBC)
+    PRINT_INST_NAME(stream, AND)
+    PRINT_INST_NAME(stream, XOR)
     PRINT_INST_NAME(stream, OR)
+    PRINT_INST_NAME(stream, CP)
+
   case UNKNOWN_INST: {
     // I only use the `_INST` suffix to prevent name collision, so i'm going
     // just print `UNKNOWN` here so I don't need to add more padding.
