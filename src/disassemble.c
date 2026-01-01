@@ -83,10 +83,14 @@ static void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, LD)
     PRINT_INST_NAME(stream, CP)
     PRINT_INST_NAME(stream, JP)
+    PRINT_INST_NAME(stream, JR)
     PRINT_INST_NAME(stream, CALL)
     PRINT_INST_NAME(stream, RET)
     PRINT_INST_NAME(stream, POP)
     PRINT_INST_NAME(stream, PUSH)
+    PRINT_INST_NAME(stream, INC)
+    PRINT_INST_NAME(stream, DEC)
+    PRINT_INST_NAME(stream, OR)
   case UNKNOWN_INST: {
     // I only use the `_INST` suffix to prevent name collision, so i'm going
     // just print `UNKNOWN` here so I don't need to add more padding.

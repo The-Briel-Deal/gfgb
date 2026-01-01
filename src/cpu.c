@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -126,6 +127,8 @@ static inline uint8_t *get_r16_mem_addr(struct gb_state *gb_state,
 }
 
 #define CONDITION_CODE_MASK 0b00011000
+#define ARITHMETIC_R8_MASK  0b00000111
+#define ARITHMETIC_OP_MASK  0b00111000
 
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
@@ -147,6 +150,18 @@ struct inst fetch(struct gb_state *gb_state) {
           .p1 = R16_MEM_PARAM(CRUMB1(curr_byte)),
           .p2 = R8_PARAM(R8_A),
       };
+    case 0b0011:
+      return (struct inst){
+          .type = INC,
+          .p1 = R16_PARAM(CRUMB1(curr_byte)),
+          .p2 = VOID_PARAM,
+      };
+    case 0b1011:
+      return (struct inst){
+          .type = DEC,
+          .p1 = R16_PARAM(CRUMB1(curr_byte)),
+          .p2 = VOID_PARAM,
+      };
     case 0b1010:
       return (struct inst){
           .type = LD,
@@ -167,13 +182,51 @@ struct inst fetch(struct gb_state *gb_state) {
       return (struct inst){.type = LD,
                            .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
                            .p2 = IMM8_PARAM(next8(gb_state))};
+    // inc r8
+    if ((curr_byte & 0b00000111) == 0b00000100)
+      return (struct inst){.type = INC,
+                           .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
+                           .p2 = VOID_PARAM};
+    // dec r8
+    if ((curr_byte & 0b00000111) == 0b00000101)
+      return (struct inst){.type = DEC,
+                           .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
+                           .p2 = VOID_PARAM};
+
+    // jr imm8
+    if (curr_byte == 0b00011000)
+      return (struct inst){
+          .type = JR, .p1 = IMM8_PARAM(next8(gb_state)), .p2 = VOID_PARAM};
+    // jr cond, imm8
+    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b00100000)
+      return (struct inst){
+          .type = JR,
+          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
+          .p2 = IMM8_PARAM(next8(gb_state))};
     break;
   case /* block */ 1:
     return (struct inst){.type = LD,
                          .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
                          .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
 
-  case /* block */ 2: break;
+  case /* block */ 2: {
+    struct inst inst = {.type = UNKNOWN_INST,
+                        .p1 = R8_PARAM(R8_A),
+                        .p2 = R8_PARAM((curr_byte & ARITHMETIC_R8_MASK) >> 0)};
+    uint8_t arithmetic_op_code = (curr_byte & ARITHMETIC_OP_MASK) >> 3;
+    switch (arithmetic_op_code) {
+    case 0: inst.type = ADD; break;
+    case 1: inst.type = ADC; break;
+    case 2: inst.type = SUB; break;
+    case 3: inst.type = SBC; break;
+    case 4: inst.type = AND; break;
+    case 5: inst.type = XOR; break;
+    case 6: inst.type = OR; break;
+    case 7: inst.type = CP; break;
+    }
+    if (inst.type != UNKNOWN_INST) return inst;
+    break;
+  }
   case /* block */ 3:
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
       return (struct inst){.type = POP,
