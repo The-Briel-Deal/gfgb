@@ -509,16 +509,35 @@ void test_stack_ops() {
   assert_eq(pop16(&gb_state), 0x1234);
 }
 
-void test_execute() { test_execute_load(); }
+void test_execute_call_ret() {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+  assert_eq(gb_state.regs.sp, 0xDFFF);
+  gb_state.regs.pc = 0x0190;
+  execute(
+      &gb_state,
+      (struct inst){.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
+  assert_eq(gb_state.regs.sp, 0xDFFD);
+  assert_eq(gb_state.regs.pc, 0x0210);
+  assert_eq(read_mem16(&gb_state, 0xDFFE), 0x0190);
+  execute(&gb_state,
+          (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
+  assert_eq(gb_state.regs.sp, 0xDFFF);
+  assert_eq(gb_state.regs.pc, 0x0190);
+}
+
+#define TEST_CASE(name)                                                        \
+  {                                                                            \
+    SDL_Log("running `test_%s()`", #name);                                     \
+    test_##name();                                                             \
+  }
 
 int main() {
   SDL_Log("Starting CPU tests.");
-  SDL_Log("running `test_fetch()`");
-  test_fetch();
-  SDL_Log("running `test_execute()`");
-  test_execute();
-  SDL_Log("running `test_stack_ops()`");
-  test_stack_ops();
+  TEST_CASE(fetch);
+  TEST_CASE(execute_load);
+  TEST_CASE(execute_call_ret);
+  TEST_CASE(stack_ops);
   SDL_Log("CPU tests succeeded.");
   SDL_Quit();
 }
