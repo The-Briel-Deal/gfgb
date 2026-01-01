@@ -403,11 +403,12 @@ void execute(struct gb_state *gb_state, struct inst inst) {
     uint8_t flags = 0x00;
     flags |= COND_N_MASK;
     if (res == 0) flags |= COND_Z_MASK;
-    if (((val1 & 0xF) + (val2 & 0xF)) > 0xF) flags |= COND_H_MASK;
-    if (res > 0xFF) {
+    if ((val1 & 0xF) < (val2 & 0xF)) flags |= COND_H_MASK;
+    if (val1 < val2) {
       flags |= COND_C_MASK;
     }
     gb_state->regs.f = flags;
+    return;
   }
   default: break;
   }
