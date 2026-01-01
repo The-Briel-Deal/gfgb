@@ -309,6 +309,11 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
 }
 
+#define COND_Z_MASK (1 << 7)
+#define COND_N_MASK (1 << 6)
+#define COND_H_MASK (1 << 5)
+#define COND_C_MASK (1 << 4)
+
 static bool eval_condition(struct gb_state *gb_state,
                            const struct inst_param inst_param) {
   assert(inst_param.type == COND);
@@ -375,6 +380,34 @@ void execute(struct gb_state *gb_state, struct inst inst) {
       return;
     }
     break;
+  }
+  case CP: {
+    uint8_t val1;
+    uint8_t val2;
+    uint16_t res;
+    if (inst.p1.type == R8) {
+      val1 = get_r8(gb_state, inst.p1.r8);
+    } else {
+      break;
+    }
+
+    if (inst.p2.type == R8) {
+      val2 = get_r8(gb_state, inst.p2.r8);
+    } else if (inst.p2.type == IMM8) {
+      val2 = inst.p2.imm8;
+    } else {
+      break;
+    }
+    res = val1 - val2;
+
+    uint8_t flags = 0x00;
+    flags |= COND_N_MASK;
+    if (res == 0) flags |= COND_Z_MASK;
+    if (((val1 & 0xF) + (val2 & 0xF)) > 0xF) flags |= COND_H_MASK;
+    if (res > 0xFF) {
+      flags |= COND_C_MASK;
+    }
+    gb_state->regs.f = flags;
   }
   default: break;
   }
