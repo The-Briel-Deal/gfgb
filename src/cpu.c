@@ -369,6 +369,13 @@ void execute(struct gb_state *gb_state, struct inst inst) {
     }
     break;
   }
+  case RET: {
+    if (inst.p1.type == VOID_PARAM_TYPE) {
+      gb_state->regs.pc = pop16(gb_state);
+      return;
+    }
+    break;
+  }
   default: break;
   }
   NOT_IMPLEMENTED(
