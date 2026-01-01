@@ -50,6 +50,7 @@ struct inst_param {
     R16_STK,
     IMM16,
     IMM8,
+    SP_IMM8, // Stack Pointer + IMM8
     IMM16_MEM,
     COND,
     UNKNOWN_INST_BYTE,
