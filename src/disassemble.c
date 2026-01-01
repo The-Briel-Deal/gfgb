@@ -83,6 +83,7 @@ static void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, CP)
     PRINT_INST_NAME(stream, JP)
     PRINT_INST_NAME(stream, CALL)
+    PRINT_INST_NAME(stream, RET)
     PRINT_INST_NAME(stream, POP)
     PRINT_INST_NAME(stream, PUSH)
   case UNKNOWN_INST: {

@@ -181,22 +181,30 @@ struct inst fetch(struct gb_state *gb_state) {
       return (struct inst){
           .type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
+    if (curr_byte == 0b11001001) // RET
+      return (struct inst){
+          .type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+
     if (curr_byte == 0b11001101) // Unconditional call
       return (struct inst){
           .type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
     if (curr_byte == 0b11101010) // LD [IMM16], A
       return (struct inst){
-          .type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), R8_PARAM(R8_A)};
+          .type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), .p2 = R8_PARAM(R8_A)};
+
     if (curr_byte == 0b11111010) // LD A, [IMM16]
       return (struct inst){
-          .type = LD, .p1 = R8_PARAM(R8_A), IMM16_MEM_PARAM(next16(gb_state))};
+          .type = LD, .p1 = R8_PARAM(R8_A), .p2 = IMM16_MEM_PARAM(next16(gb_state))};
+    
     if (curr_byte == 0b11111110) // CP A, IMM8
       return (struct inst){
-          .type = CP, .p1 = R8_PARAM(R8_A), IMM8_PARAM(next8(gb_state))};
+          .type = CP, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000010) // JP COND, IMM16
       return (struct inst){
-          .type = JP, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), IMM16_PARAM(next16(gb_state))};
+          .type = JP, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
+
     break;
   }
   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4X.",
