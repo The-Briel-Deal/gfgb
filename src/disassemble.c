@@ -1,3 +1,4 @@
+#include "disassemble.h"
 #include "common.h"
 #include "cpu.h"
 
@@ -61,7 +62,10 @@ static void print_inst_param(char *inst_param_str,
 #undef PRINT_ENUM_CASE
 
 #define PRINT_INST_NAME(stream, inst_name)                                     \
-  case inst_name: fprintf(stream, "%-10s", #inst_name); break;
+  case inst_name: {                                                            \
+    fprintf(stream, "%-10s", #inst_name);                                      \
+    break;                                                                     \
+  }
 
 static void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
@@ -71,7 +75,12 @@ static void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, CALL)
     PRINT_INST_NAME(stream, POP)
     PRINT_INST_NAME(stream, PUSH)
-    PRINT_INST_NAME(stream, UNKNOWN_INST)
+  case UNKNOWN_INST: {
+    // I only use the `_INST` suffix to prevent name collision, so i'm going
+    // just print `UNKNOWN` here so I don't need to add more padding.
+    fprintf(stream, "%-10s", "UNKNOWN");
+    break;
+  }
   }
   char inst_param_str[16];
   print_inst_param(inst_param_str, inst.p1);
@@ -82,38 +91,26 @@ static void print_inst(FILE *stream, const struct inst inst) {
 
 #undef PRINT_INST_NAME
 
-// I'm treating sections and labels the same in the parsed data structure.
-struct debug_symbol_list {
-  struct debug_symbol {
-    char name[16];
-    uint8_t bank;
-    uint16_t start_offset;
-    uint16_t len;
-  } *syms;
-  uint16_t len;
-  uint16_t capacity;
-};
-
-static void alloc_symbol_list(struct debug_symbol_list *syms) {
+void alloc_symbol_list(struct debug_symbol_list *syms) {
   syms->len = 0;
   syms->capacity = 12;
   syms->syms = calloc(syms->capacity, sizeof(*syms->syms));
 }
 
-static void free_symbol_list(struct debug_symbol_list *syms) {
+void free_symbol_list(struct debug_symbol_list *syms) {
   assert(syms->capacity != 0);
   free(syms->syms);
   syms->capacity = 0;
   syms->len = 0;
 }
 
-static void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
+void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
   char line[KB(1)];
   char *ret;
   while (!feof(sym_file)) {
     ret = fgets(line, sizeof(line), sym_file);
     if (ret == NULL) {
-      if (ferror(sym_file)) abort();
+      if (ferror(sym_file) != 0) return;
       continue;
     }
     if (line[0] == ';') continue;
@@ -183,7 +180,7 @@ void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
     fprintf(stream, "%s:\n", curr_sym->name);
     curr_sym = &syms->syms[i];
     gb_state.regs.pc = curr_sym->start_offset;
-    while (gb_state.regs.pc < curr_sym->start_offset + rom_bytes_len) {
+    while (gb_state.regs.pc < curr_sym->start_offset + curr_sym->len) {
       fprintf(stream, "  0x%.4X: ", gb_state.regs.pc);
       struct inst inst = fetch(&gb_state);
       print_inst(stream, inst);

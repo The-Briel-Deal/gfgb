@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "disassemble.h"
 
+#include <SDL3/SDL_init.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -22,8 +23,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   int c;
   char *filename = NULL;
+  char *symbol_filename = NULL;
 
-  while ((c = getopt(argc, argv, "edf:")) != -1)
+  while ((c = getopt(argc, argv, "edf:s:")) != -1)
     switch (c) {
     case 'e':
       if (run_mode != UNSET) {
@@ -42,8 +44,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       run_mode = DISASSEMBLE;
       break;
     case 'f': filename = optarg; break;
+    case 's': symbol_filename = optarg; break;
     case '?':
       if (optopt == 'f')
+        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+      if (optopt == 's')
         fprintf(stderr, "Option -%c requires an argument.\n", optopt);
       else if (isprint(optopt))
         fprintf(stderr, "Unknown option `-%c'.\n", optopt);
@@ -79,14 +84,33 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   };
   case DISASSEMBLE: {
     FILE *f;
+    int err;
 
     f = fopen(filename, "r");
     uint8_t bytes[KB(16)];
 
     int len = fread(bytes, sizeof(uint8_t), KB(16), f);
-    if (ferror(f)) return SDL_APP_FAILURE;
+    if ((err = ferror(f))) {
+      SDL_Log("Error when reading rom file: %d", err);
+      return SDL_APP_FAILURE;
+    }
     fclose(f);
-    disassemble_rom(stdout, bytes, len);
+
+    if (symbol_filename != NULL) {
+      struct debug_symbol_list syms;
+      alloc_symbol_list(&syms);
+      f = fopen(symbol_filename, "r");
+      parse_syms(&syms, f);
+      if ((err = ferror(f))) {
+        SDL_Log("Error when reading symbol file: %d", err);
+        return SDL_APP_FAILURE;
+      }
+      fclose(f);
+      disassemble_rom_with_sym(stdout, bytes, len, &syms);
+      free_symbol_list(&syms);
+    } else {
+      disassemble_rom(stdout, bytes, len);
+    }
 
     return SDL_APP_SUCCESS;
   }
