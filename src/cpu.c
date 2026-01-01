@@ -168,7 +168,11 @@ struct inst fetch(struct gb_state *gb_state) {
                            .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
                            .p2 = IMM8_PARAM(next8(gb_state))};
     break;
-  case /* block */ 1: break;
+  case /* block */ 1:
+    return (struct inst){.type = LD,
+                         .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
+                         .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
+
   case /* block */ 2: break;
   case /* block */ 3:
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
