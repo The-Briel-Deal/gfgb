@@ -382,6 +382,8 @@ void execute(struct gb_state *gb_state, struct inst inst) {
     break;
   }
   case CP: {
+    // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
+    // doing the carry / half carry flags correctly.
     uint8_t val1;
     uint8_t val2;
     uint16_t res;
