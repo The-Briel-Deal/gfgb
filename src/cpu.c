@@ -308,6 +308,19 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
 }
 
+static bool eval_condition(struct gb_state *gb_state,
+                           const struct inst_param inst_param) {
+  assert(inst_param.type == COND);
+  switch (inst_param.cond) {
+  case COND_NZ: return (gb_state->regs.f & (1 << 7)) == 0;
+  case COND_Z: return ((gb_state->regs.f & (1 << 7)) >> 7) == 1;
+  case COND_NC: return (gb_state->regs.f & (1 << 4)) == 0;
+  case COND_C: return ((gb_state->regs.f & (1 << 4)) >> 4) == 1;
+  }
+  // Something is very wrong if the above switch statement doesn't catch.
+  abort();
+}
+
 #undef IS_R16
 #undef IS_R16_MEM
 #undef IS_R8
@@ -318,6 +331,21 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   switch (inst.type) {
   case NOP: return;
   case LD: ex_ld(gb_state, inst); return;
+  case JP: {
+    if (inst.p1.type == IMM16) {
+      gb_state->regs.pc = inst.p1.imm16;
+      return;
+    }
+    if (inst.p1.type == COND) {
+      if (eval_condition(gb_state, inst.p1)) {
+        if (inst.p2.type == IMM16) {
+          gb_state->regs.pc = inst.p2.imm16;
+          return;
+        }
+      }
+    }
+    break;
+  }
   default: break;
   }
   NOT_IMPLEMENTED(

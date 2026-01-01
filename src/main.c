@@ -189,8 +189,8 @@ void gb_draw(struct gb_state *gb_state) {
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
-  struct inst inst = fetch(gb_state);
   printf("0x%.4x: ", gb_state->regs.pc);
+  struct inst inst = fetch(gb_state);
   print_inst(stdout, inst);
   execute(gb_state, inst);
 
