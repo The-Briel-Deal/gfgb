@@ -5,6 +5,7 @@
 #include <SDL3/SDL_init.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL_main.h>
@@ -60,11 +61,27 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   switch (run_mode) {
   case EXECUTE: {
-    struct gb_state *gb_state = SDL_malloc(sizeof(struct gb_state));
+    FILE *f;
+    int err;
+    uint8_t bytes[KB(16)];
+    int bytes_len;
+    struct gb_state *gb_state;
+
+    f = fopen(filename, "r");
+
+    bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+    if ((err = ferror(f))) {
+      SDL_Log("Error when reading rom file: %d", err);
+      return SDL_APP_FAILURE;
+    }
+    fclose(f);
+
+    gb_state = SDL_malloc(sizeof(struct gb_state));
     *appstate = gb_state;
     SDL_assert(appstate != NULL);
     gb_state_init(*appstate);
-    SDL_SetAppMetadata("GF-GB", "1.0", "com.gf.gameboy-emu");
+    SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
+    memcpy(gb_state->rom0, bytes, bytes_len);
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
       SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
@@ -173,6 +190,8 @@ void gb_draw(struct gb_state *gb_state) {
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
   struct inst inst = fetch(gb_state);
+  printf("0x%.4x: ", gb_state->regs.pc);
+  print_inst(stdout, inst);
   execute(gb_state, inst);
 
   gb_draw(gb_state);

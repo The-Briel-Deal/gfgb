@@ -77,7 +77,7 @@ static void print_inst_param(char *inst_param_str,
     break;                                                                     \
   }
 
-static void print_inst(FILE *stream, const struct inst inst) {
+void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
     PRINT_INST_NAME(stream, NOP)
     PRINT_INST_NAME(stream, LD)

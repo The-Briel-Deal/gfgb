@@ -1,6 +1,8 @@
 #ifndef GB_DISASSEMBLE_H
 #define GB_DISASSEMBLE_H
 
+#include "cpu.h"
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -21,6 +23,7 @@ void alloc_symbol_list(struct debug_symbol_list *syms);
 void free_symbol_list(struct debug_symbol_list *syms);
 
 void parse_syms(struct debug_symbol_list *syms, FILE *sym_file);
+void print_inst(FILE *stream, const struct inst inst);
 
 void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
                               const int rom_bytes_len,
