@@ -21,6 +21,8 @@
   (struct inst_param) { .type = IMM8, .imm8 = imm }
 #define IMM16_MEM_PARAM(imm)                                                   \
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
+#define COND_PARAM(cond)                                                       \
+  (struct inst_param) { .type = COND, .r8 = cond }
 #define UNKNOWN_INST_BYTE_PARAM(b)                                             \
   (struct inst_param) { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
 #define VOID_PARAM                                                             \
@@ -121,6 +123,8 @@ static inline uint8_t *get_r16_mem_addr(struct gb_state *gb_state,
   abort(); // This should never happen unless something is very wrong.
 }
 
+#define CONDITION_CODE_MASK 0b00011000
+
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
@@ -184,6 +188,15 @@ struct inst fetch(struct gb_state *gb_state) {
     if (curr_byte == 0b11101010) // LD [IMM16], A
       return (struct inst){
           .type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), R8_PARAM(R8_A)};
+    if (curr_byte == 0b11111010) // LD A, [IMM16]
+      return (struct inst){
+          .type = LD, .p1 = R8_PARAM(R8_A), IMM16_MEM_PARAM(next16(gb_state))};
+    if (curr_byte == 0b11111110) // CP A, IMM8
+      return (struct inst){
+          .type = CP, .p1 = R8_PARAM(R8_A), IMM8_PARAM(next8(gb_state))};
+    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000010) // JP COND, IMM16
+      return (struct inst){
+          .type = JP, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), IMM16_PARAM(next16(gb_state))};
     break;
   }
   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4X.",

@@ -54,6 +54,14 @@ static void print_inst_param(char *inst_param_str,
   // TODO: Print label for imm16 when possible.
   case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
   case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
+  case COND:
+    switch (inst_param.cond) {
+      PRINT_ENUM_CASE(COND_NZ)
+      PRINT_ENUM_CASE(COND_Z)
+      PRINT_ENUM_CASE(COND_NC)
+      PRINT_ENUM_CASE(COND_C)
+    }
+    break;
   case UNKNOWN_INST_BYTE:
     sprintf(inst_param_str, "0x%.2X", inst_param.unknown_inst_byte);
     break;
@@ -72,6 +80,7 @@ static void print_inst(FILE *stream, const struct inst inst) {
   switch (inst.type) {
     PRINT_INST_NAME(stream, NOP)
     PRINT_INST_NAME(stream, LD)
+    PRINT_INST_NAME(stream, CP)
     PRINT_INST_NAME(stream, JP)
     PRINT_INST_NAME(stream, CALL)
     PRINT_INST_NAME(stream, POP)

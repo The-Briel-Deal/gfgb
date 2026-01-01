@@ -35,6 +35,13 @@ enum r16_stk {
   R16_STK_AF = 3,
 };
 
+enum cond {
+  COND_NZ = 0,
+  COND_Z = 1,
+  COND_NC = 2,
+  COND_C = 3,
+};
+
 struct inst_param {
   enum inst_param_type {
     R8,
@@ -44,6 +51,7 @@ struct inst_param {
     IMM16,
     IMM8,
     IMM16_MEM,
+    COND,
     UNKNOWN_INST_BYTE,
     VOID_PARAM_TYPE,
   } type;
@@ -52,6 +60,7 @@ struct inst_param {
     enum r16 r16;
     enum r16_mem r16_mem;
     enum r16_stk r16_stk;
+    enum cond cond;
     uint8_t imm8;
     uint16_t imm16;
     uint8_t unknown_inst_byte;
@@ -60,11 +69,12 @@ struct inst_param {
 
 struct inst {
   enum inst_type {
-    // Block 0
     NOP,
     LD,
+    CP,
     JP,
     CALL,
+    RET,
     PUSH,
     POP,
     UNKNOWN_INST,
