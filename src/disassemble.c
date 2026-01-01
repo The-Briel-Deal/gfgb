@@ -177,8 +177,8 @@ void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
 
   const struct debug_symbol *curr_sym;
   for (int i = 0; i < syms->len; i++) {
-    fprintf(stream, "%s:\n", curr_sym->name);
     curr_sym = &syms->syms[i];
+    fprintf(stream, "%s:\n", curr_sym->name);
     gb_state.regs.pc = curr_sym->start_offset;
     while (gb_state.regs.pc < curr_sym->start_offset + curr_sym->len) {
       fprintf(stream, "  0x%.4X: ", gb_state.regs.pc);
