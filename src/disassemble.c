@@ -51,6 +51,7 @@ static void print_inst_param(char *inst_param_str,
     }
     break;
   case IMM8: sprintf(inst_param_str, "0x%.2X", inst_param.imm8); break;
+  // TODO: Print label for imm16 when possible.
   case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
   case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
   case UNKNOWN_INST_BYTE:
