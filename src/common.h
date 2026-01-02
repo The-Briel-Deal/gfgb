@@ -2,10 +2,9 @@
 #define GB_COMMON_H
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_log.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <assert.h>
 
 #define NOT_IMPLEMENTED(msg)                                                   \
   {                                                                            \
@@ -26,6 +25,10 @@
 
 #define GB_DISPLAY_WIDTH  160
 #define GB_DISPLAY_HEIGHT 144
+
+#define NS_PER_SEC        (1 * 1000 * 1000 * 1000)
+
+#define DMG_CLOCK_HZ      (1 << 22)
 
 // This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2)                                             \
@@ -89,6 +92,13 @@ static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   } else {
     NOT_IMPLEMENTED("Everything after Work RAM is not yet implemented");
   }
+}
+
+static inline uint32_t gb_dots() {
+  uint64_t ticks_ns = SDL_GetTicksNS();
+  ticks_ns %= NS_PER_SEC;
+  uint32_t dots = ticks_ns / (NS_PER_SEC / DMG_CLOCK_HZ);
+  return dots;
 }
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
