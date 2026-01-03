@@ -334,6 +334,39 @@ not_implemented:
 #define COND_N_MASK (1 << 6)
 #define COND_H_MASK (1 << 5)
 #define COND_C_MASK (1 << 4)
+void ex_cp(struct gb_state *gb_state, struct inst inst) {
+  // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
+  // doing the carry / half carry flags correctly.
+  uint8_t val1;
+  uint8_t val2;
+  uint16_t res;
+  if (inst.p1.type == R8) {
+    val1 = get_r8(gb_state, inst.p1.r8);
+  } else {
+    goto not_implemented;
+  }
+
+  if (inst.p2.type == R8) {
+    val2 = get_r8(gb_state, inst.p2.r8);
+  } else if (inst.p2.type == IMM8) {
+    val2 = inst.p2.imm8;
+  } else {
+    goto not_implemented;
+  }
+  res = val1 - val2;
+
+  uint8_t flags = 0x00;
+  flags |= COND_N_MASK;
+  if (res == 0) flags |= COND_Z_MASK;
+  if ((val1 & 0xF) < (val2 & 0xF)) flags |= COND_H_MASK;
+  if (val1 < val2) {
+    flags |= COND_C_MASK;
+  }
+  gb_state->regs.f = flags;
+  return;
+not_implemented:
+  NOT_IMPLEMENTED("Unknown compare instruction");
+}
 
 static bool eval_condition(struct gb_state *gb_state,
                            const struct inst_param inst_param) {
@@ -402,37 +435,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
     }
     break;
   }
-  case CP: {
-    // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
-    // doing the carry / half carry flags correctly.
-    uint8_t val1;
-    uint8_t val2;
-    uint16_t res;
-    if (inst.p1.type == R8) {
-      val1 = get_r8(gb_state, inst.p1.r8);
-    } else {
-      break;
-    }
-
-    if (inst.p2.type == R8) {
-      val2 = get_r8(gb_state, inst.p2.r8);
-    } else if (inst.p2.type == IMM8) {
-      val2 = inst.p2.imm8;
-    } else {
-      break;
-    }
-    res = val1 - val2;
-
-    uint8_t flags = 0x00;
-    flags |= COND_N_MASK;
-    if (res == 0) flags |= COND_Z_MASK;
-    if ((val1 & 0xF) < (val2 & 0xF)) flags |= COND_H_MASK;
-    if (val1 < val2) {
-      flags |= COND_C_MASK;
-    }
-    gb_state->regs.f = flags;
-    return;
-  }
+  case CP: ex_cp(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
