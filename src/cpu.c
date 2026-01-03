@@ -142,6 +142,17 @@ static inline uint16_t get_r16_stk(struct gb_state *gb_state,
   }
   abort(); // This should never happen unless something is very wrong.
 }
+static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk,
+                               uint16_t val) {
+  struct regs *r = &gb_state->regs;
+  switch (r16_stk) {
+  case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
+  case R16_STK_DE: SET_COMBINED_REG((*r), d, e, val); return;
+  case R16_STK_HL: SET_COMBINED_REG((*r), h, l, val); return;
+  case R16_STK_AF: SET_COMBINED_REG((*r), a, f, val); return;
+  default: abort(); // bc, de, hl, and af are the only valid r16_stk registers.
+  }
+}
 
 #define CONDITION_CODE_MASK 0b00011000
 #define ARITHMETIC_R8_MASK  0b00000111
@@ -355,7 +366,6 @@ static void push16(struct gb_state *gb_state, uint16_t val) {
   write_mem8(gb_state, gb_state->regs.sp--, (val & 0xFF00) >> 8);
   write_mem8(gb_state, gb_state->regs.sp--, (val & 0x00FF) >> 0);
 }
-
 static void ex_push(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == PUSH);
   assert(inst.p1.type == R16_STK);
@@ -370,6 +380,12 @@ static uint16_t pop16(struct gb_state *gb_state) {
   val |= read_mem8(gb_state, ++gb_state->regs.sp) << 0;
   val |= read_mem8(gb_state, ++gb_state->regs.sp) << 8;
   return val;
+}
+static void ex_pop(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == POP);
+  assert(inst.p1.type == R16_STK);
+  assert(inst.p2.type == VOID_PARAM_TYPE);
+  set_r16_stk(gb_state, inst.p1.r16_stk, pop16(gb_state));
 }
 
 #define COND_Z_MASK (1 << 7)
@@ -465,6 +481,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   }
   case CP: ex_cp(gb_state, inst); return;
   case PUSH: ex_push(gb_state, inst); return;
+  case POP: ex_pop(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
