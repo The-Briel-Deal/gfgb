@@ -45,7 +45,7 @@
 struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
-  struct {
+  struct regs {
     uint8_t a;
     uint8_t b;
     uint8_t c;

@@ -47,62 +47,67 @@ static inline uint16_t next16(struct gb_state *gb_state) {
 }
 
 static inline uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
+  struct regs *r = &gb_state->regs;
   switch (r8) {
-  case R8_B: return gb_state->regs.b;
-  case R8_C: return gb_state->regs.c;
-  case R8_D: return gb_state->regs.d;
-  case R8_E: return gb_state->regs.e;
-  case R8_H: return gb_state->regs.h;
-  case R8_L: return gb_state->regs.l;
-  case R8_HL_DREF: NOT_IMPLEMENTED("R8_HL_DREF not yet implemented.");
-  case R8_A: return gb_state->regs.a;
+  case R8_B: return r->b;
+  case R8_C: return r->c;
+  case R8_D: return r->d;
+  case R8_E: return r->e;
+  case R8_H: return r->h;
+  case R8_L: return r->l;
+  case R8_HL_DREF: return read_mem8(gb_state, COMBINED_REG((*r), h, l));
+  case R8_A: return r->a;
   default: abort();
   }
 }
 
 static inline void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
+  struct regs *r = &gb_state->regs;
   switch (r8) {
-  case R8_B: gb_state->regs.b = val; return;
-  case R8_C: gb_state->regs.c = val; return;
-  case R8_D: gb_state->regs.d = val; return;
-  case R8_E: gb_state->regs.e = val; return;
-  case R8_H: gb_state->regs.h = val; return;
-  case R8_L: gb_state->regs.l = val; return;
-  case R8_HL_DREF: NOT_IMPLEMENTED("R8_HL_DREF not yet implemented.");
-  case R8_A: gb_state->regs.a = val; return;
+  case R8_B: r->b = val; return;
+  case R8_C: r->c = val; return;
+  case R8_D: r->d = val; return;
+  case R8_E: r->e = val; return;
+  case R8_H: r->h = val; return;
+  case R8_L: r->l = val; return;
+  case R8_HL_DREF: write_mem8(gb_state, COMBINED_REG((*r), h, l), val); return;
+  case R8_A: r->a = val; return;
   default: abort();
   }
 }
 
 static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
+  struct regs *r = &gb_state->regs;
   switch (r16) {
-  case R16_BC: return COMBINED_REG(gb_state->regs, b, c);
-  case R16_DE: return COMBINED_REG(gb_state->regs, d, e);
-  case R16_HL: return COMBINED_REG(gb_state->regs, h, l);
-  case R16_SP: return gb_state->regs.sp;
+  case R16_BC: return COMBINED_REG((*r), b, c);
+  case R16_DE: return COMBINED_REG((*r), d, e);
+  case R16_HL: return COMBINED_REG((*r), h, l);
+  case R16_SP: return r->sp;
   default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
 static inline void set_r16(struct gb_state *gb_state, enum r16 r16,
                            uint16_t val) {
+  struct regs *r = &gb_state->regs;
   switch (r16) {
-  case R16_BC: SET_COMBINED_REG(gb_state->regs, b, c, val); return;
-  case R16_DE: SET_COMBINED_REG(gb_state->regs, d, e, val); return;
-  case R16_HL: SET_COMBINED_REG(gb_state->regs, h, l, val); return;
-  case R16_SP: gb_state->regs.sp = val; return;
+  case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
+  case R16_DE: SET_COMBINED_REG((*r), d, e, val); return;
+  case R16_HL: SET_COMBINED_REG((*r), h, l, val); return;
+  case R16_SP: r->sp = val; return;
   default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
 static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
                                uint8_t val) {
+  struct regs *r = &gb_state->regs;
   uint16_t mem_offset;
   switch (r16) {
-  case R16_BC: mem_offset = COMBINED_REG(gb_state->regs, b, c); break;
-  case R16_DE: mem_offset = COMBINED_REG(gb_state->regs, d, e); break;
-  case R16_HL: mem_offset = COMBINED_REG(gb_state->regs, h, l); break;
-  case R16_SP: mem_offset = gb_state->regs.sp; break;
+  case R16_BC: mem_offset = COMBINED_REG((*r), b, c); break;
+  case R16_DE: mem_offset = COMBINED_REG((*r), d, e); break;
+  case R16_HL: mem_offset = COMBINED_REG((*r), h, l); break;
+  case R16_SP: mem_offset = r->sp; break;
   default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
   write_mem8(gb_state, mem_offset, val);
