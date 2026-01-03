@@ -108,21 +108,23 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
   write_mem8(gb_state, mem_offset, val);
 }
 
-static inline uint8_t *get_r16_mem_addr(struct gb_state *gb_state,
-                                        enum r16_mem r16_mem) {
+// TODO: This won't work for the virtual hardware registers since some of them
+// are calculated on read.
+static inline uint16_t get_r16_mem(struct gb_state *gb_state,
+                                   enum r16_mem r16_mem) {
   assert(r16_mem <= R16_MEM_HLD);
   uint16_t addr;
   switch (r16_mem) {
-  case R16_MEM_BC: return unmap_address(gb_state, get_r16(gb_state, R16_BC));
-  case R16_MEM_DE: return unmap_address(gb_state, get_r16(gb_state, R16_DE));
+  case R16_MEM_BC: return get_r16(gb_state, R16_BC);
+  case R16_MEM_DE: return get_r16(gb_state, R16_DE);
   case R16_MEM_HLI: // Increment HL after deref
     addr = get_r16(gb_state, R16_HL);
     set_r16(gb_state, R16_HL, addr + 1);
-    return unmap_address(gb_state, addr);
+    return addr;
   case R16_MEM_HLD: // Decrement HL after deref
     addr = get_r16(gb_state, R16_HL);
     set_r16(gb_state, R16_HL, addr - 1);
-    return unmap_address(gb_state, addr);
+    return addr;
   }
   abort(); // This should never happen unless something is very wrong.
 }
@@ -287,6 +289,7 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_R8(param)        (param.type == R8)
 #define IS_IMM16(param)     (param.type == IMM16)
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
+#define IS_IMM8(param)      (param.type == IMM8)
 
 void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
@@ -296,17 +299,34 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
-    *get_r16_mem_addr(gb_state, dest.r16_mem) = get_r8(gb_state, src.r8);
+    write_mem8(gb_state, get_r16_mem(gb_state, dest.r16_mem),
+               get_r8(gb_state, src.r8));
     return;
   }
-  if (IS_R8(dest) && IS_R16_MEM(src)) {
-    set_r8(gb_state, dest.r8, *get_r16_mem_addr(gb_state, src.r16_mem));
+  if (IS_R8(dest)) {
+    uint8_t src_val;
+    if (IS_R16_MEM(src))
+      src_val = read_mem8(gb_state, get_r16_mem(gb_state, src.r16_mem));
+    else if (IS_IMM16_MEM(src))
+      src_val = read_mem8(gb_state, src.imm16);
+    else if (IS_IMM8(src))
+      src_val = src.imm8;
+    else if (IS_R8(src))
+      src_val = get_r8(gb_state, src.r8);
+    else
+      goto not_implemented;
+    set_r8(gb_state, dest.r8, src_val);
     return;
   }
   if (IS_IMM16_MEM(dest) && IS_R16(src)) {
     write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
     return;
   }
+  if (IS_IMM16_MEM(dest) && IS_R8(src)) {
+    write_mem8(gb_state, dest.imm16, get_r8(gb_state, src.r8));
+    return;
+  }
+not_implemented:
   NOT_IMPLEMENTED("Unknown load instruction");
 }
 

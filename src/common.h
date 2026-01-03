@@ -56,6 +56,9 @@ struct gb_state {
     uint8_t l;
     uint16_t sp;
     uint16_t pc;
+    struct io_regs {
+      uint8_t sound_on;
+    } io;
   } regs;
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
@@ -108,6 +111,7 @@ static inline uint32_t gb_dots() {
 #define IO_REG_END   0xFF7F
 
 #define IO_LY        0xFF44
+#define IO_SND_ON    0xFF26
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t val;
@@ -116,9 +120,8 @@ static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
     case IO_LY: {
       uint32_t dots = gb_dots();
       dots %= DOTS_PER_FRAME;
-      uint8_t ly =  dots % 456;
+      uint8_t ly = dots / 456;
       assert(ly < 154);
-      printf("GF_DEBUG: %d\n", ly);
       return ly;
     }
     default: NOT_IMPLEMENTED("IO Reg Not Implemented");
@@ -138,6 +141,15 @@ static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
 
 static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
                               uint8_t val) {
+  if (addr >= IO_REG_START && addr <= IO_REG_END) {
+    switch (addr) {
+    case IO_SND_ON: {
+      gb_state->regs.io.sound_on = val;
+      return;
+    }
+    default: NOT_IMPLEMENTED("IO Reg Not Implemented");
+    }
+  }
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   *val_ptr = val;
 }
