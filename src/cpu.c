@@ -307,6 +307,7 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
     write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
     return;
   }
+  NOT_IMPLEMENTED("Unknown load instruction");
 }
 
 #define COND_Z_MASK (1 << 7)

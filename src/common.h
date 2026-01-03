@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define NOT_IMPLEMENTED(msg)                                                   \
@@ -29,6 +30,8 @@
 #define NS_PER_SEC        (1 * 1000 * 1000 * 1000)
 
 #define DMG_CLOCK_HZ      (1 << 22)
+
+#define DOTS_PER_FRAME    70224
 
 // This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2)                                             \
@@ -101,8 +104,27 @@ static inline uint32_t gb_dots() {
   return dots;
 }
 
+#define IO_REG_START 0xFF00
+#define IO_REG_END   0xFF7F
+
+#define IO_LY        0xFF44
+
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
-  uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
+  uint8_t val;
+  if (addr >= IO_REG_START && addr <= IO_REG_END) {
+    switch (addr) {
+    case IO_LY: {
+      uint32_t dots = gb_dots();
+      dots %= DOTS_PER_FRAME;
+      uint8_t ly =  dots % 456;
+      assert(ly < 154);
+      printf("GF_DEBUG: %d\n", ly);
+      return ly;
+    }
+    default: NOT_IMPLEMENTED("IO Reg Not Implemented");
+    }
+  }
+  val = *((uint8_t *)unmap_address(gb_state, addr));
   return val;
 }
 
