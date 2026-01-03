@@ -9,6 +9,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+enum flags : uint8_t {
+  FLAG_Z = (1 << 7),
+  FLAG_N = (1 << 6),
+  FLAG_H = (1 << 5),
+  FLAG_C = (1 << 4),
+};
+
 #define R8_PARAM(r)                                                            \
   (struct inst_param) { .type = R8, .r8 = r }
 #define R16_PARAM(r)                                                           \
@@ -316,6 +323,7 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 #define IS_IMM8(param)      (param.type == IMM8)
 #define IS_SP_IMM8(param)   (param.type == SP_IMM8)
+#define IS_VOID(param)      (param.type == VOID_PARAM_TYPE)
 
 static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
@@ -388,10 +396,38 @@ static void ex_pop(struct gb_state *gb_state, struct inst inst) {
   set_r16_stk(gb_state, inst.p1.r16_stk, pop16(gb_state));
 }
 
-#define COND_Z_MASK (1 << 7)
-#define COND_N_MASK (1 << 6)
-#define COND_H_MASK (1 << 5)
-#define COND_C_MASK (1 << 4)
+static void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
+  if (on) {
+    gb_state->regs.f |= flags;
+  } else {
+    gb_state->regs.f &= ~flags;
+  }
+}
+
+static void ex_inc(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == INC);
+  assert(IS_R8(inst.p1) || IS_R16(inst.p1));
+  assert(IS_VOID(inst.p2));
+
+  if (IS_R8(inst.p1)) {
+    uint8_t val;
+    val = get_r8(gb_state, inst.p1.r8);
+    set_r8(gb_state, inst.p1.r8, val + 1);
+    set_flags(gb_state, FLAG_Z, val + 1 == 0x00);
+    set_flags(gb_state, FLAG_N, 0);
+    set_flags(gb_state, FLAG_H, ((val & 0x0F) + 1) == 0x10);
+    return;
+  }
+  if (IS_R16(inst.p1)) {
+    uint16_t val;
+    val = get_r16(gb_state, inst.p1.r16);
+    set_r16(gb_state, inst.p1.r16, val + 1);
+    // no flags affected for inc r16
+    return;
+  }
+  abort();
+}
+
 static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
   // doing the carry / half carry flags correctly.
@@ -413,14 +449,10 @@ static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   }
   res = val1 - val2;
 
-  uint8_t flags = 0x00;
-  flags |= COND_N_MASK;
-  if (res == 0) flags |= COND_Z_MASK;
-  if ((val1 & 0xF) < (val2 & 0xF)) flags |= COND_H_MASK;
-  if (val1 < val2) {
-    flags |= COND_C_MASK;
-  }
-  gb_state->regs.f = flags;
+  set_flags(gb_state, FLAG_N, true);
+  set_flags(gb_state, FLAG_Z, res == 0);
+  set_flags(gb_state, FLAG_H, (val1 & 0x0F) < (val2 & 0x0F));
+  set_flags(gb_state, FLAG_C, val1 < val2);
   return;
 not_implemented:
   NOT_IMPLEMENTED("Unknown compare instruction");
@@ -482,6 +514,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case CP: ex_cp(gb_state, inst); return;
   case PUSH: ex_push(gb_state, inst); return;
   case POP: ex_pop(gb_state, inst); return;
+  case INC: ex_inc(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
