@@ -323,6 +323,7 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 #define IS_IMM8(param)      (param.type == IMM8)
 #define IS_SP_IMM8(param)   (param.type == SP_IMM8)
+#define IS_COND(param)      (param.type == COND)
 #define IS_VOID(param)      (param.type == VOID_PARAM_TYPE)
 
 static void ex_ld(struct gb_state *gb_state, struct inst inst) {
@@ -495,25 +496,34 @@ static bool eval_condition(struct gb_state *gb_state,
   abort();
 }
 
-#undef IS_R16
-#undef IS_R16_MEM
-#undef IS_R8
-#undef IS_IMM16
-#undef IS_IMM16_MEM
-
 void execute(struct gb_state *gb_state, struct inst inst) {
   switch (inst.type) {
   case NOP: return;
   case LD: ex_ld(gb_state, inst); return;
   case JP: {
-    if (inst.p1.type == IMM16) {
+    if (IS_IMM16(inst.p1)) {
       gb_state->regs.pc = inst.p1.imm16;
       return;
     }
-    if (inst.p1.type == COND) {
-      if (inst.p2.type == IMM16) {
+    if (IS_COND(inst.p1)) {
+      if (IS_IMM16(inst.p2)) {
         if (eval_condition(gb_state, inst.p1)) {
           gb_state->regs.pc = inst.p2.imm16;
+        }
+        return;
+      }
+    }
+    break;
+  }
+  case JR: {
+    if (IS_IMM8(inst.p1)) {
+      gb_state->regs.pc += *(int8_t *)&inst.p1.imm8;
+      return;
+    }
+    if (IS_COND(inst.p1)) {
+      if (IS_IMM8(inst.p2)) {
+        if (eval_condition(gb_state, inst.p1)) {
+          gb_state->regs.pc += *(int8_t *)&inst.p2.imm8;
         }
         return;
       }
