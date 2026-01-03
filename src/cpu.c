@@ -428,6 +428,30 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
   abort();
 }
 
+static void ex_dec(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == DEC);
+  assert(IS_R8(inst.p1) || IS_R16(inst.p1));
+  assert(IS_VOID(inst.p2));
+
+  if (IS_R8(inst.p1)) {
+    uint8_t val;
+    val = get_r8(gb_state, inst.p1.r8);
+    set_r8(gb_state, inst.p1.r8, val - 1);
+    set_flags(gb_state, FLAG_Z, val - 1 == 0x00);
+    set_flags(gb_state, FLAG_N, 1);
+    set_flags(gb_state, FLAG_H, ((val & 0xF0) - 1) == 0x0F);
+    return;
+  }
+  if (IS_R16(inst.p1)) {
+    uint16_t val;
+    val = get_r16(gb_state, inst.p1.r16);
+    set_r16(gb_state, inst.p1.r16, val - 1);
+    // no flags affected for inc r16
+    return;
+  }
+  abort();
+}
+
 static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
   // doing the carry / half carry flags correctly.
@@ -515,6 +539,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case PUSH: ex_push(gb_state, inst); return;
   case POP: ex_pop(gb_state, inst); return;
   case INC: ex_inc(gb_state, inst); return;
+  case DEC: ex_dec(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
