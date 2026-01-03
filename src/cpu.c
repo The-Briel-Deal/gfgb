@@ -108,8 +108,6 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
   write_mem8(gb_state, mem_offset, val);
 }
 
-// TODO: This won't work for the virtual hardware registers since some of them
-// are calculated on read.
 static inline uint16_t get_r16_mem(struct gb_state *gb_state,
                                    enum r16_mem r16_mem) {
   assert(r16_mem <= R16_MEM_HLD);
@@ -125,6 +123,17 @@ static inline uint16_t get_r16_mem(struct gb_state *gb_state,
     addr = get_r16(gb_state, R16_HL);
     set_r16(gb_state, R16_HL, addr - 1);
     return addr;
+  }
+  abort(); // This should never happen unless something is very wrong.
+}
+static inline uint16_t get_r16_stk(struct gb_state *gb_state,
+                                   enum r16_stk r16_stk) {
+  assert(r16_stk <= R16_STK_AF);
+  switch (r16_stk) {
+  case R16_STK_BC: return get_r16(gb_state, R16_BC);
+  case R16_STK_DE: return get_r16(gb_state, R16_DE);
+  case R16_STK_HL: return get_r16(gb_state, R16_HL);
+  case R16_STK_AF: return COMBINED_REG(gb_state->regs, a, f);
   }
   abort(); // This should never happen unless something is very wrong.
 }
@@ -290,8 +299,9 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16(param)     (param.type == IMM16)
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 #define IS_IMM8(param)      (param.type == IMM8)
+#define IS_SP_IMM8(param)   (param.type == SP_IMM8)
 
-void ex_ld(struct gb_state *gb_state, struct inst inst) {
+static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
   struct inst_param src = inst.p2;
   if (IS_R16(dest) && IS_IMM16(src)) {
@@ -326,15 +336,42 @@ void ex_ld(struct gb_state *gb_state, struct inst inst) {
     write_mem8(gb_state, dest.imm16, get_r8(gb_state, src.r8));
     return;
   }
+  if (IS_R16(dest) && IS_SP_IMM8(src)) {
+    uint16_t src_val = get_r16(gb_state, R16_SP) + src.imm8;
+    assert(dest.r16 == R16_HL); // this inst should always be setting HL
+    set_r16(gb_state, dest.r16, src_val);
+    return;
+  }
 not_implemented:
   NOT_IMPLEMENTED("Unknown load instruction");
+}
+static void push16(struct gb_state *gb_state, uint16_t val) {
+  // little endian
+  write_mem8(gb_state, gb_state->regs.sp--, (val & 0xFF00) >> 8);
+  write_mem8(gb_state, gb_state->regs.sp--, (val & 0x00FF) >> 0);
+}
+
+static void ex_push(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == PUSH);
+  assert(inst.p1.type == R16_STK);
+  assert(inst.p2.type == VOID_PARAM_TYPE);
+  push16(gb_state, get_r16_stk(gb_state, inst.p1.r16_stk));
+}
+
+static uint16_t pop16(struct gb_state *gb_state) {
+  uint16_t val = 0;
+
+  // little endian
+  val |= read_mem8(gb_state, ++gb_state->regs.sp) << 0;
+  val |= read_mem8(gb_state, ++gb_state->regs.sp) << 8;
+  return val;
 }
 
 #define COND_Z_MASK (1 << 7)
 #define COND_N_MASK (1 << 6)
 #define COND_H_MASK (1 << 5)
 #define COND_C_MASK (1 << 4)
-void ex_cp(struct gb_state *gb_state, struct inst inst) {
+static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
   // doing the carry / half carry flags correctly.
   uint8_t val1;
@@ -381,20 +418,6 @@ static bool eval_condition(struct gb_state *gb_state,
   abort();
 }
 
-static void push16(struct gb_state *gb_state, uint16_t val) {
-  // little endian
-  write_mem8(gb_state, gb_state->regs.sp--, (val & 0xFF00) >> 8);
-  write_mem8(gb_state, gb_state->regs.sp--, (val & 0x00FF) >> 0);
-}
-static uint16_t pop16(struct gb_state *gb_state) {
-  uint16_t val = 0;
-
-  // little endian
-  val |= read_mem8(gb_state, ++gb_state->regs.sp) << 0;
-  val |= read_mem8(gb_state, ++gb_state->regs.sp) << 8;
-  return val;
-}
-
 #undef IS_R16
 #undef IS_R16_MEM
 #undef IS_R8
@@ -436,6 +459,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
     break;
   }
   case CP: ex_cp(gb_state, inst); return;
+  case PUSH: ex_push(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
