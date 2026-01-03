@@ -378,11 +378,11 @@ void execute(struct gb_state *gb_state, struct inst inst) {
       return;
     }
     if (inst.p1.type == COND) {
-      if (eval_condition(gb_state, inst.p1)) {
-        if (inst.p2.type == IMM16) {
+      if (inst.p2.type == IMM16) {
+        if (eval_condition(gb_state, inst.p1)) {
           gb_state->regs.pc = inst.p2.imm16;
-          return;
         }
+        return;
       }
     }
     break;

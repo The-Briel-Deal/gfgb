@@ -11,7 +11,7 @@
   {                                                                            \
     SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,                              \
                     "This functionality is not yet implemented: %s", msg);     \
-    exit(1);                                                                   \
+    abort();                                                                   \
   }
 
 #define KB(n)             (1024 * n)
@@ -58,6 +58,7 @@ struct gb_state {
     uint16_t pc;
     struct io_regs {
       uint8_t sound_on;
+      uint8_t lcd_control;
     } io;
   } regs;
   uint8_t rom0[KB(16)];
@@ -110,8 +111,9 @@ static inline uint32_t gb_dots() {
 #define IO_REG_START 0xFF00
 #define IO_REG_END   0xFF7F
 
-#define IO_LY        0xFF44
 #define IO_SND_ON    0xFF26
+#define IO_LCDC      0xFF40
+#define IO_LY        0xFF44
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t val;
@@ -123,6 +125,9 @@ static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
       uint8_t ly = dots / 456;
       assert(ly < 154);
       return ly;
+    }
+    case IO_LCDC: {
+      return gb_state->regs.io.lcd_control;
     }
     default: NOT_IMPLEMENTED("IO Reg Not Implemented");
     }
@@ -145,6 +150,10 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
     switch (addr) {
     case IO_SND_ON: {
       gb_state->regs.io.sound_on = val;
+      return;
+    }
+    case IO_LCDC: {
+      gb_state->regs.io.lcd_control = val;
       return;
     }
     default: NOT_IMPLEMENTED("IO Reg Not Implemented");
