@@ -372,8 +372,8 @@ not_implemented:
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
-  write_mem8(gb_state, gb_state->regs.sp--, (val & 0xFF00) >> 8);
-  write_mem8(gb_state, gb_state->regs.sp--, (val & 0x00FF) >> 0);
+  write_mem8(gb_state, --gb_state->regs.sp, (val & 0xFF00) >> 8);
+  write_mem8(gb_state, --gb_state->regs.sp, (val & 0x00FF) >> 0);
 }
 static void ex_push(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == PUSH);
@@ -386,8 +386,8 @@ static uint16_t pop16(struct gb_state *gb_state) {
   uint16_t val = 0;
 
   // little endian
-  val |= read_mem8(gb_state, ++gb_state->regs.sp) << 0;
-  val |= read_mem8(gb_state, ++gb_state->regs.sp) << 8;
+  val |= read_mem8(gb_state, gb_state->regs.sp++) << 0;
+  val |= read_mem8(gb_state, gb_state->regs.sp++) << 8;
   return val;
 }
 static void ex_pop(struct gb_state *gb_state, struct inst inst) {
@@ -673,7 +673,7 @@ void test_stack_ops() {
   gb_state_init(&gb_state);
 
   push16(&gb_state, 0x1234);
-  assert_eq(gb_state.regs.sp, 0xDFFD);
+  assert_eq(gb_state.regs.sp, 0xDFFE);
   // 16 bit vals on the stack should be little endian so that they can be read
   // like 16 bit values anywhere else in memory.
   assert_eq(read_mem8(&gb_state, 0xDFFF), 0x12);
@@ -686,17 +686,17 @@ void test_stack_ops() {
 void test_execute_call_ret() {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
-  assert_eq(gb_state.regs.sp, 0xDFFF);
+  assert_eq(gb_state.regs.sp, 0xE000);
   gb_state.regs.pc = 0x0190;
   execute(
       &gb_state,
       (struct inst){.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
-  assert_eq(gb_state.regs.sp, 0xDFFD);
+  assert_eq(gb_state.regs.sp, 0xDFFE);
   assert_eq(gb_state.regs.pc, 0x0210);
   assert_eq(read_mem16(&gb_state, 0xDFFE), 0x0190);
   execute(&gb_state,
           (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
-  assert_eq(gb_state.regs.sp, 0xDFFF);
+  assert_eq(gb_state.regs.sp, 0xE000);
   assert_eq(gb_state.regs.pc, 0x0190);
 }
 
