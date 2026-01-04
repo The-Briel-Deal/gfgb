@@ -65,6 +65,8 @@ struct gb_state {
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
   uint8_t display[GB_DISPLAY_WIDTH][GB_DISPLAY_HEIGHT];
+
+  FILE *serial_port_output;
 };
 
 #define ROM0_START 0x0000
@@ -161,9 +163,8 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
     case IO_SERIAL_TRANSFER: {
       // TODO: This just logs out every character written to this port. If I
       // actually want to implement gamelink support there is more to do.
-#ifdef LOG_SERIAL_PORT
-      printf("%c", val);
-#endif
+      if (gb_state->serial_port_output != NULL)
+        fputc(val, gb_state->serial_port_output);
       return;
     }
     case IO_SERIAL_CONTROL: return;

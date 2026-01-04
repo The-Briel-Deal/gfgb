@@ -25,8 +25,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   int c;
   char *filename = NULL;
   char *symbol_filename = NULL;
+  char *serial_output_filename = NULL;
 
-  while ((c = getopt(argc, argv, "edf:s:")) != -1)
+  // e = execute
+  // d = disassemble
+  // f: = rom file
+  // s: = sym file
+  // p: = serial port output file
+  while ((c = getopt(argc, argv, "edf:s:p:")) != -1)
     switch (c) {
     case 'e':
       if (run_mode != UNSET) {
@@ -46,6 +52,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       break;
     case 'f': filename = optarg; break;
     case 's': symbol_filename = optarg; break;
+    case 'p': serial_output_filename = optarg; break;
     case '?':
       if (optopt == 'f')
         fprintf(stderr, "Option -%c requires an argument.\n", optopt);
@@ -82,6 +89,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_state_init(*appstate);
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
     memcpy(gb_state->rom0, bytes, bytes_len);
+
+    if (serial_output_filename != NULL) {
+      gb_state->serial_port_output = fopen(serial_output_filename, "w");
+    }
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
       SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
@@ -204,7 +215,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+  struct gb_state *gb_state = appstate;
   (void)result;
+  if (gb_state->serial_port_output != NULL)
+    fclose(gb_state->serial_port_output);
   /* SDL will clean up the window/renderer for us. */
   SDL_free(appstate);
 }
