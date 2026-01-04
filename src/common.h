@@ -59,6 +59,7 @@ struct gb_state {
     struct io_regs {
       uint8_t sound_on;
       uint8_t lcd_control;
+      uint8_t bg_pallete;
     } io;
   } regs;
   uint8_t rom0[KB(16)];
@@ -118,6 +119,7 @@ static inline uint32_t gb_dots() {
 #define IO_SND_ON          0xFF26
 #define IO_LCDC            0xFF40
 #define IO_LY              0xFF44
+#define IO_BGP             0xFF47
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t val;
@@ -152,22 +154,16 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
                               uint8_t val) {
   if (addr >= IO_REG_START && addr <= IO_REG_END) {
     switch (addr) {
-    case IO_SND_ON: {
-      gb_state->regs.io.sound_on = val;
-      return;
-    }
-    case IO_LCDC: {
-      gb_state->regs.io.lcd_control = val;
-      return;
-    }
-    case IO_SERIAL_TRANSFER: {
+    case IO_SND_ON: gb_state->regs.io.sound_on = val; return;
+    case IO_LCDC: gb_state->regs.io.lcd_control = val; return;
+    case IO_SERIAL_TRANSFER:
       // TODO: This just logs out every character written to this port. If I
       // actually want to implement gamelink support there is more to do.
       if (gb_state->serial_port_output != NULL)
         fputc(val, gb_state->serial_port_output);
       return;
-    }
     case IO_SERIAL_CONTROL: return;
+    case IO_BGP: gb_state->regs.io.bg_pallete = val; return;
     default: NOT_IMPLEMENTED("IO Reg Not Implemented");
     }
   }
