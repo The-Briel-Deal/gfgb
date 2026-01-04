@@ -108,12 +108,14 @@ static inline uint32_t gb_dots() {
   return dots;
 }
 
-#define IO_REG_START 0xFF00
-#define IO_REG_END   0xFF7F
+#define IO_REG_START       0xFF00
+#define IO_REG_END         0xFF7F
 
-#define IO_SND_ON    0xFF26
-#define IO_LCDC      0xFF40
-#define IO_LY        0xFF44
+#define IO_SERIAL_TRANSFER 0xFF01
+#define IO_SERIAL_CONTROL  0xFF02
+#define IO_SND_ON          0xFF26
+#define IO_LCDC            0xFF40
+#define IO_LY              0xFF44
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t val;
@@ -156,6 +158,15 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
       gb_state->regs.io.lcd_control = val;
       return;
     }
+    case IO_SERIAL_TRANSFER: {
+      // TODO: This just logs out every character written to this port. If I
+      // actually want to implement gamelink support there is more to do.
+#ifdef LOG_SERIAL_PORT
+      printf("%c", val);
+#endif
+      return;
+    }
+    case IO_SERIAL_CONTROL: return;
     default: NOT_IMPLEMENTED("IO Reg Not Implemented");
     }
   }
