@@ -4,6 +4,7 @@
 
 #include <SDL3/SDL_init.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -163,6 +164,50 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   }
 
   return SDL_APP_CONTINUE; /* carry on with the program! */
+}
+
+enum lcdc_flags {
+  LCDC_BG_WIN_ENAB = 1 << 0,
+  LCDC_OBJ_ENABLE = 1 << 1,
+  LCDC_OBJ_SIZE = 1 << 2,
+  LCDC_BG_TILE_MAP_AREA = 1 << 3,
+  LCDC_BG_WIN_TILE_DATA_AREA = 1 << 4,
+  LCDC_WIN_ENABLE = 1 << 5,
+  LCDC_WIN_TILEMAP = 1 << 6,
+  LCDC_ENABLE = 1 << 7,
+};
+
+void gb_render_bg(struct gb_state *gb_state) {
+  // TODO: Make sure screen and bg are enabled before this
+  uint16_t bg_win_tile_data_start;
+  uint16_t bg_tile_map_start;
+  if (gb_state->regs.io.lcd_control & LCDC_BG_WIN_TILE_DATA_AREA) {
+    bg_win_tile_data_start = 0x8000;
+  } else {
+    bg_win_tile_data_start = 0x8800;
+  }
+  if (gb_state->regs.io.lcd_control & LCDC_BG_TILE_MAP_AREA) {
+    bg_tile_map_start = 0x9C00;
+  } else {
+    bg_tile_map_start = 0x9800;
+  }
+
+  for (int i = 0; i <= 0xFF; i++) {
+    const int x = i % 32;
+    const int y = i / 32;
+    const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
+    const uint8_t *tile_data_start = unmap_address(
+        gb_state, bg_win_tile_data_start + (tile_data_index * 16));
+    uint8_t *display_tile_start = &gb_state->display[x * 8][y * 8];
+    for (int i = 0; i < 4; i++) {
+      uint8_t curr_tile_data_byte = tile_data_start[i];
+      uint8_t *curr_display_bytes = &display_tile_start[i * 4];
+      curr_display_bytes[0] = (curr_tile_data_byte & 0b11000000) >> 6;
+      curr_display_bytes[1] = (curr_tile_data_byte & 0b00110000) >> 4;
+      curr_display_bytes[2] = (curr_tile_data_byte & 0b00001100) >> 2;
+      curr_display_bytes[3] = (curr_tile_data_byte & 0b00000011) >> 0;
+    }
+  }
 }
 
 void gb_draw(struct gb_state *gb_state) {
