@@ -24,6 +24,9 @@
 #define CRUMB2(byte)      ((byte & (0b11000000 >> 4)) >> 2)
 #define CRUMB3(byte)      ((byte & (0b11000000 >> 6)) >> 0)
 
+#define GB_BG_WIDTH  256
+#define GB_BG_HEIGHT 256
+
 #define GB_DISPLAY_WIDTH  160
 #define GB_DISPLAY_HEIGHT 144
 
@@ -66,6 +69,8 @@ struct gb_state {
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
   uint8_t display[GB_DISPLAY_WIDTH][GB_DISPLAY_HEIGHT];
+  // There is probably a better way to do this without having a seperate buffer for the BG.
+  uint8_t background_canvas[GB_BG_WIDTH][GB_BG_HEIGHT];
 
   FILE *serial_port_output;
 };

@@ -192,25 +192,35 @@ void gb_render_bg(struct gb_state *gb_state) {
     bg_tile_map_start = 0x9800;
   }
 
-  for (int i = 0; i <= 0xFF; i++) {
+  for (int i = 0; i < 256; i++) {
     const int x = i % 32;
     const int y = i / 32;
     const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
     const uint8_t *tile_data_start = unmap_address(
         gb_state, bg_win_tile_data_start + (tile_data_index * 16));
-    uint8_t *display_tile_start = &gb_state->display[x * 8][y * 8];
-    for (int i = 0; i < 4; i++) {
+    uint8_t bg_canvas_x = x * 8;
+    uint8_t bg_canvas_y = y * 8;
+    for (int i = 0; i < 16; i++) {
       uint8_t curr_tile_data_byte = tile_data_start[i];
-      uint8_t *curr_display_bytes = &display_tile_start[i * 4];
-      curr_display_bytes[0] = (curr_tile_data_byte & 0b11000000) >> 6;
-      curr_display_bytes[1] = (curr_tile_data_byte & 0b00110000) >> 4;
-      curr_display_bytes[2] = (curr_tile_data_byte & 0b00001100) >> 2;
-      curr_display_bytes[3] = (curr_tile_data_byte & 0b00000011) >> 0;
+      uint8_t *curr_bg_canvas_bytes = &gb_state->background_canvas[bg_canvas_x + ((i % 2) * 4)][bg_canvas_y + ((i / 2))];
+      curr_bg_canvas_bytes[0] = (curr_tile_data_byte & 0b11000000) >> 6;
+      curr_bg_canvas_bytes[1] = (curr_tile_data_byte & 0b00110000) >> 4;
+      curr_bg_canvas_bytes[2] = (curr_tile_data_byte & 0b00001100) >> 2;
+      curr_bg_canvas_bytes[3] = (curr_tile_data_byte & 0b00000011) >> 0;
     }
+  }
+
+  // TODO: I'm essentially just copying the top left of the background canvas
+  // into the display. Once I implement scrolling that will have to change.
+
+  for (int y = 0; y < GB_DISPLAY_HEIGHT; y++) {
+    memcpy(gb_state->display[y], gb_state->background_canvas[y],
+           GB_DISPLAY_WIDTH);
   }
 }
 
 void gb_draw(struct gb_state *gb_state) {
+  gb_render_bg(gb_state);
   SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0,
                               SDL_ALPHA_OPAQUE_FLOAT);
 
