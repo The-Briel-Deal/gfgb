@@ -179,13 +179,16 @@ enum lcdc_flags {
 
 void gb_render_bg(struct gb_state *gb_state) {
   // TODO: Make sure screen and bg are enabled before this
-  uint16_t bg_win_tile_data_start;
+  uint16_t bg_win_tile_data_start_p1;
+  uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
   if (gb_state->regs.io.lcd_control & LCDC_BG_WIN_TILE_DATA_AREA) {
-    bg_win_tile_data_start = 0x8000;
+    bg_win_tile_data_start_p1 = 0x8000;
   } else {
-    bg_win_tile_data_start = 0x8800;
+    bg_win_tile_data_start_p1 = 0x9000;
   }
+  // Tile data 128-256 is always in Block 1 (0x8800-0x8FFF)
+  bg_win_tile_data_start_p2 = 0x8800;
   if (gb_state->regs.io.lcd_control & LCDC_BG_TILE_MAP_AREA) {
     bg_tile_map_start = 0x9C00;
   } else {
@@ -196,17 +199,44 @@ void gb_render_bg(struct gb_state *gb_state) {
     const int x = i % 32;
     const int y = i / 32;
     const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
-    const uint8_t *tile_data_start = unmap_address(
-        gb_state, bg_win_tile_data_start + (tile_data_index * 16));
+    const uint16_t tile_data_addr =
+        (tile_data_index < 128 ? bg_win_tile_data_start_p1
+                               : bg_win_tile_data_start_p2) +
+        ((tile_data_index % 128) * 16);
+    const uint8_t *tile_data_addr_unmapped =
+        unmap_address(gb_state, tile_data_addr);
     uint8_t bg_canvas_x = x * 8;
     uint8_t bg_canvas_y = y * 8;
-    for (int i = 0; i < 16; i++) {
-      uint8_t curr_tile_data_byte = tile_data_start[i];
-      uint8_t *curr_bg_canvas_bytes = &gb_state->background_canvas[bg_canvas_x + ((i % 2) * 4)][bg_canvas_y + ((i / 2))];
-      curr_bg_canvas_bytes[0] = (curr_tile_data_byte & 0b11000000) >> 6;
-      curr_bg_canvas_bytes[1] = (curr_tile_data_byte & 0b00110000) >> 4;
-      curr_bg_canvas_bytes[2] = (curr_tile_data_byte & 0b00001100) >> 2;
-      curr_bg_canvas_bytes[3] = (curr_tile_data_byte & 0b00000011) >> 0;
+    for (int line = 0; line < 8; line++) {
+      uint8_t tile_data_byte1 = tile_data_addr_unmapped[(line * 2) + 0];
+      uint8_t tile_data_byte2 = tile_data_addr_unmapped[(line * 2) + 1];
+      uint8_t *curr_bg_canvas_bytes =
+          &gb_state->background_canvas[bg_canvas_x + ((line % 2) * 4)]
+                                      [bg_canvas_y + ((line / 2))];
+      curr_bg_canvas_bytes[0] = ((tile_data_byte1 & 0b10000000) |
+                                 ((tile_data_byte2 & 0b10000000) >> 1)) >>
+                                6;
+      curr_bg_canvas_bytes[1] = ((tile_data_byte1 & 0b01000000) |
+                                 ((tile_data_byte2 & 0b01000000) >> 1)) >>
+                                5;
+      curr_bg_canvas_bytes[2] = ((tile_data_byte1 & 0b00100000) |
+                                 ((tile_data_byte2 & 0b00100000) >> 1)) >>
+                                4;
+      curr_bg_canvas_bytes[3] = ((tile_data_byte1 & 0b00010000) |
+                                 ((tile_data_byte2 & 0b00010000) >> 1)) >>
+                                3;
+      curr_bg_canvas_bytes[4] = ((tile_data_byte1 & 0b00001000) |
+                                 ((tile_data_byte2 & 0b00001000) >> 1)) >>
+                                2;
+      curr_bg_canvas_bytes[5] = ((tile_data_byte1 & 0b00000100) |
+                                 ((tile_data_byte2 & 0b00000100) >> 1)) >>
+                                1;
+      curr_bg_canvas_bytes[6] = ((tile_data_byte1 & 0b00000010) |
+                                 ((tile_data_byte2 & 0b00000010) >> 1)) >>
+                                0;
+      curr_bg_canvas_bytes[7] = (((tile_data_byte1 & 0b00000001) << 1) |
+                                 (tile_data_byte2 & 0b00000001)) >>
+                                0;
     }
   }
 
