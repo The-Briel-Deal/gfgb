@@ -211,31 +211,30 @@ void gb_render_bg(struct gb_state *gb_state) {
       uint8_t tile_data_byte1 = tile_data_addr_unmapped[(line * 2) + 0];
       uint8_t tile_data_byte2 = tile_data_addr_unmapped[(line * 2) + 1];
       uint8_t *curr_bg_canvas_bytes =
-          &gb_state->background_canvas[bg_canvas_x + ((line % 2) * 4)]
-                                      [bg_canvas_y + ((line / 2))];
-      curr_bg_canvas_bytes[0] = ((tile_data_byte1 & 0b10000000) |
-                                 ((tile_data_byte2 & 0b10000000) >> 1)) >>
+          &gb_state->background_canvas[bg_canvas_x + line][bg_canvas_y];
+      curr_bg_canvas_bytes[0] = ((tile_data_byte2 & 0b10000000) |
+                                 ((tile_data_byte1 & 0b10000000) >> 1)) >>
                                 6;
-      curr_bg_canvas_bytes[1] = ((tile_data_byte1 & 0b01000000) |
-                                 ((tile_data_byte2 & 0b01000000) >> 1)) >>
+      curr_bg_canvas_bytes[1] = ((tile_data_byte2 & 0b01000000) |
+                                 ((tile_data_byte1 & 0b01000000) >> 1)) >>
                                 5;
-      curr_bg_canvas_bytes[2] = ((tile_data_byte1 & 0b00100000) |
-                                 ((tile_data_byte2 & 0b00100000) >> 1)) >>
+      curr_bg_canvas_bytes[2] = ((tile_data_byte2 & 0b00100000) |
+                                 ((tile_data_byte1 & 0b00100000) >> 1)) >>
                                 4;
-      curr_bg_canvas_bytes[3] = ((tile_data_byte1 & 0b00010000) |
-                                 ((tile_data_byte2 & 0b00010000) >> 1)) >>
+      curr_bg_canvas_bytes[3] = ((tile_data_byte2 & 0b00010000) |
+                                 ((tile_data_byte1 & 0b00010000) >> 1)) >>
                                 3;
-      curr_bg_canvas_bytes[4] = ((tile_data_byte1 & 0b00001000) |
-                                 ((tile_data_byte2 & 0b00001000) >> 1)) >>
+      curr_bg_canvas_bytes[4] = ((tile_data_byte2 & 0b00001000) |
+                                 ((tile_data_byte1 & 0b00001000) >> 1)) >>
                                 2;
-      curr_bg_canvas_bytes[5] = ((tile_data_byte1 & 0b00000100) |
-                                 ((tile_data_byte2 & 0b00000100) >> 1)) >>
+      curr_bg_canvas_bytes[5] = ((tile_data_byte2 & 0b00000100) |
+                                 ((tile_data_byte1 & 0b00000100) >> 1)) >>
                                 1;
-      curr_bg_canvas_bytes[6] = ((tile_data_byte1 & 0b00000010) |
-                                 ((tile_data_byte2 & 0b00000010) >> 1)) >>
+      curr_bg_canvas_bytes[6] = ((tile_data_byte2 & 0b00000010) |
+                                 ((tile_data_byte1 & 0b00000010) >> 1)) >>
                                 0;
-      curr_bg_canvas_bytes[7] = (((tile_data_byte1 & 0b00000001) << 1) |
-                                 (tile_data_byte2 & 0b00000001)) >>
+      curr_bg_canvas_bytes[7] = (((tile_data_byte2 & 0b00000001) << 1) |
+                                 (tile_data_byte1 & 0b00000001)) >>
                                 0;
     }
   }
