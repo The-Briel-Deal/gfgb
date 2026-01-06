@@ -211,7 +211,7 @@ void gb_render_bg(struct gb_state *gb_state) {
       uint8_t tile_data_byte1 = tile_data_addr_unmapped[(line * 2) + 0];
       uint8_t tile_data_byte2 = tile_data_addr_unmapped[(line * 2) + 1];
       uint8_t *curr_bg_canvas_bytes =
-          &gb_state->background_canvas[bg_canvas_x + line][bg_canvas_y];
+          &gb_state->background_canvas[bg_canvas_y + line][bg_canvas_x];
       curr_bg_canvas_bytes[0] = ((tile_data_byte2 & 0b10000000) |
                                  ((tile_data_byte1 & 0b10000000) >> 1)) >>
                                 6;
@@ -257,7 +257,7 @@ void gb_draw(struct gb_state *gb_state) {
   SDL_RenderClear(gb_state->sdl_renderer);
   for (int y = 0; y < GB_DISPLAY_HEIGHT; y++) {
     for (int x = 0; x < GB_DISPLAY_WIDTH; x++) {
-      uint8_t pixel = gb_state->display[x][y];
+      uint8_t pixel = gb_state->display[y][x];
       // The original gameboy had 4 shades of grey, these are represented by
       // 0,1,2,3. Anything greater is invalid.
       SDL_assert(pixel < 4);
