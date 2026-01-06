@@ -206,7 +206,9 @@ void gb_render_bg(struct gb_state *gb_state) {
     const uint8_t *tile_data_addr_unmapped =
         unmap_address(gb_state, tile_data_addr);
     uint8_t bg_canvas_x = x * 8;
+    assert(bg_canvas_x + 8 <= GB_BG_WIDTH);
     uint8_t bg_canvas_y = y * 8;
+    assert(bg_canvas_y + 8 <= GB_BG_HEIGHT);
     for (int line = 0; line < 8; line++) {
       uint8_t tile_data_byte1 = tile_data_addr_unmapped[(line * 2) + 0];
       uint8_t tile_data_byte2 = tile_data_addr_unmapped[(line * 2) + 1];
