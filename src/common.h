@@ -74,6 +74,9 @@ struct gb_state {
   uint8_t background_canvas[GB_BG_HEIGHT][GB_BG_WIDTH];
 
   FILE *serial_port_output;
+
+  // Used for getting fps.
+  uint64_t last_frame_ticks_ns;
 };
 
 #define ROM0_START 0x0000

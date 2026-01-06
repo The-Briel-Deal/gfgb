@@ -251,6 +251,17 @@ void gb_render_bg(struct gb_state *gb_state) {
 }
 
 void gb_draw(struct gb_state *gb_state) {
+  uint64_t this_frame_ticks_ns = SDL_GetTicksNS();
+
+#ifdef PRINT_FRAME_TIME
+  double seconds_since_last_frame =
+      (double)(this_frame_ticks_ns - gb_state->last_frame_ticks_ns) /
+      NS_PER_SEC;
+  printf("Frame time = %f seconds\n", seconds_since_last_frame);
+#endif
+
+  gb_state->last_frame_ticks_ns = this_frame_ticks_ns;
+
   gb_render_bg(gb_state);
   SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0,
                               SDL_ALPHA_OPAQUE_FLOAT);
