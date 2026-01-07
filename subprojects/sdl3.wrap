@@ -1,0 +1,6 @@
+[wrap-git]
+url = git@github.com:libsdl-org/SDL.git
+method = cmake
+revision = HEAD
+depth = 1
+

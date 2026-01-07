@@ -3,6 +3,7 @@
 #include "disassemble.h"
 
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_render.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -212,19 +213,31 @@ enum lcdc_flags {
   LCDC_ENABLE = 1 << 7,
 };
 
+void get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr) {
+  SDL_Renderer *renderer = gb_state->sdl_renderer;
+  /* TODO: Use the actual tile data for texture.
+
+  uint8_t *real_address = unmap_address(gb_state, tile_addr);
+  */
+  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX2MSB,
+                                           SDL_TEXTUREACCESS_STATIC, 8, 8);
+  assert(texture != NULL);
+  SDL_SetTexturePalette(texture, gb_state->sdl_palette);
+}
+
 // TODO: check if tile should be double height (8x16)
 void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
                   uint16_t tile_addr) {
   assert(x < GB_DISPLAY_WIDTH);
   assert(y < GB_DISPLAY_HEIGHT);
   SDL_Renderer *renderer = gb_state->sdl_renderer;
-  uint8_t *real_address = unmap_address(gb_state, tile_addr);
-  SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX2MSB,
-                    SDL_TEXTUREACCESS_STATIC, 8, 8);
   // TODO: I need to figure out 2 things
-  // 1. I need to interleave the two bytes in a gameboy tile before sending it to SDL.
-  // 2. I need to figure out a good way to keep track of textures, I could keep one texture for each tile but that seems excessive.
-  //SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void *pixels, int pitch)
+  // 1. I need to interleave the two bytes in a gameboy tile before sending it
+  // to SDL.
+  // 2. I need to figure out a good way to keep track of textures, I could keep
+  // one texture for each tile but that seems excessive.
+  // SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void
+  // *pixels, int pitch)
 }
 
 void gb_render_bg(struct gb_state *gb_state) {

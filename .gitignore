@@ -5,3 +5,4 @@ gb_emu
 *.o
 *.bin
 *.png
+subprojects/*/
