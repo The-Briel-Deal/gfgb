@@ -219,6 +219,12 @@ void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
   assert(y < GB_DISPLAY_HEIGHT);
   SDL_Renderer *renderer = gb_state->sdl_renderer;
   uint8_t *real_address = unmap_address(gb_state, tile_addr);
+  SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX2MSB,
+                    SDL_TEXTUREACCESS_STATIC, 8, 8);
+  // TODO: I need to figure out 2 things
+  // 1. I need to interleave the two bytes in a gameboy tile before sending it to SDL.
+  // 2. I need to figure out a good way to keep track of textures, I could keep one texture for each tile but that seems excessive.
+  //SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void *pixels, int pitch)
 }
 
 void gb_render_bg(struct gb_state *gb_state) {
