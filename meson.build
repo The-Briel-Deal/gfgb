@@ -6,7 +6,17 @@ project(
   default_options : ['warning_level=3', 'c_std=c23'],
 )
 
-dependencies = dependency('sdl3')
+cmake = import('cmake')
+
+
+sdl3_sub_proj_opts = cmake.subproject_options()
+sdl3_sub_proj_opts.add_cmake_defines({'SDL_STATIC': 'ON'})
+
+
+sdl3_sub_proj = cmake.subproject('sdl3', options : sdl3_sub_proj_opts)
+
+
+dependencies = sdl3_sub_proj.dependency('SDL3-static')
 sources = [
   'src/disassemble.c',
   'src/cpu.c',
