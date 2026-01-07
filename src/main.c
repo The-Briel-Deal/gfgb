@@ -306,6 +306,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 #endif
   execute(gb_state, inst);
 
+  // TODO: this doesn't need to be called every iteration.
   gb_draw(gb_state);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
