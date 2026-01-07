@@ -108,6 +108,41 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     }
     SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440,
                                      SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    if (!(gb_state->sdl_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+      SDL_Log("Couldn't create palette: %s", SDL_GetError());
+      return SDL_APP_FAILURE;
+    }
+    if (!SDL_SetPaletteColors(gb_state->sdl_palette,
+                              (SDL_Color[4]){
+                                  (SDL_Color){
+                                      .a = 255,
+                                      .r = 255 * (3 / 3),
+                                      .g = 255 * (3 / 3),
+                                      .b = 255 * (3 / 3),
+                                  },
+                                  (SDL_Color){
+                                      .a = 255,
+                                      .r = 255 * (2 / 3),
+                                      .g = 255 * (2 / 3),
+                                      .b = 255 * (2 / 3),
+                                  },
+                                  (SDL_Color){
+                                      .a = 255,
+                                      .r = 255 * (1 / 3),
+                                      .g = 255 * (1 / 3),
+                                      .b = 255 * (1 / 3),
+                                  },
+                                  (SDL_Color){
+                                      .a = 255,
+                                      .r = 255 * (0 / 3),
+                                      .g = 255 * (0 / 3),
+                                      .b = 255 * (0 / 3),
+                                  },
+                              },
+                              0, DMG_PALETTE_N_COLORS)) {
+      SDL_Log("Couldn't set palette colors: %s", SDL_GetError());
+      return SDL_APP_FAILURE;
+    }
 
     return SDL_APP_CONTINUE; /* carry on with the program! */
   };
@@ -177,6 +212,15 @@ enum lcdc_flags {
   LCDC_ENABLE = 1 << 7,
 };
 
+// TODO: check if tile should be double height (8x16)
+void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
+                  uint16_t tile_addr) {
+  assert(x < GB_DISPLAY_WIDTH);
+  assert(y < GB_DISPLAY_HEIGHT);
+  SDL_Renderer *renderer = gb_state->sdl_renderer;
+  uint8_t *real_address = unmap_address(gb_state, tile_addr);
+}
+
 void gb_render_bg(struct gb_state *gb_state) {
   // TODO: Make sure screen and bg are enabled before this
   uint16_t bg_win_tile_data_start_p1;
@@ -195,7 +239,7 @@ void gb_render_bg(struct gb_state *gb_state) {
     bg_tile_map_start = 0x9800;
   }
 
-  for (int i = 0; i < 256; i++) {
+  for (int i = 0; i < (32 * 32); i++) {
     const int x = i % 32;
     const int y = i / 32;
     const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
@@ -203,50 +247,11 @@ void gb_render_bg(struct gb_state *gb_state) {
         (tile_data_index < 128 ? bg_win_tile_data_start_p1
                                : bg_win_tile_data_start_p2) +
         ((tile_data_index % 128) * 16);
-    const uint8_t *tile_data_addr_unmapped =
-        unmap_address(gb_state, tile_data_addr);
-    uint8_t bg_canvas_x = x * 8;
-    assert(bg_canvas_x + 8 <= GB_BG_WIDTH);
-    uint8_t bg_canvas_y = y * 8;
-    assert(bg_canvas_y + 8 <= GB_BG_HEIGHT);
-    for (int line = 0; line < 8; line++) {
-      uint8_t tile_data_byte1 = tile_data_addr_unmapped[(line * 2) + 0];
-      uint8_t tile_data_byte2 = tile_data_addr_unmapped[(line * 2) + 1];
-      uint8_t *curr_bg_canvas_bytes =
-          &gb_state->background_canvas[bg_canvas_y + line][bg_canvas_x];
-      curr_bg_canvas_bytes[0] = ((tile_data_byte2 & 0b10000000) |
-                                 ((tile_data_byte1 & 0b10000000) >> 1)) >>
-                                6;
-      curr_bg_canvas_bytes[1] = ((tile_data_byte2 & 0b01000000) |
-                                 ((tile_data_byte1 & 0b01000000) >> 1)) >>
-                                5;
-      curr_bg_canvas_bytes[2] = ((tile_data_byte2 & 0b00100000) |
-                                 ((tile_data_byte1 & 0b00100000) >> 1)) >>
-                                4;
-      curr_bg_canvas_bytes[3] = ((tile_data_byte2 & 0b00010000) |
-                                 ((tile_data_byte1 & 0b00010000) >> 1)) >>
-                                3;
-      curr_bg_canvas_bytes[4] = ((tile_data_byte2 & 0b00001000) |
-                                 ((tile_data_byte1 & 0b00001000) >> 1)) >>
-                                2;
-      curr_bg_canvas_bytes[5] = ((tile_data_byte2 & 0b00000100) |
-                                 ((tile_data_byte1 & 0b00000100) >> 1)) >>
-                                1;
-      curr_bg_canvas_bytes[6] = ((tile_data_byte2 & 0b00000010) |
-                                 ((tile_data_byte1 & 0b00000010) >> 1)) >>
-                                0;
-      curr_bg_canvas_bytes[7] = (((tile_data_byte2 & 0b00000001) << 1) |
-                                 (tile_data_byte1 & 0b00000001)) >>
-                                0;
-    }
-  }
-
-  // TODO: I'm essentially just copying the top left of the background canvas
-  // into the display. Once I implement scrolling that will have to change.
-
-  for (int y = 0; y < GB_DISPLAY_HEIGHT; y++) {
-    memcpy(gb_state->display[y], gb_state->background_canvas[y],
-           GB_DISPLAY_WIDTH);
+    // TODO: handle display offset, the display won't always be in the top left.
+    uint8_t display_x = x * 8;
+    uint8_t display_y = y * 8;
+    if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
+      gb_draw_tile(gb_state, display_x, display_y, tile_data_addr);
   }
 }
 

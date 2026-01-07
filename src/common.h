@@ -14,27 +14,29 @@
     abort();                                                                   \
   }
 
-#define KB(n)             (1024 * n)
+#define KB(n)                   (1024 * n)
 
-#define NIBBLE0(byte)     ((byte & (0xF0 >> 0)) >> 4)
-#define NIBBLE1(byte)     ((byte & (0xF0 >> 4)) >> 0)
+#define NIBBLE0(byte)           ((byte & (0xF0 >> 0)) >> 4)
+#define NIBBLE1(byte)           ((byte & (0xF0 >> 4)) >> 0)
 
-#define CRUMB0(byte)      ((byte & (0b11000000 >> 0)) >> 6)
-#define CRUMB1(byte)      ((byte & (0b11000000 >> 2)) >> 4)
-#define CRUMB2(byte)      ((byte & (0b11000000 >> 4)) >> 2)
-#define CRUMB3(byte)      ((byte & (0b11000000 >> 6)) >> 0)
+#define CRUMB0(byte)            ((byte & (0b11000000 >> 0)) >> 6)
+#define CRUMB1(byte)            ((byte & (0b11000000 >> 2)) >> 4)
+#define CRUMB2(byte)            ((byte & (0b11000000 >> 4)) >> 2)
+#define CRUMB3(byte)            ((byte & (0b11000000 >> 6)) >> 0)
 
-#define GB_BG_WIDTH       256
-#define GB_BG_HEIGHT      256
+#define GB_BG_WIDTH             256
+#define GB_BG_HEIGHT            256
 
-#define GB_DISPLAY_WIDTH  160
-#define GB_DISPLAY_HEIGHT 144
+#define GB_DISPLAY_WIDTH        160
+#define GB_DISPLAY_HEIGHT       144
 
-#define NS_PER_SEC        (1 * 1000 * 1000 * 1000)
+#define DMG_PALETTE_N_COLORS 4
 
-#define DMG_CLOCK_HZ      (1 << 22)
+#define NS_PER_SEC              (1 * 1000 * 1000 * 1000)
 
-#define DOTS_PER_FRAME    70224
+#define DMG_CLOCK_HZ            (1 << 22)
+
+#define DOTS_PER_FRAME          70224
 
 // This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2)                                             \
@@ -48,6 +50,7 @@
 struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
+  SDL_Palette *sdl_palette;
   struct regs {
     uint8_t a;
     uint8_t b;
