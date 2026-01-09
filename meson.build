@@ -11,6 +11,7 @@ dependencies = dependency('sdl3')
 sources = [
   'src/disassemble.c',
   'src/cpu.c',
+  'src/ppu.c',
   'src/main.c',
 ]
 

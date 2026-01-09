@@ -1,6 +1,7 @@
 #include "common.h"
 #include "cpu.h"
 #include "disassemble.h"
+#include "ppu.h"
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_render.h>
@@ -213,7 +214,8 @@ enum lcdc_flags {
   LCDC_ENABLE = 1 << 7,
 };
 
-void get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr) {
+SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
+                                  uint16_t tile_addr) {
   SDL_Renderer *renderer = gb_state->sdl_renderer;
   /* TODO: Use the actual tile data for texture.
 
@@ -226,16 +228,10 @@ void get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr) {
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
   uint8_t pixels[16] = {0};
-  for (int i = 0; i < 8; i++) {
-    uint8_t b1 = gb_tile[(i * 2) + 0];
-    uint8_t b2 = gb_tile[(i * 2) + 1];
-    for (int j = 0; j < 8; j++) {
-      pixels[(i * 2) + (j / 4)] |= ((1 << j) & b1);
-      pixels[(i * 2) + (j / 4)] |= (((1 << j) & b2) >> 1);
-    }
-  }
+  gb_tile_to_msb2(gb_tile, pixels);
 
   SDL_UpdateTexture(texture, NULL, pixels, 2);
+  return texture;
 }
 
 // TODO: check if tile should be double height (8x16)
@@ -249,8 +245,10 @@ void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
   // to SDL.
   // 2. I need to figure out a good way to keep track of textures, I could keep
   // one texture for each tile but that seems excessive.
-  // SDL_UpdateTexture(SDL_Texture *texture, const SDL_Rect *rect, const void
-  // *pixels, int pitch)
+  SDL_Texture* texture = get_texture_for_tile(gb_state, tile_addr);
+  
+  // Draw Texture
+
 }
 
 void gb_render_bg(struct gb_state *gb_state) {
