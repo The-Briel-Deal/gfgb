@@ -221,9 +221,13 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
 
   uint8_t *real_address = unmap_address(gb_state, tile_addr);
   */
+  SDL_assert(renderer != NULL);
   SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX2MSB,
-                                           SDL_TEXTUREACCESS_STATIC, 8, 8);
-  assert(texture != NULL);
+                                           SDL_TEXTUREACCESS_STREAMING, 8, 8);
+  if (texture == NULL) {
+    SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
+    abort();
+  }
   SDL_SetTexturePalette(texture, gb_state->sdl_palette);
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
@@ -245,10 +249,11 @@ void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
   // to SDL.
   // 2. I need to figure out a good way to keep track of textures, I could keep
   // one texture for each tile but that seems excessive.
-  SDL_Texture* texture = get_texture_for_tile(gb_state, tile_addr);
-  
-  // Draw Texture
+  SDL_Texture *texture = get_texture_for_tile(gb_state, tile_addr);
 
+  bool ret;
+  ret = SDL_RenderTextureTiled(renderer, texture, NULL, 10.0, NULL);
+  assert(ret == true);
 }
 
 void gb_render_bg(struct gb_state *gb_state) {
