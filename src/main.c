@@ -223,6 +223,19 @@ void get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr) {
                                            SDL_TEXTUREACCESS_STATIC, 8, 8);
   assert(texture != NULL);
   SDL_SetTexturePalette(texture, gb_state->sdl_palette);
+
+  uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
+  uint8_t pixels[16] = {0};
+  for (int i = 0; i < 8; i++) {
+    uint8_t b1 = gb_tile[(i * 2) + 0];
+    uint8_t b2 = gb_tile[(i * 2) + 1];
+    for (int j = 0; j < 8; j++) {
+      pixels[(i * 2) + (j / 4)] |= ((1 << j) & b1);
+      pixels[(i * 2) + (j / 4)] |= (((1 << j) & b2) >> 1);
+    }
+  }
+
+  SDL_UpdateTexture(texture, NULL, pixels, 2);
 }
 
 // TODO: check if tile should be double height (8x16)

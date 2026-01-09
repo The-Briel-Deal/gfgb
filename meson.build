@@ -31,6 +31,15 @@ cpu_test_exe = executable(
   install : true,
 )
 
+ppu_test_exe = executable(
+  'ppu_test_exe',
+  ['src/cpu.c', 'src/disassemble.c','src/ppu.c'],
+  c_args : '-DRUN_PPU_TESTS=1',
+  include_directories : include_directories(['src/']),
+  dependencies : dependencies,
+  install : true,
+)
+
 disasm_test_exe = executable(
   'disasm_test_exe',
   ['src/cpu.c', 'src/disassemble.c'],
@@ -41,6 +50,7 @@ disasm_test_exe = executable(
 )
 
 test('cpu_test', cpu_test_exe)
+test('ppu_test', ppu_test_exe)
 test('disasm_test', disasm_test_exe)
 
 rgbasm = find_program('rgbasm')
