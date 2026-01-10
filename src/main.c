@@ -22,6 +22,12 @@ enum run_mode {
   DISASSEMBLE,
 };
 
+#define GREYSCALE_COLOR(lightness)                                             \
+  (SDL_Color) {                                                                \
+    .a = 255, .r = 255 * lightness, .g = 255 * lightness,                      \
+    .b = 255 * lightness,                                                      \
+  }
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
@@ -115,32 +121,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       SDL_Log("Couldn't create palette: %s", SDL_GetError());
       return SDL_APP_FAILURE;
     }
+
     if (!SDL_SetPaletteColors(gb_state->sdl_palette,
                               (SDL_Color[4]){
-                                  (SDL_Color){
-                                      .a = 255,
-                                      .r = 255 * (3.0f / 3),
-                                      .g = 255 * (3.0f / 3),
-                                      .b = 255 * (3.0f / 3),
-                                  },
-                                  (SDL_Color){
-                                      .a = 255,
-                                      .r = 255 * (2.0f / 3),
-                                      .g = 255 * (2.0f / 3),
-                                      .b = 255 * (2.0f / 3),
-                                  },
-                                  (SDL_Color){
-                                      .a = 255,
-                                      .r = 255 * (1.0f / 3),
-                                      .g = 255 * (1.0f / 3),
-                                      .b = 255 * (1.0f / 3),
-                                  },
-                                  (SDL_Color){
-                                      .a = 255,
-                                      .r = 255 * (0.0f / 3),
-                                      .g = 255 * (0.0f / 3),
-                                      .b = 255 * (0.0f / 3),
-                                  },
+                                  GREYSCALE_COLOR(0.0f / 3),
+                                  GREYSCALE_COLOR(1.0f / 3),
+                                  GREYSCALE_COLOR(2.0f / 3),
+                                  GREYSCALE_COLOR(3.0f / 3),
                               },
                               0, DMG_PALETTE_N_COLORS)) {
       SDL_Log("Couldn't set palette colors: %s", SDL_GetError());
@@ -188,6 +175,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   default: return SDL_APP_FAILURE;
   }
 }
+
+#undef GREYSCALE_COLOR
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
