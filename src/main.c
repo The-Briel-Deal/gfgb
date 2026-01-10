@@ -232,18 +232,8 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
   SDL_SetTexturePalette(texture, gb_state->sdl_palette);
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
-  // Test tile:
-  uint8_t pixels[8 * 8] = {
-      0, 0, 0, 0, 1, 1, 1, 1, //
-      0, 0, 0, 0, 1, 1, 1, 1, //
-      0, 0, 0, 0, 1, 1, 1, 1, //
-      0, 0, 0, 0, 1, 1, 1, 1, //
-      1, 1, 1, 1, 0, 0, 0, 0, //
-      1, 1, 1, 1, 0, 0, 0, 0, //
-      1, 1, 1, 1, 0, 0, 0, 0, //
-      1, 1, 1, 1, 0, 0, 0, 0, //
-  };
-  // gb_tile_to_msb2(gb_tile, pixels);
+  uint8_t pixels[8 * 8];
+  gb_tile_to_8bit_indexed(gb_tile, pixels);
 
   SDL_UpdateTexture(texture, NULL, pixels, 8);
   return texture;

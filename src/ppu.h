@@ -11,6 +11,6 @@
 //! For example, `0b1010'1100 0b1100'1011` would turn into 
 //! `0b1110'0100 0b1101'1010`
 //!
-void gb_tile_to_msb2(uint8_t *gb_tile_in, uint8_t *msb2_tile_out);
+void gb_tile_to_8bit_indexed(uint8_t *gb_tile_in, uint8_t *msb2_tile_out);
 
 #endif // GB_PPU_H
