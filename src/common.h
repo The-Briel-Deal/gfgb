@@ -79,7 +79,7 @@ struct gb_state {
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
-  SDL_Texture textures[DMG_N_TILEDATA_ADDRESSES];
+  SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
 
   FILE *serial_port_output;
 

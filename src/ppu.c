@@ -14,20 +14,43 @@ void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out) {
 }
 
 #undef PIX
-static SDL_Texture *gb_create_tex(struct gb_state *gb_state,
-                                  uint16_t tile_addr) {
-  int index = (tile_addr) / 16;
+
+inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
+  // The address this is called with should always cleanly divide by 16.
+  assert((tile_addr - GB_TILEDATA_BLOCK0_START) % 16 == 0);
+  int tex_index = (tile_addr - GB_TILEDATA_BLOCK0_START) / 16;
+  assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
+  assert(tex_index >= 0);
+  return tex_index;
 }
 
-SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
+static SDL_Texture *gb_create_tex(struct gb_state *gb_state,
                                   uint16_t tile_addr) {
   SDL_Renderer *renderer = gb_state->sdl_renderer;
+
+  uint16_t index = tile_addr_to_tex_idx(tile_addr);
+
+  assert(gb_state->textures[index] == NULL);
+
   SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8,
                                            SDL_TEXTUREACCESS_STREAMING, 8, 8);
   if (texture == NULL) {
     SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
     abort();
   }
+  gb_state->textures[index] = texture;
+
+  return texture;
+}
+
+SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
+                                  uint16_t tile_addr) {
+  SDL_Texture *texture;
+
+  uint16_t index = tile_addr_to_tex_idx(tile_addr);
+  texture = gb_state->textures[index];
+  if (texture == NULL) texture = gb_create_tex(gb_state, tile_addr);
+
   SDL_SetTexturePalette(texture, gb_state->sdl_palette);
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
