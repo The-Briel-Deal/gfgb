@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -222,7 +223,7 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
   uint8_t *real_address = unmap_address(gb_state, tile_addr);
   */
   SDL_assert(renderer != NULL);
-  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX2MSB,
+  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8,
                                            SDL_TEXTUREACCESS_STREAMING, 8, 8);
   if (texture == NULL) {
     SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
@@ -231,10 +232,20 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
   SDL_SetTexturePalette(texture, gb_state->sdl_palette);
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
-  uint8_t pixels[16] = {0};
-  gb_tile_to_msb2(gb_tile, pixels);
+  // Test tile:
+  uint8_t pixels[8 * 8] = {
+      0, 0, 0, 0, 1, 1, 1, 1, //
+      0, 0, 0, 0, 1, 1, 1, 1, //
+      0, 0, 0, 0, 1, 1, 1, 1, //
+      0, 0, 0, 0, 1, 1, 1, 1, //
+      1, 1, 1, 1, 0, 0, 0, 0, //
+      1, 1, 1, 1, 0, 0, 0, 0, //
+      1, 1, 1, 1, 0, 0, 0, 0, //
+      1, 1, 1, 1, 0, 0, 0, 0, //
+  };
+  // gb_tile_to_msb2(gb_tile, pixels);
 
-  SDL_UpdateTexture(texture, NULL, pixels, 2);
+  SDL_UpdateTexture(texture, NULL, pixels, 8);
   return texture;
 }
 
@@ -249,10 +260,21 @@ void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
   // to SDL.
   // 2. I need to figure out a good way to keep track of textures, I could keep
   // one texture for each tile but that seems excessive.
+  int win_w, win_h;
+  SDL_GetWindowSize(gb_state->sdl_window, &win_w, &win_h);
+  float w_scale = (float)win_w / GB_DISPLAY_WIDTH;
+  float h_scale = (float)win_h / GB_DISPLAY_HEIGHT;
+
   SDL_Texture *texture = get_texture_for_tile(gb_state, tile_addr);
 
   bool ret;
-  ret = SDL_RenderTextureTiled(renderer, texture, NULL, 10.0, NULL);
+  const SDL_FPoint origin_point = {.x = w_scale * x, .y = h_scale * y};
+  const SDL_FPoint top_right_point = {.x = origin_point.x + (8.0f * w_scale),
+                                      .y = origin_point.y};
+  const SDL_FPoint bot_left_point = {.x = origin_point.x,
+                                     .y = origin_point.y + (8.0f * h_scale)};
+  ret = SDL_RenderTextureAffine(renderer, texture, NULL, &origin_point,
+                                &top_right_point, &bot_left_point);
   assert(ret == true);
 }
 
