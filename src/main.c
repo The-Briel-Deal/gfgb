@@ -28,6 +28,41 @@ enum run_mode {
     .b = 255 * lightness,                                                      \
   }
 
+bool gb_video_init(struct gb_state *gb_state) {
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
+    SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+    return false;
+  }
+
+  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 1600, 1440,
+                                   SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
+                                   &gb_state->sdl_renderer)) {
+    SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+    return false;
+  }
+  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  if (!(gb_state->sdl_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+    SDL_Log("Couldn't create palette: %s", SDL_GetError());
+    return false;
+  }
+
+  if (!SDL_SetPaletteColors(gb_state->sdl_palette,
+                            (SDL_Color[4]){
+                                GREYSCALE_COLOR(0.0f / 3),
+                                GREYSCALE_COLOR(1.0f / 3),
+                                GREYSCALE_COLOR(2.0f / 3),
+                                GREYSCALE_COLOR(3.0f / 3),
+                            },
+                            0, DMG_PALETTE_N_COLORS)) {
+    SDL_Log("Couldn't set palette colors: %s", SDL_GetError());
+    return false;
+  }
+  return true;
+}
+
+#undef GREYSCALE_COLOR
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
@@ -104,35 +139,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       gb_state->serial_port_output = fopen(serial_output_filename, "w");
     }
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-      SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-      return SDL_APP_FAILURE;
-    }
-
-    if (!SDL_CreateWindowAndRenderer(
-            "examples/renderer/clear", 1600, 1440, SDL_WINDOW_RESIZABLE,
-            &gb_state->sdl_window, &gb_state->sdl_renderer)) {
-      SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-      return SDL_APP_FAILURE;
-    }
-    SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440,
-                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
-    if (!(gb_state->sdl_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-      SDL_Log("Couldn't create palette: %s", SDL_GetError());
-      return SDL_APP_FAILURE;
-    }
-
-    if (!SDL_SetPaletteColors(gb_state->sdl_palette,
-                              (SDL_Color[4]){
-                                  GREYSCALE_COLOR(0.0f / 3),
-                                  GREYSCALE_COLOR(1.0f / 3),
-                                  GREYSCALE_COLOR(2.0f / 3),
-                                  GREYSCALE_COLOR(3.0f / 3),
-                              },
-                              0, DMG_PALETTE_N_COLORS)) {
-      SDL_Log("Couldn't set palette colors: %s", SDL_GetError());
-      return SDL_APP_FAILURE;
-    }
+    if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
 
     return SDL_APP_CONTINUE; /* carry on with the program! */
   };
@@ -175,8 +182,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   default: return SDL_APP_FAILURE;
   }
 }
-
-#undef GREYSCALE_COLOR
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
