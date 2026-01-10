@@ -302,35 +302,10 @@ void gb_draw(struct gb_state *gb_state) {
 
   gb_state->last_frame_ticks_ns = this_frame_ticks_ns;
 
-  gb_render_bg(gb_state);
   SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0,
                               SDL_ALPHA_OPAQUE_FLOAT);
-
-  /* clear the window to the draw color. */
   SDL_RenderClear(gb_state->sdl_renderer);
-  for (int y = 0; y < GB_DISPLAY_HEIGHT; y++) {
-    for (int x = 0; x < GB_DISPLAY_WIDTH; x++) {
-      uint8_t pixel = gb_state->display[y][x];
-      // The original gameboy had 4 shades of grey, these are represented by
-      // 0,1,2,3. Anything greater is invalid.
-      SDL_assert(pixel < 4);
-
-      float grey_shade = (float)pixel / 3.0;
-
-      SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, grey_shade,
-                                  grey_shade, grey_shade,
-                                  SDL_ALPHA_OPAQUE_FLOAT);
-      int w, h;
-      SDL_GetRenderLogicalPresentation(gb_state->sdl_renderer, &w, &h, NULL);
-      float pixel_w = (float)w / (float)GB_DISPLAY_WIDTH;
-      float pixel_h = (float)h / (float)GB_DISPLAY_HEIGHT;
-
-      struct SDL_FRect rect = {
-          .x = pixel_w * x, .y = pixel_h * y, .w = pixel_w, .h = pixel_h};
-      SDL_RenderFillRect(gb_state->sdl_renderer, &rect);
-    }
-  }
-  /* put the newly-cleared rendering on the screen. */
+  gb_render_bg(gb_state);
   SDL_RenderPresent(gb_state->sdl_renderer);
 }
 
