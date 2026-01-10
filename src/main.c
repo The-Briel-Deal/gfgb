@@ -209,30 +209,6 @@ enum lcdc_flags {
   LCDC_ENABLE = 1 << 7,
 };
 
-SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
-                                  uint16_t tile_addr) {
-  SDL_Renderer *renderer = gb_state->sdl_renderer;
-  /* TODO: Use the actual tile data for texture.
-
-  uint8_t *real_address = unmap_address(gb_state, tile_addr);
-  */
-  SDL_assert(renderer != NULL);
-  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8,
-                                           SDL_TEXTUREACCESS_STREAMING, 8, 8);
-  if (texture == NULL) {
-    SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
-    abort();
-  }
-  SDL_SetTexturePalette(texture, gb_state->sdl_palette);
-
-  uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
-  uint8_t pixels[8 * 8];
-  gb_tile_to_8bit_indexed(gb_tile, pixels);
-
-  SDL_UpdateTexture(texture, NULL, pixels, 8);
-  return texture;
-}
-
 // TODO: check if tile should be double height (8x16)
 void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y,
                   uint16_t tile_addr) {
@@ -268,16 +244,16 @@ void gb_render_bg(struct gb_state *gb_state) {
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
   if (gb_state->regs.io.lcd_control & LCDC_BG_WIN_TILE_DATA_AREA) {
-    bg_win_tile_data_start_p1 = 0x8000;
+    bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
   } else {
-    bg_win_tile_data_start_p1 = 0x9000;
+    bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK2_START;
   }
-  // Tile data 128-256 is always in Block 1 (0x8800-0x8FFF)
-  bg_win_tile_data_start_p2 = 0x8800;
+  bg_win_tile_data_start_p2 = GB_TILEDATA_BLOCK1_START;
+
   if (gb_state->regs.io.lcd_control & LCDC_BG_TILE_MAP_AREA) {
-    bg_tile_map_start = 0x9C00;
+    bg_tile_map_start = GB_TILEMAP_BLOCK1_START;
   } else {
-    bg_tile_map_start = 0x9800;
+    bg_tile_map_start = GB_TILEMAP_BLOCK0_START;
   }
 
   for (int i = 0; i < (32 * 32); i++) {

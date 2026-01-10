@@ -14,29 +14,37 @@
     abort();                                                                   \
   }
 
-#define KB(n)                   (1024 * n)
+#define KB(n)                    (1024 * n)
 
-#define NIBBLE0(byte)           ((byte & (0xF0 >> 0)) >> 4)
-#define NIBBLE1(byte)           ((byte & (0xF0 >> 4)) >> 0)
+#define NIBBLE0(byte)            ((byte & (0xF0 >> 0)) >> 4)
+#define NIBBLE1(byte)            ((byte & (0xF0 >> 4)) >> 0)
 
-#define CRUMB0(byte)            ((byte & (0b11000000 >> 0)) >> 6)
-#define CRUMB1(byte)            ((byte & (0b11000000 >> 2)) >> 4)
-#define CRUMB2(byte)            ((byte & (0b11000000 >> 4)) >> 2)
-#define CRUMB3(byte)            ((byte & (0b11000000 >> 6)) >> 0)
+#define CRUMB0(byte)             ((byte & (0b11000000 >> 0)) >> 6)
+#define CRUMB1(byte)             ((byte & (0b11000000 >> 2)) >> 4)
+#define CRUMB2(byte)             ((byte & (0b11000000 >> 4)) >> 2)
+#define CRUMB3(byte)             ((byte & (0b11000000 >> 6)) >> 0)
 
-#define GB_BG_WIDTH             256
-#define GB_BG_HEIGHT            256
+#define GB_BG_WIDTH              256
+#define GB_BG_HEIGHT             256
 
-#define GB_DISPLAY_WIDTH        160
-#define GB_DISPLAY_HEIGHT       144
+#define GB_DISPLAY_WIDTH         160
+#define GB_DISPLAY_HEIGHT        144
 
-#define DMG_PALETTE_N_COLORS 4
+#define GB_TILEDATA_BLOCK0_START 0x8000
+#define GB_TILEDATA_BLOCK1_START 0x8800
+#define GB_TILEDATA_BLOCK2_START 0x9000
 
-#define NS_PER_SEC              (1 * 1000 * 1000 * 1000)
+#define GB_TILEMAP_BLOCK0_START  0x9800
+#define GB_TILEMAP_BLOCK1_START  0x9C00
 
-#define DMG_CLOCK_HZ            (1 << 22)
+#define DMG_PALETTE_N_COLORS     4
+#define DMG_N_TILEDATA_ADDRESSES (128 * 3)
 
-#define DOTS_PER_FRAME          70224
+#define NS_PER_SEC               (1 * 1000 * 1000 * 1000)
+
+#define DMG_CLOCK_HZ             (1 << 22)
+
+#define DOTS_PER_FRAME           70224
 
 // This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2)                                             \
@@ -71,6 +79,7 @@ struct gb_state {
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
+  SDL_Texture textures[DMG_N_TILEDATA_ADDRESSES];
 
   FILE *serial_port_output;
 

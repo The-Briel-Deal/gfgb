@@ -1,6 +1,4 @@
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_log.h>
-#include <stdint.h>
+#include "common.h"
 
 #define PIX(x, y)                                                              \
   (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) |                             \
@@ -16,6 +14,29 @@ void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out) {
 }
 
 #undef PIX
+static SDL_Texture *gb_create_tex(struct gb_state *gb_state,
+                                  uint16_t tile_addr) {
+  int index = (tile_addr) / 16;
+}
+
+SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
+                                  uint16_t tile_addr) {
+  SDL_Renderer *renderer = gb_state->sdl_renderer;
+  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8,
+                                           SDL_TEXTUREACCESS_STREAMING, 8, 8);
+  if (texture == NULL) {
+    SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
+    abort();
+  }
+  SDL_SetTexturePalette(texture, gb_state->sdl_palette);
+
+  uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
+  uint8_t pixels[8 * 8];
+  gb_tile_to_8bit_indexed(gb_tile, pixels);
+
+  SDL_UpdateTexture(texture, NULL, pixels, 8);
+  return texture;
+}
 
 #ifdef RUN_PPU_TESTS
 
