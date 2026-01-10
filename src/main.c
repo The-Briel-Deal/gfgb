@@ -3,9 +3,6 @@
 #include "disassemble.h"
 #include "ppu.h"
 
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -58,6 +55,9 @@ bool gb_video_init(struct gb_state *gb_state) {
     SDL_Log("Couldn't set palette colors: %s", SDL_GetError());
     return false;
   }
+
+  SDL_SetDefaultTextureScaleMode(gb_state->sdl_renderer,
+                                 SDL_SCALEMODE_PIXELART);
   return true;
 }
 
