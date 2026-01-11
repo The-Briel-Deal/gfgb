@@ -330,6 +330,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   if (gb_state->serial_port_output != NULL)
     fclose(gb_state->serial_port_output);
 
-  /* SDL will clean up the window/renderer for us. */
+  gb_video_free(gb_state);
   SDL_free(appstate);
 }
