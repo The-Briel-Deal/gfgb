@@ -1,5 +1,4 @@
 gb_emu
-*.gb
 *.map
 *.sym
 *.o
