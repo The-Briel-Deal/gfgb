@@ -6,6 +6,7 @@
 #include <SDL3/SDL_init.h>
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -190,11 +191,17 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     *appstate = gb_state;
     SDL_assert(appstate != NULL);
     gb_state_init(*appstate);
-    gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename);
+    if (!gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename))
+      return SDL_APP_FAILURE;
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
     if (serial_output_filename != NULL) {
       gb_state->serial_port_output = fopen(serial_output_filename, "w");
+      if (gb_state->serial_port_output == NULL) {
+        SDL_Log("Error when opening serial port output file: %s",
+                strerror(errno));
+        return SDL_APP_FAILURE;
+      }
     }
 
     if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
@@ -374,6 +381,8 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     fclose(gb_state->serial_port_output);
 
   gb_video_free(gb_state);
-  free_symbol_list(&gb_state->syms);
+  if (gb_state->syms.capacity > 0) {
+    free_symbol_list(&gb_state->syms);
+  }
   SDL_free(appstate);
 }
