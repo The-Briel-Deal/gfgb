@@ -4,6 +4,7 @@
 #include "ppu.h"
 
 #include <SDL3/SDL_init.h>
+#include <assert.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -79,6 +80,51 @@ void gb_video_free(struct gb_state *gb_state) {
 
 #undef GREYSCALE_COLOR
 
+static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name,
+                        const char *bootrom_name, const char *sym_name) {
+  FILE *f;
+  int err;
+  uint8_t bytes[KB(16)];
+  int bytes_len;
+
+  // Load ROM into gb_state->rom0
+  // TODO: Load into multiple banks once bank switching is added.
+  assert(rom_name != NULL);
+  f = fopen(rom_name, "r");
+  bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+  if ((err = ferror(f))) {
+    SDL_Log("Error when reading rom file: %d", err);
+    return false;
+  }
+  fclose(f);
+  memcpy(gb_state->rom0, bytes, bytes_len);
+
+  // Load debug symbols into gb_state->syms (symbols are optional)
+  if (sym_name != NULL) {
+    alloc_symbol_list(&gb_state->syms);
+    f = fopen(sym_name, "r");
+    parse_syms(&gb_state->syms, f);
+    if ((err = ferror(f))) {
+      SDL_Log("Error when reading symbol file: %d", err);
+      return false;
+    }
+    fclose(f);
+  }
+
+  // Load bootrom into gb_state->bootrom (bootrom is optional)
+  if (bootrom_name != NULL) {
+    f = fopen(rom_name, "r");
+    bytes_len = fread(gb_state->bootrom, sizeof(uint8_t), 0x100, f);
+    if ((err = ferror(f))) {
+      SDL_Log("Error when reading bootrom file: %d", err);
+      return false;
+    }
+    fclose(f);
+    assert(bytes_len == 0x100);
+  }
+  return true;
+}
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
@@ -94,7 +140,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   // p: = serial port output file
   char *serial_output_filename = NULL;
   // b: = boot rom
-  char *boot_rom_filename = NULL;
+  char *bootrom_filename = NULL;
   while ((c = getopt(argc, argv, "edf:s:p:b:")) != -1)
     switch (c) {
     case 'e':
@@ -116,7 +162,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     case 'f': rom_filename = optarg; break;
     case 's': symbol_filename = optarg; break;
     case 'p': serial_output_filename = optarg; break;
-    case 'b': boot_rom_filename = optarg; break;
+    case 'b': bootrom_filename = optarg; break;
     case '?':
       switch (optopt) {
       case 'f':
@@ -125,7 +171,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       case 'b':
         fprintf(stderr, "Option -%c requires an argument.\n", optopt);
         return SDL_APP_FAILURE;
-      default: {
+      default:
         if (isprint(optopt)) {
           fprintf(stderr, "Unknown option `-%c'.\n", optopt);
         } else {
@@ -133,33 +179,19 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         }
         return SDL_APP_FAILURE;
       }
-      }
     default: return SDL_APP_FAILURE;
     }
 
   switch (run_mode) {
   case EXECUTE: {
-    FILE *f;
-    int err;
-    uint8_t bytes[KB(16)];
-    int bytes_len;
     struct gb_state *gb_state;
-
-    f = fopen(rom_filename, "r");
-
-    bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
-    if ((err = ferror(f))) {
-      SDL_Log("Error when reading rom file: %d", err);
-      return SDL_APP_FAILURE;
-    }
-    fclose(f);
 
     gb_state = SDL_malloc(sizeof(struct gb_state));
     *appstate = gb_state;
     SDL_assert(appstate != NULL);
     gb_state_init(*appstate);
+    gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename);
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
-    memcpy(gb_state->rom0, bytes, bytes_len);
 
     if (serial_output_filename != NULL) {
       gb_state->serial_port_output = fopen(serial_output_filename, "w");
@@ -342,5 +374,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     fclose(gb_state->serial_port_output);
 
   gb_video_free(gb_state);
+  free_symbol_list(&gb_state->syms);
   SDL_free(appstate);
 }

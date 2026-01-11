@@ -1,6 +1,9 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
+#include "cpu.h"
+#include "disassemble.h"
+
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <stdint.h>
@@ -76,9 +79,11 @@ struct gb_state {
       uint8_t bg_pallete;
     } io;
   } regs;
+  uint8_t bootrom[0x100];
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
+  struct debug_symbol_list syms;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
 
   FILE *serial_port_output;
@@ -93,7 +98,7 @@ struct gb_state {
 #define ROMN_START 0x4000
 #define ROMN_END   0x7FFF
 
-// VRAM on CGB is switchable accross 2 8KB banks, on DMG this is just one 8KB
+// VRAM on CGB is switchable across 2 8KB banks, on DMG this is just one 8KB
 // block. I won't worry about this until DMG is finished.
 #define VRAM_START 0x8000
 #define VRAM_END   0x9FFF

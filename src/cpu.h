@@ -1,7 +1,7 @@
 #ifndef GB_CPU_H
 #define GB_CPU_H
 
-#include "common.h"
+#include <stdint.h>
 
 enum r8 {
   R8_B = 0,
@@ -93,6 +93,8 @@ struct inst {
   struct inst_param p1;
   struct inst_param p2;
 };
+
+struct gb_state;
 
 struct inst fetch(struct gb_state *gb_state);
 void execute(struct gb_state *gb_state, struct inst inst);
