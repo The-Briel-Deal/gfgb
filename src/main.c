@@ -114,7 +114,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name,
 
   // Load bootrom into gb_state->bootrom (bootrom is optional)
   if (bootrom_name != NULL) {
-    f = fopen(rom_name, "r");
+    f = fopen(bootrom_name, "r");
     bytes_len = fread(gb_state->bootrom, sizeof(uint8_t), 0x0100, f);
     if ((err = ferror(f))) {
       SDL_Log("Error when reading bootrom file: %d", err);

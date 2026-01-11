@@ -145,7 +145,7 @@ static inline uint32_t gb_dots() {
 #define IO_BGP             0xFF47
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
-  if (gb_state->bootrom_mapped && addr < 0x0100) {
+  if (gb_state->bootrom_mapped && (addr < 0x0100)) {
     return gb_state->bootrom[addr];
   }
   if (addr >= IO_REG_START && addr <= IO_REG_END) {
