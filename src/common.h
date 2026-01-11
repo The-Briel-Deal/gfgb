@@ -79,6 +79,7 @@ struct gb_state {
       uint8_t bg_pallete;
     } io;
   } regs;
+  bool bootrom_mapped;
   uint8_t bootrom[0x100];
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
@@ -144,7 +145,9 @@ static inline uint32_t gb_dots() {
 #define IO_BGP             0xFF47
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
-  uint8_t val;
+  if (gb_state->bootrom_mapped && addr < 0x0100) {
+    return gb_state->bootrom[addr];
+  }
   if (addr >= IO_REG_START && addr <= IO_REG_END) {
     switch (addr) {
     case IO_LY: {
@@ -160,7 +163,8 @@ static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
     default: NOT_IMPLEMENTED("IO Reg Not Implemented");
     }
   }
-  val = *((uint8_t *)unmap_address(gb_state, addr));
+
+  uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
   return val;
 }
 
@@ -202,10 +206,6 @@ static inline void write_mem16(struct gb_state *gb_state, uint16_t addr,
 
 static inline void gb_state_init(struct gb_state *gb_state) {
   SDL_zerop(gb_state);
-  // In reality the pc should be initialized to 0x0000 where the boot rom
-  // starts, but practically it's fine to just skip the boot rom and start at
-  // our programs location at 0x0100.
-  gb_state->regs.pc = 0x0100;
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.

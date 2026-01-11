@@ -115,13 +115,18 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name,
   // Load bootrom into gb_state->bootrom (bootrom is optional)
   if (bootrom_name != NULL) {
     f = fopen(rom_name, "r");
-    bytes_len = fread(gb_state->bootrom, sizeof(uint8_t), 0x100, f);
+    bytes_len = fread(gb_state->bootrom, sizeof(uint8_t), 0x0100, f);
     if ((err = ferror(f))) {
       SDL_Log("Error when reading bootrom file: %d", err);
       return false;
     }
     fclose(f);
-    assert(bytes_len == 0x100);
+    assert(bytes_len == 0x0100);
+    gb_state->regs.pc = 0x0000;
+    gb_state->bootrom_mapped = true;
+  } else {
+    gb_state->regs.pc = 0x0100;
+    gb_state->bootrom_mapped = false;
   }
   return true;
 }
