@@ -46,6 +46,7 @@
 
 #define DMG_PALETTE_N_COLORS     4
 #define DMG_N_TILEDATA_ADDRESSES (128 * 3)
+#define DMG_BOOTROM_SIZE         0x100
 
 #define NS_PER_SEC               (1 * 1000 * 1000 * 1000)
 
@@ -84,7 +85,8 @@ struct gb_state {
     } io;
   } regs;
   bool bootrom_mapped;
-  uint8_t bootrom[0x100];
+  bool rom_loaded;
+  uint8_t bootrom[DMG_BOOTROM_SIZE];
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
@@ -214,6 +216,12 @@ static inline void gb_state_init(struct gb_state *gb_state) {
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
   gb_state->regs.sp = WRAM_END + 1;
+
+  // This isn't necessary due to me zeroing state above, but I want to
+  // explicitly set this as false in case I ever remove the zeroing as a speed
+  // up.
+  gb_state->rom_loaded = false;
+  gb_state->bootrom_mapped = false;
 }
 #undef ROM0_START
 #undef ROM0_END

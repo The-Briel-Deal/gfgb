@@ -88,17 +88,19 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name,
   uint8_t bytes[KB(16)];
   int bytes_len;
 
-  // Load ROM into gb_state->rom0
-  // TODO: Load into multiple banks once bank switching is added.
-  assert(rom_name != NULL);
-  f = fopen(rom_name, "r");
-  bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
-  if ((err = ferror(f))) {
-    SDL_Log("Error when reading rom file: %d", err);
-    return false;
+  // Load ROM into gb_state->rom0 (rom is optional since the disassembler can
+  // also assemble only the boot rom).
+  if (rom_name != NULL) {
+    // TODO: Load into multiple banks once bank switching is added.
+    f = fopen(rom_name, "r");
+    bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+    if ((err = ferror(f))) {
+      SDL_Log("Error when reading rom file: %d", err);
+      return false;
+    }
+    fclose(f);
+    memcpy(gb_state->rom0, bytes, bytes_len);
   }
-  fclose(f);
-  memcpy(gb_state->rom0, bytes, bytes_len);
 
   // Load debug symbols into gb_state->syms (symbols are optional)
   if (sym_name != NULL) {
