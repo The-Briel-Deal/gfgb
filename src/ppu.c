@@ -67,28 +67,34 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
 
 #include <assert.h>
 
-void test_gb_tile_to_msb2() {
+void test_gb_tile_to_8bit_indexed() {
   uint8_t gb_tile_in[16] = {0};
-  uint8_t msb2_tile_expect[16] = {0};
-  uint8_t msb2_tile_result[16] = {0};
+  uint8_t indexed_8bit_tile_expect[8 * 8] = {0};
+  uint8_t indexed_8bit_tile_result[8 * 8] = {0};
   gb_tile_in[0] = 0b1010'1100;
   gb_tile_in[1] = 0b1100'1011;
-  msb2_tile_expect[0] = 0b1110'0100;
-  msb2_tile_expect[1] = 0b1101'1010;
+  indexed_8bit_tile_expect[0] = 0b11;
+  indexed_8bit_tile_expect[1] = 0b10;
+  indexed_8bit_tile_expect[2] = 0b01;
+  indexed_8bit_tile_expect[3] = 0b00;
+  indexed_8bit_tile_expect[4] = 0b11;
+  indexed_8bit_tile_expect[5] = 0b01;
+  indexed_8bit_tile_expect[6] = 0b10;
+  indexed_8bit_tile_expect[7] = 0b10;
 
-  gb_tile_to_8bit_indexed(gb_tile_in, msb2_tile_result);
+  gb_tile_to_8bit_indexed(gb_tile_in, indexed_8bit_tile_result);
   for (int i = 0; i < 16; i++) {
-    if (msb2_tile_expect[i] != msb2_tile_result[i]) {
-      SDL_Log("byte i=%d of msb2 result (%.8b) is not equal to result (%.8b)\n",
-              i, msb2_tile_result[i], msb2_tile_expect[i]);
+    if (indexed_8bit_tile_expect[i] != indexed_8bit_tile_result[i]) {
+      SDL_Log("byte i=%d of indexed_8bit result (%.8b) is not equal to result (%.8b)\n",
+              i, indexed_8bit_tile_result[i], indexed_8bit_tile_expect[i]);
       abort();
     }
   }
 }
 int main() {
   SDL_Log("Starting PPU tests.");
-  SDL_Log("running `test_gb_tile_to_msb2()`");
-  test_gb_tile_to_msb2();
+  SDL_Log("running `test_gb_tile_to_indexed_8bit()`");
+  test_gb_tile_to_8bit_indexed();
   SDL_Log("PPU tests succeeded.");
   SDL_Quit();
 }

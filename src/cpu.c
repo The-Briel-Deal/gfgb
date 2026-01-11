@@ -605,6 +605,7 @@ void test_fetch() {
   struct inst inst;
 
   gb_state_init(&gb_state);
+  gb_state.regs.pc = 0x0100;
 
   write_mem8(&gb_state, 0x100, 0b00100001);
   write_mem16(&gb_state, 0x101, 452);
