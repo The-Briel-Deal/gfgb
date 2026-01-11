@@ -60,6 +60,21 @@ bool gb_video_init(struct gb_state *gb_state) {
                                  SDL_SCALEMODE_PIXELART);
   return true;
 }
+void gb_video_free(struct gb_state *gb_state) {
+  // free all textures
+  for (int i = 0; i < DMG_N_TILEDATA_ADDRESSES; i++) {
+    if (gb_state->textures[i] != NULL) {
+      SDL_DestroyTexture(gb_state->textures[i]);
+      gb_state->textures[i] = NULL;
+    }
+  }
+  SDL_DestroyPalette(gb_state->sdl_palette);
+  gb_state->sdl_palette = NULL;
+  SDL_DestroyRenderer(gb_state->sdl_renderer);
+  gb_state->sdl_renderer = NULL;
+  SDL_DestroyWindow(gb_state->sdl_window);
+  gb_state->sdl_window = NULL;
+}
 
 #undef GREYSCALE_COLOR
 
@@ -314,6 +329,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   (void)result;
   if (gb_state->serial_port_output != NULL)
     fclose(gb_state->serial_port_output);
+
   /* SDL will clean up the window/renderer for us. */
   SDL_free(appstate);
 }
