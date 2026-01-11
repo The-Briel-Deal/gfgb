@@ -190,7 +190,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
-void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
+static void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
                      const int rom_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
@@ -202,10 +202,18 @@ void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
     print_inst(stream, inst);
   }
 }
+static void disassemble_bootrom(struct gb_state *gb_state, FILE *stream) {
+  gb_state->regs.pc = 0x0000;
+  while (gb_state->regs.pc < 0x0100) {
+    fprintf(stream, "  0x%.4X: ", gb_state->regs.pc);
+    struct inst inst = fetch(gb_state);
+    print_inst(stream, inst);
+  }
+}
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
-void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
+static void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
                               const int rom_bytes_len,
                               const struct debug_symbol_list *syms) {
   struct gb_state gb_state;
@@ -226,7 +234,7 @@ void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
 }
 // copies rom to the start of memory and start disassembly at 0x0 since we're
 // just looking at 1 section.
-void disassemble_section(FILE *stream, const uint8_t *section_bytes,
+static void disassemble_section(FILE *stream, const uint8_t *section_bytes,
                          const int section_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
@@ -237,6 +245,13 @@ void disassemble_section(FILE *stream, const uint8_t *section_bytes,
     fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
     struct inst inst = fetch(&gb_state);
     print_inst(stream, inst);
+  }
+}
+
+void disassemble(struct gb_state *gb_state, FILE *stream) {
+  if (gb_state->bootrom_mapped) {
+    fprintf(stream, "BootRom:\n");
+    disassemble_bootrom(gb_state, stream);
   }
 }
 

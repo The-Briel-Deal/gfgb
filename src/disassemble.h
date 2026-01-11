@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
-                     const int rom_bytes_len);
+void disassemble(struct gb_state *gb_state, FILE *stream);
+
 // I'm treating sections and labels the same in the parsed data structure.
 struct debug_symbol_list {
   struct debug_symbol {
@@ -24,11 +24,5 @@ void free_symbol_list(struct debug_symbol_list *syms);
 
 void parse_syms(struct debug_symbol_list *syms, FILE *sym_file);
 void print_inst(FILE *stream, const struct inst inst);
-
-void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
-                              const int rom_bytes_len,
-                              const struct debug_symbol_list *syms);
-void disassemble_section(FILE *stream, const uint8_t *section_bytes,
-                         const int section_bytes_len);
 
 #endif // GB_DISASSEMBLE_H

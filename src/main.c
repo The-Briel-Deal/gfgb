@@ -214,34 +214,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_CONTINUE; /* carry on with the program! */
   };
   case DISASSEMBLE: {
-    FILE *f;
-    int err;
 
-    f = fopen(rom_filename, "r");
-    uint8_t bytes[KB(16)];
+    struct gb_state gb_state;
+    gb_state_init(&gb_state);
 
-    int len = fread(bytes, sizeof(uint8_t), KB(16), f);
-    if ((err = ferror(f))) {
-      SDL_Log("Error when reading rom file: %d", err);
+    if (!gb_load_rom(&gb_state, rom_filename, bootrom_filename,
+                     symbol_filename))
       return SDL_APP_FAILURE;
-    }
-    fclose(f);
-
-    if (symbol_filename != NULL) {
-      struct debug_symbol_list syms;
-      alloc_symbol_list(&syms);
-      f = fopen(symbol_filename, "r");
-      parse_syms(&syms, f);
-      if ((err = ferror(f))) {
-        SDL_Log("Error when reading symbol file: %d", err);
-        return SDL_APP_FAILURE;
-      }
-      fclose(f);
-      disassemble_rom_with_sym(stdout, bytes, len, &syms);
-      free_symbol_list(&syms);
-    } else {
-      disassemble_rom(stdout, bytes, len);
-    }
+    disassemble(&gb_state, stdout);
 
     return SDL_APP_SUCCESS;
   }
