@@ -451,6 +451,24 @@ static void ex_or(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, r->a == 0);
 }
 
+static void ex_xor(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == XOR);
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
+  struct regs *r = &gb_state->regs;
+  uint8_t p2_val;
+  if (IS_R8(inst.p2)) {
+    p2_val = get_r8(gb_state, inst.p2.r8);
+  } else if (IS_IMM8(inst.p2)) {
+    p2_val = inst.p2.imm8;
+  } else {
+    unreachable();
+  }
+  r->a ^= p2_val;
+  set_flags(gb_state, FLAG_H | FLAG_N | FLAG_C, false);
+  set_flags(gb_state, FLAG_Z, r->a == 0);
+}
+
 static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == DEC);
   assert(IS_R8(inst.p1) || IS_R16(inst.p1));
@@ -573,6 +591,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case INC: ex_inc(gb_state, inst); return;
   case DEC: ex_dec(gb_state, inst); return;
   case OR: ex_or(gb_state, inst); return;
+  case XOR: ex_xor(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
