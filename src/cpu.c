@@ -3,6 +3,7 @@
 #include "disassemble.h"
 #include "test_asserts.h"
 
+#include <__stddef_unreachable.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -32,6 +33,8 @@ enum flags : uint8_t {
   (struct inst_param) { .type = IMM8, .imm8 = imm }
 #define IMM16_MEM_PARAM(imm)                                                   \
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
+#define B3_PARAM(b)                                                            \
+  (struct inst_param) { .type = B3, .b3 = b }
 #define COND_PARAM(cond)                                                       \
   (struct inst_param) { .type = COND, .r8 = cond }
 #define UNKNOWN_INST_BYTE_PARAM(b)                                             \
@@ -311,9 +314,65 @@ struct inst fetch(struct gb_state *gb_state) {
           .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
           .p2 = IMM16_PARAM(next16(gb_state))};
 
+    // 0xCB prefix instructions
+    if (curr_byte == 0xCB) {
+      uint8_t cb_suffix = next8(gb_state);
+      struct inst inst = {
+          .type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+
+      switch (CRUMB0(cb_suffix)) {
+      case 0b00:
+        switch (OCTAL1(cb_suffix)) {
+        case 0b000: // RLC R8
+          inst.type = RLC;
+          goto r8_inst;
+        case 0b001: // RRC R8
+          inst.type = RRC;
+          goto r8_inst;
+        case 0b010: // RL R8
+          inst.type = RL;
+          goto r8_inst;
+        case 0b011: // RR R8
+          inst.type = RR;
+          goto r8_inst;
+        case 0b100: // SLA R8
+          inst.type = SLA;
+          goto r8_inst;
+        case 0b101: // SRA R8
+          inst.type = SRA;
+          goto r8_inst;
+        case 0b110: // SWAP R8
+          inst.type = SWAP;
+          goto r8_inst;
+        case 0b111: // SRL R8
+          inst.type = SRL;
+          goto r8_inst;
+        }
+      case 0b01: // BIT B3, R8
+        inst.type = BIT;
+        goto b3_r8_inst;
+      case 0b10: // RES B3, R8
+        inst.type = RES;
+        goto b3_r8_inst;
+      case 0b11: // SET B3, R8
+        inst.type = SET;
+        goto b3_r8_inst;
+      }
+      // every possible 0xCB suffix maps to an opcode.
+      unreachable();
+    b3_r8_inst:
+      inst.p1 = B3_PARAM(OCTAL1(cb_suffix));
+      inst.p2 = R8_PARAM(OCTAL2(cb_suffix));
+      return inst;
+
+    r8_inst:
+      inst.p1 = R8_PARAM(OCTAL2(cb_suffix));
+      return inst;
+    }
+
     break;
   }
-  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.4X.",
+  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.2X.",
                curr_byte);
   return (struct inst){.type = UNKNOWN_INST,
                        .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte),

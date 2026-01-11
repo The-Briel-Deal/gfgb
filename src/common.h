@@ -19,13 +19,17 @@
 
 #define KB(n)                    (1024 * n)
 
-#define NIBBLE0(byte)            ((byte & (0xF0 >> 0)) >> 4)
-#define NIBBLE1(byte)            ((byte & (0xF0 >> 4)) >> 0)
+#define NIBBLE0(byte)            ((byte & 0xF0) >> 4)
+#define NIBBLE1(byte)            ((byte & 0x0F) >> 0)
 
-#define CRUMB0(byte)             ((byte & (0b11000000 >> 0)) >> 6)
-#define CRUMB1(byte)             ((byte & (0b11000000 >> 2)) >> 4)
-#define CRUMB2(byte)             ((byte & (0b11000000 >> 4)) >> 2)
-#define CRUMB3(byte)             ((byte & (0b11000000 >> 6)) >> 0)
+#define OCTAL0(byte)             ((byte & 0700) >> 6)
+#define OCTAL1(byte)             ((byte & 0070) >> 3)
+#define OCTAL2(byte)             ((byte & 0007) >> 0)
+
+#define CRUMB0(byte)             ((byte & 0b11000000) >> 6)
+#define CRUMB1(byte)             ((byte & 0b00110000) >> 4)
+#define CRUMB2(byte)             ((byte & 0b00001100) >> 2)
+#define CRUMB3(byte)             ((byte & 0b00000011) >> 0)
 
 #define GB_BG_WIDTH              256
 #define GB_BG_HEIGHT             256

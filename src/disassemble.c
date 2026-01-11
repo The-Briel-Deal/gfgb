@@ -55,6 +55,7 @@ static void print_inst_param(char *inst_param_str,
   // TODO: Print label for imm16 when possible.
   case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
   case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
+  case B3: sprintf(inst_param_str, "B3_%d", inst_param.b3); break;
   case COND:
     switch (inst_param.cond) {
       PRINT_ENUM_CASE(COND_NZ)
@@ -97,13 +98,26 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, XOR)
     PRINT_INST_NAME(stream, OR)
     PRINT_INST_NAME(stream, CP)
-
+    PRINT_INST_NAME(stream, RLC)
+    PRINT_INST_NAME(stream, RRC)
+    PRINT_INST_NAME(stream, RL)
+    PRINT_INST_NAME(stream, RR)
+    PRINT_INST_NAME(stream, SLA)
+    PRINT_INST_NAME(stream, SRA)
+    PRINT_INST_NAME(stream, SWAP)
+    PRINT_INST_NAME(stream, SRL)
+    PRINT_INST_NAME(stream, BIT)
+    PRINT_INST_NAME(stream, RES)
+    PRINT_INST_NAME(stream, SET)
   case UNKNOWN_INST: {
     // I only use the `_INST` suffix to prevent name collision, so i'm going
     // just print `UNKNOWN` here so I don't need to add more padding.
     fprintf(stream, "%-10s", "UNKNOWN");
     break;
   }
+  default:
+    printf("Unhandled instruction in disassembler, aborting.\n");
+    abort();
   }
   char inst_param_str[16];
   print_inst_param(inst_param_str, inst.p1);

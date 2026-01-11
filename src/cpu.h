@@ -52,6 +52,7 @@ struct inst_param {
     IMM8,
     SP_IMM8, // Stack Pointer + IMM8
     IMM16_MEM,
+    B3, // Bit Index
     COND,
     UNKNOWN_INST_BYTE,
     VOID_PARAM_TYPE,
@@ -64,6 +65,7 @@ struct inst_param {
     enum cond cond;
     uint8_t imm8;
     uint16_t imm16;
+    uint8_t b3;
     uint8_t unknown_inst_byte;
   };
 };
@@ -88,6 +90,17 @@ struct inst {
     AND,
     XOR,
     OR,
+    RLC,
+    RRC,
+    RL,
+    RR,
+    SLA,
+    SRA,
+    SWAP,
+    SRL,
+    BIT,
+    RES,
+    SET,
     UNKNOWN_INST,
   } type;
   struct inst_param p1;
