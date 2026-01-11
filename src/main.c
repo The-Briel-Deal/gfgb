@@ -3,6 +3,7 @@
 #include "disassemble.h"
 #include "ppu.h"
 
+#include <SDL3/SDL_init.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -83,16 +84,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
 
   int c;
-  char *filename = NULL;
-  char *symbol_filename = NULL;
-  char *serial_output_filename = NULL;
 
   // e = execute
   // d = disassemble
   // f: = rom file
+  char *rom_filename = NULL;
   // s: = sym file
+  char *symbol_filename = NULL;
   // p: = serial port output file
-  while ((c = getopt(argc, argv, "edf:s:p:")) != -1)
+  char *serial_output_filename = NULL;
+  // b: = boot rom
+  char *boot_rom_filename = NULL;
+  while ((c = getopt(argc, argv, "edf:s:p:b:")) != -1)
     switch (c) {
     case 'e':
       if (run_mode != UNSET) {
@@ -110,20 +113,28 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       }
       run_mode = DISASSEMBLE;
       break;
-    case 'f': filename = optarg; break;
+    case 'f': rom_filename = optarg; break;
     case 's': symbol_filename = optarg; break;
     case 'p': serial_output_filename = optarg; break;
+    case 'b': boot_rom_filename = optarg; break;
     case '?':
-      if (optopt == 'f')
+      switch (optopt) {
+      case 'f':
+      case 's':
+      case 'p':
+      case 'b':
         fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-      if (optopt == 's')
-        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-      else if (isprint(optopt))
-        fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-      else
-        fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
-      return 1;
-    default: abort();
+        return SDL_APP_FAILURE;
+      default: {
+        if (isprint(optopt)) {
+          fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+        } else {
+          fprintf(stderr, "Unknown option character `0x%.2X'.\n", optopt);
+        }
+        return SDL_APP_FAILURE;
+      }
+      }
+    default: return SDL_APP_FAILURE;
     }
 
   switch (run_mode) {
@@ -134,7 +145,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     int bytes_len;
     struct gb_state *gb_state;
 
-    f = fopen(filename, "r");
+    f = fopen(rom_filename, "r");
 
     bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
     if ((err = ferror(f))) {
@@ -162,7 +173,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     FILE *f;
     int err;
 
-    f = fopen(filename, "r");
+    f = fopen(rom_filename, "r");
     uint8_t bytes[KB(16)];
 
     int len = fread(bytes, sizeof(uint8_t), KB(16), f);
