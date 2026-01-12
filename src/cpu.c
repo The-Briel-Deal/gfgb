@@ -1,14 +1,10 @@
 #include "cpu.h"
 #include "common.h"
-#include "disassemble.h"
-#include "test_asserts.h"
 
-#include <__stddef_unreachable.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 enum flags : uint8_t {
   FLAG_Z = (1 << 7),
@@ -541,7 +537,7 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   assert(dest.type == IMM8_HMEM || (dest.type == R8 && dest.r8 == R8_C));
   assert(src.type == R8 && src.r8 == R8_A);
   // TODO: Finish implementing
-  NOT_IMPLEMENTED("I need to finish implementing LDH in both dirs.")
+  NOT_IMPLEMENTED("I need to finish implementing LDH in both dirs.");
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
@@ -780,6 +776,8 @@ void execute(struct gb_state *gb_state, struct inst inst) {
 }
 
 #ifdef RUN_CPU_TESTS
+
+#include "test_asserts.h"
 
 void test_fetch() {
   struct gb_state gb_state;
