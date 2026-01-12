@@ -173,8 +173,6 @@ static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk,
 #define ARITHMETIC_OP_MASK  0b00111000
 
 // TODO: The following instructions are missing and need to be implemented
-//   0x17 - RLA (Rotate Left)
-//   0xCC
 //   0xCE
 //   0xD9
 //   0xDC
@@ -333,6 +331,11 @@ struct inst fetch(struct gb_state *gb_state) {
     if (curr_byte == 0b11001101) // Unconditional call
       return (struct inst){
           .type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000100) // Conditional call
+      return (struct inst){
+          .type = CALL,
+          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
+          .p2 = IMM16_PARAM(next16(gb_state))};
 
     if (curr_byte == 0b11101010) // LD [IMM16], A
       return (struct inst){.type = LD,
