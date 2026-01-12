@@ -172,6 +172,18 @@ static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk,
 #define ARITHMETIC_R8_MASK  0b00000111
 #define ARITHMETIC_OP_MASK  0b00111000
 
+// TODO: The following instructions are missing and need to be implemented
+// 0x17
+// 0xCC
+// 0xCE
+// 0xD9
+// 0xDC
+// 0xDD
+// 0xE0
+// 0xE2
+// 0xE6
+// 0xED
+// 0xF0
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
