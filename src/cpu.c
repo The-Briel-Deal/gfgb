@@ -535,6 +535,14 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
 not_implemented:
   NOT_IMPLEMENTED("Unknown load instruction");
 }
+static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
+  struct inst_param dest = inst.p1;
+  struct inst_param src = inst.p2;
+  assert(dest.type == IMM8_HMEM || (dest.type == R8 && dest.r8 == R8_C));
+  assert(src.type == R8 && src.r8 == R8_A);
+  // TODO: Finish implementing
+  NOT_IMPLEMENTED("I need to finish implementing LDH in both dirs.")
+}
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
   write_mem8(gb_state, --gb_state->regs.sp, (val & 0xFF00) >> 8);
@@ -630,6 +638,16 @@ static void ex_xor(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, r->a == 0);
 }
 
+static void ex_bit(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == BIT);
+  assert(inst.p1.type == B3);
+  assert(IS_R8(inst.p2));
+  struct regs *r = &gb_state->regs;
+  uint8_t val = get_r8(gb_state, inst.p2.r8);
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+  set_flags(gb_state, FLAG_Z, (val >> inst.p1.b3) & 1);
+}
+
 static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == DEC);
   assert(IS_R8(inst.p1) || IS_R16(inst.p1));
@@ -701,6 +719,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   switch (inst.type) {
   case NOP: return;
   case LD: ex_ld(gb_state, inst); return;
+  case LDH: ex_ldh(gb_state, inst); return;
   case JP: {
     if (IS_IMM16(inst.p1)) {
       gb_state->regs.pc = inst.p1.imm16;
@@ -753,6 +772,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case DEC: ex_dec(gb_state, inst); return;
   case OR: ex_or(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
+  case BIT: ex_bit(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
