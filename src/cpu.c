@@ -260,31 +260,35 @@ struct inst fetch(struct gb_state *gb_state) {
 
     // rlca
     if (curr_byte == 0b00000111) {
-      return (struct inst){
-          .type = JR,
-          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
-          .p2 = IMM8_PARAM(next8(gb_state))};
+      return (struct inst){.type = RLCA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // rrca
     if (curr_byte == 0b00001111) {
+      return (struct inst){.type = RRCA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // rla
     if (curr_byte == 0b00010111) {
+      return (struct inst){.type = RLA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // rra
     if (curr_byte == 0b00011111) {
+      return (struct inst){.type = RRA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // daa
     if (curr_byte == 0b00100111) {
+      return (struct inst){.type = DAA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // cpl
     if (curr_byte == 0b00101111) {
+      return (struct inst){.type = CPL, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // scf
     if (curr_byte == 0b00110111) {
+      return (struct inst){.type = SCF, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     // ccf
     if (curr_byte == 0b00111111) {
+      return (struct inst){.type = CCF, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     }
     break;
   case /* block */ 1:
