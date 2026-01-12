@@ -31,6 +31,8 @@ enum flags : uint8_t {
   (struct inst_param) { .type = SP_IMM8, .imm8 = imm }
 #define IMM8_PARAM(imm)                                                        \
   (struct inst_param) { .type = IMM8, .imm8 = imm }
+#define IMM8_HMEM_PARAM(imm)                                                   \
+  (struct inst_param) { .type = IMM8_HMEM, .imm8 = imm }
 #define IMM16_MEM_PARAM(imm)                                                   \
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
 #define B3_PARAM(b)                                                            \
@@ -178,7 +180,7 @@ static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk,
 //   0xDC
 //   0xDD
 //   0xE0
-//   0xE2
+//   0xE2 - LDH [C], A
 //   0xE6
 //   0xED
 //   0xF0
@@ -331,30 +333,82 @@ struct inst fetch(struct gb_state *gb_state) {
     if (curr_byte == 0b11001101) // Unconditional call
       return (struct inst){
           .type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000100) // Conditional call
       return (struct inst){
           .type = CALL,
           .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
           .p2 = IMM16_PARAM(next16(gb_state))};
 
+    if (curr_byte == 0b11100010) // LDH [C], A
+      return (struct inst){
+          .type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
+
+    if (curr_byte == 0b11100000) // LDH [IMM8], A
+      return (struct inst){.type = LDH,
+                           .p1 = IMM8_HMEM_PARAM(next8(gb_state)),
+                           .p2 = R8_PARAM(R8_A)};
+
     if (curr_byte == 0b11101010) // LD [IMM16], A
       return (struct inst){.type = LD,
                            .p1 = IMM16_MEM_PARAM(next16(gb_state)),
                            .p2 = R8_PARAM(R8_A)};
 
-    if (curr_byte == 0b11111000) // LD HL, SP+IMM8
-      return (struct inst){.type = LD,
-                           .p1 = R16_PARAM(R16_HL),
-                           .p2 = SP_IMM8_PARAM(next8(gb_state))};
+    if (curr_byte == 0b11110010) // LDH A, [C]
+      return (struct inst){
+          .type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
+
+    if (curr_byte == 0b11110000) // LDH A, [IMM8]
+      return (struct inst){.type = LDH,
+                           .p1 = R8_PARAM(R8_A),
+                           .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
 
     if (curr_byte == 0b11111010) // LD A, [IMM16]
       return (struct inst){.type = LD,
                            .p1 = R8_PARAM(R8_A),
                            .p2 = IMM16_MEM_PARAM(next16(gb_state))};
 
-    if (curr_byte == 0b11111110) // CP A, IMM8
-      return (struct inst){
-          .type = CP, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+    if (curr_byte == 0b11111000) // LD HL, SP+IMM8
+      return (struct inst){.type = LD,
+                           .p1 = R16_PARAM(R16_HL),
+                           .p2 = SP_IMM8_PARAM(next8(gb_state))};
+
+    if (OCTAL2(curr_byte) == 0b110) {
+      switch (OCTAL1(curr_byte)) {
+      case 0:
+        return (struct inst){.type = ADD,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 1:
+        return (struct inst){.type = ADC,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 2:
+        return (struct inst){.type = SUB,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 3:
+        return (struct inst){.type = SBC,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 4:
+        return (struct inst){.type = AND,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 5:
+        return (struct inst){.type = XOR,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 6:
+        return (struct inst){.type = OR,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 7:
+        return (struct inst){.type = CP,
+                             .p1 = R8_PARAM(R8_A),
+                             .p2 = IMM8_PARAM(next8(gb_state))};
+      }
+    }
 
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000010) // JP COND, IMM16
       return (struct inst){

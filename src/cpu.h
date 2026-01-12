@@ -50,6 +50,7 @@ struct inst_param {
     R16_STK,
     IMM16,
     IMM8,
+    IMM8_HMEM,
     SP_IMM8, // Stack Pointer + IMM8
     IMM16_MEM,
     B3, // Bit Index
@@ -86,6 +87,7 @@ struct inst {
     JP,
     JR,
     LD,
+    LDH,
     NOP,
     OR,
     POP,

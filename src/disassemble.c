@@ -51,6 +51,7 @@ static void print_inst_param(char *inst_param_str,
     }
     break;
   case IMM8: sprintf(inst_param_str, "0x%.2X", inst_param.imm8); break;
+  case IMM8_HMEM: sprintf(inst_param_str, "[0x%.2X]", inst_param.imm8); break;
   case SP_IMM8: sprintf(inst_param_str, "SP+0x%.2X", inst_param.imm8); break;
   // TODO: Print label for imm16 when possible.
   case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
@@ -94,6 +95,7 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, JP)
     PRINT_INST_NAME(stream, JR)
     PRINT_INST_NAME(stream, LD)
+    PRINT_INST_NAME(stream, LDH)
     PRINT_INST_NAME(stream, NOP)
     PRINT_INST_NAME(stream, OR)
     PRINT_INST_NAME(stream, POP)
