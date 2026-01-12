@@ -190,15 +190,11 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
-static void disassemble_rom(FILE *stream, const uint8_t *rom_bytes,
-                     const int rom_bytes_len) {
-  struct gb_state gb_state;
-  gb_state_init(&gb_state);
-  memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
+static void disassemble_rom(struct gb_state *gb_state, FILE *stream) {
 
-  while (gb_state.regs.pc < rom_bytes_len) {
-    fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
-    struct inst inst = fetch(&gb_state);
+  while (gb_state->regs.pc < sizeof(gb_state->rom0)) {
+    fprintf(stream, "  0x%.4X: ", gb_state->regs.pc);
+    struct inst inst = fetch(gb_state);
     print_inst(stream, inst);
   }
 }
@@ -213,21 +209,16 @@ static void disassemble_bootrom(struct gb_state *gb_state, FILE *stream) {
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
-static void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
-                              const int rom_bytes_len,
-                              const struct debug_symbol_list *syms) {
-  struct gb_state gb_state;
-  gb_state_init(&gb_state);
-  memcpy(gb_state.rom0, rom_bytes, rom_bytes_len);
+static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
 
   const struct debug_symbol *curr_sym;
-  for (int i = 0; i < syms->len; i++) {
-    curr_sym = &syms->syms[i];
-    fprintf(stream, "%s:\n", curr_sym->name);
-    gb_state.regs.pc = curr_sym->start_offset;
-    while (gb_state.regs.pc < curr_sym->start_offset + curr_sym->len) {
-      fprintf(stream, "  0x%.4X: ", gb_state.regs.pc);
-      struct inst inst = fetch(&gb_state);
+  for (int i = 0; i < gb_state->syms.len; i++) {
+    curr_sym = &gb_state->syms.syms[i];
+    fprintf(stream, "  %s:\n", curr_sym->name);
+    gb_state->regs.pc = curr_sym->start_offset;
+    while (gb_state->regs.pc < curr_sym->start_offset + curr_sym->len) {
+      fprintf(stream, "    0x%.4X: ", gb_state->regs.pc);
+      struct inst inst = fetch(gb_state);
       print_inst(stream, inst);
     }
   }
@@ -235,7 +226,7 @@ static void disassemble_rom_with_sym(FILE *stream, const uint8_t *rom_bytes,
 // copies rom to the start of memory and start disassembly at 0x0 since we're
 // just looking at 1 section.
 static void disassemble_section(FILE *stream, const uint8_t *section_bytes,
-                         const int section_bytes_len) {
+                                const int section_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   gb_state.regs.pc = 0;
@@ -252,6 +243,15 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
   if (gb_state->bootrom_mapped) {
     fprintf(stream, "BootRom:\n");
     disassemble_bootrom(gb_state, stream);
+  }
+
+  if (gb_state->rom_loaded) {
+    fprintf(stream, "RomStart:\n");
+    if (gb_state->syms.capacity > 0) {
+      disassemble_rom_with_sym(gb_state, stream);
+    } else {
+      disassemble_rom(gb_state, stream);
+    }
   }
 }
 

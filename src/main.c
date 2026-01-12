@@ -100,6 +100,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name,
     }
     fclose(f);
     memcpy(gb_state->rom0, bytes, bytes_len);
+    gb_state->rom_loaded = true;
   }
 
   // Load debug symbols into gb_state->syms (symbols are optional)
