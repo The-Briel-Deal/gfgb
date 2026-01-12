@@ -173,7 +173,7 @@ static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk,
 #define ARITHMETIC_OP_MASK  0b00111000
 
 // TODO: The following instructions are missing and need to be implemented
-//   0x17
+//   0x17 - RLA (Rotate Left)
 //   0xCC
 //   0xCE
 //   0xD9
@@ -257,6 +257,35 @@ struct inst fetch(struct gb_state *gb_state) {
           .type = JR,
           .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
           .p2 = IMM8_PARAM(next8(gb_state))};
+
+    // rlca
+    if (curr_byte == 0b00000111) {
+      return (struct inst){
+          .type = JR,
+          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
+          .p2 = IMM8_PARAM(next8(gb_state))};
+    }
+    // rrca
+    if (curr_byte == 0b00001111) {
+    }
+    // rla
+    if (curr_byte == 0b00010111) {
+    }
+    // rra
+    if (curr_byte == 0b00011111) {
+    }
+    // daa
+    if (curr_byte == 0b00100111) {
+    }
+    // cpl
+    if (curr_byte == 0b00101111) {
+    }
+    // scf
+    if (curr_byte == 0b00110111) {
+    }
+    // ccf
+    if (curr_byte == 0b00111111) {
+    }
     break;
   case /* block */ 1:
     return (struct inst){.type = LD,
