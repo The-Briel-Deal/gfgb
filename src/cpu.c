@@ -638,7 +638,6 @@ static void ex_bit(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == BIT);
   assert(inst.p1.type == B3);
   assert(IS_R8(inst.p2));
-  struct regs *r = &gb_state->regs;
   uint8_t val = get_r8(gb_state, inst.p2.r8);
   set_flags(gb_state, FLAG_H | FLAG_N, false);
   set_flags(gb_state, FLAG_Z, (val >> inst.p1.b3) & 1);
