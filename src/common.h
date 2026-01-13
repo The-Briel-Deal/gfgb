@@ -119,6 +119,7 @@ struct gb_state {
   uint8_t rom0[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
+  uint8_t hram[0x80];
   struct debug_symbol_list syms;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
 
