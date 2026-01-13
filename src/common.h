@@ -5,6 +5,7 @@
 #include "disassemble.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_log.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -79,7 +80,33 @@ struct gb_state {
     uint16_t sp;
     uint16_t pc;
     struct io_regs {
-      uint8_t sound_on;
+      // Sound
+      uint8_t nr10;
+      uint8_t nr11;
+      uint8_t nr12;
+      uint8_t nr13;
+      uint8_t nr14;
+
+      uint8_t nr21;
+      uint8_t nr22;
+      uint8_t nr23;
+      uint8_t nr24;
+
+      uint8_t nr30;
+      uint8_t nr31;
+      uint8_t nr32;
+      uint8_t nr33;
+      uint8_t nr34;
+
+      uint8_t nr41;
+      uint8_t nr42;
+      uint8_t nr43;
+      uint8_t nr44;
+
+      uint8_t nr50;
+      uint8_t nr51;
+      uint8_t nr52; // sound on/off
+
       uint8_t lcd_control;
       uint8_t bg_pallete;
     } io;
@@ -151,6 +178,7 @@ static inline uint32_t gb_dots() {
 #define IO_BGP             0xFF47
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+  SDL_Log("Reading 8 bits from address 0x%.4X", addr);
   if (gb_state->bootrom_mapped && (addr < 0x0100)) {
     return gb_state->bootrom[addr];
   }
@@ -175,6 +203,7 @@ static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
 }
 
 static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
+  SDL_Log("Reading 16 bits from address 0x%.4X", addr);
   uint8_t *val_ptr = unmap_address(gb_state, addr);
   uint16_t val = 0x0000;
   val |= val_ptr[0] << 0;
@@ -184,9 +213,30 @@ static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
 
 static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
                               uint8_t val) {
+  SDL_Log("Writing val 0x%.2X to address 0x%.4X", val, addr);
   if (addr >= IO_REG_START && addr <= IO_REG_END) {
     switch (addr) {
-    case IO_SND_ON: gb_state->regs.io.sound_on = val; return;
+    case 0xFF10: gb_state->regs.io.nr10 = val; return;
+    case 0xFF11: gb_state->regs.io.nr11 = val; return;
+    case 0xFF12: gb_state->regs.io.nr12 = val; return;
+    case 0xFF13: gb_state->regs.io.nr13 = val; return;
+    case 0xFF14: gb_state->regs.io.nr14 = val; return;
+    case 0xFF16: gb_state->regs.io.nr21 = val; return;
+    case 0xFF17: gb_state->regs.io.nr22 = val; return;
+    case 0xFF18: gb_state->regs.io.nr23 = val; return;
+    case 0xFF19: gb_state->regs.io.nr24 = val; return;
+    case 0xFF1A: gb_state->regs.io.nr30 = val; return;
+    case 0xFF1B: gb_state->regs.io.nr31 = val; return;
+    case 0xFF1C: gb_state->regs.io.nr32 = val; return;
+    case 0xFF1D: gb_state->regs.io.nr33 = val; return;
+    case 0xFF1E: gb_state->regs.io.nr34 = val; return;
+    case 0xFF20: gb_state->regs.io.nr41 = val; return;
+    case 0xFF21: gb_state->regs.io.nr42 = val; return;
+    case 0xFF22: gb_state->regs.io.nr43 = val; return;
+    case 0xFF23: gb_state->regs.io.nr44 = val; return;
+    case 0xFF24: gb_state->regs.io.nr50 = val; return;
+    case 0xFF25: gb_state->regs.io.nr51 = val; return;
+    case IO_SND_ON: gb_state->regs.io.nr52 = val; return;
     case IO_LCDC: gb_state->regs.io.lcd_control = val; return;
     case IO_SERIAL_TRANSFER:
       // TODO: This just logs out every character written to this port. If I
@@ -204,6 +254,7 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
 }
 static inline void write_mem16(struct gb_state *gb_state, uint16_t addr,
                                uint16_t val) {
+  SDL_Log("Writing val 0x%.4X to address 0x%.4X", val, addr);
   // little endian
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   val_ptr[0] = (val & 0x00FF) >> 0;
