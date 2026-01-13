@@ -534,10 +534,30 @@ not_implemented:
 static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
   struct inst_param src = inst.p2;
-  assert(dest.type == IMM8_HMEM || (dest.type == R8 && dest.r8 == R8_C));
-  assert(src.type == R8 && src.r8 == R8_A);
-  // TODO: Finish implementing
-  NOT_IMPLEMENTED("I need to finish implementing LDH in both dirs.");
+  struct regs *r = &gb_state->regs;
+  if (src.type == R8 && src.r8 == R8_A) {
+    if (dest.type == IMM8_HMEM) {
+      write_mem8(gb_state, 0xFF00 + dest.imm8, r->a);
+      return;
+    }
+    if (dest.type == R8 && dest.r8 == R8_C) {
+      write_mem8(gb_state, 0xFF00 + r->c, r->a);
+      return;
+    }
+    unreachable();
+  }
+  if (dest.type == R8 && dest.r8 == R8_A) {
+    if (src.type == IMM8_HMEM) {
+      set_r8(gb_state, R8_A, read_mem8(gb_state, 0xFF00 + src.imm8));
+      return;
+    }
+    if (src.type == R8 && src.r8 == R8_C) {
+      set_r8(gb_state, R8_A, read_mem8(gb_state, 0xFF00 + r->c));
+      return;
+    }
+    unreachable();
+  }
+  unreachable();
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
