@@ -109,6 +109,8 @@ struct gb_state {
 
       uint8_t lcd_control;
       uint8_t bg_pallete;
+      uint8_t ie;  // interupt enable
+      uint8_t if_; // interupt flag
     } io;
   } regs;
   bool bootrom_mapped;
@@ -178,7 +180,8 @@ static inline uint32_t gb_dots() {
 #define IO_BGP             0xFF47
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
-  SDL_Log("Reading 8 bits from address 0x%.4X", addr);
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+               "Reading 8 bits from address 0x%.4X", addr);
   if (gb_state->bootrom_mapped && (addr < 0x0100)) {
     return gb_state->bootrom[addr];
   }
@@ -203,7 +206,8 @@ static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
 }
 
 static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
-  SDL_Log("Reading 16 bits from address 0x%.4X", addr);
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+               "Reading 16 bits from address 0x%.4X", addr);
   uint8_t *val_ptr = unmap_address(gb_state, addr);
   uint16_t val = 0x0000;
   val |= val_ptr[0] << 0;
@@ -213,8 +217,9 @@ static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
 
 static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
                               uint8_t val) {
-  SDL_Log("Writing val 0x%.2X to address 0x%.4X", val, addr);
-  if (addr >= IO_REG_START && addr <= IO_REG_END) {
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+               "Writing val 0x%.2X to address 0x%.4X", val, addr);
+  if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
     switch (addr) {
     case 0xFF10: gb_state->regs.io.nr10 = val; return;
     case 0xFF11: gb_state->regs.io.nr11 = val; return;
@@ -236,6 +241,8 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
     case 0xFF23: gb_state->regs.io.nr44 = val; return;
     case 0xFF24: gb_state->regs.io.nr50 = val; return;
     case 0xFF25: gb_state->regs.io.nr51 = val; return;
+    case 0xFF0F: gb_state->regs.io.if_ = val; return;
+    case 0xFFFF: gb_state->regs.io.ie = val; return;
     case IO_SND_ON: gb_state->regs.io.nr52 = val; return;
     case IO_LCDC: gb_state->regs.io.lcd_control = val; return;
     case IO_SERIAL_TRANSFER:
@@ -254,7 +261,8 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
 }
 static inline void write_mem16(struct gb_state *gb_state, uint16_t addr,
                                uint16_t val) {
-  SDL_Log("Writing val 0x%.4X to address 0x%.4X", val, addr);
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+               "Writing val 0x%.4X to address 0x%.4X", val, addr);
   // little endian
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   val_ptr[0] = (val & 0x00FF) >> 0;
