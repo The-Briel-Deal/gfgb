@@ -129,24 +129,31 @@ struct gb_state {
   uint64_t last_frame_ticks_ns;
 };
 
-#define ROM0_START 0x0000
-#define ROM0_END   0x3FFF
+#define ROM0_START   0x0000
+#define ROM0_END     0x3FFF
 
-#define ROMN_START 0x4000
-#define ROMN_END   0x7FFF
+#define ROMN_START   0x4000
+#define ROMN_END     0x7FFF
 
 // VRAM on CGB is switchable across 2 8KB banks, on DMG this is just one 8KB
 // block. I won't worry about this until DMG is finished.
-#define VRAM_START 0x8000
-#define VRAM_END   0x9FFF
+#define VRAM_START   0x8000
+#define VRAM_END     0x9FFF
 
-#define ERAM_START 0xA000
-#define ERAM_END   0xBFFF
+#define ERAM_START   0xA000
+#define ERAM_END     0xBFFF
 
 // This is split in two on the CGB and the second half is switchable. I'm just
 // worrying about DMG for now.
-#define WRAM_START 0xC000
-#define WRAM_END   0xDFFF
+#define WRAM_START   0xC000
+#define WRAM_END     0xDFFF
+
+#define IO_REG_START 0xFF00
+#define IO_REG_END   0xFF7F
+
+#define HRAM_START   0xFF80
+#define HRAM_END     0xFFFE
+
 static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   if (addr <= ROM0_END) {
     return &gb_state->rom0[addr - ROM0_START];
@@ -158,6 +165,10 @@ static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
     NOT_IMPLEMENTED("External RAM not implemented");
   } else if (addr <= WRAM_END) {
     return &gb_state->wram[addr - WRAM_START];
+  } else if (addr <= IO_REG_END) {
+    NOT_IMPLEMENTED("Everything between WRAM and IO Regs not implemented");
+  } else if (addr <= HRAM_END) {
+    return &gb_state->hram[addr - HRAM_START];
   } else {
     NOT_IMPLEMENTED("Everything after Work RAM is not yet implemented");
   }
@@ -169,9 +180,6 @@ static inline uint32_t gb_dots() {
   uint32_t dots = ticks_ns / (NS_PER_SEC / DMG_CLOCK_HZ);
   return dots;
 }
-
-#define IO_REG_START       0xFF00
-#define IO_REG_END         0xFF7F
 
 #define IO_SERIAL_TRANSFER 0xFF01
 #define IO_SERIAL_CONTROL  0xFF02
