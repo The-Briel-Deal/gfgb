@@ -155,6 +155,9 @@ struct gb_state {
 #define HRAM_END     0xFFFE
 
 static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
+  if (gb_state->bootrom_mapped && (addr < 0x0100)) {
+    return &gb_state->bootrom[addr];
+  }
   if (addr <= ROM0_END) {
     return &gb_state->rom0[addr - ROM0_START];
   } else if (addr <= ROMN_END) {
@@ -191,9 +194,6 @@ static inline uint32_t gb_dots() {
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
                "Reading 8 bits from address 0x%.4X", addr);
-  if (gb_state->bootrom_mapped && (addr < 0x0100)) {
-    return gb_state->bootrom[addr];
-  }
   if (addr >= IO_REG_START && addr <= IO_REG_END) {
     switch (addr) {
     case IO_LY: {
