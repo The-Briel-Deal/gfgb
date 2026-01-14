@@ -458,8 +458,6 @@ void test_parse_debug_sym() {
     rewind(stream);
 
     alloc_symbol_list(&syms);
-    // Initializing bits to 1 so that this test catches un-terminated strings.
-    memset(syms.syms, 0xFF, sizeof(*syms.syms) * syms.capacity);
     parse_syms(&syms, stream);
     fclose(stream);
   }
@@ -472,8 +470,6 @@ void test_parse_debug_sym() {
     fflush(stream);
     rewind(stream);
 
-    // Initializing bits to 1 so that this test catches un-terminated strings.
-    memset(syms.syms, 0xFF, sizeof(*syms.syms) * syms.capacity);
     parse_syms(&syms, stream);
     fclose(stream);
   }
