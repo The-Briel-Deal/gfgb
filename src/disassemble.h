@@ -8,11 +8,13 @@
 
 void disassemble(struct gb_state *gb_state, FILE *stream);
 
+#define DBG_SYM_BOOTROM_BANK -1
+
 // I'm treating sections and labels the same in the parsed data structure.
 struct debug_symbol_list {
   struct debug_symbol {
     char name[16];
-    uint8_t bank;
+    int bank;
     uint16_t start_offset;
     uint16_t len;
   } *syms;
