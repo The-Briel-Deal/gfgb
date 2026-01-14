@@ -145,6 +145,14 @@ void alloc_symbol_list(struct debug_symbol_list *syms) {
   syms->syms = calloc(syms->capacity, sizeof(*syms->syms));
 }
 
+// TODO: Shrink array if len is half of capacity.
+void realloc_symbol_list(struct debug_symbol_list *syms) {
+  if (syms->len + 1 >= syms->capacity) {
+    syms->capacity *= 2;
+    syms->syms = realloc(syms->syms, sizeof(*syms->syms) * syms->capacity);
+  }
+}
+
 void free_symbol_list(struct debug_symbol_list *syms) {
   assert(syms->capacity != 0);
   free(syms->syms);
@@ -156,6 +164,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
   char line[KB(1)];
   char *ret;
   while (!feof(sym_file)) {
+    realloc_symbol_list(syms);
     ret = fgets(line, sizeof(line), sym_file);
     if (ret == NULL) {
       if (ferror(sym_file) != 0) return;
