@@ -678,6 +678,20 @@ static void ex_rl(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, val == 0);
 }
 
+static void ex_rla(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RLA);
+  assert(IS_VOID(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  set_flags(gb_state, FLAG_C, (val >> 7) & 1);
+  val <<= 1;
+  val |= old_carry_flag;
+  set_r8(gb_state, R8_A, val);
+
+  set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
+}
+
 static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == DEC);
   assert(IS_R8(inst.p1) || IS_R16(inst.p1));
@@ -804,6 +818,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case XOR: ex_xor(gb_state, inst); return;
   case BIT: ex_bit(gb_state, inst); return;
   case RL: ex_rl(gb_state, inst); return;
+  case RLA: ex_rla(gb_state, inst); return;
   default: break;
   }
   NOT_IMPLEMENTED(
