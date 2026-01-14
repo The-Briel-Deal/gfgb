@@ -123,6 +123,8 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
     gb_state->regs.pc = 0x0000;
     gb_state->bootrom_mapped = true;
     int bootrom_name_len = strlen(bootrom_name);
+    // TODO: Handle case where bootrom name ends with `.bin`
+    // TODO: Identifying if a bootrom sym file is present should be moved to a helper fn
     if (memcmp(&bootrom_name[bootrom_name_len - 3], ".gb", 3) == 0) {
       // I need a string that is two more chars long since `.sym` is a character longer than `.gb`, and we also need
       // room for a null term.
@@ -144,6 +146,9 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 
       if (f != NULL) {
         parse_syms(&gb_state->syms, f);
+        if (ferror(f) == 0) {
+          gb_state->bootrom_has_syms = true;
+        }
         fclose(f);
       }
       free(bootrom_sym_name);

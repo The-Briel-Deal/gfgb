@@ -300,7 +300,8 @@ static void disassemble_section(FILE *stream, const uint8_t *section_bytes, cons
 }
 
 void disassemble(struct gb_state *gb_state, FILE *stream) {
-  if (gb_state->bootrom_mapped) {
+  // If bootrom has syms then they will be used in `disassemble_rom_with_sym()`
+  if (gb_state->bootrom_mapped && !gb_state->bootrom_has_syms) {
     fprintf(stream, "BootRom:\n");
     disassemble_bootrom(gb_state, stream);
   }

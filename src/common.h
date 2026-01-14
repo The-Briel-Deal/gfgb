@@ -114,6 +114,7 @@ struct gb_state {
     } io;
   } regs;
   bool bootrom_mapped;
+  bool bootrom_has_syms;
   bool rom_loaded;
   uint8_t bootrom[DMG_BOOTROM_SIZE];
   uint8_t rom0[KB(16)];
