@@ -516,10 +516,23 @@ void test_parse_debug_sym() {
 
   assert_eq(syms.len, 51);
 
-  assert_eq(syms.syms[0].bank, DBG_SYM_BOOTROM_BANK);
-  assert_eq(syms.syms[0].start_offset, 0x0000);
-  assert_eq(syms.syms[0].len, 0x0007);
-  assert_eq(syms.syms[0].name, "EntryPoint");
+#define TEST_SYM(idx, _bank, _start_offset, _len, _name)                       \
+  {                                                                            \
+    assert_eq(syms.syms[idx].bank, _bank);                                     \
+    assert_eq(syms.syms[idx].start_offset, _start_offset);                     \
+    assert_eq(syms.syms[idx].len, _len);                                       \
+    assert_eq(syms.syms[idx].name, _name);                                     \
+  }
+
+  TEST_SYM(0, DBG_SYM_BOOTROM_BANK, 0x0000, 0x0007, "EntryPoint");
+  TEST_SYM(1, DBG_SYM_BOOTROM_BANK, 0x0007, 0x0020, "EntryPoint.clearVRAM");
+
+  //  "BOOT:0007 EntryPoint.clearVRAM\n"
+  //  "BOOT:0027 EntryPoint.decompressLogo\n"
+  //  "BOOT:0039 EntryPoint.copyRTile\n"
+  //  "BOOT:0048 EntryPoint.writeTilemapRow\n"
+  //  "BOOT:004a EntryPoint.writeTilemapByte\n"
+  //  "BOOT:0055 ScrollLogo\n"
 
   assert_eq(syms.syms[36].bank, 0x00);
   assert_eq(syms.syms[36].start_offset, 0x0150);
@@ -565,7 +578,7 @@ void test_parse_debug_sym() {
   assert_eq(syms.syms[44].start_offset, 0x01C5);
   assert_eq(syms.syms[44].len, 0x0003);
   // Truncated to 15 chars (the 16th is a null terminator).
-  assert_eq(syms.syms[44].name, "ThisIsALongSymb");
+  assert_eq(syms.syms[44].name, "ThisIsALongSymbolNameToTestTrun");
 
   // Since this is the last symbol, it has an unknown len, due to this we leave
   // the length as 0.
