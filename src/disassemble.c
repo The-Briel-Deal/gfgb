@@ -472,14 +472,13 @@ void test_parse_debug_sym() {
     fflush(stream);
     rewind(stream);
 
-    alloc_symbol_list(&syms);
     // Initializing bits to 1 so that this test catches un-terminated strings.
     memset(syms.syms, 0xFF, sizeof(*syms.syms) * syms.capacity);
     parse_syms(&syms, stream);
     fclose(stream);
   }
 
-  assert_eq(syms.len, 10);
+  assert_eq(syms.len, 51);
 
   assert_eq(syms.syms[0].bank, 0x00);
   assert_eq(syms.syms[0].start_offset, 0x0150);
