@@ -503,58 +503,58 @@ void test_parse_debug_sym() {
 
   assert_eq(syms.len, 51);
 
-  assert_eq(syms.syms[0].bank, 0x00);
-  assert_eq(syms.syms[0].start_offset, 0x0150);
-  assert_eq(syms.syms[0].len, 0x0039);
-  assert_eq(syms.syms[0].name, "SimpleSprite");
+  assert_eq(syms.syms[36].bank, 0x00);
+  assert_eq(syms.syms[36].start_offset, 0x0150);
+  assert_eq(syms.syms[36].len, 0x0039);
+  assert_eq(syms.syms[36].name, "SimpleSprite");
 
-  assert_eq(syms.syms[1].bank, 0x00);
-  assert_eq(syms.syms[1].start_offset, 0x0189);
-  assert_eq(syms.syms[1].len, 0x0009);
-  assert_eq(syms.syms[1].name, "WaitForVBlank");
+  assert_eq(syms.syms[37].bank, 0x00);
+  assert_eq(syms.syms[37].start_offset, 0x0189);
+  assert_eq(syms.syms[37].len, 0x0009);
+  assert_eq(syms.syms[37].name, "WaitForVBlank");
 
-  assert_eq(syms.syms[2].bank, 0x00);
-  assert_eq(syms.syms[2].start_offset, 0x0192);
-  assert_eq(syms.syms[2].len, 0x0005);
-  assert_eq(syms.syms[2].name, "CopySprite");
+  assert_eq(syms.syms[38].bank, 0x00);
+  assert_eq(syms.syms[38].start_offset, 0x0192);
+  assert_eq(syms.syms[38].len, 0x0005);
+  assert_eq(syms.syms[38].name, "CopySprite");
 
-  assert_eq(syms.syms[3].bank, 0x00);
-  assert_eq(syms.syms[3].start_offset, 0x0197);
-  assert_eq(syms.syms[3].len, 0x0007);
-  assert_eq(syms.syms[3].name, "CopySprite.loop");
+  assert_eq(syms.syms[39].bank, 0x00);
+  assert_eq(syms.syms[39].start_offset, 0x0197);
+  assert_eq(syms.syms[39].len, 0x0007);
+  assert_eq(syms.syms[39].name, "CopySprite.loop");
 
-  assert_eq(syms.syms[4].bank, 0x00);
-  assert_eq(syms.syms[4].start_offset, 0x019E);
-  assert_eq(syms.syms[4].len, 0x0011);
-  assert_eq(syms.syms[4].name, "ClearMem");
+  assert_eq(syms.syms[40].bank, 0x00);
+  assert_eq(syms.syms[40].start_offset, 0x019E);
+  assert_eq(syms.syms[40].len, 0x0011);
+  assert_eq(syms.syms[40].name, "ClearMem");
 
-  assert_eq(syms.syms[5].bank, 0x00);
-  assert_eq(syms.syms[5].start_offset, 0x01AF);
-  assert_eq(syms.syms[5].len, 0x000A);
-  assert_eq(syms.syms[5].name, "ClearMem.loop");
+  assert_eq(syms.syms[41].bank, 0x00);
+  assert_eq(syms.syms[41].start_offset, 0x01AF);
+  assert_eq(syms.syms[41].len, 0x000A);
+  assert_eq(syms.syms[41].name, "ClearMem.loop");
 
-  assert_eq(syms.syms[6].bank, 0x00);
-  assert_eq(syms.syms[6].start_offset, 0x01B9);
-  assert_eq(syms.syms[6].len, 0x0006);
-  assert_eq(syms.syms[6].name, "LCDOff");
+  assert_eq(syms.syms[42].bank, 0x00);
+  assert_eq(syms.syms[42].start_offset, 0x01B9);
+  assert_eq(syms.syms[42].len, 0x0006);
+  assert_eq(syms.syms[42].name, "LCDOff");
 
-  assert_eq(syms.syms[7].bank, 0x00);
-  assert_eq(syms.syms[7].start_offset, 0x01BF);
-  assert_eq(syms.syms[7].len, 0x0006);
-  assert_eq(syms.syms[7].name, "LCDOn");
+  assert_eq(syms.syms[43].bank, 0x00);
+  assert_eq(syms.syms[43].start_offset, 0x01BF);
+  assert_eq(syms.syms[43].len, 0x0006);
+  assert_eq(syms.syms[43].name, "LCDOn");
 
-  assert_eq(syms.syms[8].bank, 0x00);
-  assert_eq(syms.syms[8].start_offset, 0x01C5);
-  assert_eq(syms.syms[8].len, 0x0003);
+  assert_eq(syms.syms[44].bank, 0x00);
+  assert_eq(syms.syms[44].start_offset, 0x01C5);
+  assert_eq(syms.syms[44].len, 0x0003);
   // Truncated to 15 chars (the 16th is a null terminator).
-  assert_eq(syms.syms[8].name, "ThisIsALongSymb");
+  assert_eq(syms.syms[44].name, "ThisIsALongSymb");
 
   // Since this is the last symbol, it has an unknown len, due to this we leave
   // the length as 0.
-  assert_eq(syms.syms[9].bank, 0x00);
-  assert_eq(syms.syms[9].start_offset, 0x01C8);
-  assert_eq(syms.syms[9].len, 0x0000);
-  assert_eq(syms.syms[9].name, "DoggoSprite");
+  assert_eq(syms.syms[45].bank, 0x00);
+  assert_eq(syms.syms[45].start_offset, 0x01C8);
+  assert_eq(syms.syms[45].len, 0x0000);
+  assert_eq(syms.syms[45].name, "DoggoSprite");
 
   free_symbol_list(&syms);
 }
