@@ -184,6 +184,25 @@ void sort_syms(struct debug_symbol_list *syms) {
   }
 }
 
+void set_sym_lens(struct debug_symbol_list *syms) {
+  struct debug_symbol *curr_sym;
+  struct debug_symbol *next_sym;
+  int n = syms->len;
+  for (int i = 0; i < n; i++) {
+    curr_sym = &syms->syms[i];
+
+    // Only set syms length if it is in the rom bank range and it is not the
+    // last sym.
+    curr_sym->len = 0;
+    if (i + 1 < n) {
+      next_sym = &syms->syms[i + 1];
+      if (next_sym->start_offset < 0x8000) {
+        curr_sym->len = next_sym->start_offset - curr_sym->start_offset;
+      }
+    }
+  }
+}
+
 void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
   char line[KB(1)];
   char *ret;
@@ -214,13 +233,6 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     curr_sym->start_offset = strtol(bank_endptr + 1, &endptr, 16);
     assert(endptr == bank_endptr + 5);
 
-    curr_sym->len = 0;
-
-    if (syms->len > 0) {
-      struct debug_symbol *prev_sym = &syms->syms[syms->len - 1];
-      prev_sym->len = curr_sym->start_offset - prev_sym->start_offset;
-    }
-
     strncpy(syms->syms[syms->len].name, &line[8],
             sizeof(syms->syms[syms->len].name) - 1);
     // In case the string is longer than the sym.name arr
@@ -241,6 +253,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     assert(syms->len < syms->capacity);
   }
   sort_syms(syms);
+  set_sym_lens(syms);
 }
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
