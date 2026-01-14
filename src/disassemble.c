@@ -511,24 +511,53 @@ void test_parse_debug_sym() {
 
 #define BR_BANK DBG_SYM_BOOTROM_BANK
 
-  TEST_SYM(0, DBG_SYM_BOOTROM_BANK, 0x00, 0x07 - 0x00, "EntryPoint");
-  TEST_SYM(1, DBG_SYM_BOOTROM_BANK, 0x07, 0x27 - 0x07, "EntryPoint.clearVRAM");
-  TEST_SYM(2, DBG_SYM_BOOTROM_BANK, 0x27, 0x39 - 0x27, "EntryPoint.decompressLogo");
-  TEST_SYM(3, DBG_SYM_BOOTROM_BANK, 0x39, 0x48 - 0x39, "EntryPoint.copyRTile");
-  TEST_SYM(4, DBG_SYM_BOOTROM_BANK, 0x48, 0x4A - 0x48, "EntryPoint.writeTilemapRow");
-  TEST_SYM(5, DBG_SYM_BOOTROM_BANK, 0x4A, 0x55 - 0x4A, "EntryPoint.writeTilemapByte");
-  TEST_SYM(6, DBG_SYM_BOOTROM_BANK, 0x55, 0x60 - 0x55, "ScrollLogo");
+  TEST_SYM(0, BR_BANK, 0x00, 0x07 - 0x00, "EntryPoint");
+  TEST_SYM(1, BR_BANK, 0x07, 0x27 - 0x07, "EntryPoint.clearVRAM");
+  TEST_SYM(2, BR_BANK, 0x27, 0x39 - 0x27, "EntryPoint.decompressLogo");
+  TEST_SYM(3, BR_BANK, 0x39, 0x48 - 0x39, "EntryPoint.copyRTile");
+  TEST_SYM(4, BR_BANK, 0x48, 0x4A - 0x48, "EntryPoint.writeTilemapRow");
+  TEST_SYM(5, BR_BANK, 0x4A, 0x55 - 0x4A, "EntryPoint.writeTilemapByte");
+  TEST_SYM(6, BR_BANK, 0x55, 0x60 - 0x55, "ScrollLogo");
+  TEST_SYM(7, BR_BANK, 0x60, 0x62 - 0x60, "ScrollLogo.loop");
+  TEST_SYM(8, BR_BANK, 0x62, 0x64 - 0x62, "ScrollLogo.delayFrames");
+  TEST_SYM(9, BR_BANK, 0x64, 0x80 - 0x64, "ScrollLogo.waitVBlank");
+  TEST_SYM(10, BR_BANK, 0x80, 0x86 - 0x80, "ScrollLogo.playSound");
+  TEST_SYM(11, BR_BANK, 0x86, 0x95 - 0x86, "ScrollLogo.dontPlaySound");
+  TEST_SYM(12, BR_BANK, 0x95, 0x96 - 0x95, "DecompressFirstNibble");
+  TEST_SYM(13, BR_BANK, 0x96, 0x98 - 0x96, "DecompressSecondNibble");
+  TEST_SYM(14, BR_BANK, 0x98, 0xa8 - 0x98, "DecompressSecondNibble.loop");
+  TEST_SYM(15, BR_BANK, 0xa8, 0xd8 - 0xa8, "Logo");
+  TEST_SYM(16, BR_BANK, 0xd8, 0xe0 - 0xd8, "RTile");
+  TEST_SYM(17, BR_BANK, 0xe0, 0xe6 - 0xe0, "CheckLogo");
+  TEST_SYM(18, BR_BANK, 0xe6, 0xe9 - 0xe6, "CheckLogo.compare");
+  TEST_SYM(19, BR_BANK, 0xe9, 0xf4 - 0xe9, "CheckLogo.logoFailure");
+  TEST_SYM(20, BR_BANK, 0xf4, 0xfa - 0xf4, "CheckLogo.computeChecksum");
+  TEST_SYM(21, BR_BANK, 0xfa, 0x104 - 0xfa, "CheckLogo.checksumFailure");
+  TEST_SYM(22, BR_BANK, 0x0104, 0x0134 - 0x0104, "HeaderLogo");
+  TEST_SYM(23, BR_BANK, 0x0134, 0x013f - 0x0134, "HeaderTitle");
+  TEST_SYM(24, BR_BANK, 0x013f, 0x0143 - 0x013f, "HeaderMenufacturer");
+  TEST_SYM(25, BR_BANK, 0x0143, 0x0144 - 0x0143, "HeaderCGBCompat");
+  TEST_SYM(26, BR_BANK, 0x0144, 0x0146 - 0x0144, "HeaderNewLicensee");
+  TEST_SYM(27, BR_BANK, 0x0146, 0x0147 - 0x0146, "HeaderSGBFlag");
+  TEST_SYM(28, BR_BANK, 0x0147, 0x0148 - 0x0147, "HeaderCartType");
+  TEST_SYM(29, BR_BANK, 0x0148, 0x0149 - 0x0148, "HeaderROMSize");
+  TEST_SYM(30, BR_BANK, 0x0149, 0x014a - 0x0149, "HeaderRAMSize");
+  TEST_SYM(31, BR_BANK, 0x014a, 0x014b - 0x014a, "HeaderRegionCode");
+  TEST_SYM(32, BR_BANK, 0x014b, 0x014c - 0x014b, "HeaderOldLicensee");
+  TEST_SYM(33, BR_BANK, 0x014c, 0x014d - 0x014c, "HeaderROMVersion");
+  TEST_SYM(34, BR_BANK, 0x014d, 0x014e - 0x014d, "HeaderChecksum");
+  TEST_SYM(35, BR_BANK, 0x014e, 0x0150 - 0x014e, "HeaderGlobalChecksum");
 
-  TEST_SYM(36, 0x00, 0x0150, 0x0039, "SimpleSprite");
-  TEST_SYM(37, 0x00, 0x0189, 0x0009, "WaitForVBlank");
-  TEST_SYM(38, 0x00, 0x0192, 0x0005, "CopySprite");
-  TEST_SYM(39, 0x00, 0x0197, 0x0007, "CopySprite.loop");
-  TEST_SYM(40, 0x00, 0x019E, 0x0011, "ClearMem");
-  TEST_SYM(41, 0x00, 0x01AF, 0x000A, "ClearMem.loop");
-  TEST_SYM(42, 0x00, 0x01B9, 0x0006, "LCDOff");
-  TEST_SYM(43, 0x00, 0x01BF, 0x0006, "LCDOn");
-  TEST_SYM(44, 0x00, 0x01C5, 0x0003, "ThisIsALongSymbolNameToTestTrun");
-  TEST_SYM(45, 0x00, 0x01C8, 0x0000, "DoggoSprite");
+  TEST_SYM(36, 0, 0x0150, 0x39, "SimpleSprite");
+  TEST_SYM(37, 0, 0x0189, 0x09, "WaitForVBlank");
+  TEST_SYM(38, 0, 0x0192, 0x05, "CopySprite");
+  TEST_SYM(39, 0, 0x0197, 0x07, "CopySprite.loop");
+  TEST_SYM(40, 0, 0x019E, 0x11, "ClearMem");
+  TEST_SYM(41, 0, 0x01AF, 0x0A, "ClearMem.loop");
+  TEST_SYM(42, 0, 0x01B9, 0x06, "LCDOff");
+  TEST_SYM(43, 0, 0x01BF, 0x06, "LCDOn");
+  TEST_SYM(44, 0, 0x01C5, 0x03, "ThisIsALongSymbolNameToTestTrun");
+  TEST_SYM(45, 0, 0x01C8, 0x00, "DoggoSprite");
 
 #undef TEST_SYM
 #undef BR_BANK
