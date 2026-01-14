@@ -238,6 +238,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     // TODO: dynamically grow beyond starting capacity.
     assert(syms->len < syms->capacity);
   }
+  sort_syms(syms);
 }
 
 // copies rom to the start of memory and start disassembly at 0x100 since the
