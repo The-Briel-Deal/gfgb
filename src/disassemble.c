@@ -233,7 +233,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     curr_sym->start_offset = strtol(bank_endptr + 1, &endptr, 16);
     assert(endptr == bank_endptr + 5);
 
-    strncpy(syms->syms[syms->len].name, &line[8],
+    strncpy(syms->syms[syms->len].name, endptr + 1,
             sizeof(syms->syms[syms->len].name) - 1);
     // In case the string is longer than the sym.name arr
     syms->syms[syms->len].name[sizeof(syms->syms[syms->len].name) - 1] = '\0';
@@ -515,6 +515,11 @@ void test_parse_debug_sym() {
   }
 
   assert_eq(syms.len, 51);
+
+  assert_eq(syms.syms[0].bank, DBG_SYM_BOOTROM_BANK);
+  assert_eq(syms.syms[0].start_offset, 0x0000);
+  assert_eq(syms.syms[0].len, 0x0007);
+  assert_eq(syms.syms[0].name, "EntryPoint");
 
   assert_eq(syms.syms[36].bank, 0x00);
   assert_eq(syms.syms[36].start_offset, 0x0150);
