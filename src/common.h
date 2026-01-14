@@ -192,7 +192,7 @@ static inline uint32_t gb_dots() {
 #define IO_BGP             0xFF47
 
 static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+  SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION,
                "Reading 8 bits from address 0x%.4X", addr);
   if (addr >= IO_REG_START && addr <= IO_REG_END) {
     switch (addr) {
@@ -215,7 +215,7 @@ static inline uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
 }
 
 static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+  SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION,
                "Reading 16 bits from address 0x%.4X", addr);
   uint8_t *val_ptr = unmap_address(gb_state, addr);
   uint16_t val = 0x0000;
@@ -226,7 +226,7 @@ static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
 
 static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
                               uint8_t val) {
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+  SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION,
                "Writing val 0x%.2X to address 0x%.4X", val, addr);
   if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
     switch (addr) {
@@ -270,7 +270,7 @@ static inline void write_mem8(struct gb_state *gb_state, uint16_t addr,
 }
 static inline void write_mem16(struct gb_state *gb_state, uint16_t addr,
                                uint16_t val) {
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+  SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION,
                "Writing val 0x%.4X to address 0x%.4X", val, addr);
   // little endian
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
