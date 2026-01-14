@@ -180,7 +180,7 @@ void sort_syms(struct debug_symbol_list *syms) {
         swapped = true;
       }
     }
-    if (swapped) break;
+    if (!swapped) break;
   }
 }
 
@@ -191,7 +191,9 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     realloc_symbol_list(syms);
     ret = fgets(line, sizeof(line), sym_file);
     if (ret == NULL) {
-      if (ferror(sym_file) != 0) return;
+      if (ferror(sym_file) != 0) {
+        return;
+      }
       continue;
     }
     if (line[0] == ';') continue;
