@@ -1,3 +1,4 @@
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+ColumnLimit: 120

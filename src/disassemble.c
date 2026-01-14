@@ -9,11 +9,10 @@
 #include <string.h>
 #include <time.h>
 
-#define PRINT_ENUM_CASE(enum_case)                                             \
+#define PRINT_ENUM_CASE(enum_case)                                                                                     \
   case enum_case: sprintf(inst_param_str, "%s", #enum_case); break;
 
-static void print_inst_param(char *inst_param_str,
-                             const struct inst_param inst_param) {
+static void print_inst_param(char *inst_param_str, const struct inst_param inst_param) {
   switch (inst_param.type) {
   case R8:
     switch (inst_param.r8) {
@@ -66,18 +65,16 @@ static void print_inst_param(char *inst_param_str,
       PRINT_ENUM_CASE(COND_C)
     }
     break;
-  case UNKNOWN_INST_BYTE:
-    sprintf(inst_param_str, "0x%.2X", inst_param.unknown_inst_byte);
-    break;
+  case UNKNOWN_INST_BYTE: sprintf(inst_param_str, "0x%.2X", inst_param.unknown_inst_byte); break;
   case VOID_PARAM_TYPE: sprintf(inst_param_str, "(void)"); break;
   }
 }
 #undef PRINT_ENUM_CASE
 
-#define PRINT_INST_NAME(stream, inst_name)                                     \
-  case inst_name: {                                                            \
-    fprintf(stream, "%-10s", #inst_name);                                      \
-    break;                                                                     \
+#define PRINT_INST_NAME(stream, inst_name)                                                                             \
+  case inst_name: {                                                                                                    \
+    fprintf(stream, "%-10s", #inst_name);                                                                              \
+    break;                                                                                                             \
   }
 
 void print_inst(FILE *stream, const struct inst inst) {
@@ -127,9 +124,7 @@ void print_inst(FILE *stream, const struct inst inst) {
     fprintf(stream, "%-10s", "UNKNOWN");
     break;
   }
-  default:
-    printf("Unhandled instruction in disassembler, aborting.\n");
-    abort();
+  default: printf("Unhandled instruction in disassembler, aborting.\n"); abort();
   }
   char inst_param_str[16];
   print_inst_param(inst_param_str, inst.p1);
@@ -220,8 +215,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     struct debug_symbol *curr_sym = &syms->syms[syms->len];
 
     if (line[0] == 'B') {
-      assert(line[1] == 'O' && line[2] == 'O' && line[3] == 'T' &&
-             line[4] == ':');
+      assert(line[1] == 'O' && line[2] == 'O' && line[3] == 'T' && line[4] == ':');
       endptr = &line[4];
       curr_sym->bank = DBG_SYM_BOOTROM_BANK;
     } else {
@@ -233,8 +227,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     curr_sym->start_offset = strtol(bank_endptr + 1, &endptr, 16);
     assert(endptr == bank_endptr + 5);
 
-    strncpy(syms->syms[syms->len].name, endptr + 1,
-            sizeof(syms->syms[syms->len].name) - 1);
+    strncpy(syms->syms[syms->len].name, endptr + 1, sizeof(syms->syms[syms->len].name) - 1);
     // In case the string is longer than the sym.name arr
     syms->syms[syms->len].name[sizeof(syms->syms[syms->len].name) - 1] = '\0';
     // Probably not the best way to do this but, I need this to be null
@@ -293,8 +286,7 @@ static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
 }
 // copies rom to the start of memory and start disassembly at 0x0 since we're
 // just looking at 1 section.
-static void disassemble_section(FILE *stream, const uint8_t *section_bytes,
-                                const int section_bytes_len) {
+static void disassemble_section(FILE *stream, const uint8_t *section_bytes, const int section_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   gb_state.regs.pc = 0;
@@ -375,43 +367,39 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
  *   call Done
  */
 static const unsigned char _test_disasm_section[] = {
-    0x3e, 0x00, 0xea, 0x26, 0xff, 0xcd, 0x89, 0x01, 0xcd, 0xb9, 0x01, 0x3e,
-    0x10, 0xf5, 0x21, 0x10, 0x90, 0x01, 0xc8, 0x01, 0xcd, 0x92, 0x01, 0xf1,
-    0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd,
-    0x9e, 0x01, 0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf,
-    0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
+    0x3e, 0x00, 0xea, 0x26, 0xff, 0xcd, 0x89, 0x01, 0xcd, 0xb9, 0x01, 0x3e, 0x10, 0xf5, 0x21, 0x10, 0x90, 0x01, 0xc8,
+    0x01, 0xcd, 0x92, 0x01, 0xf1, 0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd, 0x9e, 0x01,
+    0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf, 0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
 static const int _test_disasm_section_len = sizeof(_test_disasm_section);
 
-static const char _test_expected_disasm_output[] =
-    "0x0000: LD        R8_A        0x00\n"
-    "0x0002: LD        [0xFF26]    R8_A\n"
-    "0x0005: CALL      0x0189      (void)\n"
-    "0x0008: CALL      0x01B9      (void)\n"
-    "0x000B: LD        R8_A        0x10\n"
-    "0x000D: PUSH      R16_STK_AF  (void)\n"
-    "0x000E: LD        R16_HL      0x9010\n"
-    "0x0011: LD        R16_BC      0x01C8\n"
-    "0x0014: CALL      0x0192      (void)\n"
-    "0x0017: POP       R16_STK_AF  (void)\n"
-    "0x0018: LD        R16_BC      0x9800\n"
-    "0x001B: PUSH      R16_STK_BC  (void)\n"
-    "0x001C: LD        R8_A        0x00\n"
-    "0x001E: PUSH      R16_STK_AF  (void)\n"
-    "0x001F: LD        R16_BC      0x0400\n"
-    "0x0022: PUSH      R16_STK_BC  (void)\n"
-    "0x0023: CALL      0x019E      (void)\n"
-    "0x0026: POP       R16_STK_BC  (void)\n"
-    "0x0027: POP       R16_STK_AF  (void)\n"
-    "0x0028: POP       R16_STK_BC  (void)\n"
-    "0x0029: LD        R16_HL      0x9804\n"
-    "0x002C: LD        R8_HL_DREF  0x01\n"
-    "0x002E: CALL      0x01BF      (void)\n"
-    "0x0031: LD        R8_A        0xE4\n"
-    "0x0033: LD        [0xFF47]    R8_A\n"
-    "0x0036: CALL      0x01C5      (void)\n";
+static const char _test_expected_disasm_output[] = "0x0000: LD        R8_A        0x00\n"
+                                                   "0x0002: LD        [0xFF26]    R8_A\n"
+                                                   "0x0005: CALL      0x0189      (void)\n"
+                                                   "0x0008: CALL      0x01B9      (void)\n"
+                                                   "0x000B: LD        R8_A        0x10\n"
+                                                   "0x000D: PUSH      R16_STK_AF  (void)\n"
+                                                   "0x000E: LD        R16_HL      0x9010\n"
+                                                   "0x0011: LD        R16_BC      0x01C8\n"
+                                                   "0x0014: CALL      0x0192      (void)\n"
+                                                   "0x0017: POP       R16_STK_AF  (void)\n"
+                                                   "0x0018: LD        R16_BC      0x9800\n"
+                                                   "0x001B: PUSH      R16_STK_BC  (void)\n"
+                                                   "0x001C: LD        R8_A        0x00\n"
+                                                   "0x001E: PUSH      R16_STK_AF  (void)\n"
+                                                   "0x001F: LD        R16_BC      0x0400\n"
+                                                   "0x0022: PUSH      R16_STK_BC  (void)\n"
+                                                   "0x0023: CALL      0x019E      (void)\n"
+                                                   "0x0026: POP       R16_STK_BC  (void)\n"
+                                                   "0x0027: POP       R16_STK_AF  (void)\n"
+                                                   "0x0028: POP       R16_STK_BC  (void)\n"
+                                                   "0x0029: LD        R16_HL      0x9804\n"
+                                                   "0x002C: LD        R8_HL_DREF  0x01\n"
+                                                   "0x002E: CALL      0x01BF      (void)\n"
+                                                   "0x0031: LD        R8_A        0xE4\n"
+                                                   "0x0033: LD        [0xFF47]    R8_A\n"
+                                                   "0x0036: CALL      0x01C5      (void)\n";
 
-static const int _test_expected_disasm_output_len =
-    sizeof(_test_expected_disasm_output);
+static const int _test_expected_disasm_output_len = sizeof(_test_expected_disasm_output);
 
 void test_disasm() {
   FILE *stream = tmpfile();
@@ -424,76 +412,74 @@ void test_disasm() {
   fclose(stream);
   if (_test_expected_disasm_output_len - 1 != bytes_read ||
       strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
-    fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n",
-            _test_expected_disasm_output, bytes_read, buf);
+    fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n", _test_expected_disasm_output, bytes_read,
+            buf);
     abort();
   }
 }
 
-static const char _test_parse_debug_sym_input[] =
-    "; File generated by rgblink\n"
-    "00:0150 SimpleSprite\n"
-    "00:0189 WaitForVBlank\n"
-    "00:0192 CopySprite\n"
-    "00:0197 CopySprite.loop\n"
-    "00:019e ClearMem\n"
-    "00:01af ClearMem.loop\n"
-    "00:01b9 LCDOff\n"
-    "00:01bf LCDOn\n"
-    "00:01c5 ThisIsALongSymbolNameToTestTruncation\n"
-    "00:01c8 DoggoSprite";
+static const char _test_parse_debug_sym_input[] = "; File generated by rgblink\n"
+                                                  "00:0150 SimpleSprite\n"
+                                                  "00:0189 WaitForVBlank\n"
+                                                  "00:0192 CopySprite\n"
+                                                  "00:0197 CopySprite.loop\n"
+                                                  "00:019e ClearMem\n"
+                                                  "00:01af ClearMem.loop\n"
+                                                  "00:01b9 LCDOff\n"
+                                                  "00:01bf LCDOn\n"
+                                                  "00:01c5 ThisIsALongSymbolNameToTestTruncation\n"
+                                                  "00:01c8 DoggoSprite";
 
-static const char _test_parse_bootrom_debug_sym_input[] =
-    "; File generated by rgblink\n"
-    "BOOT:0000 EntryPoint\n"
-    "BOOT:0007 EntryPoint.clearVRAM\n"
-    "BOOT:0027 EntryPoint.decompressLogo\n"
-    "BOOT:0039 EntryPoint.copyRTile\n"
-    "BOOT:0048 EntryPoint.writeTilemapRow\n"
-    "BOOT:004a EntryPoint.writeTilemapByte\n"
-    "BOOT:0055 ScrollLogo\n"
-    "BOOT:0060 ScrollLogo.loop\n"
-    "BOOT:0062 ScrollLogo.delayFrames\n"
-    "BOOT:0064 ScrollLogo.waitVBlank\n"
-    "BOOT:0080 ScrollLogo.playSound\n"
-    "BOOT:0086 ScrollLogo.dontPlaySound\n"
-    "BOOT:0095 DecompressFirstNibble\n"
-    "BOOT:0096 DecompressSecondNibble\n"
-    "BOOT:0098 DecompressSecondNibble.loop\n"
-    "BOOT:00a8 Logo\n"
-    "BOOT:00d8 RTile\n"
-    "BOOT:00e0 CheckLogo\n"
-    "BOOT:00e6 CheckLogo.compare\n"
-    "BOOT:00e9 CheckLogo.logoFailure\n"
-    "BOOT:00f4 CheckLogo.computeChecksum\n"
-    "BOOT:00fa CheckLogo.checksumFailure\n"
-    "BOOT:0104 HeaderLogo\n"
-    "BOOT:0134 HeaderTitle\n"
-    "BOOT:013f HeaderMenufacturer\n"
-    "BOOT:0143 HeaderCGBCompat\n"
-    "BOOT:0144 HeaderNewLicensee\n"
-    "BOOT:0146 HeaderSGBFlag\n"
-    "BOOT:0147 HeaderCartType\n"
-    "BOOT:0148 HeaderROMSize\n"
-    "BOOT:0149 HeaderRAMSize\n"
-    "BOOT:014a HeaderRegionCode\n"
-    "BOOT:014b HeaderOldLicensee\n"
-    "BOOT:014c HeaderROMVersion\n"
-    "BOOT:014d HeaderChecksum\n"
-    "BOOT:014e HeaderGlobalChecksum\n"
-    "00:8000 vBlankTile\n"
-    "00:8010 vLogoTiles\n"
-    "00:8190 vRTile\n"
-    "00:9800 vMainTilemap\n"
-    "00:fffe hStackBottom";
+static const char _test_parse_bootrom_debug_sym_input[] = "; File generated by rgblink\n"
+                                                          "BOOT:0000 EntryPoint\n"
+                                                          "BOOT:0007 EntryPoint.clearVRAM\n"
+                                                          "BOOT:0027 EntryPoint.decompressLogo\n"
+                                                          "BOOT:0039 EntryPoint.copyRTile\n"
+                                                          "BOOT:0048 EntryPoint.writeTilemapRow\n"
+                                                          "BOOT:004a EntryPoint.writeTilemapByte\n"
+                                                          "BOOT:0055 ScrollLogo\n"
+                                                          "BOOT:0060 ScrollLogo.loop\n"
+                                                          "BOOT:0062 ScrollLogo.delayFrames\n"
+                                                          "BOOT:0064 ScrollLogo.waitVBlank\n"
+                                                          "BOOT:0080 ScrollLogo.playSound\n"
+                                                          "BOOT:0086 ScrollLogo.dontPlaySound\n"
+                                                          "BOOT:0095 DecompressFirstNibble\n"
+                                                          "BOOT:0096 DecompressSecondNibble\n"
+                                                          "BOOT:0098 DecompressSecondNibble.loop\n"
+                                                          "BOOT:00a8 Logo\n"
+                                                          "BOOT:00d8 RTile\n"
+                                                          "BOOT:00e0 CheckLogo\n"
+                                                          "BOOT:00e6 CheckLogo.compare\n"
+                                                          "BOOT:00e9 CheckLogo.logoFailure\n"
+                                                          "BOOT:00f4 CheckLogo.computeChecksum\n"
+                                                          "BOOT:00fa CheckLogo.checksumFailure\n"
+                                                          "BOOT:0104 HeaderLogo\n"
+                                                          "BOOT:0134 HeaderTitle\n"
+                                                          "BOOT:013f HeaderMenufacturer\n"
+                                                          "BOOT:0143 HeaderCGBCompat\n"
+                                                          "BOOT:0144 HeaderNewLicensee\n"
+                                                          "BOOT:0146 HeaderSGBFlag\n"
+                                                          "BOOT:0147 HeaderCartType\n"
+                                                          "BOOT:0148 HeaderROMSize\n"
+                                                          "BOOT:0149 HeaderRAMSize\n"
+                                                          "BOOT:014a HeaderRegionCode\n"
+                                                          "BOOT:014b HeaderOldLicensee\n"
+                                                          "BOOT:014c HeaderROMVersion\n"
+                                                          "BOOT:014d HeaderChecksum\n"
+                                                          "BOOT:014e HeaderGlobalChecksum\n"
+                                                          "00:8000 vBlankTile\n"
+                                                          "00:8010 vLogoTiles\n"
+                                                          "00:8190 vRTile\n"
+                                                          "00:9800 vMainTilemap\n"
+                                                          "00:fffe hStackBottom";
 
 void test_parse_debug_sym() {
   struct debug_symbol_list syms;
   // Parse rom debug syms
   {
     FILE *stream = tmpfile();
-    fwrite(_test_parse_debug_sym_input, sizeof(*_test_parse_debug_sym_input),
-           sizeof(_test_parse_debug_sym_input), stream);
+    fwrite(_test_parse_debug_sym_input, sizeof(*_test_parse_debug_sym_input), sizeof(_test_parse_debug_sym_input),
+           stream);
     fflush(stream);
     rewind(stream);
 
@@ -504,8 +490,7 @@ void test_parse_debug_sym() {
   // Parse bootrom debug syms
   {
     FILE *stream = tmpfile();
-    fwrite(_test_parse_bootrom_debug_sym_input,
-           sizeof(*_test_parse_bootrom_debug_sym_input),
+    fwrite(_test_parse_bootrom_debug_sym_input, sizeof(*_test_parse_bootrom_debug_sym_input),
            sizeof(_test_parse_bootrom_debug_sym_input), stream);
     fflush(stream);
     rewind(stream);
@@ -516,76 +501,37 @@ void test_parse_debug_sym() {
 
   assert_eq(syms.len, 51);
 
-#define TEST_SYM(idx, _bank, _start_offset, _len, _name)                       \
-  {                                                                            \
-    assert_eq(syms.syms[idx].bank, _bank);                                     \
-    assert_eq(syms.syms[idx].start_offset, _start_offset);                     \
-    assert_eq(syms.syms[idx].len, _len);                                       \
-    assert_eq(syms.syms[idx].name, _name);                                     \
+#define TEST_SYM(idx, _bank, _start_offset, _len, _name)                                                               \
+  {                                                                                                                    \
+    assert_eq(syms.syms[idx].bank, _bank);                                                                             \
+    assert_eq(syms.syms[idx].start_offset, _start_offset);                                                             \
+    assert_eq(syms.syms[idx].len, _len);                                                                               \
+    assert_eq(syms.syms[idx].name, _name);                                                                             \
   }
 
-  TEST_SYM(0, DBG_SYM_BOOTROM_BANK, 0x0000, 0x0007, "EntryPoint");
-  TEST_SYM(1, DBG_SYM_BOOTROM_BANK, 0x0007, 0x0020, "EntryPoint.clearVRAM");
+#define BR_BANK DBG_SYM_BOOTROM_BANK
 
-  //  "BOOT:0007 EntryPoint.clearVRAM\n"
-  //  "BOOT:0027 EntryPoint.decompressLogo\n"
-  //  "BOOT:0039 EntryPoint.copyRTile\n"
-  //  "BOOT:0048 EntryPoint.writeTilemapRow\n"
-  //  "BOOT:004a EntryPoint.writeTilemapByte\n"
-  //  "BOOT:0055 ScrollLogo\n"
+  TEST_SYM(0, DBG_SYM_BOOTROM_BANK, 0x00, 0x07 - 0x00, "EntryPoint");
+  TEST_SYM(1, DBG_SYM_BOOTROM_BANK, 0x07, 0x27 - 0x07, "EntryPoint.clearVRAM");
+  TEST_SYM(2, DBG_SYM_BOOTROM_BANK, 0x27, 0x39 - 0x27, "EntryPoint.decompressLogo");
+  TEST_SYM(3, DBG_SYM_BOOTROM_BANK, 0x39, 0x48 - 0x39, "EntryPoint.copyRTile");
+  TEST_SYM(4, DBG_SYM_BOOTROM_BANK, 0x48, 0x4A - 0x48, "EntryPoint.writeTilemapRow");
+  TEST_SYM(5, DBG_SYM_BOOTROM_BANK, 0x4A, 0x55 - 0x4A, "EntryPoint.writeTilemapByte");
+  TEST_SYM(6, DBG_SYM_BOOTROM_BANK, 0x55, 0x60 - 0x55, "ScrollLogo");
 
-  assert_eq(syms.syms[36].bank, 0x00);
-  assert_eq(syms.syms[36].start_offset, 0x0150);
-  assert_eq(syms.syms[36].len, 0x0039);
-  assert_eq(syms.syms[36].name, "SimpleSprite");
+  TEST_SYM(36, 0x00, 0x0150, 0x0039, "SimpleSprite");
+  TEST_SYM(37, 0x00, 0x0189, 0x0009, "WaitForVBlank");
+  TEST_SYM(38, 0x00, 0x0192, 0x0005, "CopySprite");
+  TEST_SYM(39, 0x00, 0x0197, 0x0007, "CopySprite.loop");
+  TEST_SYM(40, 0x00, 0x019E, 0x0011, "ClearMem");
+  TEST_SYM(41, 0x00, 0x01AF, 0x000A, "ClearMem.loop");
+  TEST_SYM(42, 0x00, 0x01B9, 0x0006, "LCDOff");
+  TEST_SYM(43, 0x00, 0x01BF, 0x0006, "LCDOn");
+  TEST_SYM(44, 0x00, 0x01C5, 0x0003, "ThisIsALongSymbolNameToTestTrun");
+  TEST_SYM(45, 0x00, 0x01C8, 0x0000, "DoggoSprite");
 
-  assert_eq(syms.syms[37].bank, 0x00);
-  assert_eq(syms.syms[37].start_offset, 0x0189);
-  assert_eq(syms.syms[37].len, 0x0009);
-  assert_eq(syms.syms[37].name, "WaitForVBlank");
-
-  assert_eq(syms.syms[38].bank, 0x00);
-  assert_eq(syms.syms[38].start_offset, 0x0192);
-  assert_eq(syms.syms[38].len, 0x0005);
-  assert_eq(syms.syms[38].name, "CopySprite");
-
-  assert_eq(syms.syms[39].bank, 0x00);
-  assert_eq(syms.syms[39].start_offset, 0x0197);
-  assert_eq(syms.syms[39].len, 0x0007);
-  assert_eq(syms.syms[39].name, "CopySprite.loop");
-
-  assert_eq(syms.syms[40].bank, 0x00);
-  assert_eq(syms.syms[40].start_offset, 0x019E);
-  assert_eq(syms.syms[40].len, 0x0011);
-  assert_eq(syms.syms[40].name, "ClearMem");
-
-  assert_eq(syms.syms[41].bank, 0x00);
-  assert_eq(syms.syms[41].start_offset, 0x01AF);
-  assert_eq(syms.syms[41].len, 0x000A);
-  assert_eq(syms.syms[41].name, "ClearMem.loop");
-
-  assert_eq(syms.syms[42].bank, 0x00);
-  assert_eq(syms.syms[42].start_offset, 0x01B9);
-  assert_eq(syms.syms[42].len, 0x0006);
-  assert_eq(syms.syms[42].name, "LCDOff");
-
-  assert_eq(syms.syms[43].bank, 0x00);
-  assert_eq(syms.syms[43].start_offset, 0x01BF);
-  assert_eq(syms.syms[43].len, 0x0006);
-  assert_eq(syms.syms[43].name, "LCDOn");
-
-  assert_eq(syms.syms[44].bank, 0x00);
-  assert_eq(syms.syms[44].start_offset, 0x01C5);
-  assert_eq(syms.syms[44].len, 0x0003);
-  // Truncated to 15 chars (the 16th is a null terminator).
-  assert_eq(syms.syms[44].name, "ThisIsALongSymbolNameToTestTrun");
-
-  // Since this is the last symbol, it has an unknown len, due to this we leave
-  // the length as 0.
-  assert_eq(syms.syms[45].bank, 0x00);
-  assert_eq(syms.syms[45].start_offset, 0x01C8);
-  assert_eq(syms.syms[45].len, 0x0000);
-  assert_eq(syms.syms[45].name, "DoggoSprite");
+#undef TEST_SYM
+#undef BR_BANK
 
   free_symbol_list(&syms);
 }
