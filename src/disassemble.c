@@ -300,6 +300,9 @@ static void disassemble_section(FILE *stream, const uint8_t *section_bytes, cons
 }
 
 void disassemble(struct gb_state *gb_state, FILE *stream) {
+  // TODO: I don't love how i'm doing this. Disassembly should probably be reworked to always start at 0 and just use
+  // symbols where available.
+  //
   // If bootrom has syms then they will be used in `disassemble_rom_with_sym()`
   if (gb_state->bootrom_mapped && !gb_state->bootrom_has_syms) {
     fprintf(stream, "BootRom:\n");
