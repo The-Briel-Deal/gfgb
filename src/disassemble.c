@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define PRINT_ENUM_CASE(enum_case)                                             \
   case enum_case: sprintf(inst_param_str, "%s", #enum_case); break;
@@ -158,6 +159,29 @@ void free_symbol_list(struct debug_symbol_list *syms) {
   free(syms->syms);
   syms->capacity = 0;
   syms->len = 0;
+}
+
+void sort_syms(struct debug_symbol_list *syms) {
+  // This is just bubble sort, since this is just for debugging it should be
+  // fine. If it becomes an issue I could use something faster.
+  struct debug_symbol tmp_sym;
+  bool swapped;
+  int n = syms->len;
+
+  for (int i = 0; i < n; i++) {
+    swapped = false;
+    for (int j = 0; j < (n - i - 1); j++) {
+      // TODO: currently i'm just sorting by addr, once bank switching exists we
+      // should also sort by bank.
+      if (syms->syms[j].start_offset > syms->syms[j + 1].start_offset) {
+        tmp_sym = syms->syms[j];
+        syms->syms[j] = syms->syms[j + 1];
+        syms->syms[j + 1] = tmp_sym;
+        swapped = true;
+      }
+    }
+    if (swapped) break;
+  }
 }
 
 void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
