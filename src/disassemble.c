@@ -117,6 +117,8 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, SUB)
     PRINT_INST_NAME(stream, SWAP)
     PRINT_INST_NAME(stream, XOR)
+    PRINT_INST_NAME(stream, DI)
+    PRINT_INST_NAME(stream, EI)
 
   case UNKNOWN_INST: {
     // I only use the `_INST` suffix to prevent name collision, so i'm going

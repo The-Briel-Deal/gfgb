@@ -111,6 +111,8 @@ struct inst {
     SUB,
     SWAP,
     XOR,
+    DI,
+    EI,
 
     UNKNOWN_INST,
   } type;

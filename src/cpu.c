@@ -13,31 +13,31 @@ enum flags : uint8_t {
   FLAG_C = (1 << 4),
 };
 
-#define R8_PARAM(r)                                                            \
+#define R8_PARAM(r)                                                                                                    \
   (struct inst_param) { .type = R8, .r8 = r }
-#define R16_PARAM(r)                                                           \
+#define R16_PARAM(r)                                                                                                   \
   (struct inst_param) { .type = R16, .r16 = r }
-#define R16_MEM_PARAM(r)                                                       \
+#define R16_MEM_PARAM(r)                                                                                               \
   (struct inst_param) { .type = R16_MEM, .r16_mem = r }
-#define R16_STK_PARAM(r)                                                       \
+#define R16_STK_PARAM(r)                                                                                               \
   (struct inst_param) { .type = R16_STK, .r16_stk = r }
-#define IMM16_PARAM(imm)                                                       \
+#define IMM16_PARAM(imm)                                                                                               \
   (struct inst_param) { .type = IMM16, .imm16 = imm }
-#define SP_IMM8_PARAM(imm)                                                     \
+#define SP_IMM8_PARAM(imm)                                                                                             \
   (struct inst_param) { .type = SP_IMM8, .imm8 = imm }
-#define IMM8_PARAM(imm)                                                        \
+#define IMM8_PARAM(imm)                                                                                                \
   (struct inst_param) { .type = IMM8, .imm8 = imm }
-#define IMM8_HMEM_PARAM(imm)                                                   \
+#define IMM8_HMEM_PARAM(imm)                                                                                           \
   (struct inst_param) { .type = IMM8_HMEM, .imm8 = imm }
-#define IMM16_MEM_PARAM(imm)                                                   \
+#define IMM16_MEM_PARAM(imm)                                                                                           \
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
-#define B3_PARAM(b)                                                            \
+#define B3_PARAM(b)                                                                                                    \
   (struct inst_param) { .type = B3, .b3 = b }
-#define COND_PARAM(cond)                                                       \
+#define COND_PARAM(cond)                                                                                               \
   (struct inst_param) { .type = COND, .r8 = cond }
-#define UNKNOWN_INST_BYTE_PARAM(b)                                             \
+#define UNKNOWN_INST_BYTE_PARAM(b)                                                                                     \
   (struct inst_param) { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
-#define VOID_PARAM                                                             \
+#define VOID_PARAM                                                                                                     \
   (struct inst_param) { .type = VOID_PARAM_TYPE }
 
 static inline uint8_t next8(struct gb_state *gb_state) {
@@ -99,8 +99,7 @@ static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   }
 }
 
-static inline void set_r16(struct gb_state *gb_state, enum r16 r16,
-                           uint16_t val) {
+static inline void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val) {
   struct regs *r = &gb_state->regs;
   switch (r16) {
   case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
@@ -111,8 +110,7 @@ static inline void set_r16(struct gb_state *gb_state, enum r16 r16,
   }
 }
 
-static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
-                               uint8_t val) {
+static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16, uint8_t val) {
   struct regs *r = &gb_state->regs;
   uint16_t mem_offset;
   switch (r16) {
@@ -125,8 +123,7 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16,
   write_mem8(gb_state, mem_offset, val);
 }
 
-static inline uint16_t get_r16_mem(struct gb_state *gb_state,
-                                   enum r16_mem r16_mem) {
+static inline uint16_t get_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem) {
   assert(r16_mem <= R16_MEM_HLD);
   uint16_t addr;
   switch (r16_mem) {
@@ -143,8 +140,7 @@ static inline uint16_t get_r16_mem(struct gb_state *gb_state,
   }
   abort(); // This should never happen unless something is very wrong.
 }
-static inline uint16_t get_r16_stk(struct gb_state *gb_state,
-                                   enum r16_stk r16_stk) {
+static inline uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk) {
   assert(r16_stk <= R16_STK_AF);
   switch (r16_stk) {
   case R16_STK_BC: return get_r16(gb_state, R16_BC);
@@ -154,8 +150,7 @@ static inline uint16_t get_r16_stk(struct gb_state *gb_state,
   }
   abort(); // This should never happen unless something is very wrong.
 }
-static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk,
-                               uint16_t val) {
+static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) {
   struct regs *r = &gb_state->regs;
   switch (r16_stk) {
   case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
@@ -185,8 +180,7 @@ struct inst fetch(struct gb_state *gb_state) {
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
   case /* block */ 0:
-    if (curr_byte == 0b00000000)
-      return (struct inst){.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    if (curr_byte == 0b00000000) return (struct inst){.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     switch (NIBBLE1(curr_byte)) {
     case 0b0001:
       return (struct inst){
@@ -229,30 +223,21 @@ struct inst fetch(struct gb_state *gb_state) {
     }
     // ld r8, imm8
     if ((curr_byte & 0b00000111) == 0b00000110)
-      return (struct inst){.type = LD,
-                           .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
-                           .p2 = IMM8_PARAM(next8(gb_state))};
+      return (struct inst){
+          .type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = IMM8_PARAM(next8(gb_state))};
     // inc r8
     if ((curr_byte & 0b00000111) == 0b00000100)
-      return (struct inst){.type = INC,
-                           .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
-                           .p2 = VOID_PARAM};
+      return (struct inst){.type = INC, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = VOID_PARAM};
     // dec r8
     if ((curr_byte & 0b00000111) == 0b00000101)
-      return (struct inst){.type = DEC,
-                           .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
-                           .p2 = VOID_PARAM};
+      return (struct inst){.type = DEC, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = VOID_PARAM};
 
     // jr imm8
-    if (curr_byte == 0b00011000)
-      return (struct inst){
-          .type = JR, .p1 = IMM8_PARAM(next8(gb_state)), .p2 = VOID_PARAM};
+    if (curr_byte == 0b00011000) return (struct inst){.type = JR, .p1 = IMM8_PARAM(next8(gb_state)), .p2 = VOID_PARAM};
     // jr cond, imm8
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b00100000)
       return (struct inst){
-          .type = JR,
-          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
-          .p2 = IMM8_PARAM(next8(gb_state))};
+          .type = JR, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM8_PARAM(next8(gb_state))};
 
     // rlca
     if (curr_byte == 0b00000111) {
@@ -288,14 +273,12 @@ struct inst fetch(struct gb_state *gb_state) {
     }
     break;
   case /* block */ 1:
-    return (struct inst){.type = LD,
-                         .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3),
-                         .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
+    return (struct inst){
+        .type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
 
   case /* block */ 2: {
-    struct inst inst = {.type = UNKNOWN_INST,
-                        .p1 = R8_PARAM(R8_A),
-                        .p2 = R8_PARAM((curr_byte & ARITHMETIC_R8_MASK) >> 0)};
+    struct inst inst = {
+        .type = UNKNOWN_INST, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM((curr_byte & ARITHMETIC_R8_MASK) >> 0)};
     uint8_t arithmetic_op_code = (curr_byte & ARITHMETIC_OP_MASK) >> 3;
     switch (arithmetic_op_code) {
     case 0: inst.type = ADD; break;
@@ -312,111 +295,70 @@ struct inst fetch(struct gb_state *gb_state) {
   }
   case /* block */ 3:
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
-      return (struct inst){.type = POP,
-                           .p1 = R16_STK_PARAM(CRUMB1(curr_byte)),
-                           .p2 = VOID_PARAM};
+      return (struct inst){.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
     if (NIBBLE1(curr_byte) == 0b0101) // Push r16stk
-      return (struct inst){.type = PUSH,
-                           .p1 = R16_STK_PARAM(CRUMB1(curr_byte)),
-                           .p2 = VOID_PARAM};
+      return (struct inst){.type = PUSH, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
     if (curr_byte == 0b11000011) // Unconditional jump
-      return (struct inst){
-          .type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+      return (struct inst){.type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
     if (curr_byte == 0b11001001) // RET
       return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
 
     if (curr_byte == 0b11001101) // Unconditional call
-      return (struct inst){
-          .type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+      return (struct inst){.type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000100) // Conditional call
       return (struct inst){
-          .type = CALL,
-          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
-          .p2 = IMM16_PARAM(next16(gb_state))};
+          .type = CALL, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
 
     if (curr_byte == 0b11100010) // LDH [C], A
-      return (struct inst){
-          .type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
+      return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
 
     if (curr_byte == 0b11100000) // LDH [IMM8], A
-      return (struct inst){.type = LDH,
-                           .p1 = IMM8_HMEM_PARAM(next8(gb_state)),
-                           .p2 = R8_PARAM(R8_A)};
+      return (struct inst){.type = LDH, .p1 = IMM8_HMEM_PARAM(next8(gb_state)), .p2 = R8_PARAM(R8_A)};
 
     if (curr_byte == 0b11101010) // LD [IMM16], A
-      return (struct inst){.type = LD,
-                           .p1 = IMM16_MEM_PARAM(next16(gb_state)),
-                           .p2 = R8_PARAM(R8_A)};
+      return (struct inst){.type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), .p2 = R8_PARAM(R8_A)};
 
     if (curr_byte == 0b11110010) // LDH A, [C]
-      return (struct inst){
-          .type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
+      return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
 
     if (curr_byte == 0b11110000) // LDH A, [IMM8]
-      return (struct inst){.type = LDH,
-                           .p1 = R8_PARAM(R8_A),
-                           .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
+      return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
 
     if (curr_byte == 0b11111010) // LD A, [IMM16]
-      return (struct inst){.type = LD,
-                           .p1 = R8_PARAM(R8_A),
-                           .p2 = IMM16_MEM_PARAM(next16(gb_state))};
+      return (struct inst){.type = LD, .p1 = R8_PARAM(R8_A), .p2 = IMM16_MEM_PARAM(next16(gb_state))};
 
     if (curr_byte == 0b11111000) // LD HL, SP+IMM8
-      return (struct inst){.type = LD,
-                           .p1 = R16_PARAM(R16_HL),
-                           .p2 = SP_IMM8_PARAM(next8(gb_state))};
+      return (struct inst){.type = LD, .p1 = R16_PARAM(R16_HL), .p2 = SP_IMM8_PARAM(next8(gb_state))};
+
+    // Control Instructions
+    if (curr_byte == 0xF3) // DI (Disable Interrupts)
+      return (struct inst){.type = DI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    if (curr_byte == 0xFB) // EI (Enable Interrupts)
+      return (struct inst){.type = EI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
 
     if (OCTAL2(curr_byte) == 0b110) {
       switch (OCTAL1(curr_byte)) {
-      case 0:
-        return (struct inst){.type = ADD,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 1:
-        return (struct inst){.type = ADC,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 2:
-        return (struct inst){.type = SUB,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 3:
-        return (struct inst){.type = SBC,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 4:
-        return (struct inst){.type = AND,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 5:
-        return (struct inst){.type = XOR,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 6:
-        return (struct inst){.type = OR,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
-      case 7:
-        return (struct inst){.type = CP,
-                             .p1 = R8_PARAM(R8_A),
-                             .p2 = IMM8_PARAM(next8(gb_state))};
+      case 0: return (struct inst){.type = ADD, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 1: return (struct inst){.type = ADC, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 2: return (struct inst){.type = SUB, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 3: return (struct inst){.type = SBC, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 4: return (struct inst){.type = AND, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 5: return (struct inst){.type = XOR, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 6: return (struct inst){.type = OR, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+      case 7: return (struct inst){.type = CP, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
       }
     }
 
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000010) // JP COND, IMM16
       return (struct inst){
-          .type = JP,
-          .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
-          .p2 = IMM16_PARAM(next16(gb_state))};
+          .type = JP, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
 
     // 0xCB prefix instructions
     if (curr_byte == 0xCB) {
       uint8_t cb_suffix = next8(gb_state);
-      struct inst inst = {
-          .type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      struct inst inst = {.type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
 
       switch (CRUMB0(cb_suffix)) {
       case 0b00:
@@ -470,11 +412,8 @@ struct inst fetch(struct gb_state *gb_state) {
 
     break;
   }
-  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.2X.",
-               curr_byte);
-  return (struct inst){.type = UNKNOWN_INST,
-                       .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte),
-                       .p2 = VOID_PARAM};
+  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.2X.", curr_byte);
+  return (struct inst){.type = UNKNOWN_INST, .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte), .p2 = VOID_PARAM};
 }
 
 #define IS_R16(param)       (param.type == R16)
@@ -495,8 +434,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
-    write_mem8(gb_state, get_r16_mem(gb_state, dest.r16_mem),
-               get_r8(gb_state, src.r8));
+    write_mem8(gb_state, get_r16_mem(gb_state, dest.r16_mem), get_r8(gb_state, src.r8));
     return;
   }
   if (IS_R8(dest)) {
@@ -636,6 +574,25 @@ static void ex_or(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, r->a == 0);
 }
 
+static void ex_and(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == AND);
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
+  struct regs *r = &gb_state->regs;
+  uint8_t p2_val;
+  if (IS_R8(inst.p2)) {
+    p2_val = get_r8(gb_state, inst.p2.r8);
+  } else if (IS_IMM8(inst.p2)) {
+    p2_val = inst.p2.imm8;
+  } else {
+    unreachable();
+  }
+  r->a &= p2_val;
+  set_flags(gb_state, FLAG_N | FLAG_C, false);
+  set_flags(gb_state, FLAG_H, true);
+  set_flags(gb_state, FLAG_Z, r->a == 0);
+}
+
 static void ex_xor(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == XOR);
   assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
@@ -746,8 +703,7 @@ not_implemented:
   NOT_IMPLEMENTED("Unknown compare instruction");
 }
 
-static bool eval_condition(struct gb_state *gb_state,
-                           const struct inst_param inst_param) {
+static bool eval_condition(struct gb_state *gb_state, const struct inst_param inst_param) {
   assert(inst_param.type == COND);
   switch (inst_param.cond) {
   case COND_NZ: return (gb_state->regs.f & (1 << 7)) == 0;
@@ -815,14 +771,16 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case INC: ex_inc(gb_state, inst); return;
   case DEC: ex_dec(gb_state, inst); return;
   case OR: ex_or(gb_state, inst); return;
+  case AND: ex_and(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
   case BIT: ex_bit(gb_state, inst); return;
   case RL: ex_rl(gb_state, inst); return;
   case RLA: ex_rla(gb_state, inst); return;
+  case DI: gb_state->regs.io.ime = false; return;
+  case EI: gb_state->regs.io.ime = true; return;
   default: break;
   }
-  NOT_IMPLEMENTED(
-      "`execute()` called with `inst.type` that isn't implemented.");
+  NOT_IMPLEMENTED("`execute()` called with `inst.type` that isn't implemented.");
 }
 
 #ifdef RUN_CPU_TESTS
@@ -960,22 +918,19 @@ void test_execute_call_ret() {
   gb_state_init(&gb_state);
   assert_eq(gb_state.regs.sp, 0xE000);
   gb_state.regs.pc = 0x0190;
-  execute(
-      &gb_state,
-      (struct inst){.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
+  execute(&gb_state, (struct inst){.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
   assert_eq(gb_state.regs.sp, 0xDFFE);
   assert_eq(gb_state.regs.pc, 0x0210);
   assert_eq(read_mem16(&gb_state, 0xDFFE), 0x0190);
-  execute(&gb_state,
-          (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
+  execute(&gb_state, (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
   assert_eq(gb_state.regs.sp, 0xE000);
   assert_eq(gb_state.regs.pc, 0x0190);
 }
 
-#define TEST_CASE(name)                                                        \
-  {                                                                            \
-    SDL_Log("running `test_%s()`", #name);                                     \
-    test_##name();                                                             \
+#define TEST_CASE(name)                                                                                                \
+  {                                                                                                                    \
+    SDL_Log("running `test_%s()`", #name);                                                                             \
+    test_##name();                                                                                                     \
   }
 
 int main() {
