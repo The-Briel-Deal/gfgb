@@ -369,14 +369,16 @@ char *get_inst_symbol(struct gb_state *gb_state) {
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
+  for (int i = 0; i < 1000; i++) {
 #ifdef PRINT_INST_DURING_EXEC
-  printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
+    printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-  struct inst inst = fetch(gb_state);
+    struct inst inst = fetch(gb_state);
 #ifdef PRINT_INST_DURING_EXEC
-  print_inst(stdout, inst);
+    print_inst(stdout, inst);
 #endif
-  execute(gb_state, inst);
+    execute(gb_state, inst);
+  }
 
   // TODO: this doesn't need to be called every iteration.
   gb_draw(gb_state);
