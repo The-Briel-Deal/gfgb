@@ -541,7 +541,7 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
     uint8_t val;
     val = get_r8(gb_state, inst.p1.r8);
     set_r8(gb_state, inst.p1.r8, val + 1);
-    set_flags(gb_state, FLAG_Z, val + 1 == 0x00);
+    set_flags(gb_state, FLAG_Z, (uint8_t)(val + 1) == 0x00);
     set_flags(gb_state, FLAG_N, 0);
     set_flags(gb_state, FLAG_H, ((val & 0x0F) + 1) == 0x10);
     return;
@@ -658,7 +658,7 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
     uint8_t val;
     val = get_r8(gb_state, inst.p1.r8);
     set_r8(gb_state, inst.p1.r8, val - 1);
-    set_flags(gb_state, FLAG_Z, val - 1 == 0x00);
+    set_flags(gb_state, FLAG_Z, (uint8_t)(val - 1) == 0x00);
     set_flags(gb_state, FLAG_N, 1);
     set_flags(gb_state, FLAG_H, ((val & 0xF0) - 1) == 0x0F);
     return;
