@@ -354,11 +354,23 @@ void gb_draw(struct gb_state *gb_state) {
   SDL_RenderPresent(gb_state->sdl_renderer);
 }
 
+char *get_inst_symbol(struct gb_state *gb_state) {
+  // This works because we know the symbols are sorted.
+  uint16_t pc = gb_state->regs.pc;
+  for (int i = 0; i < gb_state->syms.len; i++) {
+    struct debug_symbol *sym = &gb_state->syms.syms[i];
+    if (sym->start_offset <= pc && pc < sym->len + sym->start_offset) {
+      return sym->name;
+    }
+  }
+  return "Unknown";
+}
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
 #ifdef PRINT_INST_DURING_EXEC
-  printf("0x%.4x: ", gb_state->regs.pc);
+  printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
   struct inst inst = fetch(gb_state);
 #ifdef PRINT_INST_DURING_EXEC
