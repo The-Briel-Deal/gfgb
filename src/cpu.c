@@ -755,6 +755,14 @@ void execute(struct gb_state *gb_state, struct inst inst) {
       push16(gb_state, gb_state->regs.pc);
       gb_state->regs.pc = inst.p1.imm16;
       return;
+    } else {
+      assert(inst.p1.type == COND);
+      assert(inst.p2.type == IMM16);
+      if (eval_condition(gb_state, inst.p1)) {
+        push16(gb_state, gb_state->regs.pc);
+        gb_state->regs.pc = inst.p1.imm16;
+      }
+      return;
     }
     break;
   }
