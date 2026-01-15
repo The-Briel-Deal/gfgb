@@ -55,11 +55,11 @@
 #define DOTS_PER_FRAME             70224
 
 // This is little endian, so the number is constructed as r2,r1
-#define COMBINED_REG(regs, r1, r2) (((uint16_t)regs.r2 << 8) | ((uint16_t)regs.r1 << 0))
+#define COMBINED_REG(regs, r1, r2) (((uint16_t)regs.r1 << 8) | ((uint16_t)regs.r2 << 0))
 #define SET_COMBINED_REG(regs, r1, r2, val)                                                                            \
   {                                                                                                                    \
-    regs.r1 = (0x00FF & val) >> 0;                                                                                     \
-    regs.r2 = (0xFF00 & val) >> 8;                                                                                     \
+    regs.r1 = (0xFF00 & val) >> 8;                                                                                     \
+    regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
 struct gb_state {
