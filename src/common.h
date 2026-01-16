@@ -78,6 +78,8 @@ struct gb_state {
     uint16_t sp;
     uint16_t pc;
     struct io_regs {
+      uint8_t sc; // serial control
+
       uint8_t tima; // timer counter
       uint8_t tma;  // timer modulo
       uint8_t tac;  // timer control
@@ -160,6 +162,8 @@ struct gb_state {
 #define HRAM_END     0xFFFE
 
 enum io_reg_addr {
+  IO_SB = 0xFF01,
+  IO_SC = 0xFF02,
   IO_TIMA = 0xFF05,
   IO_TMA = 0xFF06,
   IO_TAC = 0xFF07,
@@ -185,8 +189,6 @@ enum io_reg_addr {
   IO_NR51 = 0xFF25,
   IO_IF = 0xFF0F,
   IO_IE = 0xFFFF,
-  IO_SERIAL_TRANSFER = 0xFF01,
-  IO_SERIAL_CONTROL = 0xFF02,
   IO_SND_ON = 0xFF26,
   IO_LCDC = 0xFF40,
   IO_SCY = 0xFF42,
@@ -198,6 +200,8 @@ enum io_reg_addr {
 static uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
+  case IO_SB: NOT_IMPLEMENTED("Actual IO_SERIAL_TRANSFER reg not implemented.");
+  case IO_SC: return &gb_state->regs.io.sc;
   case IO_TIMA: return &gb_state->regs.io.tima;
   case IO_TMA: return &gb_state->regs.io.tma;
   case IO_TAC: return &gb_state->regs.io.tac;
@@ -227,8 +231,6 @@ static uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_LCDC: return &gb_state->regs.io.lcdc;
   case IO_SCY: return &gb_state->regs.io.scy;
   case IO_SCX: return &gb_state->regs.io.scx;
-  case IO_SERIAL_TRANSFER: NOT_IMPLEMENTED("Actual IO_SERIAL_TRANSFER reg not implemented.");
-  case IO_SERIAL_CONTROL: NOT_IMPLEMENTED("Actual IO_SERIAL_CONTROL reg not implemented.");
   case IO_BGP: return &gb_state->regs.io.bg_pallete;
   default: NOT_IMPLEMENTED("IO Reg Not Implemented");
   }
@@ -304,7 +306,7 @@ static inline uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
 
 static inline void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.2X to address 0x%.4X", val, addr);
-  if (addr == IO_SERIAL_TRANSFER) {
+  if (addr == IO_SB) {
     // TODO: This just logs out every character written to this port. If I
     // actually want to implement gamelink support there is more to do.
     if (gb_state->serial_port_output != NULL) fputc(val, gb_state->serial_port_output);
