@@ -311,14 +311,14 @@ void gb_render_bg(struct gb_state *gb_state) {
   uint16_t bg_win_tile_data_start_p1;
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
-  if (gb_state->regs.io.lcd_control & LCDC_BG_WIN_TILE_DATA_AREA) {
+  if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
   } else {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK2_START;
   }
   bg_win_tile_data_start_p2 = GB_TILEDATA_BLOCK1_START;
 
-  if (gb_state->regs.io.lcd_control & LCDC_BG_TILE_MAP_AREA) {
+  if (gb_state->regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) {
     bg_tile_map_start = GB_TILEMAP_BLOCK1_START;
   } else {
     bg_tile_map_start = GB_TILEMAP_BLOCK0_START;
