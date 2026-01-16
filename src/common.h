@@ -124,6 +124,7 @@ struct gb_state {
   bool rom_loaded;
   uint8_t bootrom[DMG_BOOTROM_SIZE];
   uint8_t rom0[KB(16)];
+  uint8_t rom1[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
   uint8_t hram[0x80];
@@ -266,7 +267,8 @@ static void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   if (addr <= ROM0_END) {
     return &gb_state->rom0[addr - ROM0_START];
   } else if (addr <= ROMN_END) {
-    NOT_IMPLEMENTED("Rom Bank 01-NN not implemented");
+    // TODO: Implement bank switching for this region. For now we'll just assume that it's always 01.
+    return &gb_state->rom1[addr - ROMN_START];
   } else if (addr <= VRAM_END) {
     return &gb_state->vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {

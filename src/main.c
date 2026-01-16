@@ -93,8 +93,16 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       SDL_Log("Error when reading rom file: %d", err);
       return false;
     }
-    fclose(f);
     memcpy(gb_state->rom0, bytes, bytes_len);
+    if (!feof(f)) {
+      bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+      if ((err = ferror(f))) {
+        SDL_Log("Error when reading rom file: %d", err);
+        return false;
+      }
+      memcpy(gb_state->rom1, bytes, bytes_len);
+    }
+    fclose(f);
     gb_state->rom_loaded = true;
   }
 
