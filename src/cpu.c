@@ -610,6 +610,30 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
   }
   unreachable();
 }
+static void ex_sub(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SUB);
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
+
+  if (IS_R8(inst.p1) && inst.p1.r8 == R8_A) {
+    uint8_t a_val = get_r8(gb_state, R8_A);
+    uint8_t p2_val;
+    if (IS_R8(inst.p2)) {
+      p2_val = get_r8(gb_state, inst.p2.r8);
+    } else {
+      assert(IS_IMM8(inst.p2));
+      p2_val = inst.p2.imm8;
+    }
+    uint8_t result = a_val - p2_val;
+    set_r8(gb_state, inst.p1.r8, result);
+    set_flags(gb_state, FLAG_Z, (uint8_t)(result) == 0x00);
+    set_flags(gb_state, FLAG_N, 1);
+    set_flags(gb_state, FLAG_H, (a_val & 0x0F) < (p2_val & 0x0F));
+    set_flags(gb_state, FLAG_C, a_val < p2_val);
+    return;
+  }
+  unreachable();
+}
 
 static void ex_or(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == OR);
@@ -834,6 +858,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case INC: ex_inc(gb_state, inst); return;
   case DEC: ex_dec(gb_state, inst); return;
   case ADD: ex_add(gb_state, inst); return;
+  case SUB: ex_sub(gb_state, inst); return;
   case OR: ex_or(gb_state, inst); return;
   case AND: ex_and(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
