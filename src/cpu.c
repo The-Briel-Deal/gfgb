@@ -206,6 +206,12 @@ struct inst fetch(struct gb_state *gb_state) {
           .p1 = R16_PARAM(CRUMB1(curr_byte)),
           .p2 = VOID_PARAM,
       };
+    case 0b1001:
+      return (struct inst){
+          .type = ADD,
+          .p1 = R16_PARAM(R16_HL),
+          .p2 = R16_PARAM(CRUMB1(curr_byte)),
+      };
     case 0b1010:
       return (struct inst){
           .type = LD,
@@ -558,9 +564,9 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
 
 static void ex_add(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == ADD);
-  // TODO: I still haven't implemented fetch for 16 bit adds.
-  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
-  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
+  assert((IS_R8(inst.p1) && inst.p1.r8 == R8_A) ||
+         (IS_R16(inst.p1) && (inst.p1.r16 == R16_HL || inst.p1.r16 == R16_SP)));
+  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2) || IS_R16(inst.p2));
 
   if (IS_R8(inst.p1) && inst.p1.r8 == R8_A) {
     uint8_t a_val = get_r8(gb_state, R8_A);
@@ -576,6 +582,30 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
     set_flags(gb_state, FLAG_N, 0);
     set_flags(gb_state, FLAG_H, ((a_val & 0x0F) + (p2_val & 0x0F)) >= 0x10);
     set_flags(gb_state, FLAG_C, (a_val + p2_val) >= 0x100);
+    return;
+  }
+  if (IS_R16(inst.p1) && (inst.p1.r16 == R16_HL)) {
+    assert(IS_R16(inst.p2));
+    uint16_t hl_val = get_r16(gb_state, R16_HL);
+    uint16_t p2_val = get_r16(gb_state, inst.p2.r16);
+    set_r16(gb_state, R16_HL, hl_val + p2_val);
+    set_flags(gb_state, FLAG_N, 0);
+    set_flags(gb_state, FLAG_H, ((hl_val & 0x0FFF) + (p2_val & 0x0FFF)) >= 0x1000);
+    set_flags(gb_state, FLAG_C, (hl_val + p2_val) >= 0x10000);
+    return;
+  }
+
+  if (IS_R16(inst.p1) && (inst.p1.r16 == R16_SP)) {
+    assert(IS_IMM8(inst.p2));
+    uint16_t sp_val = get_r16(gb_state, R16_SP);
+    int8_t p2_val = *(int8_t *)&inst.p2.imm8;
+    uint16_t result = sp_val + p2_val;
+    set_r16(gb_state, R16_HL, result);
+    set_flags(gb_state, FLAG_N, 0);
+    // TODO: I'm not positive these are correct since p2_val is signed. I need to double check this against other
+    // emulators.
+    set_flags(gb_state, FLAG_H, ((sp_val ^ p2_val ^ result) & 0x10) == 0x10);
+    set_flags(gb_state, FLAG_C, ((sp_val ^ p2_val ^ result) & 0x100) == 0x100);
     return;
   }
   unreachable();
