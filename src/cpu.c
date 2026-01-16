@@ -556,6 +556,25 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
   abort();
 }
 
+static void ex_add(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == ADD);
+  // TODO: I still haven't implemented fetch for 16 bit adds.
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
+
+  if (IS_R8(inst.p1) && inst.p1.r8 == R8_A && IS_R8(inst.p2)) {
+    uint8_t a_val = get_r8(gb_state, R8_A);
+    uint8_t p2_val = get_r8(gb_state, inst.p2.r8);
+    set_r8(gb_state, inst.p1.r8, a_val + p2_val);
+    set_flags(gb_state, FLAG_Z, (uint8_t)(a_val + p2_val) == 0x00);
+    set_flags(gb_state, FLAG_N, 0);
+    set_flags(gb_state, FLAG_H, ((a_val & 0x0F) + (p2_val & 0x0F)) >= 0x10);
+    set_flags(gb_state, FLAG_C, (a_val + p2_val) >= 0x100);
+    return;
+  }
+  unreachable();
+}
+
 static void ex_or(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == OR);
   assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
@@ -778,6 +797,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case POP: ex_pop(gb_state, inst); return;
   case INC: ex_inc(gb_state, inst); return;
   case DEC: ex_dec(gb_state, inst); return;
+  case ADD: ex_add(gb_state, inst); return;
   case OR: ex_or(gb_state, inst); return;
   case AND: ex_and(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
