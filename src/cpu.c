@@ -562,9 +562,15 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
   assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
 
-  if (IS_R8(inst.p1) && inst.p1.r8 == R8_A && IS_R8(inst.p2)) {
+  if (IS_R8(inst.p1) && inst.p1.r8 == R8_A) {
     uint8_t a_val = get_r8(gb_state, R8_A);
-    uint8_t p2_val = get_r8(gb_state, inst.p2.r8);
+    uint8_t p2_val;
+    if (IS_R8(inst.p2)) {
+      p2_val = get_r8(gb_state, inst.p2.r8);
+    } else {
+      assert(IS_IMM8(inst.p2));
+      p2_val = inst.p2.imm8;
+    }
     set_r8(gb_state, inst.p1.r8, a_val + p2_val);
     set_flags(gb_state, FLAG_Z, (uint8_t)(a_val + p2_val) == 0x00);
     set_flags(gb_state, FLAG_N, 0);
