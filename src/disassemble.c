@@ -286,20 +286,6 @@ static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
     }
   }
 }
-// copies rom to the start of memory and start disassembly at 0x0 since we're
-// just looking at 1 section.
-static void disassemble_section(FILE *stream, const uint8_t *section_bytes, const int section_bytes_len) {
-  struct gb_state gb_state;
-  gb_state_init(&gb_state);
-  gb_state.regs.pc = 0;
-  memcpy(gb_state.rom0, section_bytes, section_bytes_len);
-
-  while (gb_state.regs.pc < section_bytes_len) {
-    fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
-    struct inst inst = fetch(&gb_state);
-    print_inst(stream, inst);
-  }
-}
 
 void disassemble(struct gb_state *gb_state, FILE *stream) {
   // TODO: I don't love how i'm doing this. Disassembly should probably be reworked to always start at 0 and just use
@@ -324,6 +310,21 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
 #ifdef RUN_DISASSEMBLE_TESTS
 
 #include "test_asserts.h"
+
+// copies rom to the start of memory and start disassembly at 0x0 since we're
+// just looking at 1 section. This is currently only used in tests.
+static void disassemble_section(FILE *stream, const uint8_t *section_bytes, const int section_bytes_len) {
+  struct gb_state gb_state;
+  gb_state_init(&gb_state);
+  gb_state.regs.pc = 0;
+  memcpy(gb_state.rom0, section_bytes, section_bytes_len);
+
+  while (gb_state.regs.pc < section_bytes_len) {
+    fprintf(stream, "0x%.4X: ", gb_state.regs.pc);
+    struct inst inst = fetch(&gb_state);
+    print_inst(stream, inst);
+  }
+}
 
 /*
  *** This below test data corresponds to this portion of the SimpleSprite rom.
