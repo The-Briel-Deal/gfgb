@@ -56,7 +56,7 @@ static inline uint16_t next16(struct gb_state *gb_state) {
   return val;
 }
 
-static inline uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
+uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
   struct regs *r = &gb_state->regs;
   switch (r8) {
   case R8_B: return r->b;
@@ -71,7 +71,7 @@ static inline uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
   }
 }
 
-static inline void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
+void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
   struct regs *r = &gb_state->regs;
   switch (r8) {
   case R8_B: r->b = val; return;
@@ -86,7 +86,7 @@ static inline void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
   }
 }
 
-static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
+uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   struct regs *r = &gb_state->regs;
   switch (r16) {
   case R16_BC: return COMBINED_REG((*r), b, c);
@@ -97,7 +97,7 @@ static inline uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   }
 }
 
-static inline void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val) {
+void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val) {
   struct regs *r = &gb_state->regs;
   switch (r16) {
   case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
@@ -108,7 +108,7 @@ static inline void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val
   }
 }
 
-static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16, uint8_t val) {
+void set_r16_mem(struct gb_state *gb_state, enum r16 r16, uint8_t val) {
   struct regs *r = &gb_state->regs;
   uint16_t mem_offset;
   switch (r16) {
@@ -121,7 +121,7 @@ static inline void set_r16_mem(struct gb_state *gb_state, enum r16 r16, uint8_t 
   write_mem8(gb_state, mem_offset, val);
 }
 
-static inline uint16_t get_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem) {
+uint16_t get_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem) {
   assert(r16_mem <= R16_MEM_HLD);
   uint16_t addr;
   switch (r16_mem) {
@@ -138,7 +138,7 @@ static inline uint16_t get_r16_mem(struct gb_state *gb_state, enum r16_mem r16_m
   }
   abort(); // This should never happen unless something is very wrong.
 }
-static inline uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk) {
+uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk) {
   assert(r16_stk <= R16_STK_AF);
   switch (r16_stk) {
   case R16_STK_BC: return get_r16(gb_state, R16_BC);
@@ -148,7 +148,7 @@ static inline uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_s
   }
   abort(); // This should never happen unless something is very wrong.
 }
-static inline void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) {
+void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) {
   struct regs *r = &gb_state->regs;
   switch (r16_stk) {
   case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
