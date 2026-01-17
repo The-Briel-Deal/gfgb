@@ -330,32 +330,7 @@ static inline void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_
   val_ptr[1] = (val & 0xFF00) >> 8;
 }
 
-static inline void gb_state_init(struct gb_state *gb_state) {
-  SDL_zerop(gb_state);
-  // It looks like this was originally at the top of HRAM, but some emulators
-  // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
-  // going with the latter approach for now.
-  gb_state->regs.sp = WRAM_END + 1;
-
-  // This isn't necessary due to me zeroing state above, but I want to
-  // explicitly set this as false in case I ever remove the zeroing as a speed
-  // up.
-  gb_state->rom_loaded = false;
-  gb_state->bootrom_mapped = false;
-}
-#undef ROM0_START
-#undef ROM0_END
-
-#undef ROMN_START
-#undef ROMN_END
-
-#undef VRAM_START
-#undef VRAM_END
-
-#undef ERAM_START
-#undef ERAM_END
-
-#undef WRAM_START
-#undef WRAM_END
+void gb_state_init(struct gb_state *gb_state);
+struct gb_state *gb_state_alloc();
 
 #endif // GB_COMMON_H

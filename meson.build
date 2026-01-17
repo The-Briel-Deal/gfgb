@@ -10,14 +10,21 @@ dependencies = dependency('sdl3')
 
 sources = [
   'src/disassemble.c',
+  'src/common.c',
   'src/cpu.c',
   'src/ppu.c',
-  'src/main.c',
 ]
+
+shared_lib = shared_library(
+  'gfgb', 
+  [sources],
+  include_directories : include_directories(['src/']),
+  dependencies : dependencies,
+)
 
 exe = executable(
   'gb_emu',
-  [sources],
+  [sources, 'src/main.c'],
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
   install : true,
@@ -25,7 +32,7 @@ exe = executable(
 
 cpu_test_exe = executable(
   'cpu_test_exe',
-  ['src/cpu.c'],
+  sources,
   c_args : '-DRUN_CPU_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
@@ -34,7 +41,7 @@ cpu_test_exe = executable(
 
 ppu_test_exe = executable(
   'ppu_test_exe',
-  ['src/cpu.c', 'src/disassemble.c','src/ppu.c'],
+  sources,
   c_args : '-DRUN_PPU_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
@@ -43,7 +50,7 @@ ppu_test_exe = executable(
 
 disasm_test_exe = executable(
   'disasm_test_exe',
-  ['src/cpu.c', 'src/disassemble.c'],
+  sources,
   c_args : '-DRUN_DISASSEMBLE_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,

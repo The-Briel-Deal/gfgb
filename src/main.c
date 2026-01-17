@@ -3,7 +3,6 @@
 #include "disassemble.h"
 #include "ppu.h"
 
-#include <SDL3/SDL_init.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -225,9 +224,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   switch (run_mode) {
   case EXECUTE: {
-    struct gb_state *gb_state;
+    struct gb_state *gb_state = gb_state_alloc();
 
-    gb_state = SDL_malloc(sizeof(struct gb_state));
     *appstate = gb_state;
     SDL_assert(appstate != NULL);
     gb_state_init(*appstate);
