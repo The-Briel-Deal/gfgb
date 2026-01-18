@@ -108,14 +108,20 @@ void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val) {
   }
 }
 
-void set_r16_mem(struct gb_state *gb_state, enum r16 r16, uint8_t val) {
+void set_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem, uint8_t val) {
   struct regs *r = &gb_state->regs;
   uint16_t mem_offset;
-  switch (r16) {
-  case R16_BC: mem_offset = COMBINED_REG((*r), b, c); break;
-  case R16_DE: mem_offset = COMBINED_REG((*r), d, e); break;
-  case R16_HL: mem_offset = COMBINED_REG((*r), h, l); break;
-  case R16_SP: mem_offset = r->sp; break;
+  switch (r16_mem) {
+  case R16_MEM_BC: mem_offset = COMBINED_REG((*r), b, c); break;
+  case R16_MEM_DE: mem_offset = COMBINED_REG((*r), d, e); break;
+  case R16_MEM_HLI:
+    mem_offset = COMBINED_REG((*r), h, l);
+    set_r16(gb_state, R16_HL, mem_offset + 1);
+    break;
+  case R16_MEM_HLD:
+    mem_offset = COMBINED_REG((*r), h, l);
+    set_r16(gb_state, R16_HL, mem_offset - 1);
+    break;
   default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
   write_mem8(gb_state, mem_offset, val);
