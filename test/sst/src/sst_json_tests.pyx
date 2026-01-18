@@ -1,5 +1,8 @@
+cimport gfgb 
+
 def main():
-  print("Hello World")
+  gb_state = gfgb.gb_state_alloc()
+  print("Hello World", gb_state)
 
 
 if __name__ == "__main__":

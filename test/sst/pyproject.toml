@@ -7,4 +7,4 @@ name = "sst_tests"
 version = "v0.0.1"
 
 [tool.setuptools]
-ext-modules = [{name = "gfgb_py", sources = ["src/*.pyx"]}]
+ext-modules = [{name = "gfgb_py", sources = ["src/*.pyx"], depends = ["src/gfgb.pxd"]}]

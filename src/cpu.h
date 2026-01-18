@@ -129,7 +129,7 @@ uint16_t get_r16(struct gb_state *gb_state, enum r16 r16);
 void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val);
 
 uint16_t get_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem);
-void set_r16_mem(struct gb_state *gb_state, enum r16 r16, uint8_t val);
+void set_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem, uint8_t val);
 
 uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk);
 void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val);
