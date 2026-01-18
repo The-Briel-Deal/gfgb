@@ -9,7 +9,7 @@ from typing import Any, List, Optional, Union
 # This is a janky way to make sure that my cython module is in path. I'll figure out a better solution later.
 sys.path.append("build")
 
-from gfgb_py import GB_State, R8
+from gfgb_py import GB_State, R8, R16
 
 
 @dataclass
@@ -52,6 +52,7 @@ def load_initial_state(gb_state: GB_State, state: StateSnapshot):
   gb_state.set_r8(R8.H, state.h)
   gb_state.set_r8(R8.L, state.l)
   gb_state.set_r8(R8.A, state.a)
+  gb_state.set_r16(R16.SP, state.sp)
 
 
 def assert_state_equals(gb_state: GB_State, state: StateSnapshot):
@@ -62,6 +63,7 @@ def assert_state_equals(gb_state: GB_State, state: StateSnapshot):
   assert gb_state.get_r8(R8.H) == state.h
   assert gb_state.get_r8(R8.L) == state.l
   assert gb_state.get_r8(R8.A) == state.a
+  assert gb_state.get_r16(R16.SP) == state.sp
 
 
 @pytest.mark.parametrize("test_file_path", test_files)
@@ -80,4 +82,5 @@ def test_single_step(test_file_path: pathlib.Path):
     gb_state = GB_State()
 
     load_initial_state(gb_state, sst_case.initial)
+    # Just to make sure setting and getting line up.
     assert_state_equals(gb_state, sst_case.initial)
