@@ -5,6 +5,7 @@ cdef extern from "common.h":
 
   void gb_state_init(gb_state *gb_state)
   gb_state *gb_state_alloc()
+  void gb_state_free(gb_state *gb_state)
 
 cdef extern from "cpu.h":
   struct inst: pass

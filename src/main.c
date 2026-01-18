@@ -398,12 +398,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   // This is still called when disassembling where there is no gb_state passed
   // to SDL.
   if (gb_state != NULL) {
-    if (gb_state->serial_port_output != NULL) fclose(gb_state->serial_port_output);
-
     gb_video_free(gb_state);
-    if (gb_state->syms.capacity > 0) {
-      free_symbol_list(&gb_state->syms);
-    }
-    SDL_free(appstate);
+    gb_state_free(gb_state);
   }
 }

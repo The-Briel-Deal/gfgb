@@ -332,5 +332,6 @@ static inline void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_
 
 void gb_state_init(struct gb_state *gb_state);
 struct gb_state *gb_state_alloc();
+void gb_state_free(struct gb_state *gb_state);
 
 #endif // GB_COMMON_H

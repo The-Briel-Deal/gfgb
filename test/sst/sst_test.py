@@ -9,7 +9,7 @@ from typing import Any, List, Optional, Union
 # This is a janky way to make sure that my cython module is in path. I'll figure out a better solution later.
 sys.path.append("build")
 
-import gfgb_py
+from gfgb_py import GB_State, R8
 
 
 @dataclass
@@ -44,6 +44,10 @@ test_files = list(sst_test_dir.iterdir())
 assert len(test_files) == 500
 
 
+def load_initial_state(gb_state: GB_State, state: StateSnapshot):
+  gb_state.set_r8(R8.A, state.a)
+
+
 @pytest.mark.parametrize("test_file_path", test_files)
 def test_single_step(test_file_path: pathlib.Path):
   assert test_file_path.is_file()
@@ -56,3 +60,7 @@ def test_single_step(test_file_path: pathlib.Path):
         final=StateSnapshot(**case["final"]),
         cycles=case["cycles"],
     )
+
+    gb_state = GB_State()
+
+    load_initial_state(gb_state, sst_case.initial)

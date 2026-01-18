@@ -15,3 +15,12 @@ void gb_state_init(struct gb_state *gb_state) {
 }
 
 struct gb_state *gb_state_alloc() { return SDL_malloc(sizeof(struct gb_state)); }
+
+void gb_state_free(struct gb_state *gb_state) { 
+    if (gb_state->serial_port_output != NULL) fclose(gb_state->serial_port_output);
+
+    if (gb_state->syms.capacity > 0) {
+      free_symbol_list(&gb_state->syms);
+    }
+    SDL_free(gb_state);
+}
