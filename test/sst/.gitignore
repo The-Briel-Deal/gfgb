@@ -2,3 +2,5 @@ build/
 *.so
 __pycache__/
 src/*.c
+*.egg-info/
+dist/

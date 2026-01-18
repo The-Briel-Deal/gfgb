@@ -1,11 +1,8 @@
-import os
-import pathlib
-from setuptools import setup
+import setuptools
 from Cython.Build import cythonize
 
 
-root_dir = pathlib.Path(__file__).parent
-src_dir = root_dir / "src/"
-setup(
-    ext_modules=cythonize(str((src_dir / "sst_json_tests.py").resolve())),
+setuptools.setup(
+    ext_modules=cythonize(["src/sst_json_tests.py"]),
+    package_dir={"sst_json_tests": "src/"},
 )
