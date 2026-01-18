@@ -398,6 +398,7 @@ struct inst fetch(struct gb_state *gb_state) {
           inst.type = SRL;
           goto r8_inst;
         }
+        break;
       case 0b01: // BIT B3, R8
         inst.type = BIT;
         goto b3_r8_inst;
