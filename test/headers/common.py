@@ -154,6 +154,7 @@ class FunctionFactoryStub:
 # Or manually fix this by comment the ctypes.CDLL loading
 _libraries = {}
 _libraries['FIXME_STUB'] = FunctionFactoryStub() #  ctypes.CDLL('FIXME_STUB')
+_libraries['libgfgb.so'] = ctypes.CDLL('./build/libgfgb.so')
 
 
 class struct_gb_state(Structure):
@@ -624,13 +625,13 @@ try:
 except AttributeError:
     pass
 try:
-    gb_state_init = _libraries['FIXME_STUB'].gb_state_init
+    gb_state_init = _libraries['libgfgb.so'].gb_state_init
     gb_state_init.restype = None
     gb_state_init.argtypes = [ctypes.POINTER(struct_gb_state)]
 except AttributeError:
     pass
 try:
-    gb_state_alloc = _libraries['FIXME_STUB'].gb_state_alloc
+    gb_state_alloc = _libraries['libgfgb.so'].gb_state_alloc
     gb_state_alloc.restype = ctypes.POINTER(struct_gb_state)
     gb_state_alloc.argtypes = []
 except AttributeError:

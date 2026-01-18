@@ -35,17 +35,8 @@ def char_pointer_cast(string, encoding='utf-8'):
 
 
 
-class FunctionFactoryStub:
-    def __getattr__(self, _):
-      return ctypes.CFUNCTYPE(lambda y:y)
-
-# libraries['FIXME_STUB'] explanation
-# As you did not list (-l libraryname.so) a library that exports this function
-# This is a non-working stub instead. 
-# You can either re-run clan2py with -l /path/to/library.so
-# Or manually fix this by comment the ctypes.CDLL loading
 _libraries = {}
-_libraries['FIXME_STUB'] = FunctionFactoryStub() #  ctypes.CDLL('FIXME_STUB')
+_libraries['libgfgb.so'] = ctypes.CDLL('./build/libgfgb.so')
 class AsDictMixin:
     @classmethod
     def as_dict(cls, self):
@@ -157,7 +148,7 @@ class Union(ctypes.Union, AsDictMixin):
 
 
 try:
-    gb_tile_to_8bit_indexed = _libraries['FIXME_STUB'].gb_tile_to_8bit_indexed
+    gb_tile_to_8bit_indexed = _libraries['libgfgb.so'].gb_tile_to_8bit_indexed
     gb_tile_to_8bit_indexed.restype = None
     gb_tile_to_8bit_indexed.argtypes = [ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte)]
 except AttributeError:
@@ -509,7 +500,7 @@ struct__IO_FILE._fields_ = [
 
 uint16_t = ctypes.c_uint16
 try:
-    get_texture_for_tile = _libraries['FIXME_STUB'].get_texture_for_tile
+    get_texture_for_tile = _libraries['libgfgb.so'].get_texture_for_tile
     get_texture_for_tile.restype = ctypes.POINTER(struct_SDL_Texture)
     get_texture_for_tile.argtypes = [ctypes.POINTER(struct_gb_state), uint16_t]
 except AttributeError:

@@ -116,17 +116,8 @@ class Union(ctypes.Union, AsDictMixin):
 
 
 
-class FunctionFactoryStub:
-    def __getattr__(self, _):
-      return ctypes.CFUNCTYPE(lambda y:y)
-
-# libraries['FIXME_STUB'] explanation
-# As you did not list (-l libraryname.so) a library that exports this function
-# This is a non-working stub instead. 
-# You can either re-run clan2py with -l /path/to/library.so
-# Or manually fix this by comment the ctypes.CDLL loading
 _libraries = {}
-_libraries['FIXME_STUB'] = FunctionFactoryStub() #  ctypes.CDLL('FIXME_STUB')
+_libraries['libgfgb.so'] = ctypes.CDLL('./build/libgfgb.so')
 c_int128 = ctypes.c_ubyte*16
 c_uint128 = c_int128
 void = None
@@ -370,62 +361,62 @@ class struct_gb_state(Structure):
 
 uint8_t = ctypes.c_uint8
 try:
-    get_r8 = _libraries['FIXME_STUB'].get_r8
+    get_r8 = _libraries['libgfgb.so'].get_r8
     get_r8.restype = uint8_t
     get_r8.argtypes = [ctypes.POINTER(struct_gb_state), r8]
 except AttributeError:
     pass
 try:
-    set_r8 = _libraries['FIXME_STUB'].set_r8
+    set_r8 = _libraries['libgfgb.so'].set_r8
     set_r8.restype = None
     set_r8.argtypes = [ctypes.POINTER(struct_gb_state), r8, uint8_t]
 except AttributeError:
     pass
 uint16_t = ctypes.c_uint16
 try:
-    get_r16 = _libraries['FIXME_STUB'].get_r16
+    get_r16 = _libraries['libgfgb.so'].get_r16
     get_r16.restype = uint16_t
     get_r16.argtypes = [ctypes.POINTER(struct_gb_state), r16]
 except AttributeError:
     pass
 try:
-    set_r16 = _libraries['FIXME_STUB'].set_r16
+    set_r16 = _libraries['libgfgb.so'].set_r16
     set_r16.restype = None
     set_r16.argtypes = [ctypes.POINTER(struct_gb_state), r16, uint16_t]
 except AttributeError:
     pass
 try:
-    get_r16_mem = _libraries['FIXME_STUB'].get_r16_mem
+    get_r16_mem = _libraries['libgfgb.so'].get_r16_mem
     get_r16_mem.restype = uint16_t
     get_r16_mem.argtypes = [ctypes.POINTER(struct_gb_state), r16_mem]
 except AttributeError:
     pass
 try:
-    set_r16_mem = _libraries['FIXME_STUB'].set_r16_mem
+    set_r16_mem = _libraries['libgfgb.so'].set_r16_mem
     set_r16_mem.restype = None
     set_r16_mem.argtypes = [ctypes.POINTER(struct_gb_state), r16, uint8_t]
 except AttributeError:
     pass
 try:
-    get_r16_stk = _libraries['FIXME_STUB'].get_r16_stk
+    get_r16_stk = _libraries['libgfgb.so'].get_r16_stk
     get_r16_stk.restype = uint16_t
     get_r16_stk.argtypes = [ctypes.POINTER(struct_gb_state), r16_stk]
 except AttributeError:
     pass
 try:
-    set_r16_stk = _libraries['FIXME_STUB'].set_r16_stk
+    set_r16_stk = _libraries['libgfgb.so'].set_r16_stk
     set_r16_stk.restype = None
     set_r16_stk.argtypes = [ctypes.POINTER(struct_gb_state), r16_stk, uint16_t]
 except AttributeError:
     pass
 try:
-    fetch = _libraries['FIXME_STUB'].fetch
+    fetch = _libraries['libgfgb.so'].fetch
     fetch.restype = struct_inst
     fetch.argtypes = [ctypes.POINTER(struct_gb_state)]
 except AttributeError:
     pass
 try:
-    execute = _libraries['FIXME_STUB'].execute
+    execute = _libraries['libgfgb.so'].execute
     execute.restype = None
     execute.argtypes = [ctypes.POINTER(struct_gb_state), struct_inst]
 except AttributeError:

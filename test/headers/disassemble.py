@@ -143,17 +143,8 @@ def char_pointer_cast(string, encoding='utf-8'):
 
 
 
-class FunctionFactoryStub:
-    def __getattr__(self, _):
-      return ctypes.CFUNCTYPE(lambda y:y)
-
-# libraries['FIXME_STUB'] explanation
-# As you did not list (-l libraryname.so) a library that exports this function
-# This is a non-working stub instead. 
-# You can either re-run clan2py with -l /path/to/library.so
-# Or manually fix this by comment the ctypes.CDLL loading
 _libraries = {}
-_libraries['FIXME_STUB'] = FunctionFactoryStub() #  ctypes.CDLL('FIXME_STUB')
+_libraries['libgfgb.so'] = ctypes.CDLL('./build/libgfgb.so')
 
 
 class struct_gb_state(Structure):
@@ -210,7 +201,7 @@ struct__IO_FILE._fields_ = [
 ]
 
 try:
-    disassemble = _libraries['FIXME_STUB'].disassemble
+    disassemble = _libraries['libgfgb.so'].disassemble
     disassemble.restype = None
     disassemble.argtypes = [ctypes.POINTER(struct_gb_state), ctypes.POINTER(struct__IO_FILE)]
 except AttributeError:
@@ -238,19 +229,19 @@ struct_debug_symbol._fields_ = [
 ]
 
 try:
-    alloc_symbol_list = _libraries['FIXME_STUB'].alloc_symbol_list
+    alloc_symbol_list = _libraries['libgfgb.so'].alloc_symbol_list
     alloc_symbol_list.restype = None
     alloc_symbol_list.argtypes = [ctypes.POINTER(struct_debug_symbol_list)]
 except AttributeError:
     pass
 try:
-    free_symbol_list = _libraries['FIXME_STUB'].free_symbol_list
+    free_symbol_list = _libraries['libgfgb.so'].free_symbol_list
     free_symbol_list.restype = None
     free_symbol_list.argtypes = [ctypes.POINTER(struct_debug_symbol_list)]
 except AttributeError:
     pass
 try:
-    parse_syms = _libraries['FIXME_STUB'].parse_syms
+    parse_syms = _libraries['libgfgb.so'].parse_syms
     parse_syms.restype = None
     parse_syms.argtypes = [ctypes.POINTER(struct_debug_symbol_list), ctypes.POINTER(struct__IO_FILE)]
 except AttributeError:
@@ -484,7 +475,7 @@ struct_inst._fields_ = [
 ]
 
 try:
-    print_inst = _libraries['FIXME_STUB'].print_inst
+    print_inst = _libraries['libgfgb.so'].print_inst
     print_inst.restype = None
     print_inst.argtypes = [ctypes.POINTER(struct__IO_FILE), struct_inst]
 except AttributeError:
