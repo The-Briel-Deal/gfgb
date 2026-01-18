@@ -45,7 +45,23 @@ assert len(test_files) == 500
 
 
 def load_initial_state(gb_state: GB_State, state: StateSnapshot):
+  gb_state.set_r8(R8.B, state.b)
+  gb_state.set_r8(R8.C, state.c)
+  gb_state.set_r8(R8.D, state.d)
+  gb_state.set_r8(R8.E, state.e)
+  gb_state.set_r8(R8.H, state.h)
+  gb_state.set_r8(R8.L, state.l)
   gb_state.set_r8(R8.A, state.a)
+
+
+def assert_state_equals(gb_state: GB_State, state: StateSnapshot):
+  assert gb_state.get_r8(R8.B) == state.b
+  assert gb_state.get_r8(R8.C) == state.c
+  assert gb_state.get_r8(R8.D) == state.d
+  assert gb_state.get_r8(R8.E) == state.e
+  assert gb_state.get_r8(R8.H) == state.h
+  assert gb_state.get_r8(R8.L) == state.l
+  assert gb_state.get_r8(R8.A) == state.a
 
 
 @pytest.mark.parametrize("test_file_path", test_files)
@@ -64,3 +80,4 @@ def test_single_step(test_file_path: pathlib.Path):
     gb_state = GB_State()
 
     load_initial_state(gb_state, sst_case.initial)
+    assert_state_equals(gb_state, sst_case.initial)

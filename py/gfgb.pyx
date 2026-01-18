@@ -15,6 +15,13 @@ class R8(enum.IntEnum):
   A = 7
 
 
+class R16(enum.IntEnum):
+  BC = 0
+  DE = 1
+  HL = 2
+  SP = 3
+
+
 @cython.cclass
 class GB_State:
   _gb_state: cython.pointer[gfgb.gb_state]
@@ -31,3 +38,9 @@ class GB_State:
 
   def get_r8(self, reg: R8) -> cython.uint:
     return gfgb.get_r8(self._gb_state, reg)
+
+  def set_r16(self, reg: R16, val: cython.uint):
+    gfgb.set_r16(self._gb_state, reg, val)
+
+  def get_r16(self, reg: R16) -> cython.uint:
+    return gfgb.get_r16(self._gb_state, reg)
