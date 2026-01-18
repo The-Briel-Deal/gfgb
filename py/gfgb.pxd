@@ -17,9 +17,24 @@ cdef extern from "cpu.h":
     R8_L = 5,
     R8_HL_DREF = 6,
     R8_A = 7,
-  enum r16: pass
-  enum r16_mem: pass
-  enum r16_stk: pass
+
+  enum r16:
+    R16_BC = 0,
+    R16_DE = 1,
+    R16_HL = 2,
+    R16_SP = 3,
+
+  enum r16_mem:
+    R16_MEM_BC = 0,
+    R16_MEM_DE = 1,
+    R16_MEM_HLI = 2,
+    R16_MEM_HLD = 3,
+
+  enum r16_stk:
+    R16_STK_BC = 0,
+    R16_STK_DE = 1,
+    R16_STK_HL = 2,
+    R16_STK_AF = 3,
 
   uint8_t get_r8(gb_state *gb_state, r8 r8)
   void set_r8(gb_state *gb_state, r8 r8, uint8_t val)
