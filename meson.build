@@ -1,6 +1,6 @@
 project(
   'gb_emu',
-  'c',
+  'c', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
   default_options : ['warning_level=3', 'c_std=c23'],
@@ -20,6 +20,16 @@ shared_lib = shared_library(
   [sources],
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
+)
+
+py = import('python').find_installation()
+dep_py = py.dependency()
+py.extension_module(
+  'gfgb_py',
+  [sources, 'py/gfgb.pyx'],
+  include_directories : include_directories(['src/']),
+  dependencies : [dependencies, dep_py],
+  cython_args : ['--module-name=gfgb_py'],
 )
 
 exe = executable(
