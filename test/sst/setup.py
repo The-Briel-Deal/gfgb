@@ -22,6 +22,7 @@ setup(
             sources=["src/*.pyx"],
             depends=["src/gfgb.pxd"],
             include_dirs=["c_src/"],
+            libraries=["gfgb"]
         ),
     ],
     cmdclass={

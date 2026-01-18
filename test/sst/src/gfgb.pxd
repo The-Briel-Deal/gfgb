@@ -8,7 +8,15 @@ cdef extern from "common.h":
 
 cdef extern from "cpu.h":
   struct inst: pass
-  enum r8: pass
+  enum r8:
+    R8_B = 0,
+    R8_C = 1,
+    R8_D = 2,
+    R8_E = 3,
+    R8_H = 4,
+    R8_L = 5,
+    R8_HL_DREF = 6,
+    R8_A = 7,
   enum r16: pass
   enum r16_mem: pass
   enum r16_stk: pass
