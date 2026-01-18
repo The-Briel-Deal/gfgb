@@ -24,12 +24,22 @@ shared_lib = shared_library(
 
 py = import('python').find_installation()
 dep_py = py.dependency()
+
+gfgb_obj = static_library(
+  'gfgb_obj',
+  'py/gfgb.pyx',
+  cython_args : ['--module-name=gfgb_py'],
+  include_directories : include_directories(['src/']),
+  dependencies : [dep_py],
+  override_options : ['warning_level=0'],
+)
+
 py.extension_module(
   'gfgb_py',
-  [sources, 'py/gfgb.pyx'],
+  [sources],
   include_directories : include_directories(['src/']),
-  dependencies : [dependencies, dep_py],
-  cython_args : ['--module-name=gfgb_py'],
+  link_whole : [gfgb_obj],
+  dependencies : [dependencies],
 )
 
 exe = executable(
