@@ -34,13 +34,15 @@ gfgb_obj = static_library(
   override_options : ['warning_level=0'],
 )
 
-py.extension_module(
+gfgb_py_ext = py.extension_module(
   'gfgb_py',
   [sources],
   include_directories : include_directories(['src/']),
   link_whole : [gfgb_obj],
   dependencies : [dependencies],
 )
+
+pytest = find_program('pytest')
 
 exe = executable(
   'gb_emu',
@@ -77,9 +79,17 @@ disasm_test_exe = executable(
   install : true,
 )
 
+current_src_dir = meson.current_source_dir()
+
 test('cpu_test', cpu_test_exe)
 test('ppu_test', ppu_test_exe)
 test('disasm_test', disasm_test_exe)
+test(
+  'single_step_tests',
+  pytest,
+  args : ['--tap', '--gfgb-py-ext', gfgb_py_ext, current_src_dir / 'test/sst/'],
+  protocol : 'tap',
+)
 
 rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
@@ -87,7 +97,6 @@ rgbfix = find_program('rgbfix')
 rgbgfx = find_program('rgbgfx')
 aseprite = find_program('aseprite')
 
-current_src_dir = meson.current_source_dir()
 
 doggo_png = custom_target('doggo_png',
   output : 'doggo.png',
