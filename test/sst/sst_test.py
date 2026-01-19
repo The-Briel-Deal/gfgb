@@ -72,7 +72,6 @@ def assert_state_equals(
 
 @pytest.mark.parametrize("test_file_path", test_files)
 def test_single_step(test_file_path: pathlib.Path, gfgb_py_mod: ModuleType):
-
   assert test_file_path.is_file()
   test_file = test_file_path.open()
   test_data: list[dict[str, Any]] = json.load(test_file)
