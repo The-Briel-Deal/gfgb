@@ -54,6 +54,31 @@
 
 #define DOTS_PER_FRAME             70224
 
+#define ROM0_START                 0x0000
+#define ROM0_END                   0x3FFF
+
+#define ROMN_START                 0x4000
+#define ROMN_END                   0x7FFF
+
+// VRAM on CGB is switchable across 2 8KB banks, on DMG this is just one 8KB
+// block. I won't worry about this until DMG is finished.
+#define VRAM_START                 0x8000
+#define VRAM_END                   0x9FFF
+
+#define ERAM_START                 0xA000
+#define ERAM_END                   0xBFFF
+
+// This is split in two on the CGB and the second half is switchable. I'm just
+// worrying about DMG for now.
+#define WRAM_START                 0xC000
+#define WRAM_END                   0xDFFF
+
+#define IO_REG_START               0xFF00
+#define IO_REG_END                 0xFF7F
+
+#define HRAM_START                 0xFF80
+#define HRAM_END                   0xFFFE
+
 // This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2) (((uint16_t)regs.r1 << 8) | ((uint16_t)regs.r2 << 0))
 #define SET_COMBINED_REG(regs, r1, r2, val)                                                                            \
@@ -127,6 +152,7 @@ struct gb_state {
   uint8_t rom1[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
+  uint8_t eram[KB(8)];
   uint8_t hram[0x80];
   struct debug_symbol_list syms;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
@@ -136,31 +162,6 @@ struct gb_state {
   // Used for getting fps.
   uint64_t last_frame_ticks_ns;
 };
-
-#define ROM0_START   0x0000
-#define ROM0_END     0x3FFF
-
-#define ROMN_START   0x4000
-#define ROMN_END     0x7FFF
-
-// VRAM on CGB is switchable across 2 8KB banks, on DMG this is just one 8KB
-// block. I won't worry about this until DMG is finished.
-#define VRAM_START   0x8000
-#define VRAM_END     0x9FFF
-
-#define ERAM_START   0xA000
-#define ERAM_END     0xBFFF
-
-// This is split in two on the CGB and the second half is switchable. I'm just
-// worrying about DMG for now.
-#define WRAM_START   0xC000
-#define WRAM_END     0xDFFF
-
-#define IO_REG_START 0xFF00
-#define IO_REG_END   0xFF7F
-
-#define HRAM_START   0xFF80
-#define HRAM_END     0xFFFE
 
 enum io_reg_addr {
   IO_SB = 0xFF01,

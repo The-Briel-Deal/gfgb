@@ -91,7 +91,8 @@ void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   } else if (addr <= VRAM_END) {
     return &gb_state->vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
-    NOT_IMPLEMENTED("External RAM not implemented");
+    // TODO: implement eram bank switching
+    return &gb_state->eram[addr - ERAM_START];
   } else if (addr <= WRAM_END) {
     return &gb_state->wram[addr - WRAM_START];
   } else if (addr <= IO_REG_END) {
