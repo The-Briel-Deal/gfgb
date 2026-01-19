@@ -73,6 +73,9 @@
 #define WRAM_START                 0xC000
 #define WRAM_END                   0xDFFF
 
+#define ECHO_RAM_START             0xE000
+#define ECHO_RAM_END               0xFDFF
+
 #define IO_REG_START               0xFF00
 #define IO_REG_END                 0xFF7F
 

@@ -60,7 +60,7 @@ static uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_SCY: return &gb_state->regs.io.scy;
   case IO_SCX: return &gb_state->regs.io.scx;
   case IO_BGP: return &gb_state->regs.io.bg_pallete;
-  default: NOT_IMPLEMENTED("IO Reg Not Implemented");
+  default: SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
   }
 }
 // For the read only IO Reg's which are computed lazily.
@@ -95,13 +95,18 @@ void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
     return &gb_state->eram[addr - ERAM_START];
   } else if (addr <= WRAM_END) {
     return &gb_state->wram[addr - WRAM_START];
+  } else if (addr <= ECHO_RAM_END) {
+    // Mirrors wram, probably should never be accessed but SST tests have reads and writes here.
+    return &gb_state->wram[addr - ECHO_RAM_START];
   } else if (addr <= IO_REG_END) {
-    NOT_IMPLEMENTED("Everything between WRAM and IO Regs not implemented");
+    goto not_implemented;
   } else if (addr <= HRAM_END) {
     return &gb_state->hram[addr - HRAM_START];
-  } else {
-    NOT_IMPLEMENTED("Everything after Work RAM is not yet implemented");
   }
+not_implemented:
+  SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                  "`unmap_address()` was called on an address that is not implemented: 0x%04x", addr);
+  return NULL;
 }
 
 uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
@@ -109,21 +114,38 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
     switch (addr) {
     case IO_LY: return get_ro_io_reg(gb_state, addr);
-    default: return *get_io_reg(gb_state, addr);
+    default:
+      uint8_t *io_reg_ptr = get_io_reg(gb_state, addr);
+      if (io_reg_ptr != NULL) return *io_reg_ptr;
+
+      goto not_implemented;
     }
   }
 
-  uint8_t val = *((uint8_t *)unmap_address(gb_state, addr));
-  return val;
+  uint8_t *val_ptr = unmap_address(gb_state, addr);
+  if (val_ptr != NULL) return *val_ptr;
+
+  goto not_implemented;
+
+not_implemented:
+  SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                  "`read_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+  return 0;
 }
 
 uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Reading 16 bits from address 0x%.4X", addr);
   uint8_t *val_ptr = unmap_address(gb_state, addr);
-  uint16_t val = 0x0000;
-  val |= val_ptr[0] << 0;
-  val |= val_ptr[1] << 8;
-  return val;
+  if (val_ptr != NULL) {
+    uint16_t val = 0x0000;
+    val |= val_ptr[0] << 0;
+    val |= val_ptr[1] << 8;
+    return val;
+  } else {
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                    "`read_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+    return 0;
+  }
 }
 
 void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
@@ -140,13 +162,22 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   } else {
     val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
   }
-  *val_ptr = val;
+  if (val_ptr != NULL)
+    *val_ptr = val;
+  else
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                    "`write_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
 }
 
 void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.4X to address 0x%.4X", val, addr);
   // little endian
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
-  val_ptr[0] = (val & 0x00FF) >> 0;
-  val_ptr[1] = (val & 0xFF00) >> 8;
+  if (val_ptr != NULL) {
+    val_ptr[0] = (val & 0x00FF) >> 0;
+    val_ptr[1] = (val & 0xFF00) >> 8;
+  } else {
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                    "`write_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+  }
 }
