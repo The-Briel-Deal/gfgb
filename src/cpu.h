@@ -137,6 +137,9 @@ void set_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem, uint8_t val);
 uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk);
 void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val);
 
+void set_ime(struct gb_state *gb_state, bool on);
+bool get_ime(struct gb_state *gb_state); // This is only for tests and debugging.
+
 struct inst fetch(struct gb_state *gb_state);
 void execute(struct gb_state *gb_state, struct inst inst);
 

@@ -168,6 +168,9 @@ void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) 
   }
 }
 
+void set_ime(struct gb_state *gb_state, bool on) { gb_state->regs.io.ime = on; }
+bool get_ime(struct gb_state *gb_state) { return gb_state->regs.io.ime; } // This is only for tests and debugging.
+
 #define CONDITION_CODE_MASK 0b00011000
 #define ARITHMETIC_R8_MASK  0b00000111
 #define ARITHMETIC_OP_MASK  0b00111000

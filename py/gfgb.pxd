@@ -52,5 +52,8 @@ cdef extern from "cpu.h":
   uint16_t get_r16_stk(gb_state *gb_state, r16_stk r16_stk)
   void set_r16_stk(gb_state *gb_state, r16_stk r16_stk, uint16_t val)
 
+  bint get_ime(gb_state *gb_state)
+  void set_ime(gb_state *gb_state, bint on)
+
   inst fetch(gb_state *gb_state)
   void execute(gb_state *gb_state, inst inst)

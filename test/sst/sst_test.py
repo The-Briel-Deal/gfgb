@@ -55,6 +55,7 @@ def load_initial_state(
   gb_state.set_r8(gfgb.R8.A, state.a)
   gb_state.set_r16(gfgb.R16.SP, state.sp)
   gb_state.set_pc(state.pc)
+  gb_state.set_ime(state.ime)
 
 
 def assert_state_equals(
@@ -69,6 +70,7 @@ def assert_state_equals(
   assert gb_state.get_r8(gfgb.R8.A) == state.a
   assert gb_state.get_r16(gfgb.R16.SP) == state.sp
   assert gb_state.get_pc() == state.pc
+  assert gb_state.get_ime() == state.ime
 
 
 @pytest.mark.parametrize("test_file_name", test_files, ids=[sub('\\.json', '', file_name) for file_name in test_files])

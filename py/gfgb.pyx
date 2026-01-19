@@ -50,3 +50,9 @@ class GB_State:
 
   def get_r16(self, reg: R16) -> cython.uint:
     return gfgb.get_r16(self._gb_state, reg)
+
+  def set_ime(self, val: bool):
+    gfgb.set_ime(self._gb_state, val)
+
+  def get_ime(self) -> bool:
+    return gfgb.get_ime(self._gb_state)
