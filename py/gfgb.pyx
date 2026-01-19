@@ -39,6 +39,12 @@ class GB_State:
   def get_r8(self, reg: R8) -> cython.uint:
     return gfgb.get_r8(self._gb_state, reg)
 
+  def set_pc(self, val: cython.uint):
+    gfgb.set_pc(self._gb_state, val)
+
+  def get_pc(self) -> cython.uint:
+    return gfgb.get_pc(self._gb_state)
+
   def set_r16(self, reg: R16, val: cython.uint):
     gfgb.set_r16(self._gb_state, reg, val)
 

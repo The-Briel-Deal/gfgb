@@ -86,6 +86,9 @@ void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
   }
 }
 
+uint16_t get_pc(struct gb_state *gb_state) { return gb_state->regs.pc; }
+void set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->regs.pc = new_pc; }
+
 uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
   struct regs *r = &gb_state->regs;
   switch (r16) {

@@ -1,15 +1,13 @@
 from dataclasses import dataclass
 import json
 import pathlib
+from types import ModuleType
 import pytest
-import sys
 
-from typing import Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
-# This is a janky way to make sure that my cython module is in path. I'll figure out a better solution later.
-sys.path.append("build")
-
-from gfgb_py import GB_State, R8, R16
+if TYPE_CHECKING:
+  import gfgb_py
 
 
 @dataclass
@@ -44,30 +42,37 @@ test_files = list(sst_test_dir.iterdir())
 assert len(test_files) == 500
 
 
-def load_initial_state(gb_state: GB_State, state: StateSnapshot):
-  gb_state.set_r8(R8.B, state.b)
-  gb_state.set_r8(R8.C, state.c)
-  gb_state.set_r8(R8.D, state.d)
-  gb_state.set_r8(R8.E, state.e)
-  gb_state.set_r8(R8.H, state.h)
-  gb_state.set_r8(R8.L, state.l)
-  gb_state.set_r8(R8.A, state.a)
-  gb_state.set_r16(R16.SP, state.sp)
+def load_initial_state(
+    gfgb: ModuleType, gb_state: gfgb_py.GB_State, state: StateSnapshot
+):
+  gb_state.set_r8(gfgb.R8.B, state.b)
+  gb_state.set_r8(gfgb.R8.C, state.c)
+  gb_state.set_r8(gfgb.R8.D, state.d)
+  gb_state.set_r8(gfgb.R8.E, state.e)
+  gb_state.set_r8(gfgb.R8.H, state.h)
+  gb_state.set_r8(gfgb.R8.L, state.l)
+  gb_state.set_r8(gfgb.R8.A, state.a)
+  gb_state.set_r16(gfgb.R16.SP, state.sp)
+  gb_state.set_pc(state.pc)
 
 
-def assert_state_equals(gb_state: GB_State, state: StateSnapshot):
-  assert gb_state.get_r8(R8.B) == state.b
-  assert gb_state.get_r8(R8.C) == state.c
-  assert gb_state.get_r8(R8.D) == state.d
-  assert gb_state.get_r8(R8.E) == state.e
-  assert gb_state.get_r8(R8.H) == state.h
-  assert gb_state.get_r8(R8.L) == state.l
-  assert gb_state.get_r8(R8.A) == state.a
-  assert gb_state.get_r16(R16.SP) == state.sp
+def assert_state_equals(
+    gfgb: ModuleType, gb_state: gfgb_py.GB_State, state: StateSnapshot
+):
+  assert gb_state.get_r8(gfgb.R8.B) == state.b
+  assert gb_state.get_r8(gfgb.R8.C) == state.c
+  assert gb_state.get_r8(gfgb.R8.D) == state.d
+  assert gb_state.get_r8(gfgb.R8.E) == state.e
+  assert gb_state.get_r8(gfgb.R8.H) == state.h
+  assert gb_state.get_r8(gfgb.R8.L) == state.l
+  assert gb_state.get_r8(gfgb.R8.A) == state.a
+  assert gb_state.get_r16(gfgb.R16.SP) == state.sp
+  assert gb_state.get_pc() == state.pc
 
 
 @pytest.mark.parametrize("test_file_path", test_files)
-def test_single_step(test_file_path: pathlib.Path):
+def test_single_step(test_file_path: pathlib.Path, gfgb_py_mod: ModuleType):
+
   assert test_file_path.is_file()
   test_file = test_file_path.open()
   test_data: list[dict[str, Any]] = json.load(test_file)
@@ -79,8 +84,8 @@ def test_single_step(test_file_path: pathlib.Path):
         cycles=case["cycles"],
     )
 
-    gb_state = GB_State()
+    gb_state = gfgb_py_mod.GB_State()
 
-    load_initial_state(gb_state, sst_case.initial)
+    load_initial_state(gfgb_py_mod, gb_state, sst_case.initial)
     # Just to make sure setting and getting line up.
-    assert_state_equals(gb_state, sst_case.initial)
+    assert_state_equals(gfgb_py_mod, gb_state, sst_case.initial)

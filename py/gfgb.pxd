@@ -40,6 +40,9 @@ cdef extern from "cpu.h":
   uint8_t get_r8(gb_state *gb_state, r8 r8)
   void set_r8(gb_state *gb_state, r8 r8, uint8_t val)
 
+  uint16_t get_pc(gb_state *gb_state)
+  void set_pc(gb_state *gb_state, uint16_t new_pc)
+
   uint16_t get_r16(gb_state *gb_state, r16 r16)
   void set_r16(gb_state *gb_state, r16 r16, uint16_t val)
 
