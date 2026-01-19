@@ -110,6 +110,9 @@ not_implemented:
 }
 
 uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+#ifdef USE_FLAT_RAM_FOR_TESTING
+  return gb_state->flat_ram[addr];
+#else
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Reading 8 bits from address 0x%.4X", addr);
   if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
     switch (addr) {
@@ -131,9 +134,17 @@ not_implemented:
   SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
                   "`read_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
   return 0;
+#endif
 }
 
 uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
+#ifdef USE_FLAT_RAM_FOR_TESTING
+  uint8_t *val_ptr = &gb_state->flat_ram[addr];
+  uint16_t val = 0x0000;
+  val |= val_ptr[0] << 0;
+  val |= val_ptr[1] << 8;
+  return val;
+#else
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Reading 16 bits from address 0x%.4X", addr);
   uint8_t *val_ptr = unmap_address(gb_state, addr);
   if (val_ptr != NULL) {
@@ -146,9 +157,13 @@ uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
                     "`read_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
     return 0;
   }
+#endif
 }
 
 void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
+#ifdef USE_FLAT_RAM_FOR_TESTING
+  gb_state->flat_ram[addr] = val;
+#else
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.2X to address 0x%.4X", val, addr);
   if (addr == IO_SB) {
     // TODO: This just logs out every character written to this port. If I
@@ -167,9 +182,15 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   else
     SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
                     "`write_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+#endif
 }
 
 void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
+#ifdef USE_FLAT_RAM_FOR_TESTING
+  uint8_t *val_ptr = &gb_state->flat_ram[addr];
+  val_ptr[0] = (val & 0x00FF) >> 0;
+  val_ptr[1] = (val & 0xFF00) >> 8;
+#else
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.4X to address 0x%.4X", val, addr);
   // little endian
   uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
@@ -180,4 +201,5 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
     SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
                     "`write_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
   }
+#endif
 }

@@ -164,6 +164,11 @@ struct gb_state {
 
   // Used for getting fps.
   uint64_t last_frame_ticks_ns;
+
+
+#ifdef USE_FLAT_RAM_FOR_TESTING
+  uint8_t flat_ram[KB(64)];
+#endif
 };
 
 enum io_reg_addr {
