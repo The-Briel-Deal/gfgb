@@ -141,6 +141,7 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   }
   *val_ptr = val;
 }
+
 void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.4X to address 0x%.4X", val, addr);
   // little endian
