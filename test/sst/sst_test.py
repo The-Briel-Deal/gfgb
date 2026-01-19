@@ -56,6 +56,11 @@ def load_initial_state(
   gb_state.set_r16(gfgb.R16.SP, state.sp)
   gb_state.set_pc(state.pc)
   gb_state.set_ime(state.ime)
+  # Load ram
+  for entry in state.ram:
+    addr = entry[0]
+    val = entry[1]
+    gb_state.write_mem8(addr, val)
 
 
 def assert_state_equals(
@@ -71,9 +76,19 @@ def assert_state_equals(
   assert gb_state.get_r16(gfgb.R16.SP) == state.sp
   assert gb_state.get_pc() == state.pc
   assert gb_state.get_ime() == state.ime
+  # Check ram
+  for entry in state.ram:
+    addr = entry[0]
+    expect_val = entry[1]
+    result_val = gb_state.read_mem8(addr)
+    assert expect_val == result_val
 
 
-@pytest.mark.parametrize("test_file_name", test_files, ids=[sub('\\.json', '', file_name) for file_name in test_files])
+@pytest.mark.parametrize(
+    "test_file_name",
+    test_files,
+    ids=[sub("\\.json", "", file_name) for file_name in test_files],
+)
 def test_single_step(test_file_name: str, gfgb_py_mod: ModuleType):
   test_file_path = pathlib.Path(sst_test_dir / test_file_name)
   assert test_file_path.is_file()
