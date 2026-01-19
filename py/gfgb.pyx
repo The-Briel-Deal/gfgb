@@ -56,3 +56,9 @@ class GB_State:
 
   def get_ime(self) -> bool:
     return gfgb.get_ime(self._gb_state)
+
+  def read_mem8(self, addr: cython.uint) -> cython.uint:
+    return gfgb.read_mem8(self._gb_state, addr)
+
+  def write_mem8(self, addr: cython.uint, val: cython.uint):
+    gfgb.write_mem8(self._gb_state, addr, val)

@@ -3,6 +3,9 @@ from libc.stdint cimport uint16_t, uint8_t
 cdef extern from "common.h":
   struct gb_state: pass
 
+  uint8_t read_mem8(gb_state *gb_state, uint16_t addr)
+  void write_mem8(gb_state *gb_state, uint16_t addr, uint8_t val)
+
   void gb_state_init(gb_state *gb_state)
   gb_state *gb_state_alloc()
   void gb_state_free(gb_state *gb_state)
