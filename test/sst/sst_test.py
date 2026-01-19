@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import json
 import pathlib
+from re import sub
 from types import ModuleType
 import pytest
 
@@ -38,7 +39,7 @@ class SSTCase:
 
 sst_test_dir = pathlib.Path(__file__).parent / "test_json/"
 assert sst_test_dir.is_dir()
-test_files = list(sst_test_dir.iterdir())
+test_files = [path.name for path in sst_test_dir.iterdir()]
 assert len(test_files) == 500
 
 
@@ -70,8 +71,9 @@ def assert_state_equals(
   assert gb_state.get_pc() == state.pc
 
 
-@pytest.mark.parametrize("test_file_path", test_files)
-def test_single_step(test_file_path: pathlib.Path, gfgb_py_mod: ModuleType):
+@pytest.mark.parametrize("test_file_name", test_files, ids=[sub('\\.json', '', file_name) for file_name in test_files])
+def test_single_step(test_file_name: str, gfgb_py_mod: ModuleType):
+  test_file_path = pathlib.Path(sst_test_dir / test_file_name)
   assert test_file_path.is_file()
   test_file = test_file_path.open()
   test_data: list[dict[str, Any]] = json.load(test_file)
