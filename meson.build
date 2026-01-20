@@ -51,8 +51,6 @@ gfgb_py_testing_ext = py.extension_module(
   dependencies : [dependencies],
 )
 
-pytest = find_program('pytest')
-
 exe = executable(
   'gb_emu',
   [sources, 'src/main.c'],
@@ -95,8 +93,8 @@ test('ppu_test', ppu_test_exe)
 test('disasm_test', disasm_test_exe)
 test(
   'single_step_tests',
-  pytest,
-  args : ['--tap', '--gfgb-py-ext', gfgb_py_testing_ext, current_src_dir / 'test/sst/'],
+  py,
+  args : ['-mpytest', '--tap', '--gfgb-py-ext', gfgb_py_testing_ext, current_src_dir / 'test/sst/'],
   depends : [gfgb_py_testing_ext],
   protocol : 'tap',
 )
