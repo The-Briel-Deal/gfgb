@@ -880,7 +880,8 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case EI: gb_state->regs.io.ime = true; return;
   default: break;
   }
-  NOT_IMPLEMENTED("`execute()` called with `inst.type` that isn't implemented.");
+  // TODO: print instruction here as well
+  ERR(gb_state, "`execute()` called with `inst.type` that isn't implemented.");
 }
 
 #ifdef RUN_CPU_TESTS
