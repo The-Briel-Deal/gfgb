@@ -107,5 +107,6 @@ def test_single_step(test_file_name: str, gfgb_py_mod: ModuleType):
     load_initial_state(gfgb_py_mod, gb_state, sst_case.initial)
 
     gb_state.fetch_and_exec()
+    assert gb_state.get_err() == False
 
     assert_state_equals(gfgb_py_mod, gb_state, sst_case.final)
