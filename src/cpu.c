@@ -320,6 +320,9 @@ struct inst fetch(struct gb_state *gb_state) {
     if (curr_byte == 0b11001001) // RET
       return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
 
+    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000000) // RET
+      return (struct inst){.type = RET, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = VOID_PARAM};
+
     if (curr_byte == 0b11001101) // Unconditional call
       return (struct inst){.type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
@@ -806,6 +809,9 @@ static bool eval_condition(struct gb_state *gb_state, const struct inst_param in
 }
 
 void execute(struct gb_state *gb_state, struct inst inst) {
+#ifdef PRINT_INST_DURING_EXEC
+  print_inst(stdout, inst);
+#endif
   switch (inst.type) {
   case NOP: return;
   case LD: ex_ld(gb_state, inst); return;
