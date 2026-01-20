@@ -17,6 +17,12 @@
     abort();                                                                                                           \
   }
 
+#define ERR(gb_state, msg, ...)                                                                                        \
+  {                                                                                                                    \
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, msg, __VA_ARGS__);                                                      \
+    gb_state->err |= true;                                                                                             \
+  }
+
 #define KB(n)                      (1024 * n)
 
 #define NIBBLE0(byte)              ((byte & 0xF0) >> 4)
@@ -165,6 +171,7 @@ struct gb_state {
   // Used for getting fps.
   uint64_t last_frame_ticks_ns;
 
+  bool err;
 
 #ifdef USE_FLAT_RAM_FOR_TESTING
   uint8_t flat_ram[KB(64)];
@@ -225,5 +232,7 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val);
 void gb_state_init(struct gb_state *gb_state);
 struct gb_state *gb_state_alloc();
 void gb_state_free(struct gb_state *gb_state);
+
+bool gb_state_get_err(struct gb_state *gb_state);
 
 #endif // GB_COMMON_H

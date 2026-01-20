@@ -67,3 +67,6 @@ class GB_State:
     inst = gfgb.fetch(self._gb_state)
     gfgb.execute(self._gb_state, inst)
 
+  def get_err(self) -> bool:
+    return gfgb.gb_state_get_err(self._gb_state)
+

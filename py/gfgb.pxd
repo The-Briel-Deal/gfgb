@@ -10,6 +10,8 @@ cdef extern from "common.h":
   gb_state *gb_state_alloc()
   void gb_state_free(gb_state *gb_state)
 
+  bint gb_state_get_err(gb_state *gb_state)
+
 cdef extern from "cpu.h":
   struct inst: pass
   enum r8:

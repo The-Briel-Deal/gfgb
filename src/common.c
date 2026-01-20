@@ -25,7 +25,7 @@ void gb_state_free(struct gb_state *gb_state) {
   SDL_free(gb_state);
 }
 
-static uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
+uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
   case IO_SB: NOT_IMPLEMENTED("Actual IO_SERIAL_TRANSFER reg not implemented.");
@@ -64,7 +64,7 @@ static uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 // For the read only IO Reg's which are computed lazily.
-static uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
+uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   (void)gb_state;
 
   switch (addr) {
@@ -202,4 +202,10 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
                     "`write_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
   }
 #endif
+}
+
+bool gb_state_get_err(struct gb_state *gb_state) {
+  bool err = gb_state->err;
+  gb_state->err = 0;
+  return err;
 }
