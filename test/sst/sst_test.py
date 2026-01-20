@@ -54,6 +54,7 @@ def load_initial_state(
   gb_state.set_r8(gfgb.R8.L, state.l)
   gb_state.set_r8(gfgb.R8.A, state.a)
   gb_state.set_r16(gfgb.R16.SP, state.sp)
+  gb_state.set_f(state.f)
   gb_state.set_pc(state.pc)
   gb_state.set_ime(state.ime)
   # Load ram
@@ -74,6 +75,7 @@ def assert_state_equals(
   assert gb_state.get_r8(gfgb.R8.L) == state.l
   assert gb_state.get_r8(gfgb.R8.A) == state.a
   assert gb_state.get_r16(gfgb.R16.SP) == state.sp
+  assert gb_state.get_f() == state.f
   assert gb_state.get_pc() == state.pc
   assert gb_state.get_ime() == state.ime
   # Check ram

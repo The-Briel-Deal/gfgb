@@ -39,6 +39,14 @@ class GB_State:
   def get_r8(self, reg: R8) -> cython.uint:
     return gfgb.get_r8(self._gb_state, reg)
 
+  def set_f(self, val: cython.uint):
+    gfgb.set_r16_stk(
+        self._gb_state, gfgb.r16_stk.R16_STK_AF, (self.get_r8(R8.A) << 8) | val
+    )
+
+  def get_f(self) -> cython.uint:
+    return gfgb.get_r16_stk(self._gb_state, gfgb.r16_stk.R16_STK_AF) & 0xFF
+
   def set_pc(self, val: cython.uint):
     gfgb.set_pc(self._gb_state, val)
 
@@ -69,4 +77,3 @@ class GB_State:
 
   def get_err(self) -> bool:
     return gfgb.gb_state_get_err(self._gb_state)
-

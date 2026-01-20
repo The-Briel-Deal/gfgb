@@ -765,6 +765,31 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   }
   abort();
 }
+static bool eval_condition(struct gb_state *gb_state, const struct inst_param inst_param) {
+  assert(inst_param.type == COND);
+  switch (inst_param.cond) {
+  case COND_NZ: return (gb_state->regs.f & (1 << 7)) == 0;
+  case COND_Z: return ((gb_state->regs.f & (1 << 7)) >> 7) == 1;
+  case COND_NC: return (gb_state->regs.f & (1 << 4)) == 0;
+  case COND_C: return ((gb_state->regs.f & (1 << 4)) >> 4) == 1;
+  }
+  // Something is very wrong if the above switch statement doesn't catch.
+  abort();
+}
+
+static void ex_ret(struct gb_state *gb_state, struct inst inst) {
+  if (inst.p1.type == VOID_PARAM_TYPE) {
+    gb_state->regs.pc = pop16(gb_state);
+    return;
+  }
+  if (inst.p1.type == COND) {
+    if (eval_condition(gb_state, inst.p1)) {
+      gb_state->regs.pc = pop16(gb_state);
+    }
+    return;
+  }
+  NOT_IMPLEMENTED("Unknown compare instruction");
+}
 
 static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
@@ -794,18 +819,6 @@ static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   return;
 not_implemented:
   NOT_IMPLEMENTED("Unknown compare instruction");
-}
-
-static bool eval_condition(struct gb_state *gb_state, const struct inst_param inst_param) {
-  assert(inst_param.type == COND);
-  switch (inst_param.cond) {
-  case COND_NZ: return (gb_state->regs.f & (1 << 7)) == 0;
-  case COND_Z: return ((gb_state->regs.f & (1 << 7)) >> 7) == 1;
-  case COND_NC: return (gb_state->regs.f & (1 << 4)) == 0;
-  case COND_C: return ((gb_state->regs.f & (1 << 4)) >> 4) == 1;
-  }
-  // Something is very wrong if the above switch statement doesn't catch.
-  abort();
 }
 
 void execute(struct gb_state *gb_state, struct inst inst) {
@@ -862,13 +875,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
     }
     break;
   }
-  case RET: {
-    if (inst.p1.type == VOID_PARAM_TYPE) {
-      gb_state->regs.pc = pop16(gb_state);
-      return;
-    }
-    break;
-  }
+  case RET: ex_ret(gb_state, inst); return;
   case CP: ex_cp(gb_state, inst); return;
   case PUSH: ex_push(gb_state, inst); return;
   case POP: ex_pop(gb_state, inst); return;
