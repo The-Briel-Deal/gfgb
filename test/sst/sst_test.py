@@ -105,5 +105,7 @@ def test_single_step(test_file_name: str, gfgb_py_mod: ModuleType):
     gb_state = gfgb_py_mod.GB_State()
 
     load_initial_state(gfgb_py_mod, gb_state, sst_case.initial)
-    # Just to make sure setting and getting line up.
-    assert_state_equals(gfgb_py_mod, gb_state, sst_case.initial)
+
+    gb_state.fetch_and_exec()
+
+    assert_state_equals(gfgb_py_mod, gb_state, sst_case.final)

@@ -62,3 +62,8 @@ class GB_State:
 
   def write_mem8(self, addr: cython.uint, val: cython.uint):
     gfgb.write_mem8(self._gb_state, addr, val)
+
+  def fetch_and_exec(self):
+    inst = gfgb.fetch(self._gb_state)
+    gfgb.execute(self._gb_state, inst)
+
