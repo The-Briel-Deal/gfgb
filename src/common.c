@@ -206,6 +206,6 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
 
 bool gb_state_get_err(struct gb_state *gb_state) {
   bool err = gb_state->err;
-  gb_state->err = 0;
+  gb_state->err = false;
   return err;
 }
