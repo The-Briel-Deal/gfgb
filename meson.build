@@ -42,6 +42,15 @@ gfgb_py_ext = py.extension_module(
   dependencies : [dependencies],
 )
 
+gfgb_py_testing_ext = py.extension_module(
+  'gfgb_py_testing',
+  [sources],
+  c_args : ['-DRUN_CPU_TESTS=1', '-DUSE_FLAT_RAM_FOR_TESTING=1'],
+  include_directories : include_directories(['src/']),
+  link_whole : [gfgb_obj],
+  dependencies : [dependencies],
+)
+
 pytest = find_program('pytest')
 
 exe = executable(
@@ -87,7 +96,8 @@ test('disasm_test', disasm_test_exe)
 test(
   'single_step_tests',
   pytest,
-  args : ['--tap', '--gfgb-py-ext', gfgb_py_ext, current_src_dir / 'test/sst/'],
+  args : ['--tap', '--gfgb-py-ext', gfgb_py_testing_ext, current_src_dir / 'test/sst/'],
+  depends : [gfgb_py_testing_ext],
   protocol : 'tap',
 )
 
