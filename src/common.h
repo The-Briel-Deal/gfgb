@@ -19,7 +19,7 @@
 
 #define ERR(gb_state, msg, ...)                                                                                        \
   {                                                                                                                    \
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__);                                                      \
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__);                                                    \
     gb_state->err |= true;                                                                                             \
   }
 
