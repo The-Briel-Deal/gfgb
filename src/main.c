@@ -380,9 +380,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
     struct inst inst = fetch(gb_state);
-#ifdef PRINT_INST_DURING_EXEC
-    print_inst(stdout, inst);
-#endif
     execute(gb_state, inst);
   }
 
