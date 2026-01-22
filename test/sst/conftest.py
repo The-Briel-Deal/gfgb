@@ -25,6 +25,7 @@ def import_from_path(module_name, file_path):
 def gfgb_py_mod(request: pytest.FixtureRequest):
   mod_path = request.config.getoption(
       "--gfgb-py-ext",
+      None
   )
   if mod_path is None:
     mod_path = "build/gfgb_py_testing.cpython-314-x86_64-linux-gnu.so"
