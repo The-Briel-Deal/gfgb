@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Daniele Nicolodi <daniele@grinta.net>
+# SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
+
+[build-system]
+requires = [
+    "cython >= 3.1.0",
+    "meson >= 1.0.0",
+    "meson-python >= 0.18.0",
+]
+build-backend = "mesonpy"
+
+[project]
+name = "gfgb"
+version = "0.1.0"
+license = "GPL3"
+description = "A scriptable GameBoy Emulator written in C"
+readme = "README.md"
+maintainers = [
+    { name = "Gabriel Ford", email = "gabe@fordltc.net" },
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: C",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+]
