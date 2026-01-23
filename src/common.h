@@ -156,13 +156,19 @@ struct gb_state {
   bool bootrom_mapped;
   bool bootrom_has_syms;
   bool rom_loaded;
-  uint8_t bootrom[DMG_BOOTROM_SIZE];
-  uint8_t rom0[KB(16)];
-  uint8_t rom1[KB(16)];
-  uint8_t wram[KB(8)];
-  uint8_t vram[KB(8)];
-  uint8_t eram[KB(8)];
-  uint8_t hram[0x80];
+  bool use_flat_ram;
+  union {
+    struct {
+      uint8_t bootrom[DMG_BOOTROM_SIZE];
+      uint8_t rom0[KB(16)];
+      uint8_t rom1[KB(16)];
+      uint8_t wram[KB(8)];
+      uint8_t vram[KB(8)];
+      uint8_t eram[KB(8)];
+      uint8_t hram[0x80];
+    };
+    uint8_t flat_ram[KB(64)];
+  };
   struct debug_symbol_list syms;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
 
@@ -172,10 +178,6 @@ struct gb_state {
   uint64_t last_frame_ticks_ns;
 
   bool err;
-
-#ifdef USE_FLAT_RAM_FOR_TESTING
-  uint8_t flat_ram[KB(64)];
-#endif
 };
 
 enum io_reg_addr {
@@ -234,5 +236,9 @@ struct gb_state *gb_state_alloc();
 void gb_state_free(struct gb_state *gb_state);
 
 bool gb_state_get_err(struct gb_state *gb_state);
+
+// Whether or not to use flat memory, this is currently exclusively used for single step tests where they expect memory
+// to be a flat 64KB bank.
+void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
 
 #endif // GB_COMMON_H
