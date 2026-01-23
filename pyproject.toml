@@ -12,7 +12,7 @@ build-backend = "mesonpy"
 [project]
 name = "gfgb"
 version = "0.1.0"
-license = "GPL3"
+license = "GPL-3.0-only"
 description = "A scriptable GameBoy Emulator written in C"
 readme = "README.md"
 maintainers = [

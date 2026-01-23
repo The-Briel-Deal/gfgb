@@ -34,20 +34,15 @@ gfgb_obj = static_library(
   override_options : ['warning_level=0'],
 )
 
+# TODO: I should probably just make the flat ram option a runtime option so I
+# don't need to build and install two extensions.
+
 gfgb_py_ext = py.extension_module(
   'gfgb_py',
   [sources],
   include_directories : include_directories(['src/']),
   link_whole : [gfgb_obj],
-  dependencies : [dependencies],
-)
-
-gfgb_py_testing_ext = py.extension_module(
-  'gfgb_py_testing',
-  [sources],
-  c_args : ['-DRUN_CPU_TESTS=1', '-DUSE_FLAT_RAM_FOR_TESTING=1'],
-  include_directories : include_directories(['src/']),
-  link_whole : [gfgb_obj],
+  install : true,
   dependencies : [dependencies],
 )
 
@@ -65,7 +60,6 @@ cpu_test_exe = executable(
   c_args : '-DRUN_CPU_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
-  install : true,
 )
 
 ppu_test_exe = executable(
@@ -74,7 +68,6 @@ ppu_test_exe = executable(
   c_args : '-DRUN_PPU_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
-  install : true,
 )
 
 disasm_test_exe = executable(
@@ -83,7 +76,6 @@ disasm_test_exe = executable(
   c_args : '-DRUN_DISASSEMBLE_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : dependencies,
-  install : true,
 )
 
 current_src_dir = meson.current_source_dir()
@@ -94,8 +86,8 @@ test('disasm_test', disasm_test_exe)
 test(
   'single_step_tests',
   py,
-  args : ['-mpytest', '--tap', '--gfgb-py-ext', gfgb_py_testing_ext, current_src_dir / 'test/sst/'],
-  depends : [gfgb_py_testing_ext],
+  args : ['-mpytest', '--tap', '--gfgb-py-ext', gfgb_py_ext, current_src_dir / 'test/sst/'],
+  depends : [gfgb_py_ext],
   protocol : 'tap',
 )
 
@@ -135,6 +127,5 @@ simple_sprite_gb = custom_target('simple_sprite_gb',
   output : 'simple_sprite.gb',
   input : simple_sprite_unfixed_gb,
   command : [rgbfix, '-v', '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT@'],
-  install : true,
   install_dir : 'simple_sprite',
 )
