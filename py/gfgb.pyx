@@ -77,3 +77,6 @@ class GB_State:
 
   def get_err(self) -> bool:
     return gfgb.gb_state_get_err(self._gb_state)
+
+  def use_flat_mem(self, enabled: bool):
+    gfgb.gb_state_use_flat_mem(self._gb_state, enabled)

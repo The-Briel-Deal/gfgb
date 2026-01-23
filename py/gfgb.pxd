@@ -11,6 +11,7 @@ cdef extern from "common.h":
   void gb_state_free(gb_state *gb_state)
 
   bint gb_state_get_err(gb_state *gb_state)
+  void gb_state_use_flat_mem(gb_state *gb_state, bint enabled);
 
 cdef extern from "cpu.h":
   struct inst: pass
