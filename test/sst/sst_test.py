@@ -98,6 +98,7 @@ def test_single_step(test_file_name: str):
     )
 
     gb_state = gfgb.GB_State()
+    gb_state.use_flat_mem(True)
 
     load_initial_state(gb_state, sst_case.initial)
 
