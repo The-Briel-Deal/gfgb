@@ -3,6 +3,7 @@
 *.o
 *.png
 *.sym
+/build/
 /dist/
-/subprojects/*/
 /out/
+/subprojects/*/

@@ -713,6 +713,19 @@ static void ex_bit(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, (val >> inst.p1.b3) & 1);
 }
 
+static void ex_set(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SET);
+  assert(inst.p1.type == B3);
+  assert(IS_R8(inst.p2));
+  enum r8 reg = inst.p2.r8;
+  assert(reg <= R8_A);
+  uint8_t bit = inst.p1.b3;
+  assert(bit <= 7);
+  uint8_t val = get_r8(gb_state, reg);
+  val |= (1 << bit);
+  set_r8(gb_state, reg, val);
+}
+
 static void ex_rl(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RL);
   assert(IS_R8(inst.p1));
@@ -887,6 +900,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case AND: ex_and(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
   case BIT: ex_bit(gb_state, inst); return;
+  case SET: ex_set(gb_state, inst); return;
   case RL: ex_rl(gb_state, inst); return;
   case RLA: ex_rla(gb_state, inst); return;
   case DI: gb_state->regs.io.ime = false; return;
