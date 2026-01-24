@@ -32,14 +32,6 @@ gfgb_obj = static_library(
   dependencies : [dep_py],
   override_options : ['warning_level=0'],
 )
-py_inst_dir = py.get_install_dir()
-message('py_inst_dir: ', py_inst_dir)
-
-gfgb_pyi = install_data(
-  'py/gfgb.pyx',
-  rename : 'gfgb.pyi',
-  install_dir : py_inst_dir,
-)
 
 gfgb_py_ext = py.extension_module(
   'gfgb',
