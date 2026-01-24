@@ -1,14 +1,11 @@
 from dataclasses import dataclass
+from re import sub
+from typing import Any, List, Optional, Union
 import json
 import pathlib
-from re import sub
-from types import ModuleType
 import pytest
 
-from typing import TYPE_CHECKING, Any, List, Optional, Union
-
-if TYPE_CHECKING:
-  import gfgb_py
+import gfgb
 
 
 @dataclass
@@ -43,9 +40,7 @@ test_files = [path.name for path in sst_test_dir.iterdir()]
 assert len(test_files) == 500
 
 
-def load_initial_state(
-    gfgb: ModuleType, gb_state: gfgb_py.GB_State, state: StateSnapshot
-):
+def load_initial_state(gb_state: gfgb.GB_State, state: StateSnapshot):
   gb_state.set_r8(gfgb.R8.B, state.b)
   gb_state.set_r8(gfgb.R8.C, state.c)
   gb_state.set_r8(gfgb.R8.D, state.d)
@@ -64,9 +59,7 @@ def load_initial_state(
     gb_state.write_mem8(addr, val)
 
 
-def assert_state_equals(
-    gfgb: ModuleType, gb_state: gfgb_py.GB_State, state: StateSnapshot
-):
+def assert_state_equals(gb_state: gfgb.GB_State, state: StateSnapshot):
   assert gb_state.get_r8(gfgb.R8.B) == state.b
   assert gb_state.get_r8(gfgb.R8.C) == state.c
   assert gb_state.get_r8(gfgb.R8.D) == state.d
@@ -91,7 +84,7 @@ def assert_state_equals(
     test_files,
     ids=[sub("\\.json", "", file_name) for file_name in test_files],
 )
-def test_single_step(test_file_name: str, gfgb_py_mod: ModuleType):
+def test_single_step(test_file_name: str):
   test_file_path = pathlib.Path(sst_test_dir / test_file_name)
   assert test_file_path.is_file()
   test_file = test_file_path.open()
@@ -104,11 +97,11 @@ def test_single_step(test_file_name: str, gfgb_py_mod: ModuleType):
         cycles=case["cycles"],
     )
 
-    gb_state = gfgb_py_mod.GB_State()
+    gb_state = gfgb.GB_State()
 
-    load_initial_state(gfgb_py_mod, gb_state, sst_case.initial)
+    load_initial_state(gb_state, sst_case.initial)
 
     gb_state.fetch_and_exec()
     assert gb_state.get_err() == False
 
-    assert_state_equals(gfgb_py_mod, gb_state, sst_case.final)
+    assert_state_equals(gb_state, sst_case.final)

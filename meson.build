@@ -26,19 +26,20 @@ py = import('python').find_installation()
 dep_py = py.dependency()
 
 gfgb_obj = static_library(
-  'gfgb_obj',
+  'gfgb',
   'py/gfgb.pyx',
-  cython_args : ['--module-name=gfgb_py'],
   include_directories : include_directories(['src/']),
   dependencies : [dep_py],
   override_options : ['warning_level=0'],
 )
 
-# TODO: I should probably just make the flat ram option a runtime option so I
-# don't need to build and install two extensions.
+gfgb_pyi = install_data(
+  'py/gfgb.pyx',
+  rename : 'gfgb.pyi'
+)
 
 gfgb_py_ext = py.extension_module(
-  'gfgb_py',
+  'gfgb',
   [sources],
   include_directories : include_directories(['src/']),
   link_whole : [gfgb_obj],
