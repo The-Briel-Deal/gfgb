@@ -36,7 +36,7 @@ class SSTCase:
 
 sst_test_dir = pathlib.Path(__file__).parent / "test_json/"
 assert sst_test_dir.is_dir()
-test_files = [path.name for path in sst_test_dir.iterdir()]
+test_files = sorted([path.name for path in sst_test_dir.iterdir()])
 assert len(test_files) == 500
 
 
