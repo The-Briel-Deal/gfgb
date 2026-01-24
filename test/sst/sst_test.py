@@ -51,7 +51,8 @@ def load_initial_state(gb_state: gfgb.GB_State, state: StateSnapshot):
   gb_state.set_r16(gfgb.R16.SP, state.sp)
   gb_state.set_f(state.f)
   gb_state.set_pc(state.pc)
-  gb_state.set_ime(state.ime)
+  assert state.ime == 0 or state.ime == 1
+  gb_state.set_ime(state.ime != 0)
   # Load ram
   for entry in state.ram:
     addr = entry[0]
