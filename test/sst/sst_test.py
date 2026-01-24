@@ -5,7 +5,7 @@ import json
 import pathlib
 import pytest
 
-import gfgb
+import gfgb  # pyright: ignore [reportMissingModuleSource]
 
 
 @dataclass
