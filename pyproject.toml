@@ -33,3 +33,6 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
 ]
+
+[tool.pyright]
+stubPath = "./stubs/"
