@@ -35,7 +35,8 @@ gfgb_obj = static_library(
 
 gfgb_pyi = install_data(
   'py/gfgb.pyx',
-  rename : 'gfgb.pyi'
+  rename : 'gfgb.pyi',
+  install_dir : py.get_install_dir(),
 )
 
 gfgb_py_ext = py.extension_module(
