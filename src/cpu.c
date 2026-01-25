@@ -33,6 +33,8 @@ enum flags : uint8_t {
   (struct inst_param) { .type = IMM16_MEM, .imm16 = imm }
 #define B3_PARAM(b)                                                                                                    \
   (struct inst_param) { .type = B3, .b3 = b }
+#define TGT3_PARAM(b)                                                                                                  \
+  (struct inst_param) { .type = TGT3, .tgt3 = b }
 #define COND_PARAM(cond)                                                                                               \
   (struct inst_param) { .type = COND, .r8 = cond }
 #define UNKNOWN_INST_BYTE_PARAM(b)                                                                                     \
@@ -328,6 +330,9 @@ struct inst fetch(struct gb_state *gb_state) {
       return (struct inst){
           .type = CALL, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
 
+    if ((curr_byte & ~0b00111000) == 0b11000111)
+      return (struct inst){.type = RST, .p1 = TGT3_PARAM((0b00111000 & curr_byte) >> 3), .p2 = VOID_PARAM};
+
     if (curr_byte == 0b11100010) // LDH [C], A
       return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
 
@@ -441,6 +446,7 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 #define IS_IMM8(param)      (param.type == IMM8)
 #define IS_SP_IMM8(param)   (param.type == SP_IMM8)
+#define IS_TGT3(param)      (param.type == TGT3)
 #define IS_COND(param)      (param.type == COND)
 #define IS_VOID(param)      (param.type == VOID_PARAM_TYPE)
 

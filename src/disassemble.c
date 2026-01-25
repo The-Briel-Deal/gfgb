@@ -57,6 +57,7 @@ static void print_inst_param(char *inst_param_str, const struct inst_param inst_
   case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
   case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
   case B3: sprintf(inst_param_str, "B3_%d", inst_param.b3); break;
+  case TGT3: sprintf(inst_param_str, "TGT3_%d", inst_param.tgt3); break;
   case COND:
     switch (inst_param.cond) {
       PRINT_ENUM_CASE(COND_NZ)
@@ -110,6 +111,7 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, RRA)
     PRINT_INST_NAME(stream, RRC)
     PRINT_INST_NAME(stream, RRCA)
+    PRINT_INST_NAME(stream, RST)
     PRINT_INST_NAME(stream, SBC)
     PRINT_INST_NAME(stream, SCF)
     PRINT_INST_NAME(stream, SET)

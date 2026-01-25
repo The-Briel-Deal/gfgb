@@ -54,6 +54,7 @@ struct inst_param {
     R16_MEM,
     R16_STK,
     R8,
+    TGT3,    // "rst's target address, divided by 8"
     SP_IMM8, // Stack Pointer + IMM8
     UNKNOWN_INST_BYTE,
     VOID_PARAM_TYPE,
@@ -67,6 +68,7 @@ struct inst_param {
     uint8_t imm8;
     uint16_t imm16;
     uint8_t b3;
+    uint8_t tgt3;
     uint8_t unknown_inst_byte;
   };
 };
@@ -104,6 +106,7 @@ struct inst {
     RRA,
     RRC,
     RRCA,
+    RST,
     SBC,
     SCF,
     SET,
