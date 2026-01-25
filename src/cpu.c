@@ -877,6 +877,30 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   }
   abort();
 }
+static void ex_daa(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == DAA);
+  assert(IS_VOID(inst.p1) && IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t adjust = 0;
+  if ((gb_state->regs.f & FLAG_N) != 0) {
+    // The last inst was a subtraction.
+    if ((gb_state->regs.f & FLAG_H) != 0) adjust += 0x06;
+    if ((gb_state->regs.f & FLAG_C) != 0) adjust += 0x60;
+    val -= adjust;
+  } else {
+    // The last inst was an addition.
+    if (((gb_state->regs.f & FLAG_H) != 0) || (val & 0x0F) > 0x9) adjust += 0x06;
+    if (((gb_state->regs.f & FLAG_C) != 0) || val > 0x99) {
+      adjust += 0x60;
+      set_flags(gb_state, FLAG_C, true);
+    }
+    val += adjust;
+  }
+  set_flags(gb_state, FLAG_H, false);
+  set_flags(gb_state, FLAG_Z, val == 0);
+  set_r8(gb_state, R8_A, val);
+}
+
 static bool eval_condition(struct gb_state *gb_state, const struct inst_param inst_param) {
   assert(inst_param.type == COND);
   switch (inst_param.cond) {
@@ -985,38 +1009,38 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   print_inst(stdout, inst);
 #endif
   switch (inst.type) {
-  case NOP: return;
-  case STOP: return;
-  case LD: ex_ld(gb_state, inst); return;
-  case LDH: ex_ldh(gb_state, inst); return;
-  case JP: ex_jp(gb_state, inst); return;
-  case JR: ex_jr(gb_state, inst); return;
-  case CALL: ex_call(gb_state, inst); return;
-  case RET: ex_ret(gb_state, inst); return;
-  case CP: ex_cp(gb_state, inst); return;
-  case PUSH: ex_push(gb_state, inst); return;
-  case POP: ex_pop(gb_state, inst); return;
-  case INC: ex_inc(gb_state, inst); return;
-  case DEC: ex_dec(gb_state, inst); return;
   case ADD: ex_add(gb_state, inst); return;
-  case SUB: ex_sub(gb_state, inst); return;
-  case OR: ex_or(gb_state, inst); return;
   case AND: ex_and(gb_state, inst); return;
-  case XOR: ex_xor(gb_state, inst); return;
   case BIT: ex_bit(gb_state, inst); return;
-  case SET: ex_set(gb_state, inst); return;
-  case RES: ex_res(gb_state, inst); return;
-  case RL: ex_rl(gb_state, inst); return;
-  case RR: ex_rr(gb_state, inst); return;
-  case RLA: ex_rla(gb_state, inst); return;
-  case RRA: ex_rra(gb_state, inst); return;
-  case RLC: ex_rlc(gb_state, inst); return;
-  case RRC: ex_rrc(gb_state, inst); return;
-  case RLCA: ex_rlca(gb_state, inst); return;
-  case RRCA: ex_rrca(gb_state, inst); return;
+  case CALL: ex_call(gb_state, inst); return;
+  case CP: ex_cp(gb_state, inst); return;
+  case DAA: ex_daa(gb_state, inst); return;
+  case DEC: ex_dec(gb_state, inst); return;
   case DI: gb_state->regs.io.ime = false; return;
   case EI: gb_state->regs.io.ime = true; return;
-  default: break;
+  case INC: ex_inc(gb_state, inst); return;
+  case JP: ex_jp(gb_state, inst); return;
+  case JR: ex_jr(gb_state, inst); return;
+  case LD: ex_ld(gb_state, inst); return;
+  case LDH: ex_ldh(gb_state, inst); return;
+  case NOP: return;
+  case OR: ex_or(gb_state, inst); return;
+  case POP: ex_pop(gb_state, inst); return;
+  case PUSH: ex_push(gb_state, inst); return;
+  case RES: ex_res(gb_state, inst); return;
+  case RET: ex_ret(gb_state, inst); return;
+  case RL: ex_rl(gb_state, inst); return;
+  case RLA: ex_rla(gb_state, inst); return;
+  case RLC: ex_rlc(gb_state, inst); return;
+  case RLCA: ex_rlca(gb_state, inst); return;
+  case RR: ex_rr(gb_state, inst); return;
+  case RRA: ex_rra(gb_state, inst); return;
+  case RRC: ex_rrc(gb_state, inst); return;
+  case RRCA: ex_rrca(gb_state, inst); return;
+  case SET: ex_set(gb_state, inst); return;
+  case STOP: return;
+  case SUB: ex_sub(gb_state, inst); return;
+  case XOR: ex_xor(gb_state, inst); return;
   }
   // TODO: print instruction here as well
   ERR(gb_state, "`execute()` called with `inst.type` that isn't implemented.");
