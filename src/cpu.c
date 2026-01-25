@@ -903,6 +903,53 @@ static void ex_ret(struct gb_state *gb_state, struct inst inst) {
   NOT_IMPLEMENTED("Unknown compare instruction");
 }
 
+static void ex_call(struct gb_state *gb_state, struct inst inst) {
+  if (inst.p1.type == IMM16) {
+    push16(gb_state, gb_state->regs.pc);
+    gb_state->regs.pc = inst.p1.imm16;
+    return;
+  } else {
+    assert(inst.p1.type == COND);
+    assert(inst.p2.type == IMM16);
+    if (eval_condition(gb_state, inst.p1)) {
+      push16(gb_state, gb_state->regs.pc);
+      gb_state->regs.pc = inst.p1.imm16;
+    }
+    return;
+  }
+  unreachable();
+}
+
+static void ex_jr(struct gb_state *gb_state, struct inst inst) {
+  if (IS_IMM8(inst.p1)) {
+    gb_state->regs.pc += *(int8_t *)&inst.p1.imm8;
+    return;
+  }
+  if (IS_COND(inst.p1)) {
+    if (IS_IMM8(inst.p2)) {
+      if (eval_condition(gb_state, inst.p1)) {
+        gb_state->regs.pc += *(int8_t *)&inst.p2.imm8;
+      }
+      return;
+    }
+  }
+}
+
+static void ex_jp(struct gb_state *gb_state, struct inst inst) {
+  if (IS_IMM16(inst.p1)) {
+    gb_state->regs.pc = inst.p1.imm16;
+    return;
+  }
+  if (IS_COND(inst.p1)) {
+    if (IS_IMM16(inst.p2)) {
+      if (eval_condition(gb_state, inst.p1)) {
+        gb_state->regs.pc = inst.p2.imm16;
+      }
+      return;
+    }
+  }
+}
+
 static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
   // doing the carry / half carry flags correctly.
@@ -942,52 +989,9 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case STOP: return;
   case LD: ex_ld(gb_state, inst); return;
   case LDH: ex_ldh(gb_state, inst); return;
-  case JP: {
-    if (IS_IMM16(inst.p1)) {
-      gb_state->regs.pc = inst.p1.imm16;
-      return;
-    }
-    if (IS_COND(inst.p1)) {
-      if (IS_IMM16(inst.p2)) {
-        if (eval_condition(gb_state, inst.p1)) {
-          gb_state->regs.pc = inst.p2.imm16;
-        }
-        return;
-      }
-    }
-    break;
-  }
-  case JR: {
-    if (IS_IMM8(inst.p1)) {
-      gb_state->regs.pc += *(int8_t *)&inst.p1.imm8;
-      return;
-    }
-    if (IS_COND(inst.p1)) {
-      if (IS_IMM8(inst.p2)) {
-        if (eval_condition(gb_state, inst.p1)) {
-          gb_state->regs.pc += *(int8_t *)&inst.p2.imm8;
-        }
-        return;
-      }
-    }
-    break;
-  }
-  case CALL: {
-    if (inst.p1.type == IMM16) {
-      push16(gb_state, gb_state->regs.pc);
-      gb_state->regs.pc = inst.p1.imm16;
-      return;
-    } else {
-      assert(inst.p1.type == COND);
-      assert(inst.p2.type == IMM16);
-      if (eval_condition(gb_state, inst.p1)) {
-        push16(gb_state, gb_state->regs.pc);
-        gb_state->regs.pc = inst.p1.imm16;
-      }
-      return;
-    }
-    break;
-  }
+  case JP: ex_jp(gb_state, inst); return;
+  case JR: ex_jr(gb_state, inst); return;
+  case CALL: ex_call(gb_state, inst); return;
   case RET: ex_ret(gb_state, inst); return;
   case CP: ex_cp(gb_state, inst); return;
   case PUSH: ex_push(gb_state, inst); return;
