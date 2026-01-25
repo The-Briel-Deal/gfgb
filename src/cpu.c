@@ -711,6 +711,13 @@ static void ex_bit(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, (val >> inst.p1.b3) & 1);
 }
 
+static void ex_scf(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SCF);
+  assert(IS_VOID(inst.p1));
+  assert(IS_VOID(inst.p2));
+  set_flags(gb_state, FLAG_N | FLAG_H, false);
+  set_flags(gb_state, FLAG_C, true);
+}
 static void ex_set(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == SET);
   assert(inst.p1.type == B3);
@@ -1047,6 +1054,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RRA: ex_rra(gb_state, inst); return;
   case RRC: ex_rrc(gb_state, inst); return;
   case RRCA: ex_rrca(gb_state, inst); return;
+  case SCF: ex_scf(gb_state, inst); return;
   case SET: ex_set(gb_state, inst); return;
   case STOP: return;
   case SUB: ex_sub(gb_state, inst); return;
