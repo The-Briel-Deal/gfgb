@@ -593,6 +593,25 @@ static void ex_adc(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_H, ((val & 0x0F) + (add & 0x0F) + (carry & 0x0F)) > 0x0F);
   set_flags(gb_state, FLAG_C, ((val & 0xFF) + (add & 0xFF) + (carry & 0xFF)) > 0xFF);
 }
+static void ex_sbc(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SBC);
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t carry = (gb_state->regs.f & FLAG_C) >> 4;
+  uint8_t sub;
+  if (IS_R8(inst.p2)) {
+    sub = get_r8(gb_state, inst.p2.r8);
+  } else {
+    assert(IS_IMM8(inst.p2));
+    sub = inst.p2.imm8;
+  }
+  uint8_t result = (uint8_t)val - sub - carry;
+  set_r8(gb_state, R8_A, result);
+  set_flags(gb_state, FLAG_Z, result == 0);
+  set_flags(gb_state, FLAG_N, true);
+  set_flags(gb_state, FLAG_H, ((val & 0x0F) - (sub & 0x0F) - (carry & 0x0F)) < 0x00);
+  set_flags(gb_state, FLAG_C, ((val & 0xFF) - (sub & 0xFF) - (carry & 0xFF)) < 0x00);
+}
 static void ex_add(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == ADD);
   assert((IS_R8(inst.p1) && inst.p1.r8 == R8_A) ||
@@ -1056,6 +1075,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case AND: ex_and(gb_state, inst); return;
   case BIT: ex_bit(gb_state, inst); return;
   case CALL: ex_call(gb_state, inst); return;
+  case CCF: ex_ccf(gb_state, inst); return;
   case CP: ex_cp(gb_state, inst); return;
   case CPL: ex_cpl(gb_state, inst); return;
   case DAA: ex_daa(gb_state, inst); return;
@@ -1081,8 +1101,8 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RRA: ex_rra(gb_state, inst); return;
   case RRC: ex_rrc(gb_state, inst); return;
   case RRCA: ex_rrca(gb_state, inst); return;
+  case SBC: ex_sbc(gb_state, inst); return;
   case SCF: ex_scf(gb_state, inst); return;
-  case CCF: ex_ccf(gb_state, inst); return;
   case SET: ex_set(gb_state, inst); return;
   case STOP: return;
   case SUB: ex_sub(gb_state, inst); return;
