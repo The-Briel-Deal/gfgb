@@ -779,7 +779,8 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
     set_r8(gb_state, inst.p1.r8, val - 1);
     set_flags(gb_state, FLAG_Z, (uint8_t)(val - 1) == 0x00);
     set_flags(gb_state, FLAG_N, 1);
-    set_flags(gb_state, FLAG_H, ((val & 0xF0) - 1) == 0x0F);
+    // if the old val's lower 4 bits are 0 then we know there will be a carry after subtraction
+    set_flags(gb_state, FLAG_H, (val & 0x0F) == 0x0);
     return;
   }
   if (IS_R16(inst.p1)) {
