@@ -574,6 +574,25 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
   abort();
 }
 
+static void ex_adc(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == ADC);
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t carry = (gb_state->regs.f & FLAG_C) >> 4;
+  uint8_t add;
+  if (IS_R8(inst.p2)) {
+    add = get_r8(gb_state, inst.p2.r8);
+  } else {
+    assert(IS_IMM8(inst.p2));
+    add = inst.p2.imm8;
+  }
+  uint8_t result = (uint8_t)val + add + carry;
+  set_r8(gb_state, R8_A, result);
+  set_flags(gb_state, FLAG_Z, result == 0);
+  set_flags(gb_state, FLAG_N, false);
+  set_flags(gb_state, FLAG_H, ((val & 0x0F) + (add & 0x0F) + (carry & 0x0F)) > 0x0F);
+  set_flags(gb_state, FLAG_C, ((val & 0xFF) + (add & 0xFF) + (carry & 0xFF)) > 0xFF);
+}
 static void ex_add(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == ADD);
   assert((IS_R8(inst.p1) && inst.p1.r8 == R8_A) ||
@@ -1032,6 +1051,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   print_inst(stdout, inst);
 #endif
   switch (inst.type) {
+  case ADC: ex_adc(gb_state, inst); return;
   case ADD: ex_add(gb_state, inst); return;
   case AND: ex_and(gb_state, inst); return;
   case BIT: ex_bit(gb_state, inst); return;
