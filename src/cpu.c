@@ -989,7 +989,7 @@ static void ex_call(struct gb_state *gb_state, struct inst inst) {
     assert(inst.p2.type == IMM16);
     if (eval_condition(gb_state, inst.p1)) {
       push16(gb_state, gb_state->regs.pc);
-      gb_state->regs.pc = inst.p1.imm16;
+      gb_state->regs.pc = inst.p2.imm16;
     }
     return;
   }
