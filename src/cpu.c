@@ -788,10 +788,10 @@ static void ex_rrc(struct gb_state *gb_state, struct inst inst) {
   assert(IS_R8(inst.p1));
   assert(IS_VOID(inst.p2));
   uint8_t val = get_r8(gb_state, inst.p1.r8);
-  uint8_t carry = (val >> 0) & 1;
+  uint8_t carry = val & 1;
   set_flags(gb_state, FLAG_C, carry);
   val >>= 1;
-  val |= ((7 << carry) & 0b10000000);
+  val |= (carry << 7);
   set_r8(gb_state, inst.p1.r8, val);
 
   set_flags(gb_state, FLAG_Z, val == 0);
