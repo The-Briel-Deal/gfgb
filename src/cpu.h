@@ -49,6 +49,7 @@ struct inst_param {
     IMM16,
     IMM16_MEM,
     IMM8,
+    E8,
     IMM8_HMEM,
     R16,
     R16_MEM,

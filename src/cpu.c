@@ -27,6 +27,8 @@ enum flags : uint8_t {
   (struct inst_param) { .type = SP_IMM8, .imm8 = imm }
 #define IMM8_PARAM(imm)                                                                                                \
   (struct inst_param) { .type = IMM8, .imm8 = imm }
+#define E8_PARAM(imm)                                                                                                  \
+  (struct inst_param) { .type = E8, .imm8 = imm }
 #define IMM8_HMEM_PARAM(imm)                                                                                           \
   (struct inst_param) { .type = IMM8_HMEM, .imm8 = imm }
 #define IMM16_MEM_PARAM(imm)                                                                                           \
@@ -313,6 +315,7 @@ struct inst fetch(struct gb_state *gb_state) {
     switch (curr_byte) {
     case 0xC9: return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     case 0xD9: return (struct inst){.type = RETI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    case 0xE8: return (struct inst){.type = ADD, .p1 = R16_PARAM(R16_SP), .p2 = E8_PARAM(next8(gb_state))};
     }
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
       return (struct inst){.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
@@ -442,6 +445,7 @@ struct inst fetch(struct gb_state *gb_state) {
 #define IS_R16(param)       (param.type == R16)
 #define IS_R16_MEM(param)   (param.type == R16_MEM)
 #define IS_R8(param)        (param.type == R8)
+#define IS_E8(param)        (param.type == E8)
 #define IS_IMM16(param)     (param.type == IMM16)
 #define IS_IMM16_MEM(param) (param.type == IMM16_MEM)
 #define IS_IMM8(param)      (param.type == IMM8)
@@ -622,7 +626,7 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == ADD);
   assert((IS_R8(inst.p1) && inst.p1.r8 == R8_A) ||
          (IS_R16(inst.p1) && (inst.p1.r16 == R16_HL || inst.p1.r16 == R16_SP)));
-  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2) || IS_R16(inst.p2));
+  assert(IS_R8(inst.p2) || IS_IMM8(inst.p2) || IS_R16(inst.p2) || IS_E8(inst.p2));
 
   if (IS_R8(inst.p1) && inst.p1.r8 == R8_A) {
     uint8_t a_val = get_r8(gb_state, R8_A);
@@ -652,12 +656,12 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
   }
 
   if (IS_R16(inst.p1) && (inst.p1.r16 == R16_SP)) {
-    assert(IS_IMM8(inst.p2));
+    assert(IS_E8(inst.p2));
     uint16_t sp_val = get_r16(gb_state, R16_SP);
     int8_t p2_val = *(int8_t *)&inst.p2.imm8;
     uint16_t result = sp_val + p2_val;
-    set_r16(gb_state, R16_HL, result);
-    set_flags(gb_state, FLAG_N, 0);
+    set_r16(gb_state, R16_SP, result);
+    set_flags(gb_state, FLAG_N | FLAG_Z, false);
     // TODO: I'm not positive these are correct since p2_val is signed. I need to double check this against other
     // emulators.
     set_flags(gb_state, FLAG_H, ((sp_val ^ p2_val ^ result) & 0x10) == 0x10);
