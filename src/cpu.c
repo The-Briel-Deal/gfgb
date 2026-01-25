@@ -745,8 +745,9 @@ static void ex_bit(struct gb_state *gb_state, struct inst inst) {
   assert(inst.p1.type == B3);
   assert(IS_R8(inst.p2));
   uint8_t val = get_r8(gb_state, inst.p2.r8);
-  set_flags(gb_state, FLAG_H | FLAG_N, false);
-  set_flags(gb_state, FLAG_Z, (val >> inst.p1.b3) & 1);
+  set_flags(gb_state, FLAG_N, false);
+  set_flags(gb_state, FLAG_H, true);
+  set_flags(gb_state, FLAG_Z, ((val >> inst.p1.b3) & 1) == 0);
 }
 
 static void ex_scf(struct gb_state *gb_state, struct inst inst) {
@@ -929,6 +930,20 @@ static void ex_sra(struct gb_state *gb_state, struct inst inst) {
   uint8_t b7 = val & (1 << 7);
   val >>= 1;
   val |= b7; // For some reason we leave bit 7 unchanged in sra.
+  set_r8(gb_state, inst.p1.r8, val);
+
+  set_flags(gb_state, FLAG_Z, val == 0);
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+}
+
+static void ex_srl(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SRL);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t carry = val & 1;
+  set_flags(gb_state, FLAG_C, carry);
+  val >>= 1;
   set_r8(gb_state, inst.p1.r8, val);
 
   set_flags(gb_state, FLAG_Z, val == 0);
@@ -1148,10 +1163,13 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case SET: ex_set(gb_state, inst); return;
   case SLA: ex_sla(gb_state, inst); return;
   case SRA: ex_sra(gb_state, inst); return;
+  case SRL: ex_srl(gb_state, inst); return;
   case STOP: return;
   case SUB: ex_sub(gb_state, inst); return;
   case SWAP: ex_swap(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
+
+  case UNKNOWN_INST: break;
   }
   // TODO: print instruction here as well
   ERR(gb_state, "`execute()` called with `inst.type` that isn't implemented.");
