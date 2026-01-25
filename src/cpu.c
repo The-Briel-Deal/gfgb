@@ -768,6 +768,50 @@ static void ex_rla(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
 }
 
+static void ex_rlc(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RLC);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t carry = (val >> 7) & 1;
+  set_flags(gb_state, FLAG_C, carry);
+  val <<= 1;
+  val |= carry;
+  set_r8(gb_state, inst.p1.r8, val);
+
+  set_flags(gb_state, FLAG_Z, val == 0);
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+}
+
+static void ex_rrc(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RRC);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t carry = (val >> 0) & 1;
+  set_flags(gb_state, FLAG_C, carry);
+  val >>= 1;
+  val |= ((7 << carry) & 0b10000000);
+  set_r8(gb_state, inst.p1.r8, val);
+
+  set_flags(gb_state, FLAG_Z, val == 0);
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+}
+
+static void ex_rlca(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RLCA);
+  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t carry = (val >> 7) & 1;
+  set_flags(gb_state, FLAG_C, carry);
+  val <<= 1;
+  val |= carry;
+  set_r8(gb_state, R8_A, val);
+
+  set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
+}
+
 static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == DEC);
   assert(IS_R8(inst.p1) || IS_R16(inst.p1));
@@ -918,6 +962,9 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RES: ex_res(gb_state, inst); return;
   case RL: ex_rl(gb_state, inst); return;
   case RLA: ex_rla(gb_state, inst); return;
+  case RLC: ex_rlc(gb_state, inst); return;
+  case RLCA: ex_rlca(gb_state, inst); return;
+  case RRC: ex_rrc(gb_state, inst); return;
   case DI: gb_state->regs.io.ime = false; return;
   case EI: gb_state->regs.io.ime = true; return;
   default: break;
