@@ -754,6 +754,21 @@ static void ex_rl(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, val == 0);
 }
 
+static void ex_rr(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RR);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  set_flags(gb_state, FLAG_C, val & 1);
+  val >>= 1;
+  val |= (old_carry_flag << 7);
+  set_r8(gb_state, inst.p1.r8, val);
+
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+  set_flags(gb_state, FLAG_Z, val == 0);
+}
+
 static void ex_rla(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RLA);
   assert(IS_VOID(inst.p1));
@@ -763,6 +778,20 @@ static void ex_rla(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_C, (val >> 7) & 1);
   val <<= 1;
   val |= old_carry_flag;
+  set_r8(gb_state, R8_A, val);
+
+  set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
+}
+
+static void ex_rra(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RRA);
+  assert(IS_VOID(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  set_flags(gb_state, FLAG_C, val & 1);
+  val >>= 1;
+  val |= (old_carry_flag << 7);
   set_r8(gb_state, R8_A, val);
 
   set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
@@ -800,7 +829,7 @@ static void ex_rrc(struct gb_state *gb_state, struct inst inst) {
 
 static void ex_rlca(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RLCA);
-  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_VOID(inst.p1));
   assert(IS_VOID(inst.p2));
   uint8_t val = get_r8(gb_state, R8_A);
   uint8_t carry = (val >> 7) & 1;
@@ -814,7 +843,7 @@ static void ex_rlca(struct gb_state *gb_state, struct inst inst) {
 
 static void ex_rrca(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RRCA);
-  assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
+  assert(IS_VOID(inst.p1));
   assert(IS_VOID(inst.p2));
   uint8_t val = get_r8(gb_state, R8_A);
   uint8_t carry = val & 1;
@@ -975,7 +1004,9 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case SET: ex_set(gb_state, inst); return;
   case RES: ex_res(gb_state, inst); return;
   case RL: ex_rl(gb_state, inst); return;
+  case RR: ex_rr(gb_state, inst); return;
   case RLA: ex_rla(gb_state, inst); return;
+  case RRA: ex_rra(gb_state, inst); return;
   case RLC: ex_rlc(gb_state, inst); return;
   case RRC: ex_rrc(gb_state, inst); return;
   case RLCA: ex_rlca(gb_state, inst); return;
