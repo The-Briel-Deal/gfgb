@@ -175,22 +175,20 @@ bool get_ime(struct gb_state *gb_state) { return gb_state->regs.io.ime; } // Thi
 #define ARITHMETIC_R8_MASK  0b00000111
 #define ARITHMETIC_OP_MASK  0b00111000
 
-// TODO: The following instructions are missing and need to be implemented
-//   0xCE
-//   0xD9
-//   0xDC
-//   0xDD
-//   0xE0
-//   0xE2 - LDH [C], A
-//   0xE6
-//   0xED
-//   0xF0
 struct inst fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
   case /* block */ 0:
-    if (curr_byte == 0b00000000) return (struct inst){.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    // First we'll look for all the instructions where params aren't in the first byte. This way we can specify them in
+    // hex for readability.
+    switch (curr_byte) {
+    case 0x00: return (struct inst){.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    case 0x10:
+      // TODO: apparently STOP has some weird edge cases where it can consume two bytes.
+      // See: https://gist.github.com/SonoSooS/c0055300670d678b5ae8433e20bea595#nop-and-stop
+      return (struct inst){.type = STOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    }
     switch (NIBBLE1(curr_byte)) {
     case 0b0001:
       return (struct inst){
@@ -941,6 +939,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
 #endif
   switch (inst.type) {
   case NOP: return;
+  case STOP: return;
   case LD: ex_ld(gb_state, inst); return;
   case LDH: ex_ldh(gb_state, inst); return;
   case JP: {

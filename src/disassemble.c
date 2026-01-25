@@ -89,6 +89,8 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, CPL)
     PRINT_INST_NAME(stream, DAA)
     PRINT_INST_NAME(stream, DEC)
+    PRINT_INST_NAME(stream, DI)
+    PRINT_INST_NAME(stream, EI)
     PRINT_INST_NAME(stream, INC)
     PRINT_INST_NAME(stream, JP)
     PRINT_INST_NAME(stream, JR)
@@ -114,11 +116,10 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, SLA)
     PRINT_INST_NAME(stream, SRA)
     PRINT_INST_NAME(stream, SRL)
+    PRINT_INST_NAME(stream, STOP)
     PRINT_INST_NAME(stream, SUB)
     PRINT_INST_NAME(stream, SWAP)
     PRINT_INST_NAME(stream, XOR)
-    PRINT_INST_NAME(stream, DI)
-    PRINT_INST_NAME(stream, EI)
 
   case UNKNOWN_INST: {
     // I only use the `_INST` suffix to prevent name collision, so i'm going
@@ -126,7 +127,6 @@ void print_inst(FILE *stream, const struct inst inst) {
     fprintf(stream, "%-10s", "UNKNOWN");
     break;
   }
-  default: printf("Unhandled instruction in disassembler, aborting.\n"); abort();
   }
   char inst_param_str[16];
   print_inst_param(inst_param_str, inst.p1);

@@ -38,6 +38,7 @@ gfgb_py_ext = py.extension_module(
   [sources],
   include_directories : include_directories(['src/']),
   link_whole : [gfgb_obj],
+  c_args : ['-g3', '-O0'],
   install : true,
   dependencies : [dependencies],
 )

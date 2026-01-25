@@ -44,17 +44,17 @@ enum cond {
 
 struct inst_param {
   enum inst_param_type {
-    R8,
+    B3, // Bit Index
+    COND,
+    IMM16,
+    IMM16_MEM,
+    IMM8,
+    IMM8_HMEM,
     R16,
     R16_MEM,
     R16_STK,
-    IMM16,
-    IMM8,
-    IMM8_HMEM,
+    R8,
     SP_IMM8, // Stack Pointer + IMM8
-    IMM16_MEM,
-    B3, // Bit Index
-    COND,
     UNKNOWN_INST_BYTE,
     VOID_PARAM_TYPE,
   } type;
@@ -83,6 +83,8 @@ struct inst {
     CPL,
     DAA,
     DEC,
+    DI,
+    EI,
     INC,
     JP,
     JR,
@@ -108,11 +110,10 @@ struct inst {
     SLA,
     SRA,
     SRL,
+    STOP,
     SUB,
     SWAP,
     XOR,
-    DI,
-    EI,
 
     UNKNOWN_INST,
   } type;
