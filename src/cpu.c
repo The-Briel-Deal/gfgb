@@ -904,6 +904,34 @@ static void ex_rrca(struct gb_state *gb_state, struct inst inst) {
 
   set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
 }
+static void ex_sla(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SLA);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t carry = (val >> 7) & 1;
+  set_flags(gb_state, FLAG_C, carry);
+  val <<= 1;
+  set_r8(gb_state, inst.p1.r8, val);
+
+  set_flags(gb_state, FLAG_Z, val == 0);
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+}
+static void ex_sra(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SRA);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t carry = val & 1;
+  set_flags(gb_state, FLAG_C, carry);
+  uint8_t b7 = val & (1 << 7);
+  val >>= 1;
+  val |= b7; // For some reason we leave bit 7 unchanged in sra.
+  set_r8(gb_state, inst.p1.r8, val);
+
+  set_flags(gb_state, FLAG_Z, val == 0);
+  set_flags(gb_state, FLAG_H | FLAG_N, false);
+}
 
 static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == DEC);
@@ -1102,6 +1130,8 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RRC: ex_rrc(gb_state, inst); return;
   case RRCA: ex_rrca(gb_state, inst); return;
   case SBC: ex_sbc(gb_state, inst); return;
+  case SLA: ex_sla(gb_state, inst); return;
+  case SRA: ex_sra(gb_state, inst); return;
   case SCF: ex_scf(gb_state, inst); return;
   case SET: ex_set(gb_state, inst); return;
   case STOP: return;
