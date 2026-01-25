@@ -1033,11 +1033,12 @@ static bool eval_condition(struct gb_state *gb_state, const struct inst_param in
   case COND_NC: return (gb_state->regs.f & (1 << 4)) == 0;
   case COND_C: return ((gb_state->regs.f & (1 << 4)) >> 4) == 1;
   }
-  // Something is very wrong if the above switch statement doesn't catch.
-  abort();
 }
 
 static void ex_ret(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RET);
+  assert(IS_VOID(inst.p1) || IS_COND(inst.p1));
+  assert(IS_VOID(inst.p2));
   if (inst.p1.type == VOID_PARAM_TYPE) {
     gb_state->regs.pc = pop16(gb_state);
     return;
@@ -1048,7 +1049,14 @@ static void ex_ret(struct gb_state *gb_state, struct inst inst) {
     }
     return;
   }
-  NOT_IMPLEMENTED("Unknown compare instruction");
+}
+
+static void ex_reti(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RETI);
+  assert(IS_VOID(inst.p1));
+  assert(IS_VOID(inst.p2));
+  gb_state->regs.io.ime = true;
+  gb_state->regs.pc = pop16(gb_state);
 }
 
 static void ex_call(struct gb_state *gb_state, struct inst inst) {
@@ -1165,6 +1173,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case PUSH: ex_push(gb_state, inst); return;
   case RES: ex_res(gb_state, inst); return;
   case RET: ex_ret(gb_state, inst); return;
+  case RETI: ex_reti(gb_state, inst); return;
   case RL: ex_rl(gb_state, inst); return;
   case RLA: ex_rla(gb_state, inst); return;
   case RLC: ex_rlc(gb_state, inst); return;
