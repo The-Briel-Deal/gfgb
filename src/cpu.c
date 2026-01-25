@@ -718,6 +718,13 @@ static void ex_scf(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_N | FLAG_H, false);
   set_flags(gb_state, FLAG_C, true);
 }
+static void ex_ccf(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == CCF);
+  assert(IS_VOID(inst.p1));
+  assert(IS_VOID(inst.p2));
+  set_flags(gb_state, FLAG_N | FLAG_H, false);
+  set_flags(gb_state, FLAG_C, !(gb_state->regs.f & FLAG_C));
+}
 static void ex_set(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == SET);
   assert(inst.p1.type == B3);
@@ -1055,6 +1062,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RRC: ex_rrc(gb_state, inst); return;
   case RRCA: ex_rrca(gb_state, inst); return;
   case SCF: ex_scf(gb_state, inst); return;
+  case CCF: ex_ccf(gb_state, inst); return;
   case SET: ex_set(gb_state, inst); return;
   case STOP: return;
   case SUB: ex_sub(gb_state, inst); return;
