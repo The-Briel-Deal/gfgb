@@ -904,6 +904,7 @@ static void ex_rrca(struct gb_state *gb_state, struct inst inst) {
 
   set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
 }
+
 static void ex_sla(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == SLA);
   assert(IS_R8(inst.p1));
@@ -917,6 +918,7 @@ static void ex_sla(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z, val == 0);
   set_flags(gb_state, FLAG_H | FLAG_N, false);
 }
+
 static void ex_sra(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == SRA);
   assert(IS_R8(inst.p1));
@@ -931,6 +933,18 @@ static void ex_sra(struct gb_state *gb_state, struct inst inst) {
 
   set_flags(gb_state, FLAG_Z, val == 0);
   set_flags(gb_state, FLAG_H | FLAG_N, false);
+}
+
+static void ex_swap(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == SWAP);
+  assert(IS_R8(inst.p1));
+  assert(IS_VOID(inst.p2));
+  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t result = ((val & 0x0F) << 4) | ((val & 0xF0) >> 4);
+  set_r8(gb_state, inst.p1.r8, result);
+
+  set_flags(gb_state, FLAG_Z, result == 0);
+  set_flags(gb_state, FLAG_H | FLAG_N | FLAG_C, false);
 }
 
 static void ex_dec(struct gb_state *gb_state, struct inst inst) {
@@ -1130,12 +1144,13 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RRC: ex_rrc(gb_state, inst); return;
   case RRCA: ex_rrca(gb_state, inst); return;
   case SBC: ex_sbc(gb_state, inst); return;
-  case SLA: ex_sla(gb_state, inst); return;
-  case SRA: ex_sra(gb_state, inst); return;
   case SCF: ex_scf(gb_state, inst); return;
   case SET: ex_set(gb_state, inst); return;
+  case SLA: ex_sla(gb_state, inst); return;
+  case SRA: ex_sra(gb_state, inst); return;
   case STOP: return;
   case SUB: ex_sub(gb_state, inst); return;
+  case SWAP: ex_swap(gb_state, inst); return;
   case XOR: ex_xor(gb_state, inst); return;
   }
   // TODO: print instruction here as well
