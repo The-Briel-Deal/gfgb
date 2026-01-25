@@ -912,6 +912,15 @@ static void ex_rrca(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_Z | FLAG_H | FLAG_N, false);
 }
 
+static void ex_rst(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == RST);
+  assert(IS_TGT3(inst.p1) && inst.p1.tgt3 < 8);
+  assert(IS_VOID(inst.p2));
+  uint16_t addr = inst.p1.tgt3 * 8;
+  push16(gb_state, gb_state->regs.pc);
+  gb_state->regs.pc = addr;
+}
+
 static void ex_sla(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == SLA);
   assert(IS_R8(inst.p1));
@@ -1164,6 +1173,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case RRA: ex_rra(gb_state, inst); return;
   case RRC: ex_rrc(gb_state, inst); return;
   case RRCA: ex_rrca(gb_state, inst); return;
+  case RST: ex_rst(gb_state, inst); return;
   case SBC: ex_sbc(gb_state, inst); return;
   case SCF: ex_scf(gb_state, inst); return;
   case SET: ex_set(gb_state, inst); return;
