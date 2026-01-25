@@ -310,16 +310,16 @@ struct inst fetch(struct gb_state *gb_state) {
     break;
   }
   case /* block */ 3:
+    switch (curr_byte) {
+    case 0xC9: return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    case 0xD9: return (struct inst){.type = RETI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    }
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
       return (struct inst){.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
     if (NIBBLE1(curr_byte) == 0b0101) // Push r16stk
       return (struct inst){.type = PUSH, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
     if (curr_byte == 0b11000011) // Unconditional jump
       return (struct inst){.type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
-
-    if (curr_byte == 0b11001001) // RET
-      return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-
     if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000000) // RET
       return (struct inst){.type = RET, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = VOID_PARAM};
 

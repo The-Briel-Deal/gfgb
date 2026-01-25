@@ -103,6 +103,7 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, PUSH)
     PRINT_INST_NAME(stream, RES)
     PRINT_INST_NAME(stream, RET)
+    PRINT_INST_NAME(stream, RETI)
     PRINT_INST_NAME(stream, RL)
     PRINT_INST_NAME(stream, RLA)
     PRINT_INST_NAME(stream, RLC)

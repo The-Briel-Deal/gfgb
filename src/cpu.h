@@ -98,6 +98,7 @@ struct inst {
     PUSH,
     RES,
     RET,
+    RETI,
     RL,
     RLA,
     RLC,
