@@ -1003,6 +1003,15 @@ static void ex_cp(struct gb_state *gb_state, struct inst inst) {
 not_implemented:
   NOT_IMPLEMENTED("Unknown compare instruction");
 }
+static void ex_cpl(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == CPL);
+  assert(IS_VOID(inst.p1));
+  assert(IS_VOID(inst.p2));
+
+  uint8_t val = get_r8(gb_state, R8_A);
+  set_r8(gb_state, R8_A, ~val);
+  set_flags(gb_state, FLAG_N | FLAG_H, true);
+}
 
 void execute(struct gb_state *gb_state, struct inst inst) {
 #ifdef PRINT_INST_DURING_EXEC
@@ -1014,6 +1023,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case BIT: ex_bit(gb_state, inst); return;
   case CALL: ex_call(gb_state, inst); return;
   case CP: ex_cp(gb_state, inst); return;
+  case CPL: ex_cpl(gb_state, inst); return;
   case DAA: ex_daa(gb_state, inst); return;
   case DEC: ex_dec(gb_state, inst); return;
   case DI: gb_state->regs.io.ime = false; return;
