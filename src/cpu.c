@@ -316,6 +316,7 @@ struct inst fetch(struct gb_state *gb_state) {
     case 0xC9: return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     case 0xD9: return (struct inst){.type = RETI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     case 0xE8: return (struct inst){.type = ADD, .p1 = R16_PARAM(R16_SP), .p2 = E8_PARAM(next8(gb_state))};
+    case 0xE9: return (struct inst){.type = JP, .p1 = R16_PARAM(R16_HL), .p2 = VOID_PARAM};
     }
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
       return (struct inst){.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
@@ -1096,17 +1097,19 @@ static void ex_jr(struct gb_state *gb_state, struct inst inst) {
 }
 
 static void ex_jp(struct gb_state *gb_state, struct inst inst) {
-  if (IS_IMM16(inst.p1)) {
-    gb_state->regs.pc = inst.p1.imm16;
-    return;
-  }
-  if (IS_COND(inst.p1)) {
-    if (IS_IMM16(inst.p2)) {
-      if (eval_condition(gb_state, inst.p1)) {
-        gb_state->regs.pc = inst.p2.imm16;
-      }
-      return;
+  switch (inst.p1.type) {
+  case IMM16: gb_state->regs.pc = inst.p1.imm16; return;
+  case COND:
+    assert(IS_IMM16(inst.p2));
+    if (eval_condition(gb_state, inst.p1)) {
+      gb_state->regs.pc = inst.p2.imm16;
     }
+    return;
+  case R16:
+    assert(inst.p1.r16 == R16_HL);
+    gb_state->regs.pc = get_r16(gb_state, R16_HL);
+    return;
+  default: ERR(gb_state, "Unknown JP inst params"); return;
   }
 }
 
