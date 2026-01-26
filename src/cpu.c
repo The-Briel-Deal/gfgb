@@ -167,13 +167,21 @@ void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) 
   case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
   case R16_STK_DE: SET_COMBINED_REG((*r), d, e, val); return;
   case R16_STK_HL: SET_COMBINED_REG((*r), h, l, val); return;
-  case R16_STK_AF: SET_COMBINED_REG((*r), a, f, val); return;
+  case R16_STK_AF: SET_COMBINED_REG((*r), a, f, val & 0xFFF0); return; // only set upper 4 on flag reg
   default: abort(); // bc, de, hl, and af are the only valid r16_stk registers.
   }
 }
 
 void set_ime(struct gb_state *gb_state, bool on) { gb_state->regs.io.ime = on; }
 bool get_ime(struct gb_state *gb_state) { return gb_state->regs.io.ime; } // This is only for tests and debugging.
+
+void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
+  if (on) {
+    gb_state->regs.f |= flags;
+  } else {
+    gb_state->regs.f &= ~flags;
+  }
+}
 
 #define CONDITION_CODE_MASK 0b00011000
 #define ARITHMETIC_R8_MASK  0b00000111
@@ -490,9 +498,15 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16(dest) && IS_SP_IMM8(src)) {
-    uint16_t src_val = get_r16(gb_state, R16_SP) + src.imm8;
     assert(dest.r16 == R16_HL); // this inst should always be setting HL
-    set_r16(gb_state, dest.r16, src_val);
+    uint16_t sp_val = get_r16(gb_state, R16_SP);
+    int8_t add = *(int8_t *)&src.imm8;
+    uint16_t result = sp_val;
+    result += add;
+    set_r16(gb_state, dest.r16, result);
+    set_flags(gb_state, FLAG_Z | FLAG_N, false);
+    set_flags(gb_state, FLAG_H, ((sp_val ^ add ^ result) & 0x10) == 0x10);
+    set_flags(gb_state, FLAG_C, ((sp_val ^ add ^ result) & 0x100) == 0x100);
     return;
   }
 not_implemented:
@@ -551,14 +565,6 @@ static void ex_pop(struct gb_state *gb_state, struct inst inst) {
   assert(inst.p1.type == R16_STK);
   assert(inst.p2.type == VOID_PARAM_TYPE);
   set_r16_stk(gb_state, inst.p1.r16_stk, pop16(gb_state));
-}
-
-static void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
-  if (on) {
-    gb_state->regs.f |= flags;
-  } else {
-    gb_state->regs.f &= ~flags;
-  }
 }
 
 static void ex_inc(struct gb_state *gb_state, struct inst inst) {
