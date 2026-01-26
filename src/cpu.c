@@ -1039,6 +1039,7 @@ static bool eval_condition(struct gb_state *gb_state, const struct inst_param in
   case COND_NC: return (gb_state->regs.f & (1 << 4)) == 0;
   case COND_C: return ((gb_state->regs.f & (1 << 4)) >> 4) == 1;
   }
+  unreachable();
 }
 
 static void ex_ret(struct gb_state *gb_state, struct inst inst) {
