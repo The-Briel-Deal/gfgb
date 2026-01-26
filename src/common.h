@@ -151,6 +151,7 @@ struct gb_state {
       uint8_t ie;  // interupt enable
       uint8_t if_; // interupt flag
       bool ime;    // interupt master enable
+      bool set_ime_after; // IME is only set after the following instruction.
     } io;
   } regs;
   bool bootrom_mapped;
