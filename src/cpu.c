@@ -323,8 +323,15 @@ struct inst fetch(struct gb_state *gb_state) {
     switch (curr_byte) {
     case 0xC9: return (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     case 0xD9: return (struct inst){.type = RETI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+    case 0xE0: return (struct inst){.type = LDH, .p1 = IMM8_HMEM_PARAM(next8(gb_state)), .p2 = R8_PARAM(R8_A)};
+    case 0xE2: return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
     case 0xE8: return (struct inst){.type = ADD, .p1 = R16_PARAM(R16_SP), .p2 = E8_PARAM(next8(gb_state))};
     case 0xE9: return (struct inst){.type = JP, .p1 = R16_PARAM(R16_HL), .p2 = VOID_PARAM};
+    case 0xEA: return (struct inst){.type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), .p2 = R8_PARAM(R8_A)};
+    case 0xF0: return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
+    case 0xF2: return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
+    case 0xF8: return (struct inst){.type = LD, .p1 = R16_PARAM(R16_HL), .p2 = SP_IMM8_PARAM(next8(gb_state))};
+    case 0xFA: return (struct inst){.type = LD, .p1 = R8_PARAM(R8_A), .p2 = IMM16_MEM_PARAM(next16(gb_state))};
     }
     if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
       return (struct inst){.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
@@ -344,27 +351,6 @@ struct inst fetch(struct gb_state *gb_state) {
 
     if ((curr_byte & ~0b00111000) == 0b11000111)
       return (struct inst){.type = RST, .p1 = TGT3_PARAM((0b00111000 & curr_byte) >> 3), .p2 = VOID_PARAM};
-
-    if (curr_byte == 0b11100010) // LDH [C], A
-      return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
-
-    if (curr_byte == 0b11100000) // LDH [IMM8], A
-      return (struct inst){.type = LDH, .p1 = IMM8_HMEM_PARAM(next8(gb_state)), .p2 = R8_PARAM(R8_A)};
-
-    if (curr_byte == 0b11101010) // LD [IMM16], A
-      return (struct inst){.type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), .p2 = R8_PARAM(R8_A)};
-
-    if (curr_byte == 0b11110010) // LDH A, [C]
-      return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
-
-    if (curr_byte == 0b11110000) // LDH A, [IMM8]
-      return (struct inst){.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
-
-    if (curr_byte == 0b11111010) // LD A, [IMM16]
-      return (struct inst){.type = LD, .p1 = R8_PARAM(R8_A), .p2 = IMM16_MEM_PARAM(next16(gb_state))};
-
-    if (curr_byte == 0b11111000) // LD HL, SP+IMM8
-      return (struct inst){.type = LD, .p1 = R16_PARAM(R16_HL), .p2 = SP_IMM8_PARAM(next8(gb_state))};
 
     // Control Instructions
     if (curr_byte == 0xF3) // DI (Disable Interrupts)
