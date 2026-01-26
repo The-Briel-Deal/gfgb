@@ -82,7 +82,7 @@ test('disasm_test', disasm_test_exe)
 test(
   'single_step_tests',
   py,
-  args : ['-mpytest', '--tap', '--gfgb-py-ext', gfgb_py_ext, current_src_dir / 'test/sst/'],
+  args : ['-mpytest', '--tap', current_src_dir / 'test/sst/'],
   depends : [gfgb_py_ext],
   protocol : 'tap',
 )
