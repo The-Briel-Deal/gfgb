@@ -1,4 +1,5 @@
 #include "common.h"
+#include <stdint.h>
 
 void gb_state_init(struct gb_state *gb_state) {
   SDL_zerop(gb_state);
@@ -26,6 +27,7 @@ void gb_state_free(struct gb_state *gb_state) {
 }
 
 uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
+
   assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
   case IO_SB: NOT_IMPLEMENTED("Actual IO_SERIAL_TRANSFER reg not implemented.");
@@ -105,7 +107,7 @@ void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   }
 not_implemented:
   SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                  "`unmap_address()` was called on an address that is not implemented: 0x%04x", addr);
+                  "`unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
   return NULL;
 }
 
@@ -115,14 +117,17 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   } else {
     SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Reading 8 bits from address 0x%.4X", addr);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
+      uint8_t val;
       switch (addr) {
-      case IO_LY: return get_ro_io_reg(gb_state, addr);
+      case IO_LY: val = get_ro_io_reg(gb_state, addr); break;
       default:
         uint8_t *io_reg_ptr = get_io_reg(gb_state, addr);
-        if (io_reg_ptr != NULL) return *io_reg_ptr;
-
-        goto not_implemented;
+        if (io_reg_ptr == NULL) goto not_implemented;
+        val = *io_reg_ptr;
+        break;
       }
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", addr, val);
+      return val;
     }
 
     uint8_t *val_ptr = unmap_address(gb_state, addr);
@@ -132,7 +137,7 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
 
   not_implemented:
     SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                    "`read_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+                    "`read_mem8()` received a null pointer from unmap_address() when addr = 0x%.4X", addr);
     return 0;
   }
 }
@@ -174,6 +179,7 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     uint8_t *val_ptr;
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
       val_ptr = get_io_reg(gb_state, addr);
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, addr);
     } else {
       val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
     }
