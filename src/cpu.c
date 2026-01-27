@@ -1066,17 +1066,20 @@ static void ex_reti(struct gb_state *gb_state, struct inst inst) {
   gb_state->regs.pc = pop16(gb_state);
 }
 
+void call(struct gb_state *gb_state, uint16_t addr) {
+  push16(gb_state, gb_state->regs.pc);
+  gb_state->regs.pc = addr;
+}
+
 static void ex_call(struct gb_state *gb_state, struct inst inst) {
   if (inst.p1.type == IMM16) {
-    push16(gb_state, gb_state->regs.pc);
-    gb_state->regs.pc = inst.p1.imm16;
+    call(gb_state, inst.p1.imm16);
     return;
   } else {
     assert(inst.p1.type == COND);
     assert(inst.p2.type == IMM16);
     if (eval_condition(gb_state, inst.p1)) {
-      push16(gb_state, gb_state->regs.pc);
-      gb_state->regs.pc = inst.p2.imm16;
+      call(gb_state, inst.p2.imm16);
     }
     return;
   }
@@ -1210,6 +1213,31 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   if (set_ime_after_this_inst) {
     gb_state->regs.io.ime = true;
     gb_state->regs.io.set_ime_after = false;
+  }
+  if (gb_state->regs.io.ime) {
+    // Interupt handlers
+    uint8_t to_handle = gb_state->regs.io.ie & gb_state->regs.io.if_;
+    if (to_handle & 0b00001) { // vblank handler
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b00010) { // stat handler
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b00100) { // timer handler
+      gb_state->regs.io.if_ &= ~0b00100;
+      call(gb_state, 0x0050);
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b01000) { // serial handler
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b10000) { // joypad handler
+      goto interrupt_handled;
+    }
+    goto interrupt_handled_end;
+  interrupt_handled:
+    gb_state->regs.io.ime = false;
+  interrupt_handled_end:
   }
 }
 
