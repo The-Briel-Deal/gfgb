@@ -259,9 +259,10 @@ static inline void update_timers(struct gb_state *gb_state) {
 
   uint8_t incr_by = (curr_m_cycles - prev_m_cycles) / incr_every;
 
-  if ((gb_state->regs.io.tima + incr_by) > 0xFF) {
+  if (((uint32_t)gb_state->regs.io.tima + incr_by) > 0xFF) {
     gb_state->regs.io.if_ |= 0b00100;
   }
+  gb_state->regs.io.tima += incr_by;
 }
 
 void *unmap_address(struct gb_state *gb_state, uint16_t addr);
