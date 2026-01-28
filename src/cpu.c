@@ -44,6 +44,8 @@ enum flags : uint8_t {
 #define VOID_PARAM                                                                                                     \
   (struct inst_param) { .type = VOID_PARAM_TYPE }
 
+#define SPEND_MCYCLES(n) gb_state->m_cycles_elapsed += n;
+
 static inline uint8_t next8(struct gb_state *gb_state) {
   uint8_t val = read_mem8(gb_state, gb_state->regs.pc);
   gb_state->regs.pc += 1;
@@ -463,15 +465,17 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R8(dest)) {
     uint8_t src_val;
-    if (IS_R16_MEM(src))
+    if (IS_R16_MEM(src)) {
       src_val = read_mem8(gb_state, get_r16_mem(gb_state, src.r16_mem));
-    else if (IS_IMM16_MEM(src))
+    } else if (IS_IMM16_MEM(src)) {
       src_val = read_mem8(gb_state, src.imm16);
-    else if (IS_IMM8(src))
+    } else if (IS_IMM8(src)) {
+      SPEND_MCYCLES(2);
       src_val = src.imm8;
-    else if (IS_R8(src))
+    } else if (IS_R8(src)) {
+      SPEND_MCYCLES(1);
       src_val = get_r8(gb_state, src.r8);
-    else
+    } else
       goto not_implemented;
     set_r8(gb_state, dest.r8, src_val);
     return;
@@ -486,6 +490,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R16(dest) && IS_SP_IMM8(src)) {
     assert(dest.r16 == R16_HL); // this inst should always be setting HL
+    SPEND_MCYCLES(2);
     uint16_t sp_val = get_r16(gb_state, R16_SP);
     int8_t add = *(int8_t *)&src.imm8;
     uint16_t result = sp_val;
