@@ -107,3 +107,5 @@ def test_single_step(test_file_name: str):
     assert gb_state.get_err() == False
 
     assert_state_equals(gb_state, sst_case.final)
+
+    assert gb_state.m_cycles() == len(sst_case.cycles)
