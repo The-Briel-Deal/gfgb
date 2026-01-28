@@ -177,6 +177,14 @@ struct gb_state {
   // used for getting fps
   uint64_t last_frame_ticks_ns;
 
+  // total m_cycles_elapsed on the cpu
+  //
+  // This is currently just based on the simple m_cycle timing of each instruction from
+  // https://gekkio.fi/files/gb-docs/gbctr.pdf. If I ever want to pass cycle accurate tests i'll need to account for the
+  // SM83's overlaping fetch/execute and any other timing idiosyncrasies. For now though just using the simple timings
+  // should be enough to make most games run.
+  uint64_t m_cycles_elapsed;
+
   // used for updating the timer io regs.
   uint32_t last_timer_sync_m_cycles;
 
