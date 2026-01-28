@@ -209,6 +209,9 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
     }
   }
 }
+uint64_t m_cycles(struct gb_state *gb_state) {
+  return gb_state->m_cycles_elapsed;
+}
 
 bool gb_state_get_err(struct gb_state *gb_state) {
   bool err = gb_state->err;

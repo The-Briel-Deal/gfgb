@@ -238,17 +238,11 @@ static inline uint32_t gb_dots() {
   return ns_to_dots(SDL_GetTicksNS());
 }
 
-static inline uint32_t m_cycles() {
-  uint64_t ns = SDL_GetTicksNS();
-  ns %= NS_PER_SEC;
-  uint32_t t_cycles = ns / (NS_PER_SEC / DMG_CLOCK_HZ);
-
-  return t_cycles / 4;
-}
+uint64_t m_cycles(struct gb_state *gb_state);
 
 static inline void update_timers(struct gb_state *gb_state) {
-  uint32_t curr_m_cycles = m_cycles();
-  uint32_t prev_m_cycles = gb_state->last_timer_sync_m_cycles;
+  uint64_t curr_m_cycles = m_cycles(gb_state);
+  uint64_t prev_m_cycles = gb_state->last_timer_sync_m_cycles;
 
   uint8_t tac = gb_state->regs.io.tac;
   if ((tac & 0b0100) == 0) return;

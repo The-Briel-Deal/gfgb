@@ -1,4 +1,4 @@
-from libc.stdint cimport uint16_t, uint8_t
+from libc.stdint cimport uint64_t, uint16_t, uint8_t
 
 cdef extern from "common.h":
   struct gb_state: pass
@@ -11,7 +11,9 @@ cdef extern from "common.h":
   void gb_state_free(gb_state *gb_state)
 
   bint gb_state_get_err(gb_state *gb_state)
-  void gb_state_use_flat_mem(gb_state *gb_state, bint enabled);
+  void gb_state_use_flat_mem(gb_state *gb_state, bint enabled)
+
+  uint64_t m_cycles(gb_state *gb_state)
 
 cdef extern from "cpu.h":
   struct inst: pass
