@@ -468,8 +468,10 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   if (IS_R8(dest)) {
     uint8_t src_val;
     if (IS_R16_MEM(src)) {
+      SPEND_MCYCLES(2);
       src_val = read_mem8(gb_state, get_r16_mem(gb_state, src.r16_mem));
     } else if (IS_IMM16_MEM(src)) {
+      SPEND_MCYCLES(4);
       src_val = read_mem8(gb_state, src.imm16);
     } else if (IS_IMM8(src)) {
       SPEND_MCYCLES(2);
@@ -483,10 +485,12 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_IMM16_MEM(dest) && IS_R16(src)) {
+    SPEND_MCYCLES(5);
     write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
     return;
   }
   if (IS_IMM16_MEM(dest) && IS_R8(src)) {
+    SPEND_MCYCLES(4);
     write_mem8(gb_state, dest.imm16, get_r8(gb_state, src.r8));
     return;
   }
@@ -507,6 +511,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   if (IS_R16(dest) && IS_R16(src)) {
     assert(dest.r16 == R16_SP);
     assert(src.r16 == R16_HL);
+    SPEND_MCYCLES(2);
     uint16_t hl_val = get_r16(gb_state, R16_HL);
     set_r16(gb_state, R16_SP, hl_val);
     return;
@@ -545,6 +550,12 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
 static void ex_nop(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == NOP);
   SPEND_MCYCLES(1);
+}
+static void ex_stop(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == STOP);
+  // For some reason the SST tests expect stop to take 3 M-Cycles, this contradicts other documentation, but i'll just
+  // go with it until it causes problems.
+  SPEND_MCYCLES(3);
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
@@ -662,6 +673,7 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R16(inst.p1) && (inst.p1.r16 == R16_HL)) {
     assert(IS_R16(inst.p2));
+    SPEND_MCYCLES(2);
     uint16_t hl_val = get_r16(gb_state, R16_HL);
     uint16_t p2_val = get_r16(gb_state, inst.p2.r16);
     set_r16(gb_state, R16_HL, hl_val + p2_val);
@@ -850,6 +862,7 @@ static void ex_rla(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RLA);
   assert(IS_VOID(inst.p1));
   assert(IS_VOID(inst.p2));
+  SPEND_MCYCLES(1);
   uint8_t val = get_r8(gb_state, R8_A);
   uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
   set_flags(gb_state, FLAG_C, (val >> 7) & 1);
@@ -908,6 +921,7 @@ static void ex_rlca(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RLCA);
   assert(IS_VOID(inst.p1));
   assert(IS_VOID(inst.p2));
+  SPEND_MCYCLES(1);
   uint8_t val = get_r8(gb_state, R8_A);
   uint8_t carry = (val >> 7) & 1;
   set_flags(gb_state, FLAG_C, carry);
@@ -922,6 +936,7 @@ static void ex_rrca(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RRCA);
   assert(IS_VOID(inst.p1));
   assert(IS_VOID(inst.p2));
+  SPEND_MCYCLES(1);
   uint8_t val = get_r8(gb_state, R8_A);
   uint8_t carry = val & 1;
   set_flags(gb_state, FLAG_C, carry);
@@ -1105,12 +1120,16 @@ static void ex_call(struct gb_state *gb_state, struct inst inst) {
 
 static void ex_jr(struct gb_state *gb_state, struct inst inst) {
   if (IS_IMM8(inst.p1)) {
+    SPEND_MCYCLES(3);
     gb_state->regs.pc += *(int8_t *)&inst.p1.imm8;
     return;
   }
   if (IS_COND(inst.p1)) {
     if (IS_IMM8(inst.p2)) {
+      SPEND_MCYCLES(2);
       if (eval_condition(gb_state, inst.p1)) {
+        SPEND_MCYCLES(1);
+
         gb_state->regs.pc += *(int8_t *)&inst.p2.imm8;
       }
       return;
@@ -1219,7 +1238,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case SLA: ex_sla(gb_state, inst); break;
   case SRA: ex_sra(gb_state, inst); break;
   case SRL: ex_srl(gb_state, inst); break;
-  case STOP: break;
+  case STOP: ex_stop(gb_state, inst); break;
   case SUB: ex_sub(gb_state, inst); break;
   case SWAP: ex_swap(gb_state, inst); break;
   case XOR: ex_xor(gb_state, inst); break;
