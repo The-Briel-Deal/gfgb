@@ -192,14 +192,11 @@ void set_sym_lens(struct debug_symbol_list *syms) {
   for (int i = 0; i < n; i++) {
     curr_sym = &syms->syms[i];
 
-    // Only set syms length if it is in the rom bank range and it is not the
-    // last sym.
+    // Only set syms length if it is not the last sym.
     curr_sym->len = 0;
     if (i + 1 < n) {
       next_sym = &syms->syms[i + 1];
-      if (next_sym->start_offset < 0x8000) {
-        curr_sym->len = next_sym->start_offset - curr_sym->start_offset;
-      }
+      curr_sym->len = next_sym->start_offset - curr_sym->start_offset;
     }
   }
 }
