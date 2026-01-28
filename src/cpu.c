@@ -456,10 +456,12 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
   struct inst_param src = inst.p2;
   if (IS_R16(dest) && IS_IMM16(src)) {
+    SPEND_MCYCLES(3);
     set_r16(gb_state, dest.r16, src.imm16);
     return;
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
+    SPEND_MCYCLES(2);
     write_mem8(gb_state, get_r16_mem(gb_state, dest.r16_mem), get_r8(gb_state, src.r8));
     return;
   }
@@ -540,6 +542,10 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   }
   unreachable();
 }
+static void ex_nop(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == NOP);
+  SPEND_MCYCLES(1);
+}
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
   write_mem8(gb_state, --gb_state->regs.sp, (val & 0xFF00) >> 8);
@@ -573,6 +579,8 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
   assert(IS_VOID(inst.p2));
 
   if (IS_R8(inst.p1)) {
+    SPEND_MCYCLES(1);
+    if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
     uint8_t val;
     val = get_r8(gb_state, inst.p1.r8);
     set_r8(gb_state, inst.p1.r8, val + 1);
@@ -582,6 +590,7 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16(inst.p1)) {
+    SPEND_MCYCLES(2);
     uint16_t val;
     val = get_r16(gb_state, inst.p1.r16);
     set_r16(gb_state, inst.p1.r16, val + 1);
@@ -994,6 +1003,8 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   assert(IS_VOID(inst.p2));
 
   if (IS_R8(inst.p1)) {
+    SPEND_MCYCLES(1);
+    if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
     uint8_t val;
     val = get_r8(gb_state, inst.p1.r8);
     set_r8(gb_state, inst.p1.r8, val - 1);
@@ -1004,6 +1015,7 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
     return;
   }
   if (IS_R16(inst.p1)) {
+    SPEND_MCYCLES(2);
     uint16_t val;
     val = get_r16(gb_state, inst.p1.r16);
     set_r16(gb_state, inst.p1.r16, val - 1);
@@ -1185,7 +1197,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case JR: ex_jr(gb_state, inst); break;
   case LD: ex_ld(gb_state, inst); break;
   case LDH: ex_ldh(gb_state, inst); break;
-  case NOP: break;
+  case NOP: ex_nop(gb_state, inst); break;
   case OR: ex_or(gb_state, inst); break;
   case POP: ex_pop(gb_state, inst); break;
   case PUSH: ex_push(gb_state, inst); break;
