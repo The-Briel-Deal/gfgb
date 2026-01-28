@@ -498,7 +498,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R16(dest) && IS_SP_IMM8(src)) {
     assert(dest.r16 == R16_HL); // this inst should always be setting HL
-    SPEND_MCYCLES(2);
+    SPEND_MCYCLES(3);
     uint16_t sp_val = get_r16(gb_state, R16_SP);
     int8_t add = *(int8_t *)&src.imm8;
     uint16_t result = sp_val;
@@ -527,10 +527,12 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   struct regs *r = &gb_state->regs;
   if (src.type == R8 && src.r8 == R8_A) {
     if (dest.type == IMM8_HMEM) {
+      SPEND_MCYCLES(3);
       write_mem8(gb_state, 0xFF00 + dest.imm8, r->a);
       return;
     }
     if (dest.type == R8 && dest.r8 == R8_C) {
+      SPEND_MCYCLES(2);
       write_mem8(gb_state, 0xFF00 + r->c, r->a);
       return;
     }
@@ -538,10 +540,12 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   }
   if (dest.type == R8 && dest.r8 == R8_A) {
     if (src.type == IMM8_HMEM) {
+      SPEND_MCYCLES(3);
       set_r8(gb_state, R8_A, read_mem8(gb_state, 0xFF00 + src.imm8));
       return;
     }
     if (src.type == R8 && src.r8 == R8_C) {
+      SPEND_MCYCLES(2);
       set_r8(gb_state, R8_A, read_mem8(gb_state, 0xFF00 + r->c));
       return;
     }
@@ -698,6 +702,7 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
 
   if (IS_R16(inst.p1) && (inst.p1.r16 == R16_SP)) {
     assert(IS_E8(inst.p2));
+    SPEND_MCYCLES(4);
     uint16_t sp_val = get_r16(gb_state, R16_SP);
     int8_t p2_val = *(int8_t *)&inst.p2.imm8;
     uint16_t result = sp_val + p2_val;
@@ -750,7 +755,7 @@ static void ex_or(struct gb_state *gb_state, struct inst inst) {
     if (inst.p2.r8 == R8_HL_DREF) SPEND_MCYCLES(1);
     p2_val = get_r8(gb_state, inst.p2.r8);
   } else if (IS_IMM8(inst.p2)) {
-    SPEND_MCYCLES(1);
+    SPEND_MCYCLES(2);
     p2_val = inst.p2.imm8;
   } else {
     unreachable();
@@ -1090,6 +1095,19 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
   }
   abort();
 }
+
+static void ex_di(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == DI);
+  SPEND_MCYCLES(1);
+  gb_state->regs.io.ime = false;
+}
+
+static void ex_ei(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == EI);
+  SPEND_MCYCLES(1);
+  gb_state->regs.io.set_ime_after = true;
+}
+
 static void ex_daa(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == DAA);
   assert(IS_VOID(inst.p1) && IS_VOID(inst.p2));
@@ -1149,6 +1167,7 @@ static void ex_reti(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == RETI);
   assert(IS_VOID(inst.p1));
   assert(IS_VOID(inst.p2));
+  SPEND_MCYCLES(4);
   gb_state->regs.io.ime = true;
   gb_state->regs.pc = pop16(gb_state);
 }
@@ -1277,8 +1296,8 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case CPL: ex_cpl(gb_state, inst); break;
   case DAA: ex_daa(gb_state, inst); break;
   case DEC: ex_dec(gb_state, inst); break;
-  case DI: gb_state->regs.io.ime = false; break;
-  case EI: gb_state->regs.io.set_ime_after = true; break;
+  case DI: ex_di(gb_state, inst); break;
+  case EI: ex_ei(gb_state, inst); break;
   case INC: ex_inc(gb_state, inst); break;
   case JP: ex_jp(gb_state, inst); break;
   case JR: ex_jr(gb_state, inst); break;
