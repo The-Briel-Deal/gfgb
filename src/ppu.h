@@ -13,7 +13,21 @@
 //!
 void gb_tile_to_8bit_indexed(uint8_t *gb_tile_in, uint8_t *msb2_tile_out);
 
-SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
-                                  uint16_t tile_addr);
+SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr);
+
+#define OBP0 0
+#define OBP1 1
+
+struct __attribute__((packed)) oam_entry {
+  uint8_t y_pos : 8;
+  uint8_t x_pos : 8;
+  uint8_t index : 8;
+  bool priority : 1;
+  bool y_flip : 1;
+  bool x_flip : 1;
+  bool dmg_palette : 1;
+  bool bank : 1;
+  unsigned int cgb_palette : 3;
+};
 
 #endif // GB_PPU_H
