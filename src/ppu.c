@@ -1,8 +1,7 @@
 #include "common.h"
+#include "ppu.h"
 
-#define PIX(x, y)                                                              \
-  (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) |                             \
-      (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
+#define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
 void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out) {
   for (int y = 0; y < 8; y++) {
@@ -24,16 +23,14 @@ inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
   return tex_index;
 }
 
-static SDL_Texture *gb_create_tex(struct gb_state *gb_state,
-                                  uint16_t tile_addr) {
+static SDL_Texture *gb_create_tex(struct gb_state *gb_state, uint16_t tile_addr) {
   SDL_Renderer *renderer = gb_state->sdl_renderer;
 
   uint16_t index = tile_addr_to_tex_idx(tile_addr);
 
   assert(gb_state->textures[index] == NULL);
 
-  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8,
-                                           SDL_TEXTUREACCESS_STREAMING, 8, 8);
+  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, 8, 8);
   if (texture == NULL) {
     SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
     abort();
@@ -43,8 +40,7 @@ static SDL_Texture *gb_create_tex(struct gb_state *gb_state,
   return texture;
 }
 
-SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
-                                  uint16_t tile_addr) {
+SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr) {
   SDL_Texture *texture;
 
   uint16_t index = tile_addr_to_tex_idx(tile_addr);
@@ -59,6 +55,12 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state,
 
   SDL_UpdateTexture(texture, NULL, pixels, 8);
   return texture;
+}
+
+struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
+  assert(index < 40);
+  struct oam_entry *oam_start = unmap_address(gb_state, 0xFE00);
+  return oam_start[index];
 }
 
 #ifdef RUN_PPU_TESTS
@@ -85,8 +87,8 @@ void test_gb_tile_to_8bit_indexed() {
   gb_tile_to_8bit_indexed(gb_tile_in, indexed_8bit_tile_result);
   for (int i = 0; i < 16; i++) {
     if (indexed_8bit_tile_expect[i] != indexed_8bit_tile_result[i]) {
-      SDL_Log("byte i=%d of indexed_8bit result (%.8b) is not equal to result (%.8b)\n",
-              i, indexed_8bit_tile_result[i], indexed_8bit_tile_expect[i]);
+      SDL_Log("byte i=%d of indexed_8bit result (%.8b) is not equal to result (%.8b)\n", i, indexed_8bit_tile_result[i],
+              indexed_8bit_tile_expect[i]);
       abort();
     }
   }

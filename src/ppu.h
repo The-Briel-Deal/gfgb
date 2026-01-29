@@ -2,6 +2,7 @@
 #define GB_PPU_H
 
 #include "common.h"
+#include <stdint.h>
 
 //! \brief Convert a gameboy tile to indexed msb2
 //!
@@ -29,5 +30,7 @@ struct __attribute__((packed)) oam_entry {
   bool bank : 1;
   unsigned int cgb_palette : 3;
 };
+
+struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index);
 
 #endif // GB_PPU_H
