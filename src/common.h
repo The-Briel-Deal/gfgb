@@ -146,6 +146,10 @@ struct gb_state {
       uint8_t nr51;
       uint8_t nr52; // sound on/off
 
+      uint8_t ly;
+      uint8_t lyc;
+      uint8_t stat;
+
       uint8_t lcdc;
       uint8_t scy;
       uint8_t scx;
@@ -228,7 +232,12 @@ enum io_reg_addr {
   IO_LCDC = 0xFF40,
   IO_SCY = 0xFF42,
   IO_SCX = 0xFF43,
+
+  // LCD Status Registers
   IO_LY = 0xFF44,
+  IO_LYC = 0xFF45,
+  IO_STAT = 0xFF41,
+
   IO_BGP = 0xFF47,
 };
 static inline uint32_t ns_to_dots(uint64_t ns) {

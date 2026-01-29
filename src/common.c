@@ -61,21 +61,20 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_LCDC: return &gb_state->regs.io.lcdc;
   case IO_SCY: return &gb_state->regs.io.scy;
   case IO_SCX: return &gb_state->regs.io.scx;
+  case IO_LYC: return &gb_state->regs.io.lyc;
+  case IO_STAT:
+    // The least significant 3 bits are RO. I'll need to figure out a way to make sure those bits aren't written to.
+    return &gb_state->regs.io.stat;
   case IO_BGP: return &gb_state->regs.io.bg_pallete;
   default: SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
   }
 }
-// For the read only IO Reg's which are computed lazily.
 uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   (void)gb_state;
 
   switch (addr) {
   case IO_LY: {
-    uint32_t dots = gb_dots();
-    dots %= DOTS_PER_FRAME;
-    uint8_t ly = dots / 456;
-    assert(ly < 154);
-    return ly;
+    return gb_state->regs.io.ly;
   }
   default: NOT_IMPLEMENTED("Read Only IO Reg Not Implemented");
   }
