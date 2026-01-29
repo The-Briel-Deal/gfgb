@@ -288,7 +288,7 @@ enum lcdc_flags {
 };
 
 // TODO: check if tile should be double height (8x16)
-void gb_draw_tile(struct gb_state *gb_state, uint8_t x, uint8_t y, uint16_t tile_addr) {
+void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr) {
   assert(x < GB_DISPLAY_WIDTH);
   assert(y < GB_DISPLAY_HEIGHT);
   SDL_Renderer *renderer = gb_state->sdl_renderer;
@@ -357,6 +357,10 @@ void gb_draw(struct gb_state *gb_state) {
   SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
   SDL_RenderClear(gb_state->sdl_renderer);
   gb_render_bg(gb_state);
+  for (int i = 0; i < 40; i++) {
+    struct oam_entry oam_entry = get_oam_entry(gb_state, i);
+    gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16));
+  }
   SDL_RenderPresent(gb_state->sdl_renderer);
 }
 
@@ -388,9 +392,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       gb_state->m_cycles_elapsed++;
     }
     handle_interrupts(gb_state);
-  }
-  for (int i = 0; i < 40; i++) {
-    struct oam_entry oam_entry = get_oam_entry(gb_state, i);
   }
 
   // TODO: this doesn't need to be called every iteration.
