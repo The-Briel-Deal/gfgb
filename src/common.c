@@ -98,8 +98,10 @@ void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   } else if (addr <= WRAM_END) {
     return &gb_state->wram[addr - WRAM_START];
   } else if (addr <= ECHO_RAM_END) {
-    // Mirrors wram, probably should never be accessed but SST tests have reads and writes here.
+    // Mirrors wram, probably should never be accessed.
     return &gb_state->wram[addr - ECHO_RAM_START];
+  } else if (addr <= OAM_END) {
+    return &gb_state->oam[addr - OAM_START];
   } else if (addr <= IO_REG_END) {
     goto not_implemented;
   } else if (addr <= HRAM_END) {
@@ -209,9 +211,7 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
     }
   }
 }
-uint64_t m_cycles(struct gb_state *gb_state) {
-  return gb_state->m_cycles_elapsed;
-}
+uint64_t m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
 
 bool gb_state_get_err(struct gb_state *gb_state) {
   bool err = gb_state->err;

@@ -81,6 +81,9 @@
 #define ECHO_RAM_START             0xE000
 #define ECHO_RAM_END               0xFDFF
 
+#define OAM_START                  0xFE00
+#define OAM_END                    0xFE9F
+
 #define IO_REG_START               0xFF00
 #define IO_REG_END                 0xFF7F
 
@@ -167,6 +170,7 @@ struct gb_state {
       uint8_t vram[KB(8)];
       uint8_t eram[KB(8)];
       uint8_t hram[0x80];
+      uint8_t oam[0x9F];
     };
     uint8_t flat_ram[KB(64)];
   };

@@ -389,6 +389,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
     handle_interrupts(gb_state);
   }
+  for (int i = 0; i < 40; i++) {
+    struct oam_entry oam_entry = get_oam_entry(gb_state, i);
+  }
 
   // TODO: this doesn't need to be called every iteration.
   gb_draw(gb_state);

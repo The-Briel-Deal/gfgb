@@ -1,5 +1,5 @@
-#include "common.h"
 #include "ppu.h"
+#include "common.h"
 
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
@@ -60,7 +60,21 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr)
 struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   assert(index < 40);
   struct oam_entry *oam_start = unmap_address(gb_state, 0xFE00);
-  return oam_start[index];
+  struct oam_entry oam_entry = oam_start[index];
+
+#ifdef DEBUG_PRINT_OAM_ENTRIES
+  printf("GF_DEBUG: OAM Entry %d\n", index);
+  printf("  x_pos = %d\n", oam_entry.x_pos);
+  printf("  y_pos = %d\n", oam_entry.y_pos);
+  printf("  bank = %d\n", oam_entry.bank);
+  printf("  dmg_palette = %d\n", oam_entry.dmg_palette);
+  printf("  index = %d\n", oam_entry.index);
+  printf("  priority = %d\n", oam_entry.priority);
+  printf("  x_flip = %d\n", oam_entry.x_flip);
+  printf("  y_flip = %d\n", oam_entry.y_flip);
+#endif
+
+  return oam_entry;
 }
 
 #ifdef RUN_PPU_TESTS
