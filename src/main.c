@@ -337,8 +337,8 @@ void gb_render_bg(struct gb_state *gb_state) {
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     // TODO: handle display offset, the display won't always be in the top left.
-    uint8_t display_x = x * 8;
-    uint8_t display_y = y * 8;
+    uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
+    uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr);
   }
