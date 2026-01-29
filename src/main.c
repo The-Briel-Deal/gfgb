@@ -287,8 +287,12 @@ enum lcdc_flags {
   LCDC_ENABLE = 1 << 7,
 };
 
+enum draw_tile_flags {
+  DRAW_TILE_FLIP_X = 1 << 0,
+  DRAW_TILE_FLIP_Y = 1 << 1,
+};
 // TODO: check if tile should be double height (8x16)
-void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr) {
+void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr, enum draw_tile_flags flags) {
   assert(x < GB_DISPLAY_WIDTH);
   assert(y < GB_DISPLAY_HEIGHT);
   SDL_Renderer *renderer = gb_state->sdl_renderer;
@@ -305,10 +309,18 @@ void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr) {
   SDL_Texture *texture = get_texture_for_tile(gb_state, tile_addr);
 
   bool ret;
-  const SDL_FPoint origin_point = {.x = w_scale * x, .y = h_scale * y};
-  const SDL_FPoint top_right_point = {.x = origin_point.x + (8.0f * w_scale), .y = origin_point.y};
-  const SDL_FPoint bot_left_point = {.x = origin_point.x, .y = origin_point.y + (8.0f * h_scale)};
-  ret = SDL_RenderTextureAffine(renderer, texture, NULL, &origin_point, &top_right_point, &bot_left_point);
+  SDL_FRect dstrect = {
+      .x = w_scale * x,
+      .y = h_scale * y,
+      .w = 8.0f * w_scale,
+      .h = 8.0f * h_scale,
+  };
+
+  SDL_FlipMode flip = 0;
+  if (flags & DRAW_TILE_FLIP_X) flip |= SDL_FLIP_HORIZONTAL;
+  if (flags & DRAW_TILE_FLIP_Y) flip |= SDL_FLIP_VERTICAL;
+
+  ret = SDL_RenderTextureRotated(renderer, texture, NULL, &dstrect, 0.0, NULL, flip);
   assert(ret == true);
 }
 
@@ -340,7 +352,7 @@ void gb_render_bg(struct gb_state *gb_state) {
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile(gb_state, display_x, display_y, tile_data_addr);
+      gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
 }
 
@@ -359,7 +371,10 @@ void gb_draw(struct gb_state *gb_state) {
   gb_render_bg(gb_state);
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
-    gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16));
+    enum draw_tile_flags flags = 0;
+    if (oam_entry.x_flip) flags |= DRAW_TILE_FLIP_X;
+    if (oam_entry.y_flip) flags |= DRAW_TILE_FLIP_Y;
+    gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16), flags);
   }
   SDL_RenderPresent(gb_state->sdl_renderer);
 }
