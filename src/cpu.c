@@ -190,6 +190,7 @@ void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
 #define ARITHMETIC_OP_MASK  0b00111000
 
 struct inst fetch(struct gb_state *gb_state) {
+  assert(!gb_state->halted);
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
   switch (block) {
@@ -562,6 +563,12 @@ static void ex_stop(struct gb_state *gb_state, struct inst inst) {
   assert(inst.type == STOP);
   // For some reason the SST tests expect stop to take 3 M-Cycles, this contradicts other documentation, but i'll just
   // go with it until it causes problems.
+  SPEND_MCYCLES(3);
+}
+static void ex_halt(struct gb_state *gb_state, struct inst inst) {
+  assert(inst.type == HALT);
+  gb_state->halted = true;
+  // TODO: make sure halt bug is implemented
   SPEND_MCYCLES(3);
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
@@ -1281,7 +1288,40 @@ static void ex_cpl(struct gb_state *gb_state, struct inst inst) {
   set_flags(gb_state, FLAG_N | FLAG_H, true);
 }
 
+void handle_interrupts(struct gb_state *gb_state) {
+  uint8_t to_handle = gb_state->regs.io.ie & gb_state->regs.io.if_;
+
+  // even if ime is false we still want to stop being halted once an interrupt is available
+  if (to_handle) gb_state->halted = false;
+
+  if (gb_state->regs.io.ime) {
+    // Interupt handlers
+    if (to_handle & 0b00001) { // vblank handler
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b00010) { // stat handler
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b00100) { // timer handler
+      gb_state->regs.io.if_ &= ~0b00100;
+      call(gb_state, 0x0050);
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b01000) { // serial handler
+      goto interrupt_handled;
+    }
+    if (to_handle & 0b10000) { // joypad handler
+      goto interrupt_handled;
+    }
+    goto interrupt_handled_end;
+  interrupt_handled:
+    gb_state->regs.io.ime = false;
+  interrupt_handled_end:
+  }
+}
+
 void execute(struct gb_state *gb_state, struct inst inst) {
+  assert(!gb_state->halted);
   bool set_ime_after_this_inst = gb_state->regs.io.set_ime_after;
 #ifdef PRINT_INST_DURING_EXEC
   print_inst(stdout, inst);
@@ -1327,6 +1367,7 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   case SRA: ex_sra(gb_state, inst); break;
   case SRL: ex_srl(gb_state, inst); break;
   case STOP: ex_stop(gb_state, inst); break;
+  case HALT: ex_halt(gb_state, inst); break;
   case SUB: ex_sub(gb_state, inst); break;
   case SWAP: ex_swap(gb_state, inst); break;
   case XOR: ex_xor(gb_state, inst); break;
@@ -1337,31 +1378,6 @@ void execute(struct gb_state *gb_state, struct inst inst) {
   if (set_ime_after_this_inst) {
     gb_state->regs.io.ime = true;
     gb_state->regs.io.set_ime_after = false;
-  }
-  if (gb_state->regs.io.ime) {
-    // Interupt handlers
-    uint8_t to_handle = gb_state->regs.io.ie & gb_state->regs.io.if_;
-    if (to_handle & 0b00001) { // vblank handler
-      goto interrupt_handled;
-    }
-    if (to_handle & 0b00010) { // stat handler
-      goto interrupt_handled;
-    }
-    if (to_handle & 0b00100) { // timer handler
-      gb_state->regs.io.if_ &= ~0b00100;
-      call(gb_state, 0x0050);
-      goto interrupt_handled;
-    }
-    if (to_handle & 0b01000) { // serial handler
-      goto interrupt_handled;
-    }
-    if (to_handle & 0b10000) { // joypad handler
-      goto interrupt_handled;
-    }
-    goto interrupt_handled_end;
-  interrupt_handled:
-    gb_state->regs.io.ime = false;
-  interrupt_handled_end:
   }
 }
 

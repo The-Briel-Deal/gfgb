@@ -153,6 +153,7 @@ struct gb_state {
       bool set_ime_after; // IME is only set after the following instruction.
     } io;
   } regs;
+  bool halted;
   bool bootrom_mapped;
   bool bootrom_has_syms;
   bool rom_loaded;

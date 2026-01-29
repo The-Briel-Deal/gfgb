@@ -150,4 +150,6 @@ bool get_ime(struct gb_state *gb_state); // This is only for tests and debugging
 struct inst fetch(struct gb_state *gb_state);
 void execute(struct gb_state *gb_state, struct inst inst);
 
+void handle_interrupts(struct gb_state *gb_state);
+
 #endif // GB_CPU_H
