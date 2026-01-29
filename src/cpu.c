@@ -301,6 +301,7 @@ struct inst fetch(struct gb_state *gb_state) {
     }
     break;
   case /* block */ 1:
+    if (curr_byte == 0x76) return (struct inst){.type = HALT, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
     return (struct inst){
         .type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
 

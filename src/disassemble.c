@@ -93,6 +93,7 @@ void print_inst(FILE *stream, const struct inst inst) {
     PRINT_INST_NAME(stream, DEC)
     PRINT_INST_NAME(stream, DI)
     PRINT_INST_NAME(stream, EI)
+    PRINT_INST_NAME(stream, HALT)
     PRINT_INST_NAME(stream, INC)
     PRINT_INST_NAME(stream, JP)
     PRINT_INST_NAME(stream, JR)

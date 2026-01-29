@@ -88,6 +88,7 @@ struct inst {
     DEC,
     DI,
     EI,
+    HALT,
     INC,
     JP,
     JR,
