@@ -403,7 +403,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       struct inst inst = fetch(gb_state);
       execute(gb_state, inst);
     } else {
-      // we don't want to stop iterating m cycles while halted or else the timer interupt will never get called
+      // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
       gb_state->m_cycles_elapsed++;
     }
     handle_interrupts(gb_state);
