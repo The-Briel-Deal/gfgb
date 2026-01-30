@@ -315,7 +315,7 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   if (gb_state->regs.io.ly >= 144) {
     mode = VBLANK;
   } else if (gb_state->lcd_x < 80) {
-    if (!gb_state->first_oam_scan_after_enable)
+    if (gb_state->first_oam_scan_after_enable)
       mode = (gb_state->regs.io.stat & (0b11 << 0)) >> 0;
     else
       mode = OAM_SCAN;
