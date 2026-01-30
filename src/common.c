@@ -123,6 +123,11 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
       uint8_t val;
       switch (addr) {
       case IO_LY: val = get_ro_io_reg(gb_state, addr); break;
+      case IO_STAT:
+        // stat is partially read only. we also want to make sure bit 7 is high.
+        val = *get_io_reg(gb_state, addr);
+        val |= (1 << 7);
+        break;
       default:
         uint8_t *io_reg_ptr = get_io_reg(gb_state, addr);
         if (io_reg_ptr == NULL) goto not_implemented;
@@ -284,7 +289,13 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 }
 
 static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
-  if ((gb_state->regs.io.lcdc & (1 << 7)) == 0) return;
+  // Don't update anything besides clearing ppu mode when PPU is disabled.
+  if ((gb_state->regs.io.lcdc & (1 << 7)) == 0) {
+    // PPU mode reports 0 when PPU is disabled.
+    // https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
+    gb_state->regs.io.stat &= ~0b0000'0011;
+    return;
+  }
   bool prev_triggered = lcd_interrupt_triggered(gb_state);
   uint64_t prev_dots = gb_dots(prev_m_cycles);
   uint64_t curr_dots = gb_dots(curr_m_cycles);
