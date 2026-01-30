@@ -15,6 +15,7 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->bootrom_mapped = false;
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
   gb_state->regs.io.lcdc = 0b10010001;
+  gb_state->first_oam_scan_after_enable = true;
 }
 
 struct gb_state *gb_state_alloc() { return SDL_malloc(sizeof(struct gb_state)); }
@@ -289,11 +290,14 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 }
 
 static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
-  // Don't update anything besides clearing ppu mode when PPU is disabled.
+  // Don't update anything besides clearing ppu mode and resetting ly and lx when PPU is disabled.
   if ((gb_state->regs.io.lcdc & (1 << 7)) == 0) {
     // PPU mode reports 0 when PPU is disabled.
     // https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
     gb_state->regs.io.stat &= ~0b0000'0011;
+    gb_state->regs.io.ly = 0;
+    gb_state->lcd_x = 0;
+    gb_state->first_oam_scan_after_enable = true;
     return;
   }
   bool prev_triggered = lcd_interrupt_triggered(gb_state);
@@ -311,8 +315,12 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   if (gb_state->regs.io.ly >= 144) {
     mode = VBLANK;
   } else if (gb_state->lcd_x < 80) {
-    mode = OAM_SCAN;
+    if (!gb_state->first_oam_scan_after_enable)
+      mode = (gb_state->regs.io.stat & (0b11 << 0)) >> 0;
+    else
+      mode = OAM_SCAN;
   } else if (gb_state->lcd_x < 369) {
+    gb_state->first_oam_scan_after_enable = false;
     // We're assuming that mode 3 is always taking the longest possible amount of time.
     // If we wanted to be really precise we would have to calculate the exact length with:
     // https://gbdev.io/pandocs/Rendering.html#obj-penalty-algorithm
