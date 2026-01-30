@@ -194,6 +194,9 @@ struct gb_state {
   // should be enough to make most games run.
   uint64_t m_cycles_elapsed;
 
+  // used for identifying when we are in hblank, and for knowing when we can increment ly. 
+  uint32_t lcd_x;
+
   // used for updating the timer io regs.
   uint32_t last_timer_sync_m_cycles;
 
@@ -240,46 +243,10 @@ enum io_reg_addr {
 
   IO_BGP = 0xFF47,
 };
-static inline uint32_t ns_to_dots(uint64_t ns) {
-  ns %= NS_PER_SEC;
-  uint32_t dots = ns / (NS_PER_SEC / DMG_CLOCK_HZ);
-  return dots;
-}
-
-static inline uint32_t gb_dots() {
-  // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support
-  // i'll need to handle that when getting dots.
-  return ns_to_dots(SDL_GetTicksNS());
-}
 
 uint64_t m_cycles(struct gb_state *gb_state);
 
-static inline void update_timers(struct gb_state *gb_state) {
-  uint64_t curr_m_cycles = m_cycles(gb_state);
-  uint64_t prev_m_cycles = gb_state->last_timer_sync_m_cycles;
-
-  uint8_t tac = gb_state->regs.io.tac;
-  if ((tac & 0b0100) == 0) return;
-  uint16_t incr_every;
-  switch (tac & 0b0011) {
-  case 0: incr_every = 256; break;
-  case 1: incr_every = 4; break;
-  case 2: incr_every = 16; break;
-  case 3: incr_every = 64; break;
-  }
-  // we want to floor this to the lowest multiple of the increment rate, that way we don't risk missing increments if
-  // this is called too frequently.
-  curr_m_cycles /= incr_every;
-  curr_m_cycles *= incr_every;
-  gb_state->last_timer_sync_m_cycles = curr_m_cycles;
-
-  uint8_t incr_by = (curr_m_cycles - prev_m_cycles) / incr_every;
-
-  if (((uint32_t)gb_state->regs.io.tima + incr_by) > 0xFF) {
-    gb_state->regs.io.if_ |= 0b00100;
-  }
-  gb_state->regs.io.tima += incr_by;
-}
+void update_timers(struct gb_state *gb_state);
 
 void *unmap_address(struct gb_state *gb_state, uint16_t addr);
 

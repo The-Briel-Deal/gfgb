@@ -210,7 +210,90 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
     }
   }
 }
+
 uint64_t m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
+
+static uint64_t gb_dots(uint64_t m_cycles) {
+  // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support
+  // i'll need to handle that when getting dots.
+  return m_cycles * 4;
+}
+
+static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
+  uint8_t tac = gb_state->regs.io.tac;
+  if ((tac & 0b0100) == 0) return;
+  uint16_t incr_every;
+  switch (tac & 0b0011) {
+  case 0: incr_every = 256; break;
+  case 1: incr_every = 4; break;
+  case 2: incr_every = 16; break;
+  case 3: incr_every = 64; break;
+  }
+  // we want to floor this to the lowest multiple of the increment rate, that way we don't risk missing increments if
+  // this is called too frequently.
+  curr_m_cycles /= incr_every;
+  curr_m_cycles *= incr_every;
+
+  prev_m_cycles /= incr_every;
+  prev_m_cycles *= incr_every;
+
+  uint8_t incr_by = (curr_m_cycles - prev_m_cycles) / incr_every;
+
+  if (((uint32_t)gb_state->regs.io.tima + incr_by) > 0xFF) {
+    gb_state->regs.io.if_ |= 0b00100;
+  }
+  gb_state->regs.io.tima += incr_by;
+}
+
+#define DOTS_PER_LINE   456
+#define LINES_PER_FRAME 153
+
+#define HBLANK          0
+#define VBLANK          1
+#define OAM_SCAN        2
+#define DRAWING_PIXELS  3
+
+static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
+  uint64_t prev_dots = gb_dots(prev_m_cycles);
+  uint64_t curr_dots = gb_dots(curr_m_cycles);
+  uint32_t dots_elapsed = curr_dots - prev_dots;
+  gb_state->lcd_x += dots_elapsed;
+  gb_state->regs.io.ly += (gb_state->lcd_x / DOTS_PER_LINE);
+  gb_state->lcd_x %= DOTS_PER_LINE;
+  gb_state->regs.io.ly %= LINES_PER_FRAME;
+
+  uint8_t mode;
+  if (gb_state->regs.io.ly >= 144) {
+    mode = VBLANK;
+  } else if (gb_state->lcd_x < 80) {
+    mode = OAM_SCAN;
+  } else if (gb_state->lcd_x < 369) {
+    // We're assuming that mode 3 is always taking the longest possible amount of time.
+    // If we wanted to be really precise we would have to calculate the exact length with:
+    // https://gbdev.io/pandocs/Rendering.html#obj-penalty-algorithm
+    mode = DRAWING_PIXELS;
+  } else {
+    mode = HBLANK;
+  }
+  gb_state->regs.io.stat &= ~0b0000'0011;
+  gb_state->regs.io.stat |= mode;
+
+  if (gb_state->regs.io.ly == gb_state->regs.io.lyc) {
+    gb_state->regs.io.stat |= 0b0000'0100;
+  } else {
+    gb_state->regs.io.stat &= ~0b0000'0100;
+  }
+  // TODO: trigger stat interrupt if a condition is met.
+}
+
+void update_timers(struct gb_state *gb_state) {
+  uint64_t curr_m_cycles = m_cycles(gb_state);
+  uint64_t prev_m_cycles = gb_state->last_timer_sync_m_cycles;
+  gb_state->last_timer_sync_m_cycles = curr_m_cycles;
+
+  update_tima(gb_state, prev_m_cycles, curr_m_cycles);
+  update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);
+}
 
 bool gb_state_get_err(struct gb_state *gb_state) {
   bool err = gb_state->err;
