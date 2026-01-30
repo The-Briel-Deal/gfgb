@@ -13,6 +13,8 @@ void gb_state_init(struct gb_state *gb_state) {
   // up.
   gb_state->rom_loaded = false;
   gb_state->bootrom_mapped = false;
+  // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
+  gb_state->regs.io.lcdc = 0b10010001;
 }
 
 struct gb_state *gb_state_alloc() { return SDL_malloc(sizeof(struct gb_state)); }
@@ -282,6 +284,7 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 }
 
 static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
+  if ((gb_state->regs.io.lcdc & (1 << 7)) == 0) return;
   bool prev_triggered = lcd_interrupt_triggered(gb_state);
   uint64_t prev_dots = gb_dots(prev_m_cycles);
   uint64_t curr_dots = gb_dots(curr_m_cycles);
