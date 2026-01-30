@@ -253,7 +253,36 @@ static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint6
 #define OAM_SCAN        2
 #define DRAWING_PIXELS  3
 
+static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
+
+  uint8_t stat = gb_state->regs.io.stat;
+  uint8_t mode = (stat & (0b11 << 0)) >> 0;
+  uint8_t lyc_eq_ly = (stat & (0b1 << 2)) >> 2;
+  uint8_t m0_select = (stat & (0b1 << 3)) >> 3;
+  uint8_t m1_select = (stat & (0b1 << 4)) >> 4;
+  uint8_t m2_select = (stat & (0b1 << 5)) >> 5;
+  uint8_t lyc_select = (stat & (0b1 << 6)) >> 6;
+
+  switch (mode) {
+  case HBLANK:
+    if (m0_select) return true;
+    break;
+  case VBLANK:
+    if (m1_select) return true;
+    break;
+  case OAM_SCAN:
+    if (m2_select) return true;
+    break;
+  case DRAWING_PIXELS: break;
+  }
+
+  if (lyc_select && lyc_eq_ly) return true;
+
+  return false;
+}
+
 static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
+  bool prev_triggered = lcd_interrupt_triggered(gb_state);
   uint64_t prev_dots = gb_dots(prev_m_cycles);
   uint64_t curr_dots = gb_dots(curr_m_cycles);
   uint32_t dots_elapsed = curr_dots - prev_dots;
@@ -285,7 +314,9 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   } else {
     gb_state->regs.io.stat &= ~0b0000'0100;
   }
-  // TODO: trigger stat interrupt if a condition is met.
+  bool curr_triggered = lcd_interrupt_triggered(gb_state);
+  if ((!prev_triggered) && curr_triggered) gb_state->regs.io.if_ |= 0b00010;
+  if (mode == VBLANK) gb_state->regs.io.if_ |= 0b00001;
 }
 
 void update_timers(struct gb_state *gb_state) {

@@ -1297,9 +1297,13 @@ void handle_interrupts(struct gb_state *gb_state) {
   if (gb_state->regs.io.ime) {
     // Interupt handlers
     if (to_handle & 0b00001) { // vblank handler
+      gb_state->regs.io.if_ &= ~0b00001;
+      call(gb_state, 0x0040);
       goto interrupt_handled;
     }
     if (to_handle & 0b00010) { // stat handler
+      gb_state->regs.io.if_ &= ~0b00010;
+      call(gb_state, 0x0048);
       goto interrupt_handled;
     }
     if (to_handle & 0b00100) { // timer handler
