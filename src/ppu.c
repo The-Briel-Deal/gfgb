@@ -112,7 +112,7 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   // 2. I need to figure out a good way to keep track of textures, I could keep
   // one texture for each tile but that seems excessive.
   int win_w, win_h;
-  SDL_GetWindowSize(gb_state->sdl_window, &win_w, &win_h);
+  SDL_GetCurrentRenderOutputSize(gb_state->sdl_renderer, &win_w, &win_h);
   float w_scale = (float)win_w / GB_DISPLAY_WIDTH;
   float h_scale = (float)win_h / GB_DISPLAY_HEIGHT;
 
@@ -170,6 +170,18 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
+#ifdef WRITE_BG_TARGET_TO_FILE
+  if (SDL_GetTicksNS() > ((uint64_t)NS_PER_SEC * 3)) {
+    SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
+    assert(target_surface != NULL);
+    SDL_IOStream *file_stream = SDL_IOFromFile("bg_tex.png", "w");
+    assert(file_stream != NULL);
+    success = SDL_SavePNG_IO(target_surface, file_stream, true);
+    assert(success);
+    exit(0);
+  }
+#endif
+
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
   assert(success);
 }
