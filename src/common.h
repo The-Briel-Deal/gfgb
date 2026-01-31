@@ -99,6 +99,11 @@
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
+#define HBLANK          0
+#define VBLANK          1
+#define OAM_SCAN        2
+#define DRAWING_PIXELS  3
+
 struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
@@ -202,6 +207,8 @@ struct gb_state {
   uint32_t lcd_x;
 
   bool last_stat_interrupt;
+
+  uint8_t last_mode_handled;
 
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;

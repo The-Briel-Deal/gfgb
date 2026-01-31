@@ -356,7 +356,7 @@ void gb_render_bg(struct gb_state *gb_state) {
   }
 }
 
-void gb_read_oam_entrys(struct gb_state *gb_state) {
+void gb_read_oam_entries(struct gb_state *gb_state) {
   memcpy(gb_state->oam_entries, gb_state->oam, sizeof(gb_state->oam));
 }
 
@@ -398,23 +398,38 @@ char *get_inst_symbol(struct gb_state *gb_state) {
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
-  for (int i = 0; i < 1000; i++) {
-    if (!gb_state->halted) {
+  if (!gb_state->halted) {
 #ifdef PRINT_INST_DURING_EXEC
-      printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
+    printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-      struct inst inst = fetch(gb_state);
-      execute(gb_state, inst);
-    } else {
-      // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
-      gb_state->m_cycles_elapsed++;
-    }
-    update_timers(gb_state);
-    handle_interrupts(gb_state);
+    struct inst inst = fetch(gb_state);
+    execute(gb_state, inst);
+  } else {
+    // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
+    gb_state->m_cycles_elapsed++;
+  }
+  update_timers(gb_state);
+  handle_interrupts(gb_state);
+
+  if (((gb_state->regs.io.stat & 0b11) == OAM_SCAN) && (gb_state->last_mode_handled != OAM_SCAN)) {
+    gb_read_oam_entries(gb_state);
+    gb_state->last_mode_handled = OAM_SCAN;
   }
 
-  // TODO: this doesn't need to be called every iteration.
-  gb_draw(gb_state);
+  if (((gb_state->regs.io.stat & 0b11) == DRAWING_PIXELS) && (gb_state->last_mode_handled != DRAWING_PIXELS)) {
+    gb_draw(gb_state);
+    gb_state->last_mode_handled = DRAWING_PIXELS;
+  }
+
+  if (((gb_state->regs.io.stat & 0b11) == HBLANK) && (gb_state->last_mode_handled != HBLANK)) {
+    // Nothing special is done during hblank currently, this is just here to make sure last_mode_handled is rotated.
+    gb_state->last_mode_handled = HBLANK;
+  }
+
+  if (((gb_state->regs.io.stat & 0b11) == VBLANK) && (gb_state->last_mode_handled != VBLANK)) {
+    // Nothing special is done during vblank currently, this is just here to make sure last_mode_handled is rotated.
+    gb_state->last_mode_handled = VBLANK;
+  }
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
