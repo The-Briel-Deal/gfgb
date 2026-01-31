@@ -566,7 +566,7 @@ void test_parse_debug_sym() {
   TEST_SYM(42, 0, 0x01B9, 0x06, "LCDOff");
   TEST_SYM(43, 0, 0x01BF, 0x06, "LCDOn");
   TEST_SYM(44, 0, 0x01C5, 0x03, "ThisIsALongSymbolNameToTestTrun");
-  TEST_SYM(45, 0, 0x01C8, 0x00, "DoggoSprite");
+  TEST_SYM(45, 0, 0x01C8, 0x7E38, "DoggoSprite");
 
 #undef TEST_SYM
 #undef BR_BANK
