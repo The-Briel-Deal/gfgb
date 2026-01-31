@@ -256,10 +256,6 @@ static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint6
 #define DOTS_PER_LINE   456
 #define LINES_PER_FRAME 153
 
-#define HBLANK          0
-#define VBLANK          1
-#define OAM_SCAN        2
-#define DRAWING_PIXELS  3
 
 static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 

@@ -72,7 +72,7 @@ struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   struct oam_entry oam_entry = gb_state->oam_entries[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
-  printf("GF_DEBUG: OAM Entry %d\n", index);
+  printf("OAM Entry %d\n", index);
   printf("  x_pos = %d\n", oam_entry.x_pos);
   printf("  y_pos = %d\n", oam_entry.y_pos);
   printf("  bank = %d\n", oam_entry.bank);
@@ -134,11 +134,18 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   assert(ret == true);
 }
 
-static void gb_render_bg(struct gb_state *gb_state) {
+static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
+  bool success;
+
   // TODO: Make sure screen and bg are enabled before this
   uint16_t bg_win_tile_data_start_p1;
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
+
+  SDL_Texture *prev_target = SDL_GetRenderTarget(gb_state->sdl_renderer);
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
+  assert(success);
+
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
   } else {
@@ -158,12 +165,13 @@ static void gb_render_bg(struct gb_state *gb_state) {
     const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
-    // TODO: handle display offset, the display won't always be in the top left.
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
+  assert(success);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
@@ -182,7 +190,7 @@ void gb_draw(struct gb_state *gb_state) {
 
   SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
   SDL_RenderClear(gb_state->sdl_renderer);
-  gb_render_bg(gb_state);
+  gb_render_bg(gb_state, gb_state->sdl_render_buffer);
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
     enum draw_tile_flags flags = 0;
