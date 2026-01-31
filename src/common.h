@@ -197,6 +197,8 @@ struct gb_state {
   // used for identifying when we are in hblank, and for knowing when we can increment ly. 
   uint32_t lcd_x;
 
+  bool last_stat_interrupt;
+
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;
 

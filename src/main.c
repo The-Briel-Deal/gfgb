@@ -395,7 +395,6 @@ char *get_inst_symbol(struct gb_state *gb_state) {
 SDL_AppResult SDL_AppIterate(void *appstate) {
   struct gb_state *gb_state = appstate;
   for (int i = 0; i < 1000; i++) {
-    update_timers(gb_state);
     if (!gb_state->halted) {
 #ifdef PRINT_INST_DURING_EXEC
       printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
@@ -406,6 +405,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
       gb_state->m_cycles_elapsed++;
     }
+    update_timers(gb_state);
     handle_interrupts(gb_state);
   }
 

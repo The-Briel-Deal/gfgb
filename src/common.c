@@ -300,7 +300,6 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     gb_state->first_oam_scan_after_enable = true;
     return;
   }
-  bool prev_triggered = lcd_interrupt_triggered(gb_state);
   uint64_t prev_dots = gb_dots(prev_m_cycles);
   uint64_t curr_dots = gb_dots(curr_m_cycles);
   uint32_t dots_elapsed = curr_dots - prev_dots;
@@ -316,7 +315,7 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     mode = VBLANK;
   } else if (gb_state->lcd_x < 80) {
     if (gb_state->first_oam_scan_after_enable)
-      mode = (gb_state->regs.io.stat & (0b11 << 0)) >> 0;
+      mode = (gb_state->regs.io.stat & 0b11);
     else
       mode = OAM_SCAN;
   } else if (gb_state->lcd_x < 369) {
@@ -336,8 +335,12 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   } else {
     gb_state->regs.io.stat &= ~0b0000'0100;
   }
+  bool prev_triggered = gb_state->last_stat_interrupt;
   bool curr_triggered = lcd_interrupt_triggered(gb_state);
-  if ((!prev_triggered) && curr_triggered) gb_state->regs.io.if_ |= 0b00010;
+  gb_state->last_stat_interrupt = curr_triggered;
+  if ((!prev_triggered) && curr_triggered) {
+    gb_state->regs.io.if_ |= 0b00010;
+  }
   if (mode == VBLANK) gb_state->regs.io.if_ |= 0b00001;
 }
 
