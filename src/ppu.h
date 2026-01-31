@@ -1,8 +1,10 @@
 #ifndef GB_PPU_H
 #define GB_PPU_H
 
-#include "common.h"
+#include <SDL3/SDL.h>
 #include <stdint.h>
+
+struct gb_state;
 
 //! \brief Convert a gameboy tile to indexed msb2
 //!

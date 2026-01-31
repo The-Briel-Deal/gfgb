@@ -59,8 +59,7 @@ SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr)
 
 struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   assert(index < 40);
-  struct oam_entry *oam_start = unmap_address(gb_state, 0xFE00);
-  struct oam_entry oam_entry = oam_start[index];
+  struct oam_entry oam_entry = gb_state->oam_entries[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
   printf("GF_DEBUG: OAM Entry %d\n", index);
