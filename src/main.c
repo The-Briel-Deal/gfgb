@@ -356,6 +356,10 @@ void gb_render_bg(struct gb_state *gb_state) {
   }
 }
 
+void gb_read_oam_entrys(struct gb_state *gb_state) {
+  memcpy(gb_state->oam_entries, gb_state->oam, sizeof(gb_state->oam));
+}
+
 void gb_draw(struct gb_state *gb_state) {
   uint64_t this_frame_ticks_ns = SDL_GetTicksNS();
 

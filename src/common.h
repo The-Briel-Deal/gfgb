@@ -3,6 +3,7 @@
 
 #include "cpu.h"
 #include "disassemble.h"
+#include "ppu.h"
 
 #include <SDL3/SDL.h>
 #include <assert.h>
@@ -174,12 +175,15 @@ struct gb_state {
       uint8_t vram[KB(8)];
       uint8_t eram[KB(8)];
       uint8_t hram[0x80];
-      uint8_t oam[0x9F];
+      uint8_t oam[4 * 40];
     };
     uint8_t flat_ram[KB(64)];
   };
   struct debug_symbol_list syms;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
+
+  // this is where all of the oam entries are copied to during the oam read window
+  struct oam_entry oam_entries[40];
 
   FILE *serial_port_output;
 
@@ -194,7 +198,7 @@ struct gb_state {
   // should be enough to make most games run.
   uint64_t m_cycles_elapsed;
 
-  // used for identifying when we are in hblank, and for knowing when we can increment ly. 
+  // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
 
   bool last_stat_interrupt;
