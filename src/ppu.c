@@ -1,5 +1,9 @@
 #include "ppu.h"
 #include "common.h"
+#include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_properties.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
@@ -170,17 +174,23 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
-#ifdef WRITE_BG_TARGET_TO_FILE
+  // #ifdef WRITE_BG_TARGET_TO_FILE
   if (SDL_GetTicksNS() > ((uint64_t)NS_PER_SEC * 3)) {
     SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
     assert(target_surface != NULL);
-    SDL_IOStream *file_stream = SDL_IOFromFile("bg_tex.png", "w");
-    assert(file_stream != NULL);
-    success = SDL_SavePNG_IO(target_surface, file_stream, true);
+    SDL_IOStream *stream = SDL_IOFromDynamicMem();
+    assert(stream != NULL);
+    success = SDL_SavePNG_IO(target_surface, stream, false);
     assert(success);
+    SDL_PropertiesID stream_props = SDL_GetIOProperties(stream);
+    Sint64 stream_len = SDL_TellIO(stream);
+    uint8_t *png_raw_data = SDL_GetPointerProperty(stream_props, SDL_PROP_IOSTREAM_DYNAMIC_MEMORY_POINTER, NULL);
+    char *b64_png_data = b64_encode(png_raw_data, stream_len);
+    printf("\\x1b_Gf=100;%s\\x1b\\\n", b64_png_data);
+
     exit(0);
   }
-#endif
+  // #endif
 
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
   assert(success);

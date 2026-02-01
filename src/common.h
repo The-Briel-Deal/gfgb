@@ -99,10 +99,10 @@
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
-#define HBLANK          0
-#define VBLANK          1
-#define OAM_SCAN        2
-#define DRAWING_PIXELS  3
+#define HBLANK         0
+#define VBLANK         1
+#define OAM_SCAN       2
+#define DRAWING_PIXELS 3
 
 struct gb_state {
   SDL_Window *sdl_window;
@@ -283,5 +283,8 @@ bool gb_state_get_err(struct gb_state *gb_state);
 // Whether or not to use flat memory, this is currently exclusively used for single step tests where they expect memory
 // to be a flat 64KB bank.
 void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
+
+size_t b64_encoded_size(size_t inlen);
+char *b64_encode(const unsigned char *in, size_t len);
 
 #endif // GB_COMMON_H
