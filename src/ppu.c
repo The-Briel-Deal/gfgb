@@ -1,5 +1,8 @@
 #include "ppu.h"
 #include "common.h"
+#include <sixel.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
@@ -170,17 +173,17 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
-#ifdef WRITE_BG_TARGET_TO_FILE
-  if (SDL_GetTicksNS() > ((uint64_t)NS_PER_SEC * 3)) {
+  {
     SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
-    assert(target_surface != NULL);
-    SDL_IOStream *file_stream = SDL_IOFromFile("bg_tex.png", "w");
-    assert(file_stream != NULL);
-    success = SDL_SavePNG_IO(target_surface, file_stream, true);
-    assert(success);
-    exit(0);
+    sixel_encoder_t *encoder;
+    SIXELSTATUS status;
+    status = sixel_encoder_new(&encoder, NULL);
+    assert(status == SIXEL_OK);
+    uint8_t palette;
+    status = sixel_encoder_encode_bytes(encoder, target_surface->pixels, target_surface->w, target_surface->h,
+                                        SIXEL_PIXELFORMAT_RGBA8888, &palette, 20);
+    assert(status == SIXEL_OK);
   }
-#endif
 
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
   assert(success);

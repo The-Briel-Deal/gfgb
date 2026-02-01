@@ -6,7 +6,7 @@ project(
   default_options : ['warning_level=3', 'c_std=c23'],
 )
 
-dependencies = dependency('sdl3')
+dependencies = [dependency('sdl3'), dependency('libsixel')]
 
 sources = [
   'src/disassemble.c',
