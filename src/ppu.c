@@ -1,7 +1,6 @@
 #include "ppu.h"
 #include "common.h"
-#include <SDL3/SDL_iostream.h>
-#include <SDL3/SDL_properties.h>
+#include <sixel.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -138,6 +137,11 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   assert(ret == true);
 }
 
+static int sixel_write_cb(char *data, int size, void *priv) {
+  (void)priv;
+  return fwrite(data, 1, size, stdout);
+}
+
 static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
   bool success;
 
@@ -176,17 +180,41 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
   }
   // #ifdef WRITE_BG_TARGET_TO_FILE
   if (SDL_GetTicksNS() > ((uint64_t)NS_PER_SEC * 3)) {
+    // {
+    //   flags = 8,
+    //   format = SDL_PIXELFORMAT_ABGR8888,
+    //   w = 160,
+    //   h = 144,
+    //   pitch = 640,
+    //   pixels = 0x555556178780,
+    //   refcount = 1,
+    //   reserved = 0x7ffff7ef1ca4 <SDL_surface_magic.lto_priv.0>
+    // }
+
     SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
     assert(target_surface != NULL);
-    SDL_IOStream *stream = SDL_IOFromDynamicMem();
-    assert(stream != NULL);
-    success = SDL_SavePNG_IO(target_surface, stream, false);
-    assert(success);
-    SDL_PropertiesID stream_props = SDL_GetIOProperties(stream);
-    Sint64 stream_len = SDL_TellIO(stream);
-    uint8_t *png_raw_data = SDL_GetPointerProperty(stream_props, SDL_PROP_IOSTREAM_DYNAMIC_MEMORY_POINTER, NULL);
-    char *b64_png_data = b64_encode(png_raw_data, stream_len);
-    printf("\\x1b_Gf=100;%s\\x1b\\\n", b64_png_data);
+
+    sixel_output_t *output = NULL;
+    sixel_dither_t *dither = NULL;
+
+    /* create stdout output */
+    if (sixel_output_new(&output, sixel_write_cb, NULL, NULL) != SIXEL_OK) {
+      fprintf(stderr, "sixel_output_new failed\n");
+      exit(1);
+    }
+
+    /* create dither (note the real signature) */
+    if (sixel_dither_new(&dither, 256, NULL) != SIXEL_OK) {
+      fprintf(stderr, "sixel_dither_new failed\n");
+      exit(1);
+    }
+
+    SDL_Surface *converted = SDL_ConvertSurface(target_surface, SDL_PIXELFORMAT_RGB24);
+
+    /* encode raw RGB pixels */
+    if (sixel_encode(converted->pixels, converted->w, converted->h, 3, dither, output) != SIXEL_OK) {
+      fprintf(stderr, "sixel_encode failed\n");
+    }
 
     exit(0);
   }
