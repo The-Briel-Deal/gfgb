@@ -137,11 +137,6 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   assert(ret == true);
 }
 
-static int sixel_write_cb(char *data, int size, void *priv) {
-  (void)priv;
-  return fwrite(data, 1, size, stdout);
-}
-
 static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
   bool success;
 
@@ -192,31 +187,14 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     // }
 
     SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
-    assert(target_surface != NULL);
-
-    sixel_output_t *output = NULL;
-    sixel_dither_t *dither = NULL;
-
-    /* create stdout output */
-    if (sixel_output_new(&output, sixel_write_cb, NULL, NULL) != SIXEL_OK) {
-      fprintf(stderr, "sixel_output_new failed\n");
-      exit(1);
-    }
-
-    /* create dither (note the real signature) */
-    if (sixel_dither_new(&dither, 256, NULL) != SIXEL_OK) {
-      fprintf(stderr, "sixel_dither_new failed\n");
-      exit(1);
-    }
-
-    SDL_Surface *converted = SDL_ConvertSurface(target_surface, SDL_PIXELFORMAT_RGB24);
-
-    /* encode raw RGB pixels */
-    if (sixel_encode(converted->pixels, converted->w, converted->h, 3, dither, output) != SIXEL_OK) {
-      fprintf(stderr, "sixel_encode failed\n");
-    }
-
-    exit(0);
+    sixel_encoder_t *encoder;
+    SIXELSTATUS status;
+    status = sixel_encoder_new(&encoder, NULL);
+    assert(status == SIXEL_OK);
+    uint8_t palette;
+    status = sixel_encoder_encode_bytes(encoder, target_surface->pixels, target_surface->w, target_surface->h,
+                                        SIXEL_PIXELFORMAT_ABGR8888, &palette, 4);
+    assert(status == SIXEL_OK);
   }
   // #endif
 
