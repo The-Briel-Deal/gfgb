@@ -173,19 +173,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
-  // #ifdef WRITE_BG_TARGET_TO_FILE
-  if (SDL_GetTicksNS() > ((uint64_t)NS_PER_SEC * 3)) {
-    // {
-    //   flags = 8,
-    //   format = SDL_PIXELFORMAT_ABGR8888,
-    //   w = 160,
-    //   h = 144,
-    //   pitch = 640,
-    //   pixels = 0x555556178780,
-    //   refcount = 1,
-    //   reserved = 0x7ffff7ef1ca4 <SDL_surface_magic.lto_priv.0>
-    // }
-
+  {
     SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
     sixel_encoder_t *encoder;
     SIXELSTATUS status;
@@ -193,10 +181,9 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     assert(status == SIXEL_OK);
     uint8_t palette;
     status = sixel_encoder_encode_bytes(encoder, target_surface->pixels, target_surface->w, target_surface->h,
-                                        SIXEL_PIXELFORMAT_ABGR8888, &palette, 4);
+                                        SIXEL_PIXELFORMAT_RGBA8888, &palette, 20);
     assert(status == SIXEL_OK);
   }
-  // #endif
 
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
   assert(success);
