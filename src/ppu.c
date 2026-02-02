@@ -3,6 +3,8 @@
 #include <sixel.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
@@ -137,6 +139,21 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   assert(ret == true);
 }
 
+void render_surface_to_term(SDL_Surface *target_surface) {
+  sixel_encoder_t *encoder;
+  SIXELSTATUS status;
+  status = sixel_encoder_new(&encoder, NULL);
+  sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_WIDTH, "500px");
+  assert(status == SIXEL_OK);
+  uint8_t palette;
+  uint8_t *pixels = malloc(target_surface->pitch * target_surface->h);
+  memcpy(pixels, target_surface->pixels, target_surface->pitch * target_surface->h);
+  status = sixel_encoder_encode_bytes(encoder, pixels, target_surface->w, target_surface->h, SIXEL_PIXELFORMAT_RGBA8888,
+                                      &palette, 20);
+  assert(status == SIXEL_OK);
+  sixel_encoder_unref(encoder);
+}
+
 static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
   bool success;
 
@@ -173,17 +190,8 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
-  {
-    SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
-    sixel_encoder_t *encoder;
-    SIXELSTATUS status;
-    status = sixel_encoder_new(&encoder, NULL);
-    assert(status == SIXEL_OK);
-    uint8_t palette;
-    status = sixel_encoder_encode_bytes(encoder, target_surface->pixels, target_surface->w, target_surface->h,
-                                        SIXEL_PIXELFORMAT_RGBA8888, &palette, 20);
-    assert(status == SIXEL_OK);
-  }
+  SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
+  render_surface_to_term(target_surface);
 
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
   assert(success);
