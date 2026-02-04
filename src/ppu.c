@@ -1,5 +1,9 @@
 #include "ppu.h"
 #include "common.h"
+
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_render.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -146,8 +150,11 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
 
-  SDL_Texture *prev_target = SDL_GetRenderTarget(gb_state->sdl_renderer);
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
+  assert(success);
+  success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
+  assert(success);
+  success = SDL_RenderClear(gb_state->sdl_renderer);
   assert(success);
 
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
@@ -174,10 +181,24 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
   }
-  SDL_Surface *target_surface = SDL_RenderReadPixels(gb_state->sdl_renderer, NULL);
 
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, prev_target);
   assert(success);
+}
+static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
+  bool success;
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
+  assert(success);
+  success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_TRANSPARENT_FLOAT);
+  assert(success);
+  success = SDL_RenderClear(gb_state->sdl_renderer);
+  assert(success);
+  for (int i = 0; i < 40; i++) {
+    struct oam_entry oam_entry = get_oam_entry(gb_state, i);
+    enum draw_tile_flags flags = 0;
+    if (oam_entry.x_flip) flags |= DRAW_TILE_FLIP_X;
+    if (oam_entry.y_flip) flags |= DRAW_TILE_FLIP_Y;
+    gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16), flags);
+  }
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
@@ -185,6 +206,7 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
 }
 
 void gb_draw(struct gb_state *gb_state) {
+  bool success;
   uint64_t this_frame_ticks_ns = SDL_GetTicksNS();
 
 #ifdef PRINT_FRAME_TIME
@@ -194,17 +216,20 @@ void gb_draw(struct gb_state *gb_state) {
 
   gb_state->last_frame_ticks_ns = this_frame_ticks_ns;
 
-  SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
-  SDL_RenderClear(gb_state->sdl_renderer);
-  gb_render_bg(gb_state, gb_state->sdl_render_buffer);
-  for (int i = 0; i < 40; i++) {
-    struct oam_entry oam_entry = get_oam_entry(gb_state, i);
-    enum draw_tile_flags flags = 0;
-    if (oam_entry.x_flip) flags |= DRAW_TILE_FLIP_X;
-    if (oam_entry.y_flip) flags |= DRAW_TILE_FLIP_Y;
-    gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16), flags);
-  }
-  SDL_RenderPresent(gb_state->sdl_renderer);
+  gb_render_bg(gb_state, gb_state->sdl_bg_target);
+  gb_render_objs(gb_state, gb_state->sdl_obj_target);
+  /* NULL means that we are selecting the window as the target */
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
+  assert(success);
+  success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
+  assert(success);
+  success = SDL_RenderClear(gb_state->sdl_renderer);
+  assert(success);
+  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, NULL, NULL);
+  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, NULL, NULL);
+
+  success = SDL_RenderPresent(gb_state->sdl_renderer);
+  assert(success);
 }
 
 #ifdef RUN_PPU_TESTS

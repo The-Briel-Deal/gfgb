@@ -109,7 +109,8 @@ struct gb_state {
   SDL_Renderer *sdl_renderer;
   SDL_Palette *sdl_palette;
   // We draw into this texture initially, then we scan our current line and copy it to the screen on hblank.
-  SDL_Texture *sdl_render_buffer;
+  SDL_Texture *sdl_bg_target;
+  SDL_Texture *sdl_obj_target;
   struct regs {
     uint8_t a;
     uint8_t b;
