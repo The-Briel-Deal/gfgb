@@ -107,7 +107,9 @@
 struct gb_state {
   SDL_Window *sdl_window;
   SDL_Renderer *sdl_renderer;
-  SDL_Palette *sdl_palette;
+  SDL_Palette *sdl_bg_palette;
+  SDL_Palette *sdl_obj_palette_0;
+  SDL_Palette *sdl_obj_palette_1;
   // We draw into this texture initially, then we scan our current line and copy it to the screen on hblank.
   SDL_Texture *sdl_bg_target;
   SDL_Texture *sdl_obj_target;
@@ -162,7 +164,9 @@ struct gb_state {
       uint8_t lcdc;
       uint8_t scy;
       uint8_t scx;
-      uint8_t bg_pallete;
+      uint8_t bgp;
+      uint8_t obp0;
+      uint8_t obp1;
       uint8_t ie;         // interupt enable
       uint8_t if_;        // interupt flag
       bool ime;           // interupt master enable
@@ -261,6 +265,8 @@ enum io_reg_addr {
   IO_STAT = 0xFF41,
 
   IO_BGP = 0xFF47,
+  IO_OBP0 = 0xFF48,
+  IO_OBP1 = 0xFF49,
 };
 
 uint64_t m_cycles(struct gb_state *gb_state);

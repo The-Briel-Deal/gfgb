@@ -68,7 +68,9 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_STAT:
     // The least significant 3 bits are RO. I'll need to figure out a way to make sure those bits aren't written to.
     return &gb_state->regs.io.stat;
-  case IO_BGP: return &gb_state->regs.io.bg_pallete;
+  case IO_BGP: return &gb_state->regs.io.bgp;
+  case IO_OBP0: return &gb_state->regs.io.obp0;
+  case IO_OBP1: return &gb_state->regs.io.obp1;
   default: SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
   }
 }

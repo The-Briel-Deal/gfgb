@@ -1,9 +1,7 @@
 #include "ppu.h"
 #include "common.h"
 
-#include <SDL3/SDL_pixels.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,14 +56,62 @@ static SDL_Texture *gb_create_tex(struct gb_state *gb_state, uint16_t tile_addr)
   return texture;
 }
 
-static SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr) {
+#define GREYSCALE_COLOR(lightness)                                                                                     \
+  (SDL_Color) { .a = 255, .r = 255 * lightness, .g = 255 * lightness, .b = 255 * lightness, }
+#define TRANSPARENT_COLOR                                                                                              \
+  (SDL_Color) { .a = 0, .r = 0, .g = 0, .b = 0, }
+
+static void update_palettes(struct gb_state *gb_state) {
+  uint8_t bgp_id_0 = (gb_state->regs.io.bgp >> 0) & 0b11;
+  uint8_t bgp_id_1 = (gb_state->regs.io.bgp >> 2) & 0b11;
+  uint8_t bgp_id_2 = (gb_state->regs.io.bgp >> 4) & 0b11;
+  uint8_t bgp_id_3 = (gb_state->regs.io.bgp >> 6) & 0b11;
+  if (!SDL_SetPaletteColors(gb_state->sdl_bg_palette,
+                            (SDL_Color[4]){
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_0) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
+                            },
+                            0, DMG_PALETTE_N_COLORS)) {
+    ERR(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
+  }
+  uint8_t obp0_id_1 = (gb_state->regs.io.obp0 >> 2) & 0b11;
+  uint8_t obp0_id_2 = (gb_state->regs.io.obp0 >> 4) & 0b11;
+  uint8_t obp0_id_3 = (gb_state->regs.io.obp0 >> 6) & 0b11;
+  if (!SDL_SetPaletteColors(gb_state->sdl_obj_palette_0,
+                            (SDL_Color[4]){
+                                TRANSPARENT_COLOR,
+                                GREYSCALE_COLOR((3.0f - (float)obp0_id_1) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)obp0_id_2) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)obp0_id_3) / 3.0f),
+                            },
+                            0, DMG_PALETTE_N_COLORS)) {
+    ERR(gb_state, "Couldn't set obj palette 0 colors: %s", SDL_GetError());
+  }
+  uint8_t obp1_id_1 = (gb_state->regs.io.obp1 >> 2) & 0b11;
+  uint8_t obp1_id_2 = (gb_state->regs.io.obp1 >> 4) & 0b11;
+  uint8_t obp1_id_3 = (gb_state->regs.io.obp1 >> 6) & 0b11;
+  if (!SDL_SetPaletteColors(gb_state->sdl_obj_palette_1,
+                            (SDL_Color[4]){
+                                TRANSPARENT_COLOR,
+                                GREYSCALE_COLOR((3.0f - (float)obp1_id_1) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)obp1_id_2) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)obp1_id_3) / 3.0f),
+                            },
+                            0, DMG_PALETTE_N_COLORS)) {
+    ERR(gb_state, "Couldn't set obj palette 1 colors: %s", SDL_GetError());
+  }
+}
+
+static SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr, SDL_Palette *palette) {
   SDL_Texture *texture;
 
   uint16_t index = tile_addr_to_tex_idx(tile_addr);
   texture = gb_state->textures[index];
   if (texture == NULL) texture = gb_create_tex(gb_state, tile_addr);
 
-  SDL_SetTexturePalette(texture, gb_state->sdl_palette);
+  SDL_SetTexturePalette(texture, palette);
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
   uint8_t pixels[8 * 8];
@@ -107,6 +153,9 @@ enum lcdc_flags {
 enum draw_tile_flags {
   DRAW_TILE_FLIP_X = 1 << 0,
   DRAW_TILE_FLIP_Y = 1 << 1,
+  DRAW_TILE_PALETTE_BGP = 1 << 2,
+  DRAW_TILE_PALETTE_OBP0 = 1 << 3,
+  DRAW_TILE_PALETTE_OBP1 = 1 << 4,
 };
 
 // TODO: check if tile should be double height (8x16)
@@ -124,7 +173,17 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   float w_scale = (float)win_w / GB_DISPLAY_WIDTH;
   float h_scale = (float)win_h / GB_DISPLAY_HEIGHT;
 
-  SDL_Texture *texture = get_texture_for_tile(gb_state, tile_addr);
+  SDL_Palette *palette;
+  if (flags & DRAW_TILE_PALETTE_BGP) {
+    palette = gb_state->sdl_bg_palette;
+  } else if (flags & DRAW_TILE_PALETTE_OBP0) {
+    palette = gb_state->sdl_obj_palette_0;
+  } else if (flags & DRAW_TILE_PALETTE_OBP1) {
+    palette = gb_state->sdl_obj_palette_1;
+  } else {
+    unreachable();
+  }
+  SDL_Texture *texture = get_texture_for_tile(gb_state, tile_addr, palette);
 
   bool ret;
   SDL_FRect dstrect = {
@@ -179,7 +238,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, 0);
+      gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, DRAW_TILE_PALETTE_BGP);
   }
 
   assert(success);
@@ -197,6 +256,10 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
     enum draw_tile_flags flags = 0;
     if (oam_entry.x_flip) flags |= DRAW_TILE_FLIP_X;
     if (oam_entry.y_flip) flags |= DRAW_TILE_FLIP_Y;
+    if (oam_entry.dmg_palette)
+      flags |= DRAW_TILE_PALETTE_OBP1;
+    else
+      flags |= DRAW_TILE_PALETTE_OBP0;
     gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16), flags);
   }
 }
@@ -216,6 +279,7 @@ void gb_draw(struct gb_state *gb_state) {
 
   gb_state->last_frame_ticks_ns = this_frame_ticks_ns;
 
+  update_palettes(gb_state);
   gb_render_bg(gb_state, gb_state->sdl_bg_target);
   gb_render_objs(gb_state, gb_state->sdl_obj_target);
   /* NULL means that we are selecting the window as the target */

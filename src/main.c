@@ -22,9 +22,6 @@ enum run_mode {
   DISASSEMBLE,
 };
 
-#define GREYSCALE_COLOR(lightness)                                                                                     \
-  (SDL_Color) { .a = 255, .r = 255 * lightness, .g = 255 * lightness, .b = 255 * lightness, }
-
 bool gb_video_init(struct gb_state *gb_state) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
@@ -37,30 +34,26 @@ bool gb_video_init(struct gb_state *gb_state) {
     return false;
   }
   SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-  if (!(gb_state->sdl_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    SDL_Log("Couldn't create palette: %s", SDL_GetError());
+  if (!(gb_state->sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+    SDL_Log("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
-
-  if (!SDL_SetPaletteColors(gb_state->sdl_palette,
-                            (SDL_Color[4]){
-                                GREYSCALE_COLOR(0.0f / 3),
-                                GREYSCALE_COLOR(1.0f / 3),
-                                GREYSCALE_COLOR(2.0f / 3),
-                                GREYSCALE_COLOR(3.0f / 3),
-                            },
-                            0, DMG_PALETTE_N_COLORS)) {
-    SDL_Log("Couldn't set palette colors: %s", SDL_GetError());
+  if (!(gb_state->sdl_obj_palette_0 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+    SDL_Log("Couldn't create obj palette 0: %s", SDL_GetError());
+    return false;
+  }
+  if (!(gb_state->sdl_obj_palette_1 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+    SDL_Log("Couldn't create obj palette 1: %s", SDL_GetError());
     return false;
   }
 
   SDL_SetDefaultTextureScaleMode(gb_state->sdl_renderer, SDL_SCALEMODE_PIXELART);
 
-  gb_state->sdl_bg_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
-                                                  SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  gb_state->sdl_bg_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
+                                              GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   assert(gb_state->sdl_bg_target != NULL);
-  gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
-                                                  SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
+                                               GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   assert(gb_state->sdl_obj_target != NULL);
 
   return true;
@@ -73,8 +66,12 @@ void gb_video_free(struct gb_state *gb_state) {
       gb_state->textures[i] = NULL;
     }
   }
-  SDL_DestroyPalette(gb_state->sdl_palette);
-  gb_state->sdl_palette = NULL;
+  SDL_DestroyPalette(gb_state->sdl_bg_palette);
+  gb_state->sdl_bg_palette = NULL;
+  SDL_DestroyPalette(gb_state->sdl_obj_palette_0);
+  gb_state->sdl_obj_palette_0 = NULL;
+  SDL_DestroyPalette(gb_state->sdl_obj_palette_1);
+  gb_state->sdl_obj_palette_1 = NULL;
   SDL_DestroyRenderer(gb_state->sdl_renderer);
   gb_state->sdl_renderer = NULL;
   SDL_DestroyWindow(gb_state->sdl_window);
