@@ -275,8 +275,10 @@ void gb_composite_line(struct gb_state *gb_state) {
       .h = 1,
       .w = GB_DISPLAY_WIDTH,
   };
-  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, &line_rect, &line_rect);
-  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
+  success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, &line_rect, &line_rect);
+  assert(success);
+  success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
+  assert(success);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
@@ -312,7 +314,7 @@ void gb_present(struct gb_state *gb_state) {
   assert(success);
   success = SDL_RenderPresent(gb_state->sdl_renderer);
   assert(success);
-} 
+}
 
 #ifdef RUN_PPU_TESTS
 
