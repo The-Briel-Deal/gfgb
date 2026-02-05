@@ -1,6 +1,7 @@
 #include "ppu.h"
 #include "common.h"
 
+#include <SDL3/SDL_rect.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -268,8 +269,14 @@ static void gb_composite_targets(struct gb_state *gb_state, SDL_Texture *target)
   bool success;
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
   assert(success);
-  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, NULL, NULL);
-  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, NULL, NULL);
+  SDL_FRect line_rect = {
+      .x = 0,
+      .y = gb_state->regs.io.ly,
+      .h = 1,
+      .w = GB_DISPLAY_WIDTH,
+  };
+  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, &line_rect, &line_rect);
+  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
