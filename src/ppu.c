@@ -265,9 +265,9 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
   }
 }
 
-static void gb_composite_targets(struct gb_state *gb_state, SDL_Texture *target) {
+void gb_composite_line(struct gb_state *gb_state) {
   bool success;
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, gb_state->sdl_composite_target);
   assert(success);
   SDL_FRect line_rect = {
       .x = 0,
@@ -284,7 +284,6 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
 }
 
 void gb_draw(struct gb_state *gb_state) {
-  bool success;
   uint64_t this_frame_ticks_ns = SDL_GetTicksNS();
 
 #ifdef PRINT_FRAME_TIME
@@ -297,7 +296,11 @@ void gb_draw(struct gb_state *gb_state) {
   update_palettes(gb_state);
   gb_render_bg(gb_state, gb_state->sdl_bg_target);
   gb_render_objs(gb_state, gb_state->sdl_obj_target);
-  gb_composite_targets(gb_state, gb_state->sdl_composite_target);
+}
+
+// called on vblank
+void gb_present(struct gb_state *gb_state) {
+  bool success;
   /* NULL means that we are selecting the window as the target */
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
   assert(success);
@@ -309,7 +312,7 @@ void gb_draw(struct gb_state *gb_state) {
   assert(success);
   success = SDL_RenderPresent(gb_state->sdl_renderer);
   assert(success);
-}
+} 
 
 #ifdef RUN_PPU_TESTS
 

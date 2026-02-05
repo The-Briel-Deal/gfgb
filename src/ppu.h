@@ -21,8 +21,9 @@ struct __attribute__((packed)) oam_entry {
   bool priority : 1;
 };
 
-void gb_read_oam_entries(struct gb_state *gb_state);
-
-void gb_draw(struct gb_state *gb_state);
+void gb_read_oam_entries(struct gb_state *gb_state); // on OAM-Scan
+void gb_draw(struct gb_state *gb_state);             // on Drawing-Pixels
+void gb_composite_line(struct gb_state *gb_state);   // on H-Blank
+void gb_present(struct gb_state *gb_state);          // on V-Blank
 
 #endif // GB_PPU_H
