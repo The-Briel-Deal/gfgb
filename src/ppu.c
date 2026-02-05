@@ -264,6 +264,14 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
   }
 }
 
+static void gb_composite_targets(struct gb_state *gb_state, SDL_Texture *target) {
+  bool success;
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
+  assert(success);
+  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, NULL, NULL);
+  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, NULL, NULL);
+}
+
 void gb_read_oam_entries(struct gb_state *gb_state) {
   memcpy(gb_state->oam_entries, gb_state->oam, sizeof(gb_state->oam));
 }
@@ -282,6 +290,7 @@ void gb_draw(struct gb_state *gb_state) {
   update_palettes(gb_state);
   gb_render_bg(gb_state, gb_state->sdl_bg_target);
   gb_render_objs(gb_state, gb_state->sdl_obj_target);
+  gb_composite_targets(gb_state, gb_state->sdl_composite_target);
   /* NULL means that we are selecting the window as the target */
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
   assert(success);
@@ -289,9 +298,8 @@ void gb_draw(struct gb_state *gb_state) {
   assert(success);
   success = SDL_RenderClear(gb_state->sdl_renderer);
   assert(success);
-  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, NULL, NULL);
-  SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, NULL, NULL);
-
+  success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
+  assert(success);
   success = SDL_RenderPresent(gb_state->sdl_renderer);
   assert(success);
 }

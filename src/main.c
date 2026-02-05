@@ -55,6 +55,9 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                                GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   assert(gb_state->sdl_obj_target != NULL);
+  gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
+                                               GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  assert(gb_state->sdl_obj_target != NULL);
 
   return true;
 }
