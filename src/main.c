@@ -55,9 +55,9 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                                GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   assert(gb_state->sdl_obj_target != NULL);
-  gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                               GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_obj_target != NULL);
+  gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
+                                                     SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  assert(gb_state->sdl_composite_target != NULL);
 
   return true;
 }
@@ -311,26 +311,18 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   }
   update_timers(gb_state);
   handle_interrupts(gb_state);
+  uint8_t curr_mode, last_mode;
+  curr_mode = gb_state->regs.io.stat & 0b11;
+  last_mode = gb_state->last_mode_handled;
 
-  if (((gb_state->regs.io.stat & 0b11) == OAM_SCAN) && (gb_state->last_mode_handled != OAM_SCAN)) {
-    gb_read_oam_entries(gb_state);
-    gb_state->last_mode_handled = OAM_SCAN;
-  }
+  if (curr_mode != last_mode) switch (curr_mode) {
+    case OAM_SCAN: gb_read_oam_entries(gb_state); break;
+    case DRAWING_PIXELS: gb_draw(gb_state); break;
+    case HBLANK: break;
+    case VBLANK: break;
+    }
+  gb_state->last_mode_handled = curr_mode;
 
-  if (((gb_state->regs.io.stat & 0b11) == DRAWING_PIXELS) && (gb_state->last_mode_handled != DRAWING_PIXELS)) {
-    gb_draw(gb_state);
-    gb_state->last_mode_handled = DRAWING_PIXELS;
-  }
-
-  if (((gb_state->regs.io.stat & 0b11) == HBLANK) && (gb_state->last_mode_handled != HBLANK)) {
-    // Nothing special is done during hblank currently, this is just here to make sure last_mode_handled is rotated.
-    gb_state->last_mode_handled = HBLANK;
-  }
-
-  if (((gb_state->regs.io.stat & 0b11) == VBLANK) && (gb_state->last_mode_handled != VBLANK)) {
-    // Nothing special is done during vblank currently, this is just here to make sure last_mode_handled is rotated.
-    gb_state->last_mode_handled = VBLANK;
-  }
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
