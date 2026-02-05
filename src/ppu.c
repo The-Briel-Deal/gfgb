@@ -279,6 +279,8 @@ void gb_composite_line(struct gb_state *gb_state) {
   assert(success);
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
   assert(success);
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
+  assert(success);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
