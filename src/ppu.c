@@ -164,11 +164,6 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   assert(x < GB_DISPLAY_WIDTH);
   assert(y < GB_DISPLAY_HEIGHT);
   SDL_Renderer *renderer = gb_state->sdl_renderer;
-  // TODO: I need to figure out 2 things
-  // 1. I need to interleave the two bytes in a gameboy tile before sending it
-  // to SDL.
-  // 2. I need to figure out a good way to keep track of textures, I could keep
-  // one texture for each tile but that seems excessive.
   int win_w, win_h;
   SDL_GetCurrentRenderOutputSize(gb_state->sdl_renderer, &win_w, &win_h);
   float w_scale = (float)win_w / GB_DISPLAY_WIDTH;
