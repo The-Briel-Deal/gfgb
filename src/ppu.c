@@ -158,11 +158,17 @@ enum draw_tile_flags {
   DRAW_TILE_PALETTE_OBP0 = 1 << 3,
   DRAW_TILE_PALETTE_OBP1 = 1 << 4,
 };
+static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height) {
+  uint8_t ly = gb_state->regs.io.ly;
+  return ((ly >= y) && (ly <= y + height));
+}
 
 // TODO: check if tile should be double height (8x16)
 static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr, enum draw_tile_flags flags) {
   assert(x < GB_DISPLAY_WIDTH);
   assert(y < GB_DISPLAY_HEIGHT);
+  // TODO: this 8 will need to change to 16 if tile is double height
+  if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
   SDL_Renderer *renderer = gb_state->sdl_renderer;
   int win_w, win_h;
   SDL_GetCurrentRenderOutputSize(gb_state->sdl_renderer, &win_w, &win_h);
