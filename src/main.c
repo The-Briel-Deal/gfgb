@@ -33,7 +33,8 @@ bool gb_video_init(struct gb_state *gb_state) {
     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
     return false;
   }
-  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 1600, 1440, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
   if (!(gb_state->sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
     SDL_Log("Couldn't create bg palette: %s", SDL_GetError());
     return false;
@@ -275,9 +276,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   struct gb_state *gb_state = appstate;
   switch (event->type) {
   case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
-  case SDL_EVENT_WINDOW_RESIZED:
-    SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, event->window.data1, event->window.data2,
-                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x
+                                    height, screen will be automatically letter boxed on resize */
     break;
   }
 
