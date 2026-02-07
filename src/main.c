@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
+#include "tracy/TracyC.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -299,6 +300,7 @@ char *get_inst_symbol(struct gb_state *gb_state) {
 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
+  TracyCFrameMarkStart("SDL Iteration");
   struct gb_state *gb_state = appstate;
   if (!gb_state->halted) {
 #ifdef PRINT_INST_DURING_EXEC
@@ -324,6 +326,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   gb_state->last_mode_handled = curr_mode;
 
+  TracyCFrameMarkStart("SDL Iteration");
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 

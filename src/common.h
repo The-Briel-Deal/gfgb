@@ -1,6 +1,8 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
+#include <tracy/TracyC.h>
+
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
