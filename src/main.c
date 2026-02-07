@@ -302,7 +302,7 @@ const char *const sl_SDL_Iteration = "SDL Iteration";
 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
-  TracyCFrameMarkStart(sl_SDL_Iteration);
+  TracyCFrameMarkStart(NULL);
   struct gb_state *gb_state = appstate;
   if (!gb_state->halted) {
 #ifdef PRINT_INST_DURING_EXEC
@@ -328,7 +328,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   gb_state->last_mode_handled = curr_mode;
 
-  TracyCFrameMarkEnd(sl_SDL_Iteration);
+  TracyCFrameMarkEnd(NULL);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
