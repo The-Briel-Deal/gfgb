@@ -46,6 +46,7 @@
 #define GB_TILEDATA_BLOCK0_START   0x8000
 #define GB_TILEDATA_BLOCK1_START   0x8800
 #define GB_TILEDATA_BLOCK2_START   0x9000
+#define GB_TILEDATA_BLOCK2_END     0x9800
 
 #define GB_TILEMAP_BLOCK0_START    0x9800
 #define GB_TILEMAP_BLOCK1_START    0x9C00
@@ -194,6 +195,7 @@ struct gb_state {
   };
   struct debug_symbol_list syms;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
+  bool dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
   // this is where all of the oam entries are copied to during the oam read window
   struct oam_entry oam_entries[40];
@@ -294,5 +296,13 @@ void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
 
 size_t b64_encoded_size(size_t inlen);
 char *b64_encode(const unsigned char *in, size_t len);
+
+// This is in common since I need to also use this for marking textures dirty when they are written to.
+inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
+  int tex_index = (tile_addr - GB_TILEDATA_BLOCK0_START) / 16;
+  assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
+  assert(tex_index >= 0);
+  return tex_index;
+}
 
 #endif // GB_COMMON_H

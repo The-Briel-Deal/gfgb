@@ -175,6 +175,12 @@ uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
     }
   }
 }
+void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
+  if (addr >= GB_TILEDATA_BLOCK0_START && addr < GB_TILEDATA_BLOCK2_END) {
+    uint16_t tex_idx = tile_addr_to_tex_idx(addr);
+    gb_state->dirty_textures[tex_idx] = true;
+  }
+}
 
 void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->use_flat_ram) {
@@ -194,11 +200,17 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     } else {
       val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
     }
-    if (val_ptr != NULL)
+    if (val_ptr != NULL) {
+      // VRAM is the only place where stuff needs to be uploaded to the GPU (which is expensive). So we mark modified
+      // items in vram as dirty where necessary.
+      if (addr >= VRAM_START && addr <= VRAM_END) {
+        mark_dirty(gb_state, addr);
+      }
       *val_ptr = val;
-    else
+    } else {
       SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
                       "`write_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+    }
   }
 }
 
