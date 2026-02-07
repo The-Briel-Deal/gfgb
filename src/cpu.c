@@ -189,7 +189,17 @@ void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
 #define ARITHMETIC_R8_MASK  0b00000111
 #define ARITHMETIC_OP_MASK  0b00111000
 
+const char *const TracyFrame_fetch = "Fetch";
+
+static inline struct inst _fetch(struct gb_state *gb_state);
 struct inst fetch(struct gb_state *gb_state) {
+  TracyCFrameMarkStart(TracyFrame_fetch);
+  struct inst inst = _fetch(gb_state);
+  TracyCFrameMarkEnd(TracyFrame_fetch);
+  return inst;
+}
+
+static inline struct inst _fetch(struct gb_state *gb_state) {
   assert(!gb_state->halted);
   uint8_t curr_byte = next8(gb_state);
   uint8_t block = CRUMB0(curr_byte);
@@ -1324,7 +1334,16 @@ void handle_interrupts(struct gb_state *gb_state) {
   }
 }
 
+const char *const TracyFrame_execute = "Execute";
+
+static inline void _execute(struct gb_state *gb_state, struct inst inst);
 void execute(struct gb_state *gb_state, struct inst inst) {
+  TracyCFrameMarkStart(TracyFrame_execute);
+  _execute(gb_state, inst);
+  TracyCFrameMarkEnd(TracyFrame_execute);
+}
+
+static inline void _execute(struct gb_state *gb_state, struct inst inst) {
   assert(!gb_state->halted);
   bool set_ime_after_this_inst = gb_state->regs.io.set_ime_after;
 #ifdef PRINT_INST_DURING_EXEC

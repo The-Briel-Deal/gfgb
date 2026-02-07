@@ -2,7 +2,6 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
-#include "tracy/TracyC.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -297,8 +296,7 @@ char *get_inst_symbol(struct gb_state *gb_state) {
   }
   return "Unknown";
 }
-
-const char *const sl_SDL_Iteration = "SDL Iteration";
+const char* const TracyFrame_fetch_exec = "CPU Fetch and Execute"; 
 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
@@ -308,8 +306,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 #ifdef PRINT_INST_DURING_EXEC
     printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
+    TracyCFrameMarkStart(TracyFrame_fetch_exec);
     struct inst inst = fetch(gb_state);
     execute(gb_state, inst);
+    TracyCFrameMarkEnd(TracyFrame_fetch_exec);
   } else {
     // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
     gb_state->m_cycles_elapsed++;
