@@ -6,7 +6,15 @@ project(
   default_options : ['warning_level=3', 'c_std=c23'],
 )
 
-dependencies = [dependency('sdl3')]
+sdl3_dep = dependency('sdl3')
+tracy_dep = dependency('tracy', static : true)
+global_deps = []
+if get_option('tracy_enable')
+  global_deps += tracy_dep
+  if get_option('buildtype') != 'debugoptimized'
+    warning('Profiling builds should set --buildtype=debugoptimized')
+  endif
+endif
 
 sources = [
   'src/disassemble.c',
@@ -19,7 +27,7 @@ shared_lib = shared_library(
   'gfgb', 
   [sources],
   include_directories : include_directories(['src/']),
-  dependencies : dependencies,
+  dependencies : [sdl3_dep, global_deps],
 )
 
 py = import('python').find_installation()
@@ -29,7 +37,7 @@ gfgb_obj = static_library(
   'gfgb',
   'py/gfgb.pyx',
   include_directories : include_directories(['src/']),
-  dependencies : [dep_py],
+  dependencies : [dep_py, global_deps],
   override_options : ['warning_level=0'],
 )
 
@@ -39,14 +47,14 @@ gfgb_py_ext = py.extension_module(
   include_directories : include_directories(['src/']),
   link_whole : [gfgb_obj],
   install : true,
-  dependencies : [dependencies],
+  dependencies : [sdl3_dep, global_deps],
 )
 
 exe = executable(
   'gb_emu',
   [sources, 'src/main.c'],
   include_directories : include_directories(['src/']),
-  dependencies : dependencies,
+  dependencies : [sdl3_dep, global_deps],
   install : true,
 )
 
@@ -55,7 +63,7 @@ cpu_test_exe = executable(
   sources,
   c_args : '-DRUN_CPU_TESTS=1',
   include_directories : include_directories(['src/']),
-  dependencies : dependencies,
+  dependencies : [sdl3_dep, global_deps],
 )
 
 ppu_test_exe = executable(
@@ -63,7 +71,7 @@ ppu_test_exe = executable(
   sources,
   c_args : '-DRUN_PPU_TESTS=1',
   include_directories : include_directories(['src/']),
-  dependencies : dependencies,
+  dependencies : [sdl3_dep, global_deps],
 )
 
 disasm_test_exe = executable(
@@ -71,7 +79,7 @@ disasm_test_exe = executable(
   sources,
   c_args : '-DRUN_DISASSEMBLE_TESTS=1',
   include_directories : include_directories(['src/']),
-  dependencies : dependencies,
+  dependencies : [sdl3_dep, global_deps],
 )
 
 current_src_dir = meson.current_source_dir()
