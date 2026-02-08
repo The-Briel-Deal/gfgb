@@ -300,9 +300,6 @@ bool gb_state_get_err(struct gb_state *gb_state);
 // to be a flat 64KB bank.
 void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
 
-size_t b64_encoded_size(size_t inlen);
-char *b64_encode(const unsigned char *in, size_t len);
-
 // This is in common since I need to also use this for marking textures dirty when they are written to.
 inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
   int tex_index = (tile_addr - GB_TILEDATA_BLOCK0_START) / 16;
