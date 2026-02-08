@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "common.h"
+#include "tracy/TracyC.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -189,13 +190,13 @@ void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
 #define ARITHMETIC_R8_MASK  0b00000111
 #define ARITHMETIC_OP_MASK  0b00111000
 
-const char *const TracyFrame_fetch = "Fetch";
+const char *const TracyZone_fetch = "Fetch";
 
 static inline struct inst _fetch(struct gb_state *gb_state);
 struct inst fetch(struct gb_state *gb_state) {
-  TracyCFrameMarkStart(TracyFrame_fetch);
+  TracyCZone(TracyZone_fetch, true);
   struct inst inst = _fetch(gb_state);
-  TracyCFrameMarkEnd(TracyFrame_fetch);
+  TracyCZoneEnd(TracyZone_fetch);
   return inst;
 }
 
@@ -1334,13 +1335,13 @@ void handle_interrupts(struct gb_state *gb_state) {
   }
 }
 
-const char *const TracyFrame_execute = "Execute";
+const char *const TracyZone_execute = "Execute";
 
 static inline void _execute(struct gb_state *gb_state, struct inst inst);
 void execute(struct gb_state *gb_state, struct inst inst) {
-  TracyCFrameMarkStart(TracyFrame_execute);
+  TracyCZone(TracyZone_execute, true);
   _execute(gb_state, inst);
-  TracyCFrameMarkEnd(TracyFrame_execute);
+  TracyCZoneEnd(TracyZone_execute);
 }
 
 static inline void _execute(struct gb_state *gb_state, struct inst inst) {
