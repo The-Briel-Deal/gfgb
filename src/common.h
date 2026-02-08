@@ -36,13 +36,13 @@
 
 #define NOT_IMPLEMENTED(msg)                                                                                           \
   {                                                                                                                    \
-    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "This functionality is not yet implemented: %s", msg);               \
+    LogCritical("This functionality is not yet implemented: %s", msg);                                                 \
     abort();                                                                                                           \
   }
 
 #define ERR(gb_state, msg, ...)                                                                                        \
   {                                                                                                                    \
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__);                                                    \
+    LogError(msg, ##__VA_ARGS__);                                                                                      \
     gb_state->err |= true;                                                                                             \
   }
 

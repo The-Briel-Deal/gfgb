@@ -25,27 +25,27 @@ enum run_mode {
 
 bool gb_video_init(struct gb_state *gb_state) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+    LogCritical("Couldn't initialize SDL: %s", SDL_GetError());
     return false;
   }
 
   if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
                                    &gb_state->sdl_renderer)) {
-    SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+    LogCritical("Couldn't create window/renderer: %s", SDL_GetError());
     return false;
   }
   SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
   if (!(gb_state->sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    SDL_Log("Couldn't create bg palette: %s", SDL_GetError());
+    LogCritical("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
   if (!(gb_state->sdl_obj_palette_0 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    SDL_Log("Couldn't create obj palette 0: %s", SDL_GetError());
+    LogCritical("Couldn't create obj palette 0: %s", SDL_GetError());
     return false;
   }
   if (!(gb_state->sdl_obj_palette_1 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    SDL_Log("Couldn't create obj palette 1: %s", SDL_GetError());
+    LogCritical("Couldn't create obj palette 1: %s", SDL_GetError());
     return false;
   }
 
@@ -99,14 +99,14 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
     f = fopen(rom_name, "r");
     bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
     if ((err = ferror(f))) {
-      SDL_Log("Error when reading rom file: %d", err);
+      LogCritical("Error when reading rom file: %d", err);
       return false;
     }
     memcpy(gb_state->rom0, bytes, bytes_len);
     if (!feof(f)) {
       bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
       if ((err = ferror(f))) {
-        SDL_Log("Error when reading rom file: %d", err);
+        LogCritical("Error when reading rom file: %d", err);
         return false;
       }
       memcpy(gb_state->rom1, bytes, bytes_len);
@@ -121,7 +121,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
     f = fopen(sym_name, "r");
     parse_syms(&gb_state->syms, f);
     if ((err = ferror(f))) {
-      SDL_Log("Error when reading symbol file: %d", err);
+      LogCritical("Error when reading symbol file: %d", err);
       return false;
     }
     fclose(f);
@@ -132,7 +132,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
     f = fopen(bootrom_name, "r");
     bytes_len = fread(gb_state->bootrom, sizeof(uint8_t), 0x0100, f);
     if ((err = ferror(f))) {
-      SDL_Log("Error when reading bootrom file: %d", err);
+      LogCritical("Error when reading bootrom file: %d", err);
       return false;
     }
     fclose(f);
@@ -153,12 +153,11 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       bootrom_sym_name[bootrom_name_len - 1] = 'y';
       bootrom_sym_name[bootrom_name_len - 0] = 'm';
       bootrom_sym_name[bootrom_name_len + 1] = '\0';
-      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Looking for bootrom symbol file at `%s`", bootrom_sym_name);
+      LogCritical("Looking for bootrom symbol file at `%s`", bootrom_sym_name);
       f = fopen(bootrom_sym_name, "r");
       if (f == NULL) {
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-                     "Error '%s' occured in when opening symbol file. Is the file present and accessible?",
-                     strerror(errno));
+        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?",
+                 strerror(errno));
       }
 
       if (f != NULL) {
@@ -170,7 +169,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       }
       free(bootrom_sym_name);
     } else {
-      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Bootrom filename `%s` does not end with `.gb`", bootrom_name);
+      LogDebug("Bootrom filename `%s` does not end with `.gb`", bootrom_name);
     }
   } else {
     gb_state->regs.pc = 0x0100;
@@ -245,7 +244,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     if (serial_output_filename != NULL) {
       gb_state->serial_port_output = fopen(serial_output_filename, "w");
       if (gb_state->serial_port_output == NULL) {
-        SDL_Log("Error when opening serial port output file: %s", strerror(errno));
+        LogCritical("Error when opening serial port output file: %s", strerror(errno));
         return SDL_APP_FAILURE;
       }
     }

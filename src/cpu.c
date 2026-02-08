@@ -447,7 +447,7 @@ static inline struct inst _fetch(struct gb_state *gb_state) {
 
     break;
   }
-  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown instruction 0x%.2X.", curr_byte);
+  LogError("Unknown instruction 0x%.2X.", curr_byte);
   return (struct inst){.type = UNKNOWN_INST, .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte), .p2 = VOID_PARAM};
 }
 
@@ -1549,17 +1549,17 @@ void test_execute_call_ret() {
 
 #define TEST_CASE(name)                                                                                                \
   {                                                                                                                    \
-    SDL_Log("running `test_%s()`", #name);                                                                             \
+    LogInfo("running `test_%s()`", #name);                                                                             \
     test_##name();                                                                                                     \
   }
 
 int main() {
-  SDL_Log("Starting CPU tests.");
+  LogInfo("Starting CPU tests.");
   TEST_CASE(fetch);
   TEST_CASE(execute_load);
   TEST_CASE(execute_call_ret);
   TEST_CASE(stack_ops);
-  SDL_Log("CPU tests succeeded.");
+  LogInfo("CPU tests succeeded.");
   SDL_Quit();
 }
 

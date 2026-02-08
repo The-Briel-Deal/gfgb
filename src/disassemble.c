@@ -575,12 +575,12 @@ void test_parse_debug_sym() {
 }
 
 int main() {
-  SDL_Log("Starting Disassemble tests.");
-  SDL_Log("running `test_disasm()`");
+  LogInfo("Starting Disassemble tests.");
+  LogInfo("running `test_disasm()`");
   test_disasm();
-  SDL_Log("running `test_parse_debug_sym()`");
+  LogInfo("running `test_parse_debug_sym()`");
   test_parse_debug_sym();
-  SDL_Log("Disassemble tests succeeded.");
+  LogInfo("Disassemble tests succeeded.");
   SDL_Quit();
 }
 

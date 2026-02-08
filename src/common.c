@@ -71,7 +71,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_BGP: return &gb_state->regs.io.bgp;
   case IO_OBP0: return &gb_state->regs.io.obp0;
   case IO_OBP1: return &gb_state->regs.io.obp1;
-  default: SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
+  default: LogError("IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
   }
 }
 uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
@@ -112,8 +112,7 @@ void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
     return &gb_state->hram[addr - HRAM_START];
   }
 not_implemented:
-  SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                  "`unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
+  LogError("`unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
   return NULL;
 }
 
@@ -137,7 +136,7 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
         val = *io_reg_ptr;
         break;
       }
-      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", addr, val);
+      LogDebug("Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", addr, val);
       return val;
     }
 
@@ -147,8 +146,7 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
     goto not_implemented;
 
   not_implemented:
-    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                    "`read_mem8()` received a null pointer from unmap_address() when addr = 0x%.4X", addr);
+    LogCritical("`read_mem8()` received a null pointer from unmap_address() when addr = 0x%.4X", addr);
     return 0;
   }
 }
@@ -169,8 +167,7 @@ uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
       val |= val_ptr[1] << 8;
       return val;
     } else {
-      SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                      "`read_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+      LogCritical("`read_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
       return 0;
     }
   }
@@ -196,7 +193,7 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     uint8_t *val_ptr;
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
       val_ptr = get_io_reg(gb_state, addr);
-      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, addr);
+      LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, addr);
     } else {
       val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
     }
@@ -208,8 +205,7 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
       }
       *val_ptr = val;
     } else {
-      SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                      "`write_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+      LogCritical("`write_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
     }
   }
 }
@@ -227,8 +223,7 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
       val_ptr[0] = (val & 0x00FF) >> 0;
       val_ptr[1] = (val & 0xFF00) >> 8;
     } else {
-      SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                      "`write_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+      LogCritical("`write_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
     }
   }
 }

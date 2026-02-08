@@ -40,7 +40,7 @@ static SDL_Texture *gb_create_tex(struct gb_state *gb_state, uint16_t tile_addr)
 
   SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, 8, 8);
   if (texture == NULL) {
-    SDL_Log("SDL_CreateTexture returned null: %s", SDL_GetError());
+    LogInfo("SDL_CreateTexture returned null: %s", SDL_GetError());
     abort();
   }
   gb_state->textures[index] = texture;
@@ -344,17 +344,17 @@ void test_gb_tile_to_8bit_indexed() {
   gb_tile_to_8bit_indexed(gb_tile_in, indexed_8bit_tile_result);
   for (int i = 0; i < 16; i++) {
     if (indexed_8bit_tile_expect[i] != indexed_8bit_tile_result[i]) {
-      SDL_Log("byte i=%d of indexed_8bit result (%.8b) is not equal to result (%.8b)\n", i, indexed_8bit_tile_result[i],
+      LogInfo("byte i=%d of indexed_8bit result (%.8b) is not equal to result (%.8b)\n", i, indexed_8bit_tile_result[i],
               indexed_8bit_tile_expect[i]);
       abort();
     }
   }
 }
 int main() {
-  SDL_Log("Starting PPU tests.");
-  SDL_Log("running `test_gb_tile_to_indexed_8bit()`");
+  LogInfo("Starting PPU tests.");
+  LogInfo("running `test_gb_tile_to_indexed_8bit()`");
   test_gb_tile_to_8bit_indexed();
-  SDL_Log("PPU tests succeeded.");
+  LogInfo("PPU tests succeeded.");
   SDL_Quit();
 }
 #endif
