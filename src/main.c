@@ -310,6 +310,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   TracyCZoneN(ctx, "Fetch and Execute", true);
   if (!gb_state->halted) {
     TracyCZoneColor(ctx, TRACY_COLOR_GREEN);
+    TracyCZoneTextN(ctx, "Not Halted");
 #ifdef PRINT_INST_DURING_EXEC
     printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
@@ -330,6 +331,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   curr_mode = gb_state->regs.io.stat & 0b11;
   last_mode = gb_state->last_mode_handled;
 
+  TracyCZoneN(rndr_ctx, "Rendering", true);
   if (curr_mode != last_mode) switch (curr_mode) {
     case OAM_SCAN: gb_read_oam_entries(gb_state); break;
     case DRAWING_PIXELS: gb_draw(gb_state); break;
@@ -337,6 +339,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     case VBLANK: gb_present(gb_state); break;
     }
   gb_state->last_mode_handled = curr_mode;
+  TracyCZoneEnd(rndr_ctx);
 
   TracyCFrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */

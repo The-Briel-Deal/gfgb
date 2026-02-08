@@ -1298,6 +1298,7 @@ static void ex_cpl(struct gb_state *gb_state, struct inst inst) {
 }
 
 void handle_interrupts(struct gb_state *gb_state) {
+  TracyCZoneN(ctx, "Handle Interrupts", true);
   uint8_t to_handle = gb_state->regs.io.ie & gb_state->regs.io.if_;
 
   // even if ime is false we still want to stop being halted once an interrupt is available
@@ -1331,6 +1332,7 @@ void handle_interrupts(struct gb_state *gb_state) {
     gb_state->regs.io.ime = false;
   interrupt_handled_end:
   }
+  TracyCZoneEnd(ctx);
 }
 
 static inline void _execute(struct gb_state *gb_state, struct inst inst);
