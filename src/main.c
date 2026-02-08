@@ -307,55 +307,57 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   TracyCFrameMarkStart(TracyFrame_SDL_AppIterate);
   struct gb_state *gb_state = appstate;
 
-  TracyCZoneN(ctx, "Fetch and Execute", true);
-  if (!gb_state->halted) {
-    TracyCZoneColor(ctx, TRACY_COLOR_GREEN);
-    TracyCZoneTextN(ctx, "Not Halted");
+  for (int i = 0; i < 100; i++) {
+    TracyCZoneN(ctx, "Fetch and Execute", true);
+    if (!gb_state->halted) {
+      TracyCZoneColor(ctx, TRACY_COLOR_GREEN);
+      TracyCZoneTextN(ctx, "Not Halted");
 #ifdef PRINT_INST_DURING_EXEC
-    printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
+      printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-    struct inst inst = fetch(gb_state);
-    execute(gb_state, inst);
-  } else {
-    // Halted
-    TracyCZoneColor(ctx, TRACY_COLOR_RED);
-    TracyCZoneTextN(ctx, "Halted");
-    // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
-    gb_state->m_cycles_elapsed++;
-  }
-  TracyCZoneEnd(ctx);
-
-  update_timers(gb_state);
-  handle_interrupts(gb_state);
-  uint8_t curr_mode, last_mode;
-  curr_mode = gb_state->regs.io.stat & 0b11;
-  last_mode = gb_state->last_mode_handled;
-
-  TracyCZoneN(rndr_ctx, "Rendering", true);
-  if (curr_mode != last_mode) switch (curr_mode) {
-    case OAM_SCAN:
-      TracyCZoneTextN(rndr_ctx, "OAM_SCAN");
-      TracyCMessageL("OAM_SCAN");
-      gb_read_oam_entries(gb_state);
-      break;
-    case DRAWING_PIXELS:
-      TracyCZoneTextN(rndr_ctx, "DRAWING_PIXELS");
-      TracyCMessageL("DRAWING_PIXELS");
-      gb_draw(gb_state);
-      break;
-    case HBLANK:
-      TracyCZoneTextN(rndr_ctx, "HBLANK");
-      TracyCMessageL("HBLANK");
-      gb_composite_line(gb_state);
-      break;
-    case VBLANK:
-      TracyCZoneTextN(rndr_ctx, "VBLANK");
-      TracyCMessageL("VBLANK");
-      gb_present(gb_state);
-      break;
+      struct inst inst = fetch(gb_state);
+      execute(gb_state, inst);
+    } else {
+      // Halted
+      TracyCZoneColor(ctx, TRACY_COLOR_RED);
+      TracyCZoneTextN(ctx, "Halted");
+      // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
+      gb_state->m_cycles_elapsed++;
     }
-  gb_state->last_mode_handled = curr_mode;
-  TracyCZoneEnd(rndr_ctx);
+    TracyCZoneEnd(ctx);
+
+    update_timers(gb_state);
+    handle_interrupts(gb_state);
+    uint8_t curr_mode, last_mode;
+    curr_mode = gb_state->regs.io.stat & 0b11;
+    last_mode = gb_state->last_mode_handled;
+
+    TracyCZoneN(rndr_ctx, "Rendering", true);
+    if (curr_mode != last_mode) switch (curr_mode) {
+      case OAM_SCAN:
+        TracyCZoneTextN(rndr_ctx, "OAM_SCAN");
+        TracyCMessageL("OAM_SCAN");
+        gb_read_oam_entries(gb_state);
+        break;
+      case DRAWING_PIXELS:
+        TracyCZoneTextN(rndr_ctx, "DRAWING_PIXELS");
+        TracyCMessageL("DRAWING_PIXELS");
+        gb_draw(gb_state);
+        break;
+      case HBLANK:
+        TracyCZoneTextN(rndr_ctx, "HBLANK");
+        TracyCMessageL("HBLANK");
+        gb_composite_line(gb_state);
+        break;
+      case VBLANK:
+        TracyCZoneTextN(rndr_ctx, "VBLANK");
+        TracyCMessageL("VBLANK");
+        gb_present(gb_state);
+        break;
+      }
+    gb_state->last_mode_handled = curr_mode;
+    TracyCZoneEnd(rndr_ctx);
+  }
 
   TracyCFrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
