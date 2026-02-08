@@ -3,6 +3,11 @@
 
 #include <tracy/TracyC.h>
 
+// Redefining this macro which is currently calling the wrong logString fn.
+// I can drop this once https://github.com/wolfpld/tracy/issues/1274 is resolved
+#undef TracyCMessageL
+#define TracyCMessageL(txt) ___tracy_emit_logStringL(TracyMessageSeverityInfo, 0, TRACY_CALLSTACK, txt)
+
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
