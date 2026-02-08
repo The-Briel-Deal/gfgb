@@ -8,9 +8,8 @@ project(
 
 sdl3_dep = dependency('sdl3')
 tracy_dep = dependency('tracy', static : true)
-global_deps = []
+global_deps = [tracy_dep]
 if get_option('tracy_enable')
-  global_deps += tracy_dep
   if get_option('buildtype') != 'debugoptimized'
     warning('Profiling builds should set --buildtype=debugoptimized')
   endif

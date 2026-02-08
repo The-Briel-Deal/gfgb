@@ -121,7 +121,7 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->use_flat_ram) {
     return gb_state->flat_ram[addr];
   } else {
-    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Reading 8 bits from address 0x%.4X", addr);
+    LogTrace("Reading 8 bits from address 0x%.4X", addr);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
       uint8_t val;
       switch (addr) {
@@ -161,7 +161,7 @@ uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
     val |= val_ptr[1] << 8;
     return val;
   } else {
-    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Reading 16 bits from address 0x%.4X", addr);
+    LogTrace("Reading 16 bits from address 0x%.4X", addr);
     uint8_t *val_ptr = unmap_address(gb_state, addr);
     if (val_ptr != NULL) {
       uint16_t val = 0x0000;
@@ -186,7 +186,7 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->use_flat_ram) {
     gb_state->flat_ram[addr] = val;
   } else {
-    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.2X to address 0x%.4X", val, addr);
+    LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
     if (addr == IO_SB) {
       // TODO: This just logs out every character written to this port. If I
       // actually want to implement gamelink support there is more to do.
@@ -220,7 +220,7 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
     val_ptr[0] = (val & 0x00FF) >> 0;
     val_ptr[1] = (val & 0xFF00) >> 8;
   } else {
-    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, "Writing val 0x%.4X to address 0x%.4X", val, addr);
+    LogTrace("Writing val 0x%.4X to address 0x%.4X", val, addr);
     // little endian
     uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
     if (val_ptr != NULL) {

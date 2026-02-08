@@ -5,8 +5,10 @@
 
 // Redefining this macro which is currently calling the wrong logString fn.
 // I can drop this once https://github.com/wolfpld/tracy/issues/1274 is resolved
+#ifdef TRACY_ENABLE
 #undef TracyCMessageL
 #define TracyCMessageL(txt) ___tracy_emit_logStringL(TracyMessageSeverityInfo, 0, TRACY_CALLSTACK, txt)
+#endif
 
 #include "cpu.h"
 #include "disassemble.h"
@@ -17,6 +19,20 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef GFGB_ENABLE_LOGGING
+#define LogTrace(msg, ...)    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
+#define LogInfo(msg, ...)     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
+#define LogDebug(msg, ...)    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
+#define LogError(msg, ...)    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
+#define LogCritical(msg, ...) SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
+#else
+#define LogTrace(msg, ...)
+#define LogInfo(msg, ...)
+#define LogDebug(msg, ...)
+#define LogError(msg, ...)
+#define LogCritical(msg, ...)
+#endif
 
 #define NOT_IMPLEMENTED(msg)                                                                                           \
   {                                                                                                                    \
