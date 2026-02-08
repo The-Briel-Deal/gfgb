@@ -300,9 +300,11 @@ char *get_inst_symbol(struct gb_state *gb_state) {
 
 #define TracyCZoneTextN(ctx, txt) TracyCZoneText(ctx, txt, sizeof(txt));
 
+const char *const TracyFrame_SDL_AppIterate = "App Iteration";
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
-  TracyCFrameMarkStart(NULL);
+  TracyCFrameMarkStart(TracyFrame_SDL_AppIterate);
   struct gb_state *gb_state = appstate;
 
   TracyCZoneN(ctx, "Fetch and Execute", true);
@@ -336,7 +338,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   gb_state->last_mode_handled = curr_mode;
 
-  TracyCFrameMarkEnd(NULL);
+  TracyCFrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 

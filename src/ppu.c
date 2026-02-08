@@ -316,6 +316,8 @@ void gb_present(struct gb_state *gb_state) {
   assert(success);
   success = SDL_RenderPresent(gb_state->sdl_renderer);
   assert(success);
+
+  TracyCFrameMark
 }
 
 #ifdef RUN_PPU_TESTS
