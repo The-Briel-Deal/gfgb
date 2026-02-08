@@ -340,14 +340,17 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       break;
     case DRAWING_PIXELS:
       TracyCZoneTextN(rndr_ctx, "DRAWING_PIXELS");
+      TracyCMessageL("DRAWING_PIXELS");
       gb_draw(gb_state);
       break;
     case HBLANK:
       TracyCZoneTextN(rndr_ctx, "HBLANK");
+      TracyCMessageL("HBLANK");
       gb_composite_line(gb_state);
       break;
     case VBLANK:
       TracyCZoneTextN(rndr_ctx, "VBLANK");
+      TracyCMessageL("VBLANK");
       gb_present(gb_state);
       break;
     }
