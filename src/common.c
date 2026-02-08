@@ -354,12 +354,14 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
 }
 
 void update_timers(struct gb_state *gb_state) {
+  TracyCZoneN(ctx, "Update Timers", true);
   uint64_t curr_m_cycles = m_cycles(gb_state);
   uint64_t prev_m_cycles = gb_state->last_timer_sync_m_cycles;
   gb_state->last_timer_sync_m_cycles = curr_m_cycles;
 
   update_tima(gb_state, prev_m_cycles, curr_m_cycles);
   update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);
+  TracyCZoneEnd(ctx);
 }
 
 bool gb_state_get_err(struct gb_state *gb_state) {

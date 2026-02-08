@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
+#include "tracy/TracyC.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -297,22 +298,30 @@ char *get_inst_symbol(struct gb_state *gb_state) {
   return "Unknown";
 }
 
+#define TracyCZoneTextN(ctx, txt) TracyCZoneText(ctx, txt, sizeof(txt));
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   TracyCFrameMarkStart(NULL);
   struct gb_state *gb_state = appstate;
+
+  TracyCZoneN(ctx, "Fetch and Execute", true);
   if (!gb_state->halted) {
+    TracyCZoneColor(ctx, TRACY_COLOR_GREEN);
 #ifdef PRINT_INST_DURING_EXEC
     printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-    TracyCZoneN(ctx, "Fetch and Execute", true);
     struct inst inst = fetch(gb_state);
     execute(gb_state, inst);
-    TracyCZoneEnd(ctx);
   } else {
+    // Halted
+    TracyCZoneColor(ctx, TRACY_COLOR_RED);
+    TracyCZoneTextN(ctx, "Halted");
     // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
     gb_state->m_cycles_elapsed++;
   }
+  TracyCZoneEnd(ctx);
+
   update_timers(gb_state);
   handle_interrupts(gb_state);
   uint8_t curr_mode, last_mode;

@@ -102,10 +102,14 @@
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
-#define HBLANK         0
-#define VBLANK         1
-#define OAM_SCAN       2
-#define DRAWING_PIXELS 3
+#define HBLANK            0
+#define VBLANK            1
+#define OAM_SCAN          2
+#define DRAWING_PIXELS    3
+
+#define TRACY_COLOR_RED   0xff0000
+#define TRACY_COLOR_GREEN 0x00ff00
+#define TRACY_COLOR_BLUE  0x0000ff
 
 struct gb_state {
   SDL_Window *sdl_window;
