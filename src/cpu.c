@@ -190,13 +190,11 @@ void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
 #define ARITHMETIC_R8_MASK  0b00000111
 #define ARITHMETIC_OP_MASK  0b00111000
 
-const char *const TracyZone_fetch = "Fetch";
-
 static inline struct inst _fetch(struct gb_state *gb_state);
 struct inst fetch(struct gb_state *gb_state) {
-  TracyCZone(TracyZone_fetch, true);
+  TracyCZoneN(ctx, "Fetch", true);
   struct inst inst = _fetch(gb_state);
-  TracyCZoneEnd(TracyZone_fetch);
+  TracyCZoneEnd(ctx);
   return inst;
 }
 
@@ -1335,13 +1333,11 @@ void handle_interrupts(struct gb_state *gb_state) {
   }
 }
 
-const char *const TracyZone_execute = "Execute";
-
 static inline void _execute(struct gb_state *gb_state, struct inst inst);
 void execute(struct gb_state *gb_state, struct inst inst) {
-  TracyCZone(TracyZone_execute, true);
+  TracyCZoneN(ctx, "Execute", true);
   _execute(gb_state, inst);
-  TracyCZoneEnd(TracyZone_execute);
+  TracyCZoneEnd(ctx);
 }
 
 static inline void _execute(struct gb_state *gb_state, struct inst inst) {

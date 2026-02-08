@@ -296,7 +296,6 @@ char *get_inst_symbol(struct gb_state *gb_state) {
   }
   return "Unknown";
 }
-const char *const TracyZone_fetch_exec = "CPU Fetch and Execute";
 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
@@ -306,10 +305,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 #ifdef PRINT_INST_DURING_EXEC
     printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-    TracyCZone(TracyZone_fetch_exec, true);
+    TracyCZoneN(ctx, "Fetch and Execute", true);
     struct inst inst = fetch(gb_state);
     execute(gb_state, inst);
-    TracyCZoneEnd(TracyZone_fetch_exec);
+    TracyCZoneEnd(ctx);
   } else {
     // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
     gb_state->m_cycles_elapsed++;
