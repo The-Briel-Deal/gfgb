@@ -297,9 +297,15 @@ void gb_draw(struct gb_state *gb_state) {
 
   gb_state->last_frame_ticks_ns = this_frame_ticks_ns;
 
+  TracyCZoneN(update_palettes_ctx, "Palette Update", true);
   update_palettes(gb_state);
+  TracyCZoneEnd(update_palettes_ctx);
+  TracyCZoneN(render_bg_ctx, "Background Render", true);
   gb_render_bg(gb_state, gb_state->sdl_bg_target);
+  TracyCZoneEnd(render_bg_ctx);
+  TracyCZoneN(render_objs_ctx, "Object Render", true);
   gb_render_objs(gb_state, gb_state->sdl_obj_target);
+  TracyCZoneEnd(render_objs_ctx);
 }
 
 // called on vblank
