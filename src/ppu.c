@@ -169,10 +169,6 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
   SDL_Renderer *renderer = gb_state->sdl_renderer;
-  int win_w, win_h;
-  SDL_GetCurrentRenderOutputSize(gb_state->sdl_renderer, &win_w, &win_h);
-  float w_scale = (float)win_w / GB_DISPLAY_WIDTH;
-  float h_scale = (float)win_h / GB_DISPLAY_HEIGHT;
 
   SDL_Palette *palette;
   if (flags & DRAW_TILE_PALETTE_BGP) {
@@ -188,10 +184,10 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
 
   bool ret;
   SDL_FRect dstrect = {
-      .x = w_scale * x,
-      .y = h_scale * y,
-      .w = 8.0f * w_scale,
-      .h = 8.0f * h_scale,
+      .x = x,
+      .y = y,
+      .w = 8.0f,
+      .h = 8.0f,
   };
 
   SDL_FlipMode flip = 0;
