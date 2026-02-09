@@ -6,6 +6,9 @@
 
 struct gb_state;
 
+bool gb_video_init(struct gb_state *gb_state);
+void gb_video_free(struct gb_state *gb_state);
+
 #define OBP0 0
 #define OBP1 1
 

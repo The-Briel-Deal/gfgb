@@ -23,68 +23,6 @@ enum run_mode {
   DISASSEMBLE,
 };
 
-bool gb_video_init(struct gb_state *gb_state) {
-  if (!SDL_Init(SDL_INIT_VIDEO)) {
-    LogCritical("Couldn't initialize SDL: %s", SDL_GetError());
-    return false;
-  }
-
-  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
-                                   &gb_state->sdl_renderer)) {
-    LogCritical("Couldn't create window/renderer: %s", SDL_GetError());
-    return false;
-  }
-  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
-  if (!(gb_state->sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    LogCritical("Couldn't create bg palette: %s", SDL_GetError());
-    return false;
-  }
-  if (!(gb_state->sdl_obj_palette_0 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    LogCritical("Couldn't create obj palette 0: %s", SDL_GetError());
-    return false;
-  }
-  if (!(gb_state->sdl_obj_palette_1 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
-    LogCritical("Couldn't create obj palette 1: %s", SDL_GetError());
-    return false;
-  }
-
-  SDL_SetDefaultTextureScaleMode(gb_state->sdl_renderer, SDL_SCALEMODE_PIXELART);
-
-  gb_state->sdl_bg_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                              GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_bg_target != NULL);
-  gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                               GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_obj_target != NULL);
-  gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
-                                                     SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_composite_target != NULL);
-
-  return true;
-}
-void gb_video_free(struct gb_state *gb_state) {
-  // free all textures
-  for (int i = 0; i < DMG_N_TILEDATA_ADDRESSES; i++) {
-    if (gb_state->textures[i] != NULL) {
-      SDL_DestroyTexture(gb_state->textures[i]);
-      gb_state->textures[i] = NULL;
-    }
-  }
-  SDL_DestroyPalette(gb_state->sdl_bg_palette);
-  gb_state->sdl_bg_palette = NULL;
-  SDL_DestroyPalette(gb_state->sdl_obj_palette_0);
-  gb_state->sdl_obj_palette_0 = NULL;
-  SDL_DestroyPalette(gb_state->sdl_obj_palette_1);
-  gb_state->sdl_obj_palette_1 = NULL;
-  SDL_DestroyRenderer(gb_state->sdl_renderer);
-  gb_state->sdl_renderer = NULL;
-  SDL_DestroyWindow(gb_state->sdl_window);
-  gb_state->sdl_window = NULL;
-}
-
-#undef GREYSCALE_COLOR
-
 static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name,
                         const char *sym_name) {
   FILE *f;
