@@ -13,7 +13,7 @@ bool gb_video_init(struct gb_state *gb_state) {
     return false;
   }
 
-  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
+  if (!SDL_CreateWindowAndRenderer("GF-GB", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
                                    &gb_state->sdl_renderer)) {
     LogCritical("Couldn't create window/renderer: %s", SDL_GetError());
     return false;
