@@ -334,24 +334,24 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     TracyCZoneN(rndr_ctx, "Rendering", true);
     if (curr_mode != last_mode) switch (curr_mode) {
       case OAM_SCAN:
-        TracyCZoneTextN(rndr_ctx, "OAM_SCAN");
-        TracyCMessageL("OAM_SCAN");
+        TracyCZoneN(oam_ctx, "OAM Read", true);
         gb_read_oam_entries(gb_state);
+        TracyCZoneEnd(oam_ctx);
         break;
       case DRAWING_PIXELS:
-        TracyCZoneTextN(rndr_ctx, "DRAWING_PIXELS");
-        TracyCMessageL("DRAWING_PIXELS");
+        TracyCZoneN(draw_pix_ctx, "Drawing Pixels", true);
         gb_draw(gb_state);
+        TracyCZoneEnd(draw_pix_ctx);
         break;
       case HBLANK:
-        TracyCZoneTextN(rndr_ctx, "HBLANK");
-        TracyCMessageL("HBLANK");
+        TracyCZoneN(hblank_ctx, "H-Blank", true);
         gb_composite_line(gb_state);
+        TracyCZoneEnd(hblank_ctx);
         break;
       case VBLANK:
-        TracyCZoneTextN(rndr_ctx, "VBLANK");
-        TracyCMessageL("VBLANK");
+        TracyCZoneN(vblank_ctx, "V-Blank", true);
         gb_present(gb_state);
+        TracyCZoneEnd(vblank_ctx);
         break;
       }
     gb_state->last_mode_handled = curr_mode;
