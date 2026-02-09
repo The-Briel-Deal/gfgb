@@ -7,7 +7,13 @@ project(
 )
 
 sdl3_dep = dependency('sdl3')
-tracy_dep = dependency('tracy', static : true)
+tracy_dep = dependency(
+  'tracy',
+  static : true,
+  default_options : {
+    'warning_level' : '0',
+  },
+)
 global_deps = [tracy_dep]
 if get_option('tracy_enable')
   if get_option('buildtype') != 'debugoptimized'

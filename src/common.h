@@ -12,8 +12,6 @@
 
 #include <SDL3/SDL.h>
 #include <assert.h>
-#undef assert
-#define assert(expr) SDL_assert(expr)
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +19,8 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
+
+#define GF_assert(expr) SDL_assert(expr)
 
 #ifdef GFGB_ENABLE_LOGGING
 #define LogTrace(msg, ...)    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
