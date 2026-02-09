@@ -1,6 +1,8 @@
 #include "ppu.h"
 #include "common.h"
 
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -41,7 +43,7 @@ bool gb_video_init(struct gb_state *gb_state) {
                                                GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_obj_target != NULL);
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
-                                                     SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+                                                     SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_composite_target != NULL);
 
   return true;
@@ -343,24 +345,26 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
 
 void gb_composite_line(struct gb_state *gb_state) {
   bool success;
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, gb_state->sdl_composite_target);
-  GF_assert(success);
-  SDL_FRect line_rect = {
+  SDL_FRect line_frect = {
       .x = 0,
       .y = gb_state->regs.io.ly,
       .h = 1,
       .w = GB_DISPLAY_WIDTH,
   };
-  SDL_Texture *sdl_bg_target_tex = SDL_CreateTextureFromSurface(gb_state->sdl_renderer, gb_state->sdl_bg_target);
-  GF_assert(sdl_bg_target_tex);
-  success = SDL_RenderTexture(gb_state->sdl_renderer, sdl_bg_target_tex, &line_rect, &line_rect);
+  SDL_Rect line_rect = {
+      .x = 0,
+      .y = gb_state->regs.io.ly,
+      .h = 1,
+      .w = GB_DISPLAY_WIDTH,
+  };
+  SDL_Surface *locked_texture;
+  success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
   GF_assert(success);
-  SDL_DestroyTexture(sdl_bg_target_tex);
+  SDL_BlitSurface(gb_state->sdl_bg_target, &line_rect, locked_texture, NULL);
+  // success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_frect, &line_frect);
+  // GF_assert(success);
+  SDL_UnlockTexture(gb_state->sdl_composite_target);
 
-  success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
-  GF_assert(success);
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
-  GF_assert(success);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
