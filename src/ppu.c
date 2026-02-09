@@ -38,13 +38,13 @@ bool gb_video_init(struct gb_state *gb_state) {
 
   gb_state->sdl_bg_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                               GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_bg_target != NULL);
+  GF_assert(gb_state->sdl_bg_target != NULL);
   gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                                GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_obj_target != NULL);
+  GF_assert(gb_state->sdl_obj_target != NULL);
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
                                                      SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  assert(gb_state->sdl_composite_target != NULL);
+  GF_assert(gb_state->sdl_composite_target != NULL);
 
   return true;
 }
@@ -97,7 +97,7 @@ static SDL_Texture *gb_create_tex(struct gb_state *gb_state, uint16_t tile_addr)
 
   uint16_t index = tile_addr_to_tex_idx(tile_addr);
 
-  assert(gb_state->textures[index] == NULL);
+  GF_assert(gb_state->textures[index] == NULL);
 
   SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, 8, 8);
   if (texture == NULL) {
@@ -183,7 +183,7 @@ static SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t til
 }
 
 struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
-  assert(index < 40);
+  GF_assert(index < 40);
   struct oam_entry oam_entry = gb_state->oam_entries[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
@@ -225,8 +225,8 @@ static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height)
 
 // TODO: check if tile should be double height (8x16)
 static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr, enum draw_tile_flags flags) {
-  assert(x < GB_DISPLAY_WIDTH);
-  assert(y < GB_DISPLAY_HEIGHT);
+  GF_assert(x < GB_DISPLAY_WIDTH);
+  GF_assert(y < GB_DISPLAY_HEIGHT);
   // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
   SDL_Renderer *renderer = gb_state->sdl_renderer;
@@ -256,7 +256,7 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   if (flags & DRAW_TILE_FLIP_Y) flip |= SDL_FLIP_VERTICAL;
 
   ret = SDL_RenderTextureRotated(renderer, texture, NULL, &dstrect, 0.0, NULL, flip);
-  assert(ret == true);
+  GF_assert(ret == true);
 }
 
 static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
@@ -268,11 +268,11 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
   uint16_t bg_tile_map_start;
 
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
-  assert(success);
+  GF_assert(success);
   success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
-  assert(success);
+  GF_assert(success);
   success = SDL_RenderClear(gb_state->sdl_renderer);
-  assert(success);
+  GF_assert(success);
 
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
@@ -299,16 +299,16 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
       gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, DRAW_TILE_PALETTE_BGP);
   }
 
-  assert(success);
+  GF_assert(success);
 }
 static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
   bool success;
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
-  assert(success);
+  GF_assert(success);
   success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_TRANSPARENT_FLOAT);
-  assert(success);
+  GF_assert(success);
   success = SDL_RenderClear(gb_state->sdl_renderer);
-  assert(success);
+  GF_assert(success);
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
     enum draw_tile_flags flags = 0;
@@ -325,7 +325,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
 void gb_composite_line(struct gb_state *gb_state) {
   bool success;
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, gb_state->sdl_composite_target);
-  assert(success);
+  GF_assert(success);
   SDL_FRect line_rect = {
       .x = 0,
       .y = gb_state->regs.io.ly,
@@ -333,11 +333,11 @@ void gb_composite_line(struct gb_state *gb_state) {
       .w = GB_DISPLAY_WIDTH,
   };
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, &line_rect, &line_rect);
-  assert(success);
+  GF_assert(success);
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
-  assert(success);
+  GF_assert(success);
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
-  assert(success);
+  GF_assert(success);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
@@ -370,15 +370,15 @@ void gb_present(struct gb_state *gb_state) {
   bool success;
   /* NULL means that we are selecting the window as the target */
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
-  assert(success);
+  GF_assert(success);
   success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
-  assert(success);
+  GF_assert(success);
   success = SDL_RenderClear(gb_state->sdl_renderer);
-  assert(success);
+  GF_assert(success);
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
-  assert(success);
+  GF_assert(success);
   success = SDL_RenderPresent(gb_state->sdl_renderer);
-  assert(success);
+  GF_assert(success);
 
   TracyCFrameMark
 }

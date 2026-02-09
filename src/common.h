@@ -326,8 +326,8 @@ void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
 // This is in common since I need to also use this for marking textures dirty when they are written to.
 inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
   int tex_index = (tile_addr - GB_TILEDATA_BLOCK0_START) / 16;
-  assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
-  assert(tex_index >= 0);
+  GF_assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
+  GF_assert(tex_index >= 0);
   return tex_index;
 }
 

@@ -157,7 +157,7 @@ void realloc_symbol_list(struct debug_symbol_list *syms) {
 }
 
 void free_symbol_list(struct debug_symbol_list *syms) {
-  assert(syms->capacity != 0);
+  GF_assert(syms->capacity != 0);
   free(syms->syms);
   syms->capacity = 0;
   syms->len = 0;
@@ -219,17 +219,17 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     struct debug_symbol *curr_sym = &syms->syms[syms->len];
 
     if (line[0] == 'B') {
-      assert(line[1] == 'O' && line[2] == 'O' && line[3] == 'T' && line[4] == ':');
+      GF_assert(line[1] == 'O' && line[2] == 'O' && line[3] == 'T' && line[4] == ':');
       endptr = &line[4];
       curr_sym->bank = DBG_SYM_BOOTROM_BANK;
     } else {
       curr_sym->bank = strtol(&line[0], &endptr, 16);
-      assert(endptr == &line[2]);
+      GF_assert(endptr == &line[2]);
     }
     char *bank_endptr = endptr;
 
     curr_sym->start_offset = strtol(bank_endptr + 1, &endptr, 16);
-    assert(endptr == bank_endptr + 5);
+    GF_assert(endptr == bank_endptr + 5);
 
     strncpy(syms->syms[syms->len].name, endptr + 1, sizeof(syms->syms[syms->len].name) - 1);
     // In case the string is longer than the sym.name arr
@@ -247,7 +247,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 
     syms->len++;
     // TODO: dynamically grow beyond starting capacity.
-    assert(syms->len < syms->capacity);
+    GF_assert(syms->len < syms->capacity);
   }
   sort_syms(syms);
   set_sym_lens(syms);
@@ -416,8 +416,8 @@ void test_disasm() {
   disassemble_section(stream, _test_disasm_section, _test_disasm_section_len);
   rewind(stream);
   int bytes_read = fread(buf, sizeof(*buf), sizeof(buf), stream);
-  assert(ferror(stream) == 0);
-  assert(feof(stream) != 0);
+  GF_assert(ferror(stream) == 0);
+  GF_assert(feof(stream) != 0);
   fclose(stream);
   if (_test_expected_disasm_output_len - 1 != bytes_read ||
       strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
