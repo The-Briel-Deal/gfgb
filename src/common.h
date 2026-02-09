@@ -141,7 +141,7 @@ struct gb_state {
   SDL_Palette *sdl_obj_palette_0;
   SDL_Palette *sdl_obj_palette_1;
   // We draw into this texture initially, then we scan our current line and copy it to the screen on hblank.
-  SDL_Texture *sdl_bg_target;
+  SDL_Surface *sdl_bg_target;
   SDL_Texture *sdl_obj_target;
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
   struct regs {

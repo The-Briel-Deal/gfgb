@@ -1,7 +1,6 @@
 #include "ppu.h"
 #include "common.h"
 
-#include <SDL3/SDL_rect.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -36,8 +35,7 @@ bool gb_video_init(struct gb_state *gb_state) {
 
   SDL_SetDefaultTextureScaleMode(gb_state->sdl_renderer, SDL_SCALEMODE_PIXELART);
 
-  gb_state->sdl_bg_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                              GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT, SDL_PIXELFORMAT_INDEX8);
   GF_assert(gb_state->sdl_bg_target != NULL);
   gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                                GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
@@ -259,20 +257,52 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   GF_assert(ret == true);
 }
 
-static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
-  bool success;
+static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, int x, int y, uint16_t tile_addr,
+                                    enum draw_tile_flags flags) {
+  GF_assert(x < GB_DISPLAY_WIDTH);
+  GF_assert(y < GB_DISPLAY_HEIGHT);
+  // TODO: this 8 will need to change to 16 if tile is double height
+  if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
+  SDL_Renderer *renderer = gb_state->sdl_renderer;
 
+  SDL_Palette *palette;
+  if (flags & DRAW_TILE_PALETTE_BGP) {
+    palette = gb_state->sdl_bg_palette;
+  } else if (flags & DRAW_TILE_PALETTE_OBP0) {
+    palette = gb_state->sdl_obj_palette_0;
+  } else if (flags & DRAW_TILE_PALETTE_OBP1) {
+    palette = gb_state->sdl_obj_palette_1;
+  } else {
+    unreachable();
+  }
+  uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
+  uint8_t pixels[8 * 8];
+  gb_tile_to_8bit_indexed(gb_tile, pixels);
+  SDL_Surface *tile_surface = SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_INDEX8, &pixels, 8);
+
+  SDL_Rect dstrect = {
+      .x = x,
+      .y = y,
+      .w = 8,
+      .h = 8,
+  };
+
+  SDL_FlipMode flip = 0;
+  if (flags & DRAW_TILE_FLIP_X) flip |= SDL_FLIP_HORIZONTAL;
+  if (flags & DRAW_TILE_FLIP_Y) flip |= SDL_FLIP_VERTICAL;
+
+  if (flip) SDL_FlipSurface(tile_surface, flip);
+
+  SDL_BlitSurface(tile_surface, NULL, target, &dstrect);
+
+  SDL_DestroySurface(tile_surface);
+}
+
+static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   // TODO: Make sure screen and bg are enabled before this
   uint16_t bg_win_tile_data_start_p1;
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
-
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
-  GF_assert(success);
-  success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
-  GF_assert(success);
-  success = SDL_RenderClear(gb_state->sdl_renderer);
-  GF_assert(success);
 
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
@@ -287,6 +317,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     bg_tile_map_start = GB_TILEMAP_BLOCK0_START;
   }
 
+  SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
   for (int i = 0; i < (32 * 32); i++) {
     const int x = i % 32;
     const int y = i / 32;
@@ -296,10 +327,8 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Texture *target) {
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile(gb_state, display_x, display_y, tile_data_addr, DRAW_TILE_PALETTE_BGP);
+      gb_draw_tile_to_surface(gb_state, target, display_x, display_y, tile_data_addr, DRAW_TILE_PALETTE_BGP);
   }
-
-  GF_assert(success);
 }
 static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
   bool success;
@@ -332,8 +361,12 @@ void gb_composite_line(struct gb_state *gb_state) {
       .h = 1,
       .w = GB_DISPLAY_WIDTH,
   };
-  success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_bg_target, &line_rect, &line_rect);
+  SDL_Texture *sdl_bg_target_tex = SDL_CreateTextureFromSurface(gb_state->sdl_renderer, gb_state->sdl_bg_target);
+  GF_assert(sdl_bg_target_tex);
+  success = SDL_RenderTexture(gb_state->sdl_renderer, sdl_bg_target_tex, &line_rect, &line_rect);
   GF_assert(success);
+  SDL_DestroyTexture(sdl_bg_target_tex);
+
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_rect, &line_rect);
   GF_assert(success);
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
