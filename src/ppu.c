@@ -1,6 +1,7 @@
 #include "ppu.h"
 #include "common.h"
 
+#include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
 #include <stddef.h>
@@ -39,9 +40,11 @@ bool gb_video_init(struct gb_state *gb_state) {
 
   gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT, SDL_PIXELFORMAT_INDEX8);
   GF_assert(gb_state->sdl_bg_target != NULL);
-  gb_state->sdl_obj_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                               GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
+  // makes it easier when compositing as well since it doesn't need a format change.
+  gb_state->sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT, SDL_PIXELFORMAT_RGBA32);
   GF_assert(gb_state->sdl_obj_target != NULL);
+
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_composite_target != NULL);
@@ -322,35 +325,28 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }
 }
-static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
+static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target) {
+  // TODO: I'll need to make another palette which contains all possible colors that might be on an obj
   bool success;
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, target);
-  GF_assert(success);
-  success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_TRANSPARENT_FLOAT);
-  GF_assert(success);
-  success = SDL_RenderClear(gb_state->sdl_renderer);
+  success = SDL_ClearSurface(target, 0, 0, 0, 0);
   GF_assert(success);
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
     enum draw_tile_flags flags = 0;
     if (oam_entry.x_flip) flags |= DRAW_TILE_FLIP_X;
     if (oam_entry.y_flip) flags |= DRAW_TILE_FLIP_Y;
+    SDL_Palette *palette;
     if (oam_entry.dmg_palette)
-      flags |= DRAW_TILE_PALETTE_OBP1;
+      palette = gb_state->sdl_obj_palette_1;
     else
-      flags |= DRAW_TILE_PALETTE_OBP0;
-    gb_draw_tile(gb_state, oam_entry.x_pos - 8, oam_entry.y_pos - 16, 0x8000 + (oam_entry.index * 16), flags);
+      palette = gb_state->sdl_obj_palette_0;
+    gb_draw_tile_to_surface(gb_state, target, palette, oam_entry.x_pos - 8, oam_entry.y_pos - 16,
+                            0x8000 + (oam_entry.index * 16), flags);
   }
 }
 
 void gb_composite_line(struct gb_state *gb_state) {
   bool success;
-  SDL_FRect line_frect = {
-      .x = 0,
-      .y = gb_state->regs.io.ly,
-      .h = 1,
-      .w = GB_DISPLAY_WIDTH,
-  };
   SDL_Rect line_rect = {
       .x = 0,
       .y = gb_state->regs.io.ly,
@@ -361,10 +357,10 @@ void gb_composite_line(struct gb_state *gb_state) {
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
   GF_assert(success);
   SDL_BlitSurface(gb_state->sdl_bg_target, &line_rect, locked_texture, NULL);
+  SDL_BlitSurface(gb_state->sdl_obj_target, &line_rect, locked_texture, NULL);
   // success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_frect, &line_frect);
   // GF_assert(success);
   SDL_UnlockTexture(gb_state->sdl_composite_target);
-
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
