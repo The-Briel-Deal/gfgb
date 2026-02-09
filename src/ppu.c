@@ -257,28 +257,18 @@ static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_
   GF_assert(ret == true);
 }
 
-static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, int x, int y, uint16_t tile_addr,
-                                    enum draw_tile_flags flags) {
+static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
+                                    uint16_t tile_addr, enum draw_tile_flags flags) {
   GF_assert(x < GB_DISPLAY_WIDTH);
   GF_assert(y < GB_DISPLAY_HEIGHT);
   // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
-  SDL_Renderer *renderer = gb_state->sdl_renderer;
 
-  SDL_Palette *palette;
-  if (flags & DRAW_TILE_PALETTE_BGP) {
-    palette = gb_state->sdl_bg_palette;
-  } else if (flags & DRAW_TILE_PALETTE_OBP0) {
-    palette = gb_state->sdl_obj_palette_0;
-  } else if (flags & DRAW_TILE_PALETTE_OBP1) {
-    palette = gb_state->sdl_obj_palette_1;
-  } else {
-    unreachable();
-  }
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
   uint8_t pixels[8 * 8];
   gb_tile_to_8bit_indexed(gb_tile, pixels);
   SDL_Surface *tile_surface = SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_INDEX8, &pixels, 8);
+  SDL_SetSurfacePalette(tile_surface, palette);
 
   SDL_Rect dstrect = {
       .x = x,
@@ -327,7 +317,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, display_x, display_y, tile_data_addr, DRAW_TILE_PALETTE_BGP);
+      gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }
 }
 static void gb_render_objs(struct gb_state *gb_state, SDL_Texture *target) {
