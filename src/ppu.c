@@ -38,11 +38,13 @@ bool gb_video_init(struct gb_state *gb_state) {
 
   SDL_SetDefaultTextureScaleMode(gb_state->sdl_renderer, SDL_SCALEMODE_PIXELART);
 
-  gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT, SDL_PIXELFORMAT_INDEX8);
+  // These targets only need to be 1 line tall since i'm just using these surfaces to store the scanline
+  gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
   GF_assert(gb_state->sdl_bg_target != NULL);
+
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
-  gb_state->sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT, SDL_PIXELFORMAT_RGBA32);
+  gb_state->sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
   GF_assert(gb_state->sdl_obj_target != NULL);
 
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
@@ -277,7 +279,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
 
   SDL_Rect dstrect = {
       .x = x,
-      .y = y,
+      .y = y - gb_state->regs.io.ly,
       .w = 8,
       .h = 8,
   };
@@ -356,8 +358,14 @@ void gb_composite_line(struct gb_state *gb_state) {
   SDL_Surface *locked_texture;
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
   GF_assert(success);
-  SDL_BlitSurface(gb_state->sdl_bg_target, &line_rect, locked_texture, NULL);
-  SDL_BlitSurface(gb_state->sdl_obj_target, &line_rect, locked_texture, NULL);
+
+  // both targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
+  GF_assert(locked_texture->h == gb_state->sdl_bg_target->h);
+  GF_assert(locked_texture->w == gb_state->sdl_bg_target->w);
+  SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
+  GF_assert(locked_texture->h == gb_state->sdl_obj_target->h);
+  GF_assert(locked_texture->w == gb_state->sdl_obj_target->w);
+  SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
   // success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_frect, &line_frect);
   // GF_assert(success);
   SDL_UnlockTexture(gb_state->sdl_composite_target);
