@@ -74,7 +74,7 @@ void gb_video_free(struct gb_state *gb_state) {
 
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
-//! \brief Convert a gameboy tile to indexed 8bit indexed.
+//! \brief Convert a gameboy tile from it's byte interleaved 2bit format to 8bit indexed.
 //!
 //! The primary objective here is to make it so that I can send gameboy tiles to
 //! SDL in a format that SDL understands.
