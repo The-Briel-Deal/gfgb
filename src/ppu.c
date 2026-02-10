@@ -137,6 +137,16 @@ static void update_palettes(struct gb_state *gb_state) {
                             0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
   }
+  if (!SDL_SetPaletteColors(gb_state->sdl_bg_trans0_palette,
+                            (SDL_Color[4]){
+                                TRANSPARENT_COLOR,
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
+                                GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
+                            },
+                            0, DMG_PALETTE_N_COLORS)) {
+    ERR(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
+  }
   uint8_t obp0_id_1 = (gb_state->regs.io.obp0 >> 2) & 0b11;
   uint8_t obp0_id_2 = (gb_state->regs.io.obp0 >> 4) & 0b11;
   uint8_t obp0_id_3 = (gb_state->regs.io.obp0 >> 6) & 0b11;
@@ -367,15 +377,26 @@ void gb_composite_line(struct gb_state *gb_state) {
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
   GF_assert(success);
 
-  // both targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
+  // all intermediate targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
   GF_assert(locked_texture->h == gb_state->sdl_bg_target->h);
   GF_assert(locked_texture->w == gb_state->sdl_bg_target->w);
-  SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
+
+  GF_assert(locked_texture->h == gb_state->sdl_obj_priority_target->h);
+  GF_assert(locked_texture->w == gb_state->sdl_obj_priority_target->w);
+
   GF_assert(locked_texture->h == gb_state->sdl_obj_target->h);
   GF_assert(locked_texture->w == gb_state->sdl_obj_target->w);
+
+  SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_palette);
+  SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
+
+  SDL_BlitSurface(gb_state->sdl_obj_priority_target, NULL, locked_texture, NULL);
+
+  SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_trans0_palette);
+  SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
+
   SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
-  // success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_obj_target, &line_frect, &line_frect);
-  // GF_assert(success);
+
   SDL_UnlockTexture(gb_state->sdl_composite_target);
 }
 
