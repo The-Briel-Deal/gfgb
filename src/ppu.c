@@ -47,6 +47,9 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
   GF_assert(gb_state->sdl_obj_target != NULL);
 
+  gb_state->sdl_obj_priority_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
+  GF_assert(gb_state->sdl_obj_priority_target != NULL);
+
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_composite_target != NULL);
@@ -327,8 +330,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }
 }
-static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target) {
-  // TODO: I'll need to make another palette which contains all possible colors that might be on an obj
+static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
   success = SDL_ClearSurface(target, 0, 0, 0, 0);
   GF_assert(success);
@@ -342,8 +344,13 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target) {
       palette = gb_state->sdl_obj_palette_1;
     else
       palette = gb_state->sdl_obj_palette_0;
-    gb_draw_tile_to_surface(gb_state, target, palette, oam_entry.x_pos - 8, oam_entry.y_pos - 16,
-                            0x8000 + (oam_entry.index * 16), flags);
+    if (oam_entry.priority) {
+      gb_draw_tile_to_surface(gb_state, priority_target, palette, oam_entry.x_pos - 8, oam_entry.y_pos - 16,
+                              0x8000 + (oam_entry.index * 16), flags);
+    } else {
+      gb_draw_tile_to_surface(gb_state, target, palette, oam_entry.x_pos - 8, oam_entry.y_pos - 16,
+                              0x8000 + (oam_entry.index * 16), flags);
+    }
   }
 }
 
@@ -392,7 +399,7 @@ void gb_draw(struct gb_state *gb_state) {
   gb_render_bg(gb_state, gb_state->sdl_bg_target);
   TracyCZoneEnd(render_bg_ctx);
   TracyCZoneN(render_objs_ctx, "Object Render", true);
-  gb_render_objs(gb_state, gb_state->sdl_obj_target);
+  gb_render_objs(gb_state, gb_state->sdl_obj_target, gb_state->sdl_obj_priority_target);
   TracyCZoneEnd(render_objs_ctx);
 }
 
