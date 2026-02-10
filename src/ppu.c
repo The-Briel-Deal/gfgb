@@ -333,6 +333,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
 static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
   success = SDL_ClearSurface(target, 0, 0, 0, 0);
+  success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
   GF_assert(success);
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
