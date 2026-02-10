@@ -67,6 +67,8 @@ void gb_video_free(struct gb_state *gb_state) {
   }
   SDL_DestroyPalette(gb_state->sdl_bg_palette);
   gb_state->sdl_bg_palette = NULL;
+  SDL_DestroyPalette(gb_state->sdl_bg_trans0_palette);
+  gb_state->sdl_bg_trans0_palette = NULL;
   SDL_DestroyPalette(gb_state->sdl_obj_palette_0);
   gb_state->sdl_obj_palette_0 = NULL;
   SDL_DestroyPalette(gb_state->sdl_obj_palette_1);
