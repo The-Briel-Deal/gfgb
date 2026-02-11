@@ -43,8 +43,9 @@ bool gb_video_init(struct gb_state *gb_state) {
   SDL_SetDefaultTextureScaleMode(gb_state->sdl_renderer, SDL_SCALEMODE_PIXELART);
 
   // These targets only need to be 1 line tall since i'm just using these surfaces to store the scanline
-  gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
+  gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
   GF_assert(gb_state->sdl_bg_target != NULL);
+  SDL_SetSurfaceBlendMode(gb_state->sdl_bg_target, SDL_BLENDMODE_BLEND);
 
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
