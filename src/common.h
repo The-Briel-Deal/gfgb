@@ -143,6 +143,7 @@ struct gb_state {
   SDL_Palette *sdl_obj_palette_1;
   // we draw into these surfaces initially, then we scan our current line and copy it to the screen on hblank
   SDL_Surface *sdl_bg_target;
+  SDL_Surface *sdl_win_target;
   SDL_Surface *sdl_obj_target;
   // this is where obj's that have the priority bit set are rendered, these need to be rendered before the bits 1-3 of
   // background and window.

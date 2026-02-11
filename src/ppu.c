@@ -47,6 +47,10 @@ bool gb_video_init(struct gb_state *gb_state) {
   GF_assert(gb_state->sdl_bg_target != NULL);
   SDL_SetSurfaceBlendMode(gb_state->sdl_bg_target, SDL_BLENDMODE_BLEND);
 
+  gb_state->sdl_win_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
+  GF_assert(gb_state->sdl_win_target != NULL);
+  SDL_SetSurfaceBlendMode(gb_state->sdl_win_target, SDL_BLENDMODE_BLEND);
+
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
   gb_state->sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
@@ -349,13 +353,18 @@ void gb_composite_line(struct gb_state *gb_state) {
   GF_assert(locked_texture->h == gb_state->sdl_obj_target->h);
   GF_assert(locked_texture->w == gb_state->sdl_obj_target->w);
 
+  // bg and win use the same palette
   SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_palette);
+  SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_palette);
   SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
+  SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
 
   SDL_BlitSurface(gb_state->sdl_obj_priority_target, NULL, locked_texture, NULL);
 
   SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_trans0_palette);
+  SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_trans0_palette);
   SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
+  SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
 
   SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
 
@@ -382,6 +391,9 @@ void gb_draw(struct gb_state *gb_state) {
   TracyCZoneN(render_bg_ctx, "Background Render", true);
   gb_render_bg(gb_state, gb_state->sdl_bg_target);
   TracyCZoneEnd(render_bg_ctx);
+  TracyCZoneN(render_win_ctx, "Window Render", true);
+  gb_render_win(gb_state, gb_state->sdl_win_target);
+  TracyCZoneEnd(render_win_ctx);
   TracyCZoneN(render_objs_ctx, "Object Render", true);
   gb_render_objs(gb_state, gb_state->sdl_obj_target, gb_state->sdl_obj_priority_target);
   TracyCZoneEnd(render_objs_ctx);
