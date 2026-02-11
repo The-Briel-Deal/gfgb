@@ -300,8 +300,8 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     const uint8_t tile_data_index = read_mem8(gb_state, win_tile_map_start + i);
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
-    uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
-    uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
+    uint8_t display_x = (x * 8) - gb_state->regs.io.wx;
+    uint8_t display_y = (y * 8) - gb_state->regs.io.wy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }

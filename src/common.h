@@ -203,6 +203,8 @@ struct gb_state {
       uint8_t bgp;
       uint8_t obp0;
       uint8_t obp1;
+      uint8_t wx;
+      uint8_t wy;
       uint8_t ie;         // interupt enable
       uint8_t if_;        // interupt flag
       bool ime;           // interupt master enable
@@ -295,6 +297,9 @@ enum io_reg_addr {
   IO_LCDC = 0xFF40,
   IO_SCY = 0xFF42,
   IO_SCX = 0xFF43,
+
+  IO_WY = 0xFF4A,
+  IO_WX = 0xFF4B,
 
   // LCD Status Registers
   IO_LY = 0xFF44,

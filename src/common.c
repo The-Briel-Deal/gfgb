@@ -64,6 +64,8 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_LCDC: return &gb_state->regs.io.lcdc;
   case IO_SCY: return &gb_state->regs.io.scy;
   case IO_SCX: return &gb_state->regs.io.scx;
+  case IO_WY: return &gb_state->regs.io.wy;
+  case IO_WX: return &gb_state->regs.io.wx;
   case IO_LYC: return &gb_state->regs.io.lyc;
   case IO_STAT:
     // The least significant 3 bits are RO. I'll need to figure out a way to make sure those bits aren't written to.
