@@ -244,41 +244,6 @@ static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height)
 }
 
 // TODO: check if tile should be double height (8x16)
-static void gb_draw_tile(struct gb_state *gb_state, int x, int y, uint16_t tile_addr, enum draw_tile_flags flags) {
-  GF_assert(x < GB_DISPLAY_WIDTH);
-  GF_assert(y < GB_DISPLAY_HEIGHT);
-  // TODO: this 8 will need to change to 16 if tile is double height
-  if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
-  SDL_Renderer *renderer = gb_state->sdl_renderer;
-
-  SDL_Palette *palette;
-  if (flags & DRAW_TILE_PALETTE_BGP) {
-    palette = gb_state->sdl_bg_palette;
-  } else if (flags & DRAW_TILE_PALETTE_OBP0) {
-    palette = gb_state->sdl_obj_palette_0;
-  } else if (flags & DRAW_TILE_PALETTE_OBP1) {
-    palette = gb_state->sdl_obj_palette_1;
-  } else {
-    unreachable();
-  }
-  SDL_Texture *texture = get_texture_for_tile(gb_state, tile_addr, palette);
-
-  bool ret;
-  SDL_FRect dstrect = {
-      .x = x,
-      .y = y,
-      .w = 8.0f,
-      .h = 8.0f,
-  };
-
-  SDL_FlipMode flip = 0;
-  if (flags & DRAW_TILE_FLIP_X) flip |= SDL_FLIP_HORIZONTAL;
-  if (flags & DRAW_TILE_FLIP_Y) flip |= SDL_FLIP_VERTICAL;
-
-  ret = SDL_RenderTextureRotated(renderer, texture, NULL, &dstrect, 0.0, NULL, flip);
-  GF_assert(ret == true);
-}
-
 static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
                                     uint16_t tile_addr, enum draw_tile_flags flags) {
   GF_assert(x < GB_DISPLAY_WIDTH);
