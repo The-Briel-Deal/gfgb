@@ -6,6 +6,10 @@ project(
   default_options : ['warning_level=3', 'c_std=c23'],
 )
 
+if get_option('enable_logging')
+  add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'c')
+endif
+
 sdl3_dep = dependency('sdl3')
 tracy_dep = dependency(
   'tracy',
@@ -15,11 +19,6 @@ tracy_dep = dependency(
   },
 )
 global_deps = [tracy_dep]
-if get_option('tracy_enable')
-  if get_option('buildtype') != 'debugoptimized'
-    warning('Profiling builds should set --buildtype=debugoptimized')
-  endif
-endif
 
 sources = [
   'src/disassemble.c',

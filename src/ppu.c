@@ -27,6 +27,10 @@ bool gb_video_init(struct gb_state *gb_state) {
     LogCritical("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
+  if (!(gb_state->sdl_bg_trans0_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+    LogCritical("Couldn't create bg palette: %s", SDL_GetError());
+    return false;
+  }
   if (!(gb_state->sdl_obj_palette_0 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
     LogCritical("Couldn't create obj palette 0: %s", SDL_GetError());
     return false;
