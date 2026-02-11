@@ -107,23 +107,6 @@ static void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out) {
 
 #undef PIX
 
-static SDL_Texture *gb_create_tex(struct gb_state *gb_state, uint16_t tile_addr) {
-  SDL_Renderer *renderer = gb_state->sdl_renderer;
-
-  uint16_t index = tile_addr_to_tex_idx(tile_addr);
-
-  GF_assert(gb_state->textures[index] == NULL);
-
-  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, 8, 8);
-  if (texture == NULL) {
-    LogInfo("SDL_CreateTexture returned null: %s", SDL_GetError());
-    abort();
-  }
-  gb_state->textures[index] = texture;
-
-  return texture;
-}
-
 #define GREYSCALE_COLOR(lightness)                                                                                     \
   (SDL_Color) { .a = 255, .r = 255 * lightness, .g = 255 * lightness, .b = 255 * lightness, }
 #define TRANSPARENT_COLOR                                                                                              \
@@ -180,31 +163,6 @@ static void update_palettes(struct gb_state *gb_state) {
                             0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set obj palette 1 colors: %s", SDL_GetError());
   }
-}
-
-static SDL_Texture *get_texture_for_tile(struct gb_state *gb_state, uint16_t tile_addr, SDL_Palette *palette) {
-  SDL_Texture *texture;
-  bool fresh = false;
-
-  uint16_t index = tile_addr_to_tex_idx(tile_addr);
-  texture = gb_state->textures[index];
-  if (texture == NULL) {
-    texture = gb_create_tex(gb_state, tile_addr);
-    fresh = true;
-  }
-  SDL_SetTexturePalette(texture, palette);
-
-  // only update the texture if it's uninitialized (fresh) or modified since last upload (dirty)
-  if (fresh || gb_state->dirty_textures[index]) {
-    uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
-    uint8_t pixels[8 * 8];
-    gb_tile_to_8bit_indexed(gb_tile, pixels);
-
-    SDL_UpdateTexture(texture, NULL, pixels, 8);
-    gb_state->dirty_textures[index] = false;
-  }
-
-  return texture;
 }
 
 struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
