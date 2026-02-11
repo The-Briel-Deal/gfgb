@@ -270,6 +270,38 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }
 }
+static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
+  // TODO: Make sure screen and bg are enabled before this
+  uint16_t bg_win_tile_data_start_p1;
+  uint16_t bg_win_tile_data_start_p2;
+  uint16_t win_tile_map_start;
+
+  if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
+    bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
+  } else {
+    bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK2_START;
+  }
+  bg_win_tile_data_start_p2 = GB_TILEDATA_BLOCK1_START;
+
+  if (gb_state->regs.io.lcdc & LCDC_WIN_TILEMAP) {
+    win_tile_map_start = GB_TILEMAP_BLOCK1_START;
+  } else {
+    win_tile_map_start = GB_TILEMAP_BLOCK0_START;
+  }
+
+  SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
+  for (int i = 0; i < (32 * 32); i++) {
+    const int x = i % 32;
+    const int y = i / 32;
+    const uint8_t tile_data_index = read_mem8(gb_state, win_tile_map_start + i);
+    const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
+                                    ((tile_data_index % 128) * 16);
+    uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
+    uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
+    if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
+      gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
+  }
+}
 static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
   success = SDL_ClearSurface(target, 0, 0, 0, 0);
