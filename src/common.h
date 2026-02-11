@@ -211,6 +211,12 @@ struct gb_state {
       bool set_ime_after; // IME is only set after the following instruction.
     } io;
   } regs;
+
+  // Window Related
+  bool wy_cond;
+  bool wx_cond;
+  uint8_t win_line_counter;
+
   bool halted;
   bool bootrom_mapped;
   bool bootrom_has_syms;

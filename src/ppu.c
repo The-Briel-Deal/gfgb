@@ -372,6 +372,13 @@ void gb_composite_line(struct gb_state *gb_state) {
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
+  // Window's Y condition is checked for at the start of mode 2 (oam scan) every line.
+  if (gb_state->regs.io.ly == gb_state->regs.io.wy) {
+    gb_state->wy_cond = true;
+  }
+  // Window's X condition in a perfectly accurate pixel FIFO renderer would be checked every pixel, but since my
+  // emulator currently uses a scanline based renderer, this should work just as well.
+  gb_state->wx_cond = (gb_state->regs.io.wx < 167);
   memcpy(gb_state->oam_entries, gb_state->oam, sizeof(gb_state->oam));
 }
 
@@ -402,6 +409,10 @@ void gb_draw(struct gb_state *gb_state) {
 // called on vblank
 void gb_present(struct gb_state *gb_state) {
   bool success;
+
+  gb_state->win_line_counter = 0;
+  gb_state->wy_cond = 0;
+
   /* NULL means that we are selecting the window as the target */
   success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
   GF_assert(success);
