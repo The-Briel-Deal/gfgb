@@ -216,6 +216,7 @@ struct gb_state {
   bool wy_cond;
   bool wx_cond;
   uint8_t win_line_counter;
+  bool win_line_blank;
 
   bool halted;
   bool bootrom_mapped;

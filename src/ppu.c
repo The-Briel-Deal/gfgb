@@ -280,6 +280,12 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   uint16_t bg_win_tile_data_start_p2;
   uint16_t win_tile_map_start;
 
+  if ((!gb_state->wy_cond) || (!gb_state->wx_cond) || (!(gb_state->regs.io.lcdc & LCDC_WIN_ENABLE))) {
+    gb_state->win_line_blank = true;
+    return;
+  }
+  gb_state->win_line_blank = false;
+
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
   } else {
@@ -293,6 +299,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     win_tile_map_start = GB_TILEMAP_BLOCK0_START;
   }
 
+  // TODO: Check if this is actually needed, I don't think it is.
   SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
   for (int i = 0; i < (32 * 32); i++) {
     const int x = i % 32;
@@ -355,16 +362,22 @@ void gb_composite_line(struct gb_state *gb_state) {
 
   // bg and win use the same palette
   SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_palette);
-  SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_palette);
   SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
-  SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
+
+  if (!gb_state->win_line_blank) {
+    SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_palette);
+    SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
+  }
 
   SDL_BlitSurface(gb_state->sdl_obj_priority_target, NULL, locked_texture, NULL);
 
   SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_trans0_palette);
-  SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_trans0_palette);
   SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
-  SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
+
+  if (!gb_state->win_line_blank) {
+    SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_trans0_palette);
+    SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
+  }
 
   SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
 
