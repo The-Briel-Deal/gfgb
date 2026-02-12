@@ -94,8 +94,8 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       LogCritical("Looking for bootrom symbol file at `%s`", bootrom_sym_name);
       f = fopen(bootrom_sym_name, "r");
       if (f == NULL) {
-        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?",
-                 strerror(errno));
+        const char *error_string = strerror(errno);
+        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?", error_string);
       }
 
       if (f != NULL) {

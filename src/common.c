@@ -1,5 +1,7 @@
 #include "common.h"
+
 #include <stdint.h>
+#include <stdlib.h>
 
 void gb_state_init(struct gb_state *gb_state) {
   SDL_zerop(gb_state);
