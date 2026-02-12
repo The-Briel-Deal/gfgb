@@ -209,11 +209,44 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   }
 }
 
+void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event) {
+  (void)gb_state;
+  switch (event->type) {
+  case SDL_EVENT_KEY_UP: break;
+  case SDL_EVENT_KEY_DOWN: {
+    switch (event->key) {
+    case SDLK_1: {
+#ifndef NDEBUG
+      gb_state->dbg_hide_bg = !gb_state->dbg_hide_bg;
+#endif
+      break;
+    }
+    case SDLK_2: {
+#ifndef NDEBUG
+      gb_state->dbg_hide_win = !gb_state->dbg_hide_win;
+#endif
+      break;
+    }
+    case SDLK_3: {
+#ifndef NDEBUG
+      gb_state->dbg_hide_objs = !gb_state->dbg_hide_objs;
+#endif
+      break;
+    }
+    }
+    break;
+  }
+  default: unreachable();
+  }
+}
+
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   struct gb_state *gb_state = appstate;
   (void)gb_state;
   switch (event->type) {
+  case SDL_EVENT_KEY_UP:
+  case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;
   case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
   case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x
                                     height, screen will be automatically letter boxed on resize */

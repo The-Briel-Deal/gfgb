@@ -270,6 +270,13 @@ struct gb_state {
   uint32_t last_timer_sync_m_cycles;
 
   bool err;
+
+  // runtime debug toggles
+#ifndef NDEBUG
+  bool dbg_hide_bg;
+  bool dbg_hide_win;
+  bool dbg_hide_objs;
+#endif
 };
 
 enum io_reg_addr {
