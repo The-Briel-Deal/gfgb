@@ -375,7 +375,7 @@ void gb_composite_line(struct gb_state *gb_state) {
   }
 
   // TODO: Adjust width properly
-  SDL_Rect win_rect = {.x = gb_state->regs.io.wx, .y = 0, .h = 1, .w = GB_DISPLAY_WIDTH};
+  SDL_Rect win_rect = {.x = gb_state->regs.io.wx - 7, .y = 0, .h = 1, .w = GB_DISPLAY_WIDTH};
 #ifndef NDEBUG
   if (!gb_state->dbg_hide_win)
 #endif
