@@ -301,10 +301,10 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
 
   // TODO: Check if this is actually needed, I don't think it is.
   SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
-  for (int i = 0; i < (32 * 32); i++) {
-    const int x = i % 32;
-    const int y = i / 32;
-    const uint8_t tile_data_index = read_mem8(gb_state, win_tile_map_start + i);
+  for (int i = 0; i < 32; i++) {
+    const int x = i;
+    const int y = gb_state->win_line_counter / 8;
+    const uint8_t tile_data_index = read_mem8(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     uint8_t display_x = (x * 8) + gb_state->regs.io.wx - 7;
@@ -312,6 +312,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }
+  gb_state->win_line_counter++;
 }
 static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
