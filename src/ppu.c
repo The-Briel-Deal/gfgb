@@ -192,7 +192,7 @@ struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   return oam_entry;
 }
 enum lcdc_flags {
-  LCDC_BG_WIN_ENAB = 1 << 0,
+  LCDC_BG_WIN_ENABLE = 1 << 0,
   LCDC_OBJ_ENABLE = 1 << 1,
   LCDC_OBJ_SIZE = 1 << 2,
   LCDC_BG_TILE_MAP_AREA = 1 << 3,
@@ -247,10 +247,15 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
 }
 
 static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
+  bool success;
   // TODO: Make sure screen and bg are enabled before this
   uint16_t bg_win_tile_data_start_p1;
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
+  SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
+  success = SDL_ClearSurface(target, 1.0f, 1.0f, 1.0f, 1.0f);
+  GF_assert(success);
+  if (!(gb_state->regs.io.lcdc & LCDC_BG_WIN_ENABLE)) return;
 
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
@@ -265,7 +270,6 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     bg_tile_map_start = GB_TILEMAP_BLOCK0_START;
   }
 
-  SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
   for (int i = 0; i < (32 * 32); i++) {
     const int x = i % 32;
     const int y = i / 32;
@@ -328,9 +332,10 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
 static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
   success = SDL_ClearSurface(target, 0, 0, 0, 0);
-  success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
-  if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
   GF_assert(success);
+  success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
+  GF_assert(success);
+  if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
     enum draw_tile_flags flags = 0;
