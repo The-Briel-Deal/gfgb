@@ -352,6 +352,9 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     }
     int x = oam_entry.x_pos - 8;
     int y = oam_entry.y_pos - 16;
+    if (oam_entry.y_flip && draw_double_height) {
+      y += 8;
+    }
   draw_obj:
     // TODO: account for vflip
     if (oam_entry.priority) {
@@ -362,7 +365,11 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     if (draw_double_height) {
       draw_double_height = false;
       oam_entry.index++;
-      y += 8;
+      if (oam_entry.y_flip) {
+        y -= 8;
+      } else {
+        y += 8;
+      }
       goto draw_obj;
     }
   }
