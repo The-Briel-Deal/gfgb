@@ -9,6 +9,10 @@ project(
 if get_option('enable_logging')
   add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'c')
 endif
+if get_option('dbg_green_bg')
+  add_global_arguments('-DGF_DBG_GREEN_BG=1', language : 'c')
+endif
+
 
 sdl3_dep = dependency('sdl3')
 tracy_dep = dependency(

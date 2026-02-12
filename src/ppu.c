@@ -351,6 +351,10 @@ void gb_composite_line(struct gb_state *gb_state) {
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
   GF_assert(success);
 
+#ifdef GF_DBG_GREEN_BG
+  SDL_ClearSurface(locked_texture, 0, 1, 0, 1);
+#endif
+
   // all intermediate targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
   GF_assert(locked_texture->h == gb_state->sdl_bg_target->h);
   GF_assert(locked_texture->w == gb_state->sdl_bg_target->w);
