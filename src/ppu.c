@@ -1,12 +1,10 @@
 #include "ppu.h"
-#include <SDL3/SDL_stdinc.h>
 
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
 #include "common.h"
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
