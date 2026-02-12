@@ -3,13 +3,6 @@
 
 #include <tracy/TracyC.h>
 
-// Redefining this macro which is currently calling the wrong logString fn.
-// I can drop this once https://github.com/wolfpld/tracy/issues/1274 is resolved
-#ifdef TRACY_ENABLE
-#undef TracyCMessageL
-#define TracyCMessageL(txt) ___tracy_emit_logStringL(TracyMessageSeverityInfo, 0, TRACY_CALLSTACK, txt)
-#endif
-
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <stdint.h>
@@ -21,13 +14,21 @@
 #include "ppu.h"
 
 #define GF_assert(expr) SDL_assert(expr)
+enum GB_LogCategory {
+  GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
+  GB_LOG_CATEGORY_PPU = SDL_LOG_CATEGORY_CUSTOM,
+};
+
+#ifndef GB_LOG_CATEGORY
+#define GB_LOG_CATEGORY GB_LOG_CATEGORY_DEFAULT
+#endif
 
 #ifdef GFGB_ENABLE_LOGGING
-#define LogTrace(msg, ...)    SDL_LogTrace(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
-#define LogInfo(msg, ...)     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
-#define LogDebug(msg, ...)    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
-#define LogError(msg, ...)    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
-#define LogCritical(msg, ...) SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, msg, ##__VA_ARGS__)
+#define LogTrace(msg, ...)    SDL_LogTrace(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogInfo(msg, ...)     SDL_LogInfo(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogDebug(msg, ...)    SDL_LogDebug(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogError(msg, ...)    SDL_LogError(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogCritical(msg, ...) SDL_LogCritical(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 #else
 #define LogTrace(msg, ...)
 #define LogInfo(msg, ...)

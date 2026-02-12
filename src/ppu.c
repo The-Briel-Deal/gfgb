@@ -1,9 +1,9 @@
 #include "ppu.h"
+#include <SDL3/SDL_stdinc.h>
+
+#define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
 #include "common.h"
 
-#include <SDL3/SDL_pixels.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_surface.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +11,12 @@
 #include <string.h>
 
 bool gb_video_init(struct gb_state *gb_state) {
+  SDL_Environment *env = SDL_GetEnvironment();
+  const char *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
+  if (ppu_log_priority_str != NULL) {
+    int ppu_log_priority = atoi(ppu_log_priority_str);
+    SDL_SetLogPriority(GB_LOG_CATEGORY_PPU, ppu_log_priority);
+  }
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     LogCritical("Couldn't initialize SDL: %s", SDL_GetError());
     return false;
