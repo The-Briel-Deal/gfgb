@@ -346,12 +346,23 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
       palette = gb_state->sdl_obj_palette_1;
     else
       palette = gb_state->sdl_obj_palette_0;
+    bool draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    if (draw_double_height) {
+      oam_entry.index &= 0b1111'1110;
+    }
+    int x = oam_entry.x_pos - 8;
+    int y = oam_entry.y_pos - 16;
+  draw_obj:
     if (oam_entry.priority) {
-      gb_draw_tile_to_surface(gb_state, priority_target, palette, oam_entry.x_pos - 8, oam_entry.y_pos - 16,
-                              0x8000 + (oam_entry.index * 16), flags);
+      gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (oam_entry.index * 16), flags);
     } else {
-      gb_draw_tile_to_surface(gb_state, target, palette, oam_entry.x_pos - 8, oam_entry.y_pos - 16,
-                              0x8000 + (oam_entry.index * 16), flags);
+      gb_draw_tile_to_surface(gb_state, target, palette, x, y, 0x8000 + (oam_entry.index * 16), flags);
+    }
+    if (draw_double_height) {
+      draw_double_height = false;
+      oam_entry.index++;
+      y += 8;
+      goto draw_obj;
     }
   }
 }
