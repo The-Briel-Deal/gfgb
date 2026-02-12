@@ -364,9 +364,11 @@ void gb_composite_line(struct gb_state *gb_state) {
   SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_palette);
   SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
 
+  // TODO: Adjust width properly
+  SDL_Rect win_rect = {.x = gb_state->regs.io.wx, .y = 0, .h = 1, .w = GB_DISPLAY_WIDTH};
   if (!gb_state->win_line_blank) {
     SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_palette);
-    SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
+    SDL_BlitSurface(gb_state->sdl_win_target, &win_rect, locked_texture, &win_rect);
   }
 
   SDL_BlitSurface(gb_state->sdl_obj_priority_target, NULL, locked_texture, NULL);
@@ -376,7 +378,7 @@ void gb_composite_line(struct gb_state *gb_state) {
 
   if (!gb_state->win_line_blank) {
     SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_trans0_palette);
-    SDL_BlitSurface(gb_state->sdl_win_target, NULL, locked_texture, NULL);
+    SDL_BlitSurface(gb_state->sdl_win_target, &win_rect, locked_texture, &win_rect);
   }
 
   SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
