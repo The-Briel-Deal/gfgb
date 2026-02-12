@@ -284,6 +284,13 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   uint16_t bg_win_tile_data_start_p2;
   uint16_t win_tile_map_start;
 
+  LogDebug("Window State: line_counter = %d, wx = %d, wy = %d", gb_state->win_line_counter, gb_state->regs.io.wx,
+           gb_state->regs.io.wy);
+
+  // Window's X condition in a perfectly accurate pixel FIFO renderer would be checked every pixel, but since my
+  // emulator currently uses a scanline based renderer, this should work just as well.
+  gb_state->wx_cond = (gb_state->regs.io.wx < 167);
+
   if ((!gb_state->wy_cond) || (!gb_state->wx_cond) || (!(gb_state->regs.io.lcdc & LCDC_WIN_ENABLE))) {
     gb_state->win_line_blank = true;
     return;
@@ -312,7 +319,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     uint8_t display_x = (x * 8) + gb_state->regs.io.wx - 7;
-    uint8_t display_y = (y * 8) + gb_state->regs.io.wy;
+    uint8_t display_y = (gb_state->regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
   }
@@ -430,9 +437,6 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
   if (gb_state->regs.io.ly == gb_state->regs.io.wy) {
     gb_state->wy_cond = true;
   }
-  // Window's X condition in a perfectly accurate pixel FIFO renderer would be checked every pixel, but since my
-  // emulator currently uses a scanline based renderer, this should work just as well.
-  gb_state->wx_cond = (gb_state->regs.io.wx < 167);
   memcpy(gb_state->oam_entries, gb_state->oam, sizeof(gb_state->oam));
 }
 
