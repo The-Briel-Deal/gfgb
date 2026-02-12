@@ -329,6 +329,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
   bool success;
   success = SDL_ClearSurface(target, 0, 0, 0, 0);
   success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
+  if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
   GF_assert(success);
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
