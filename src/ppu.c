@@ -356,7 +356,6 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
       y += 8;
     }
   draw_obj:
-    // TODO: account for vflip
     if (oam_entry.priority) {
       gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (oam_entry.index * 16), flags);
     } else {
