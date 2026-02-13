@@ -240,8 +240,8 @@ struct gb_state {
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
   bool dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
-  // this is where all of the oam entries are copied to during the oam read window
-  struct oam_entry oam_entries[40];
+  // this is where all of the oam entries to be drawn on the current line are gathered and ordered during the oam read window
+  const struct oam_entry *oam_entries[10];
 
   FILE *serial_port_output;
 

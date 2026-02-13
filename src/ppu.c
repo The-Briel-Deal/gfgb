@@ -173,20 +173,20 @@ static void update_palettes(struct gb_state *gb_state) {
   }
 }
 
-struct oam_entry get_oam_entry(struct gb_state *gb_state, uint8_t index) {
+const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   GF_assert(index < 40);
-  struct oam_entry oam_entry = gb_state->oam_entries[index];
+  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->oam)[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
   printf("OAM Entry %d\n", index);
-  printf("  x_pos = %d\n", oam_entry.x_pos);
-  printf("  y_pos = %d\n", oam_entry.y_pos);
-  printf("  bank = %d\n", oam_entry.bank);
-  printf("  dmg_palette = %d\n", oam_entry.dmg_palette);
-  printf("  index = %d\n", oam_entry.index);
-  printf("  priority = %d\n", oam_entry.priority);
-  printf("  x_flip = %d\n", oam_entry.x_flip);
-  printf("  y_flip = %d\n", oam_entry.y_flip);
+  printf("  x_pos = %d\n", oam_entry->x_pos);
+  printf("  y_pos = %d\n", oam_entry->y_pos);
+  printf("  bank = %d\n", oam_entry->bank);
+  printf("  dmg_palette = %d\n", oam_entry->dmg_palette);
+  printf("  index = %d\n", oam_entry->index);
+  printf("  priority = %d\n", oam_entry->priority);
+  printf("  x_flip = %d\n", oam_entry->x_flip);
+  printf("  y_flip = %d\n", oam_entry->y_flip);
 #endif
 
   return oam_entry;
@@ -338,35 +338,38 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
   if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
   // TODO: I need to change this to choose the (up to) ten objects on this line in OAM_SCAN. I'll also want to properly
   // sort objects with equal X positions so that the first one has higher draw priority.
-  for (int i = 0; i < 40; i++) {
-    struct oam_entry oam_entry = get_oam_entry(gb_state, i);
+  for (int i = 0; i < 10; i++) {
+    uint8_t tile_idx;
+    const struct oam_entry *oam_entry = gb_state->oam_entries[i];
+    if (oam_entry == NULL) break;
     enum draw_tile_flags flags = 0;
-    if (oam_entry.x_flip) flags |= DRAW_TILE_FLIP_X;
-    if (oam_entry.y_flip) flags |= DRAW_TILE_FLIP_Y;
+    if (oam_entry->x_flip) flags |= DRAW_TILE_FLIP_X;
+    if (oam_entry->y_flip) flags |= DRAW_TILE_FLIP_Y;
     SDL_Palette *palette;
-    if (oam_entry.dmg_palette)
+    if (oam_entry->dmg_palette)
       palette = gb_state->sdl_obj_palette_1;
     else
       palette = gb_state->sdl_obj_palette_0;
     bool draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    tile_idx = oam_entry->index;
     if (draw_double_height) {
-      oam_entry.index &= 0b1111'1110;
+      tile_idx &= 0b1111'1110;
     }
-    int x = oam_entry.x_pos - 8;
-    int y = oam_entry.y_pos - 16;
-    if (oam_entry.y_flip && draw_double_height) {
+    int x = oam_entry->x_pos - 8;
+    int y = oam_entry->y_pos - 16;
+    if (oam_entry->y_flip && draw_double_height) {
       y += 8;
     }
   draw_obj:
-    if (oam_entry.priority) {
-      gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (oam_entry.index * 16), flags);
+    if (oam_entry->priority) {
+      gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (tile_idx * 16), flags);
     } else {
-      gb_draw_tile_to_surface(gb_state, target, palette, x, y, 0x8000 + (oam_entry.index * 16), flags);
+      gb_draw_tile_to_surface(gb_state, target, palette, x, y, 0x8000 + (tile_idx * 16), flags);
     }
     if (draw_double_height) {
       draw_double_height = false;
-      oam_entry.index++;
-      if (oam_entry.y_flip) {
+      tile_idx++;
+      if (oam_entry->y_flip) {
         y -= 8;
       } else {
         y += 8;
@@ -463,7 +466,22 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
   if (gb_state->regs.io.ly == gb_state->regs.io.wy) {
     gb_state->wy_cond = true;
   }
-  memcpy(gb_state->oam_entries, gb_state->oam, sizeof(gb_state->oam));
+  uint8_t oam_entries_pos = 0;
+  for (int i = 0; i < 40; i++) {
+    if (oam_entries_pos >= 10) {
+      break;
+    }
+    const struct oam_entry *oam_entry = get_oam_entry(gb_state, i);
+    const bool draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    if (!gb_is_tile_in_scanline(gb_state, oam_entry->y_pos - 16, (draw_double_height) ? 16 : 8)) {
+      continue;
+    }
+    // TODO: sort by X, if x equal make sure first in list comes last.
+    gb_state->oam_entries[oam_entries_pos++] = oam_entry;
+  }
+  if (oam_entries_pos < 10) {
+    gb_state->oam_entries[oam_entries_pos] = NULL;
+  }
 }
 
 void gb_draw(struct gb_state *gb_state) {
