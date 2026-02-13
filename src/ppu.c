@@ -476,8 +476,20 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
     if (!gb_is_tile_in_scanline(gb_state, oam_entry->y_pos - 16, (draw_double_height) ? 16 : 8)) {
       continue;
     }
-    // TODO: sort by X, if x equal make sure first in list comes last.
-    gb_state->oam_entries[oam_entries_pos++] = oam_entry;
+    // Sort by x_pos, if x_pos is equal to another entry's x_pos make sure first in oam_mem has highest priority (the
+    // final entry in `gb_state->oam_entries` is highest priority since it's the last to be drawn).
+    bool inserted = false;
+    for (int j = 0; j < oam_entries_pos; j++) {
+      if (gb_state->oam_entries[j]->x_pos <= oam_entry->x_pos) {
+        memmove(&gb_state->oam_entries[j + 1], &gb_state->oam_entries[j],
+                (oam_entries_pos - j) * sizeof(struct oam_entry *));
+        gb_state->oam_entries[j] = oam_entry;
+        oam_entries_pos++;
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted) gb_state->oam_entries[oam_entries_pos++] = oam_entry;
   }
   if (oam_entries_pos < 10) {
     gb_state->oam_entries[oam_entries_pos] = NULL;
