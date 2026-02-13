@@ -15,7 +15,7 @@
 #define GF_assert(expr) SDL_assert(expr)
 enum GB_LogCategory {
   GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
-  GB_LOG_CATEGORY_PPU = SDL_LOG_CATEGORY_CUSTOM,
+  GB_LOG_CATEGORY_PPU     = SDL_LOG_CATEGORY_CUSTOM,
 };
 
 #ifndef GB_LOG_CATEGORY
@@ -161,6 +161,8 @@ struct gb_state {
     uint16_t sp;
     uint16_t pc;
     struct io_regs {
+      uint8_t joyp;
+
       uint8_t sc; // serial control
 
       uint8_t tima; // timer counter
@@ -240,7 +242,8 @@ struct gb_state {
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
   bool dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
-  // this is where all of the oam entries to be drawn on the current line are gathered and ordered during the oam read window
+  // this is where all of the oam entries to be drawn on the current line are gathered and ordered during the oam read
+  // window
   const struct oam_entry *oam_entries[10];
 
   FILE *serial_port_output;
@@ -280,49 +283,66 @@ struct gb_state {
 };
 
 enum io_reg_addr {
-  IO_SB = 0xFF01,
-  IO_SC = 0xFF02,
-  IO_TIMA = 0xFF05,
-  IO_TMA = 0xFF06,
-  IO_TAC = 0xFF07,
-  IO_NR10 = 0xFF10,
-  IO_NR11 = 0xFF11,
-  IO_NR12 = 0xFF12,
-  IO_NR13 = 0xFF13,
-  IO_NR14 = 0xFF14,
-  IO_NR21 = 0xFF16,
-  IO_NR22 = 0xFF17,
-  IO_NR23 = 0xFF18,
-  IO_NR24 = 0xFF19,
-  IO_NR30 = 0xFF1A,
-  IO_NR31 = 0xFF1B,
-  IO_NR32 = 0xFF1C,
-  IO_NR33 = 0xFF1D,
-  IO_NR34 = 0xFF1E,
-  IO_NR41 = 0xFF20,
-  IO_NR42 = 0xFF21,
-  IO_NR43 = 0xFF22,
-  IO_NR44 = 0xFF23,
-  IO_NR50 = 0xFF24,
-  IO_NR51 = 0xFF25,
-  IO_IF = 0xFF0F,
-  IO_IE = 0xFFFF,
+  IO_JOYP   = 0xFF00,
+  IO_SB     = 0xFF01,
+  IO_SC     = 0xFF02,
+  IO_TIMA   = 0xFF05,
+  IO_TMA    = 0xFF06,
+  IO_TAC    = 0xFF07,
+  IO_NR10   = 0xFF10,
+  IO_NR11   = 0xFF11,
+  IO_NR12   = 0xFF12,
+  IO_NR13   = 0xFF13,
+  IO_NR14   = 0xFF14,
+  IO_NR21   = 0xFF16,
+  IO_NR22   = 0xFF17,
+  IO_NR23   = 0xFF18,
+  IO_NR24   = 0xFF19,
+  IO_NR30   = 0xFF1A,
+  IO_NR31   = 0xFF1B,
+  IO_NR32   = 0xFF1C,
+  IO_NR33   = 0xFF1D,
+  IO_NR34   = 0xFF1E,
+  IO_NR41   = 0xFF20,
+  IO_NR42   = 0xFF21,
+  IO_NR43   = 0xFF22,
+  IO_NR44   = 0xFF23,
+  IO_NR50   = 0xFF24,
+  IO_NR51   = 0xFF25,
+  IO_IF     = 0xFF0F,
+  IO_IE     = 0xFFFF,
   IO_SND_ON = 0xFF26,
-  IO_LCDC = 0xFF40,
-  IO_SCY = 0xFF42,
-  IO_SCX = 0xFF43,
+  IO_LCDC   = 0xFF40,
+  IO_SCY    = 0xFF42,
+  IO_SCX    = 0xFF43,
 
-  IO_WY = 0xFF4A,
-  IO_WX = 0xFF4B,
+  IO_WY     = 0xFF4A,
+  IO_WX     = 0xFF4B,
 
   // LCD Status Registers
-  IO_LY = 0xFF44,
-  IO_LYC = 0xFF45,
-  IO_STAT = 0xFF41,
+  IO_LY     = 0xFF44,
+  IO_LYC    = 0xFF45,
+  IO_STAT   = 0xFF41,
 
-  IO_BGP = 0xFF47,
-  IO_OBP0 = 0xFF48,
-  IO_OBP1 = 0xFF49,
+  IO_BGP    = 0xFF47,
+  IO_OBP0   = 0xFF48,
+  IO_OBP1   = 0xFF49,
+};
+
+enum joy_pad_io_reg_bits : uint8_t {
+  JOYP_SELECT_D_PAD   = 1 << 4,
+  // D-Pad Dirs: if JOYP_SELECT_D_PAD is selected (aka is 0)
+  JOYP_D_PAD_RIGHT    = 1 << 0,
+  JOYP_D_PAD_LEFT     = 1 << 1,
+  JOYP_D_PAD_UP       = 1 << 2,
+  JOYP_D_PAD_DOWN     = 1 << 3,
+
+  JOYP_SELECT_BUTTONS = 1 << 5,
+  // Buttons: if JOYP_SELECT_BUTTONS is selected (aka is 0)
+  JOYP_BUTTON_A       = 1 << 0,
+  JOYP_BUTTON_B       = 1 << 1,
+  JOYP_BUTTON_SELECT  = 1 << 2,
+  JOYP_BUTTON_START   = 1 << 3,
 };
 
 uint64_t m_cycles(struct gb_state *gb_state);

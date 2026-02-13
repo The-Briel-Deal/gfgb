@@ -8,15 +8,15 @@ void gb_state_init(struct gb_state *gb_state) {
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
-  gb_state->regs.sp = WRAM_END + 1;
+  gb_state->regs.sp                     = WRAM_END + 1;
 
   // This isn't necessary due to me zeroing state above, but I want to
   // explicitly set this as false in case I ever remove the zeroing as a speed
   // up.
-  gb_state->rom_loaded = false;
-  gb_state->bootrom_mapped = false;
+  gb_state->rom_loaded                  = false;
+  gb_state->bootrom_mapped              = false;
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
-  gb_state->regs.io.lcdc = 0b10010001;
+  gb_state->regs.io.lcdc                = 0b10010001;
   gb_state->first_oam_scan_after_enable = true;
 }
 
@@ -158,7 +158,7 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
 uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->use_flat_ram) {
     uint8_t *val_ptr = &gb_state->flat_ram[addr];
-    uint16_t val = 0x0000;
+    uint16_t val     = 0x0000;
     val |= val_ptr[0] << 0;
     val |= val_ptr[1] << 8;
     return val;
@@ -178,8 +178,25 @@ uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
 }
 void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   if (addr >= GB_TILEDATA_BLOCK0_START && addr < GB_TILEDATA_BLOCK2_END) {
-    uint16_t tex_idx = tile_addr_to_tex_idx(addr);
+    uint16_t tex_idx                  = tile_addr_to_tex_idx(addr);
     gb_state->dirty_textures[tex_idx] = true;
+  }
+}
+
+void write_io_reg(struct gb_state *gb_state, enum io_reg_addr reg, uint8_t val) {
+  // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
+  // read-only.
+  LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
+  switch (reg) {
+  case IO_JOYP:
+    gb_state->regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
+    gb_state->regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
+  default:
+    uint8_t *reg_ptr = get_io_reg(gb_state, reg);
+    if (reg_ptr == NULL) {
+      LogError("Unknown IO Register at addr = 0x%.4X", reg);
+    }
+    *reg_ptr = val;
   }
 }
 
@@ -196,8 +213,8 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     }
     uint8_t *val_ptr;
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
-      val_ptr = get_io_reg(gb_state, addr);
-      LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, addr);
+      write_io_reg(gb_state, addr, val);
+      return;
     } else {
       val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
     }
@@ -217,8 +234,8 @@ void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
 void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   if (gb_state->use_flat_ram) {
     uint8_t *val_ptr = &gb_state->flat_ram[addr];
-    val_ptr[0] = (val & 0x00FF) >> 0;
-    val_ptr[1] = (val & 0xFF00) >> 8;
+    val_ptr[0]       = (val & 0x00FF) >> 0;
+    val_ptr[1]       = (val & 0xFF00) >> 8;
   } else {
     LogTrace("Writing val 0x%.4X to address 0x%.4X", val, addr);
     // little endian
@@ -271,12 +288,12 @@ static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint6
 
 static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 
-  uint8_t stat = gb_state->regs.io.stat;
-  uint8_t mode = (stat & (0b11 << 0)) >> 0;
-  uint8_t lyc_eq_ly = (stat & (0b1 << 2)) >> 2;
-  uint8_t m0_select = (stat & (0b1 << 3)) >> 3;
-  uint8_t m1_select = (stat & (0b1 << 4)) >> 4;
-  uint8_t m2_select = (stat & (0b1 << 5)) >> 5;
+  uint8_t stat       = gb_state->regs.io.stat;
+  uint8_t mode       = (stat & (0b11 << 0)) >> 0;
+  uint8_t lyc_eq_ly  = (stat & (0b1 << 2)) >> 2;
+  uint8_t m0_select  = (stat & (0b1 << 3)) >> 3;
+  uint8_t m1_select  = (stat & (0b1 << 4)) >> 4;
+  uint8_t m2_select  = (stat & (0b1 << 5)) >> 5;
   uint8_t lyc_select = (stat & (0b1 << 6)) >> 6;
 
   switch (mode) {
@@ -303,13 +320,13 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     // PPU mode reports 0 when PPU is disabled.
     // https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
     gb_state->regs.io.stat &= ~0b0000'0011;
-    gb_state->regs.io.ly = 0;
-    gb_state->lcd_x = 0;
+    gb_state->regs.io.ly                  = 0;
+    gb_state->lcd_x                       = 0;
     gb_state->first_oam_scan_after_enable = true;
     return;
   }
-  uint64_t prev_dots = gb_dots(prev_m_cycles);
-  uint64_t curr_dots = gb_dots(curr_m_cycles);
+  uint64_t prev_dots    = gb_dots(prev_m_cycles);
+  uint64_t curr_dots    = gb_dots(curr_m_cycles);
   uint32_t dots_elapsed = curr_dots - prev_dots;
   gb_state->lcd_x += dots_elapsed;
   gb_state->regs.io.ly += (gb_state->lcd_x / DOTS_PER_LINE);
@@ -331,7 +348,7 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     // We're assuming that mode 3 is always taking the longest possible amount of time.
     // If we wanted to be really precise we would have to calculate the exact length with:
     // https://gbdev.io/pandocs/Rendering.html#obj-penalty-algorithm
-    mode = DRAWING_PIXELS;
+    mode                                  = DRAWING_PIXELS;
   } else {
     mode = HBLANK;
   }
@@ -343,8 +360,8 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   } else {
     gb_state->regs.io.stat &= ~0b0000'0100;
   }
-  bool prev_triggered = gb_state->last_stat_interrupt;
-  bool curr_triggered = lcd_interrupt_triggered(gb_state);
+  bool prev_triggered           = gb_state->last_stat_interrupt;
+  bool curr_triggered           = lcd_interrupt_triggered(gb_state);
   gb_state->last_stat_interrupt = curr_triggered;
   if ((!prev_triggered) && curr_triggered) {
     gb_state->regs.io.if_ |= 0b00010;
@@ -354,8 +371,8 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
 
 void update_timers(struct gb_state *gb_state) {
   TracyCZoneN(ctx, "Update Timers", true);
-  uint64_t curr_m_cycles = m_cycles(gb_state);
-  uint64_t prev_m_cycles = gb_state->last_timer_sync_m_cycles;
+  uint64_t curr_m_cycles             = m_cycles(gb_state);
+  uint64_t prev_m_cycles             = gb_state->last_timer_sync_m_cycles;
   gb_state->last_timer_sync_m_cycles = curr_m_cycles;
 
   update_tima(gb_state, prev_m_cycles, curr_m_cycles);
@@ -364,7 +381,7 @@ void update_timers(struct gb_state *gb_state) {
 }
 
 bool gb_state_get_err(struct gb_state *gb_state) {
-  bool err = gb_state->err;
+  bool err      = gb_state->err;
   gb_state->err = false;
   return err;
 }
