@@ -336,6 +336,8 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
   success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
   GF_assert(success);
   if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
+  // TODO: I need to change this to choose the (up to) ten objects on this line in OAM_SCAN. I'll also want to properly
+  // sort objects with equal X positions so that the first one has higher draw priority.
   for (int i = 0; i < 40; i++) {
     struct oam_entry oam_entry = get_oam_entry(gb_state, i);
     enum draw_tile_flags flags = 0;
