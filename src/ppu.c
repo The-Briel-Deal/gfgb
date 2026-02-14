@@ -68,12 +68,18 @@ bool gb_video_init(struct gb_state *gb_state) {
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_composite_target != NULL);
 
+  // Initialize Text Rendering
   bool success = TTF_Init();
   GF_assert(success);
+
   gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
   GF_assert(gb_state->ttf_text_engine != NULL);
+
   gb_state->ttf_font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 16);
   GF_assert(gb_state->ttf_font != NULL);
+
+  gb_state->ttf_text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, "Test Text", 0);
+  GF_assert(gb_state->ttf_text != NULL);
 
   return true;
 }
@@ -534,9 +540,6 @@ static void gb_draw_dbg_text(struct gb_state *gb_state) {
   bool success;
   success = SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
   GF_assert(success);
-
-  TTF_Text *text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, "Test Text", 0);
-  GF_assert(text != NULL);
 
   success = TTF_SetTextColor(text, 0, 255, 0, 255);
   GF_assert(success);

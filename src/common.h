@@ -135,13 +135,19 @@ enum GB_LogCategory {
 #define TRACY_COLOR_GREEN 0x00ff00
 #define TRACY_COLOR_BLUE  0x0000ff
 
+struct gb_dyn_str {
+  char  *txt;
+  size_t len;
+  size_t cap;
+};
+
 struct gb_state {
-  SDL_Window *sdl_window;
+  SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
-  SDL_Palette *sdl_bg_palette;
-  SDL_Palette *sdl_bg_trans0_palette; // this palette is used to draw bits 1-3 on top of priority objects
-  SDL_Palette *sdl_obj_palette_0;
-  SDL_Palette *sdl_obj_palette_1;
+  SDL_Palette  *sdl_bg_palette;
+  SDL_Palette  *sdl_bg_trans0_palette; // this palette is used to draw bits 1-3 on top of priority objects
+  SDL_Palette  *sdl_obj_palette_0;
+  SDL_Palette  *sdl_obj_palette_1;
   // we draw into these surfaces initially, then we scan our current line and copy it to the screen on hblank
   SDL_Surface *sdl_bg_target;
   SDL_Surface *sdl_win_target;
@@ -150,17 +156,22 @@ struct gb_state {
   // background and window.
   SDL_Surface *sdl_obj_priority_target;
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
-  TTF_TextEngine *ttf_text_engine;
-  TTF_Font *ttf_font;
+
+  // Used for displaying state on screen using SDL3-ttf
+  TTF_TextEngine   *ttf_text_engine;
+  TTF_Font         *ttf_font;
+  TTF_Text         *ttf_text;
+  struct gb_dyn_str debug_state_text;
+
   struct regs {
-    uint8_t a;
-    uint8_t b;
-    uint8_t c;
-    uint8_t d;
-    uint8_t e;
-    uint8_t f;
-    uint8_t h;
-    uint8_t l;
+    uint8_t  a;
+    uint8_t  b;
+    uint8_t  c;
+    uint8_t  d;
+    uint8_t  e;
+    uint8_t  f;
+    uint8_t  h;
+    uint8_t  l;
     uint16_t sp;
     uint16_t pc;
     struct io_regs {
@@ -210,24 +221,24 @@ struct gb_state {
       uint8_t obp1;
       uint8_t wx;
       uint8_t wy;
-      uint8_t ie;         // interupt enable
-      uint8_t if_;        // interupt flag
-      bool ime;           // interupt master enable
-      bool set_ime_after; // IME is only set after the following instruction.
+      uint8_t ie;            // interupt enable
+      uint8_t if_;           // interupt flag
+      bool    ime;           // interupt master enable
+      bool    set_ime_after; // IME is only set after the following instruction.
     } io;
   } regs;
 
   // Window Related
-  bool wy_cond;
-  bool wx_cond;
+  bool    wy_cond;
+  bool    wx_cond;
   uint8_t win_line_counter;
-  bool win_line_blank;
+  bool    win_line_blank;
 
-  bool halted;
-  bool bootrom_mapped;
-  bool bootrom_has_syms;
-  bool rom_loaded;
-  bool use_flat_ram;
+  bool    halted;
+  bool    bootrom_mapped;
+  bool    bootrom_has_syms;
+  bool    rom_loaded;
+  bool    use_flat_ram;
   union {
     struct {
       uint8_t bootrom[DMG_BOOTROM_SIZE];
@@ -242,14 +253,14 @@ struct gb_state {
     uint8_t flat_ram[KB(64)];
   };
   struct debug_symbol_list syms;
-  SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
-  bool dirty_textures[DMG_N_TILEDATA_ADDRESSES];
+  SDL_Texture             *textures[DMG_N_TILEDATA_ADDRESSES];
+  bool                     dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
   // this is where all of the oam entries to be drawn on the current line are gathered and ordered during the oam read
   // window
   const struct oam_entry *oam_entries[10];
 
-  FILE *serial_port_output;
+  FILE                   *serial_port_output;
 
   // used for getting fps
   uint64_t last_frame_ticks_ns;
@@ -265,9 +276,9 @@ struct gb_state {
   // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
 
-  bool last_stat_interrupt;
+  bool     last_stat_interrupt;
 
-  uint8_t last_mode_handled;
+  uint8_t  last_mode_handled;
 
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;
@@ -275,7 +286,7 @@ struct gb_state {
   // used for updating the timer io regs.
   uint32_t last_timer_sync_m_cycles;
 
-  bool err;
+  bool     err;
 
   // runtime debug toggles
 #ifndef NDEBUG
@@ -323,17 +334,17 @@ enum io_reg_addr {
   IO_WX     = 0xFF4B,
 
   // LCD Status Registers
-  IO_LY     = 0xFF44,
-  IO_LYC    = 0xFF45,
-  IO_STAT   = 0xFF41,
+  IO_LY   = 0xFF44,
+  IO_LYC  = 0xFF45,
+  IO_STAT = 0xFF41,
 
-  IO_BGP    = 0xFF47,
-  IO_OBP0   = 0xFF48,
-  IO_OBP1   = 0xFF49,
+  IO_BGP  = 0xFF47,
+  IO_OBP0 = 0xFF48,
+  IO_OBP1 = 0xFF49,
 };
 
 enum joy_pad_io_reg_bits : uint8_t {
-  JOYP_SELECT_D_PAD   = 1 << 4,
+  JOYP_SELECT_D_PAD = 1 << 4,
   // D-Pad Dirs: if JOYP_SELECT_D_PAD is selected (aka is 0)
   JOYP_D_PAD_RIGHT    = 1 << 0,
   JOYP_D_PAD_LEFT     = 1 << 1,
@@ -342,29 +353,29 @@ enum joy_pad_io_reg_bits : uint8_t {
 
   JOYP_SELECT_BUTTONS = 1 << 5,
   // Buttons: if JOYP_SELECT_BUTTONS is selected (aka is 0)
-  JOYP_BUTTON_A       = 1 << 0,
-  JOYP_BUTTON_B       = 1 << 1,
-  JOYP_BUTTON_SELECT  = 1 << 2,
-  JOYP_BUTTON_START   = 1 << 3,
+  JOYP_BUTTON_A      = 1 << 0,
+  JOYP_BUTTON_B      = 1 << 1,
+  JOYP_BUTTON_SELECT = 1 << 2,
+  JOYP_BUTTON_START  = 1 << 3,
 };
 
-uint64_t m_cycles(struct gb_state *gb_state);
+uint64_t         m_cycles(struct gb_state *gb_state);
 
-void update_timers(struct gb_state *gb_state);
+void             update_timers(struct gb_state *gb_state);
 
-void *unmap_address(struct gb_state *gb_state, uint16_t addr);
+void            *unmap_address(struct gb_state *gb_state, uint16_t addr);
 
-uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr);
-void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val);
+uint8_t          read_mem8(struct gb_state *gb_state, uint16_t addr);
+void             write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val);
 
-uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr);
-void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val);
+uint16_t         read_mem16(struct gb_state *gb_state, uint16_t addr);
+void             write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val);
 
-void gb_state_init(struct gb_state *gb_state);
+void             gb_state_init(struct gb_state *gb_state);
 struct gb_state *gb_state_alloc();
-void gb_state_free(struct gb_state *gb_state);
+void             gb_state_free(struct gb_state *gb_state);
 
-bool gb_state_get_err(struct gb_state *gb_state);
+bool             gb_state_get_err(struct gb_state *gb_state);
 
 // Whether or not to use flat memory, this is currently exclusively used for single step tests where they expect memory
 // to be a flat 64KB bank.
