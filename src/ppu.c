@@ -541,8 +541,6 @@ static void gb_draw_dbg_text(struct gb_state *gb_state) {
   GB_CheckSDLCall(TTF_SetTextColor(gb_state->ttf_text, 0, 255, 0, 255));
   GB_CheckSDLCall(TTF_DrawRendererText(gb_state->ttf_text, 0, 0));
 
-  TTF_DestroyText(gb_state->ttf_text);
-
   SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
 }
