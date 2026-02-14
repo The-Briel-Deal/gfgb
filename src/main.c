@@ -74,7 +74,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       return false;
     }
     fclose(f);
-    GF_assert(bytes_len == 0x0100);
+    GB_assert(bytes_len == 0x0100);
     gb_state->regs.pc = 0x0000;
     gb_state->bootrom_mapped = true;
     int bootrom_name_len = strlen(bootrom_name);
@@ -174,7 +174,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     struct gb_state *gb_state = gb_state_alloc();
 
     *appstate = gb_state;
-    GF_assert(appstate != NULL);
+    GB_assert(appstate != NULL);
     gb_state_init(*appstate);
     if (!gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename)) return SDL_APP_FAILURE;
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");

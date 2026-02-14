@@ -49,37 +49,37 @@ bool gb_video_init(struct gb_state *gb_state) {
 
   // These targets only need to be 1 line tall since i'm just using these surfaces to store the scanline
   gb_state->sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
-  GF_assert(gb_state->sdl_bg_target != NULL);
+  GB_assert(gb_state->sdl_bg_target != NULL);
   SDL_SetSurfaceBlendMode(gb_state->sdl_bg_target, SDL_BLENDMODE_BLEND);
 
   gb_state->sdl_win_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
-  GF_assert(gb_state->sdl_win_target != NULL);
+  GB_assert(gb_state->sdl_win_target != NULL);
   SDL_SetSurfaceBlendMode(gb_state->sdl_win_target, SDL_BLENDMODE_BLEND);
 
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
   gb_state->sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
-  GF_assert(gb_state->sdl_obj_target != NULL);
+  GB_assert(gb_state->sdl_obj_target != NULL);
 
   gb_state->sdl_obj_priority_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
-  GF_assert(gb_state->sdl_obj_priority_target != NULL);
+  GB_assert(gb_state->sdl_obj_priority_target != NULL);
 
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  GF_assert(gb_state->sdl_composite_target != NULL);
+  GB_assert(gb_state->sdl_composite_target != NULL);
 
   // Initialize Text Rendering
   bool success = TTF_Init();
-  GF_assert(success);
+  GB_assert(success);
 
   gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
-  GF_assert(gb_state->ttf_text_engine != NULL);
+  GB_assert(gb_state->ttf_text_engine != NULL);
 
   gb_state->ttf_font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 16);
-  GF_assert(gb_state->ttf_font != NULL);
+  GB_assert(gb_state->ttf_font != NULL);
 
   gb_state->ttf_text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, "Test Text", 0);
-  GF_assert(gb_state->ttf_text != NULL);
+  GB_assert(gb_state->ttf_text != NULL);
 
   return true;
 }
@@ -190,7 +190,7 @@ static void update_palettes(struct gb_state *gb_state) {
 }
 
 const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) {
-  GF_assert(index < 40);
+  GB_assert(index < 40);
   const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->oam)[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
@@ -233,8 +233,8 @@ static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height)
 // TODO: check if tile should be double height (8x16)
 static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
                                     uint16_t tile_addr, enum draw_tile_flags flags) {
-  GF_assert(x < GB_DISPLAY_WIDTH);
-  GF_assert(y < GB_DISPLAY_HEIGHT);
+  GB_assert(x < GB_DISPLAY_WIDTH);
+  GB_assert(y < GB_DISPLAY_HEIGHT);
   // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
 
@@ -270,7 +270,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   uint16_t bg_tile_map_start;
   SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
   success = SDL_ClearSurface(target, 1.0f, 1.0f, 1.0f, 1.0f);
-  GF_assert(success);
+  GB_assert(success);
   if (!(gb_state->regs.io.lcdc & LCDC_BG_WIN_ENABLE)) return;
 
   if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
@@ -348,9 +348,9 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
 static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
   success = SDL_ClearSurface(target, 0, 0, 0, 0);
-  GF_assert(success);
+  GB_assert(success);
   success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
-  GF_assert(success);
+  GB_assert(success);
   if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
   // TODO: I need to change this to choose the (up to) ten objects on this line in OAM_SCAN. I'll also want to properly
   // sort objects with equal X positions so that the first one has higher draw priority.
@@ -405,21 +405,21 @@ void gb_composite_line(struct gb_state *gb_state) {
   };
   SDL_Surface *locked_texture;
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
-  GF_assert(success);
+  GB_assert(success);
 
 #ifdef GF_DBG_GREEN_BG
   SDL_ClearSurface(locked_texture, 0, 1, 0, 1);
 #endif
 
   // all intermediate targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
-  GF_assert(locked_texture->h == gb_state->sdl_bg_target->h);
-  GF_assert(locked_texture->w == gb_state->sdl_bg_target->w);
+  GB_assert(locked_texture->h == gb_state->sdl_bg_target->h);
+  GB_assert(locked_texture->w == gb_state->sdl_bg_target->w);
 
-  GF_assert(locked_texture->h == gb_state->sdl_obj_priority_target->h);
-  GF_assert(locked_texture->w == gb_state->sdl_obj_priority_target->w);
+  GB_assert(locked_texture->h == gb_state->sdl_obj_priority_target->h);
+  GB_assert(locked_texture->w == gb_state->sdl_obj_priority_target->w);
 
-  GF_assert(locked_texture->h == gb_state->sdl_obj_target->h);
-  GF_assert(locked_texture->w == gb_state->sdl_obj_target->w);
+  GB_assert(locked_texture->h == gb_state->sdl_obj_target->h);
+  GB_assert(locked_texture->w == gb_state->sdl_obj_target->w);
 
 #ifndef NDEBUG
   if (!gb_state->dbg_hide_bg)
@@ -539,13 +539,13 @@ void gb_draw(struct gb_state *gb_state) {
 static void gb_draw_dbg_text(struct gb_state *gb_state) {
   bool success;
   success = SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
-  GF_assert(success);
+  GB_assert(success);
 
   success = TTF_SetTextColor(text, 0, 255, 0, 255);
-  GF_assert(success);
+  GB_assert(success);
   success = TTF_DrawRendererText(text, 0, 0);
 
-  GF_assert(success);
+  GB_assert(success);
   TTF_DestroyText(text);
 
   SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
@@ -561,18 +561,18 @@ void gb_present(struct gb_state *gb_state) {
 
   /* NULL means that we are selecting the window as the target */
   success                    = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
-  GF_assert(success);
+  GB_assert(success);
   success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
-  GF_assert(success);
+  GB_assert(success);
   success = SDL_RenderClear(gb_state->sdl_renderer);
-  GF_assert(success);
+  GB_assert(success);
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
-  GF_assert(success);
+  GB_assert(success);
 
   gb_draw_dbg_text(gb_state);
 
   success = SDL_RenderPresent(gb_state->sdl_renderer);
-  GF_assert(success);
+  GB_assert(success);
 
   TracyCFrameMark
 }

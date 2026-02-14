@@ -13,7 +13,7 @@
 #include "disassemble.h"
 #include "ppu.h"
 
-#define GF_assert(expr) SDL_assert(expr)
+#define GB_assert(expr) SDL_assert(expr)
 enum GB_LogCategory {
   GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
   GB_LOG_CATEGORY_PPU     = SDL_LOG_CATEGORY_CUSTOM,
@@ -384,8 +384,8 @@ void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
 // This is in common since I need to also use this for marking textures dirty when they are written to.
 inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
   int tex_index = (tile_addr - GB_TILEDATA_BLOCK0_START) / 16;
-  GF_assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
-  GF_assert(tex_index >= 0);
+  GB_assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
+  GB_assert(tex_index >= 0);
   return tex_index;
 }
 
