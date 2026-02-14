@@ -18,6 +18,14 @@ enum GB_LogCategory {
   GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
   GB_LOG_CATEGORY_PPU     = SDL_LOG_CATEGORY_CUSTOM,
 };
+#ifdef NDEBUG
+#define GB_CheckSDLCall(call) call
+#else
+#define GB_CheckSDLCall(call)                                                                                         \
+  if (!call) {                                                                                                         \
+    LogCritical(__FILE__ "@%d: SDL Call '" #call "' failed due to '%s'", __LINE__, SDL_GetError());                    \
+  }
+#endif
 
 #ifndef GB_LOG_CATEGORY
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_DEFAULT

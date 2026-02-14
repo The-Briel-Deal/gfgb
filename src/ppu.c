@@ -10,8 +10,8 @@
 #include <string.h>
 
 bool gb_video_init(struct gb_state *gb_state) {
-  SDL_Environment *env             = SDL_GetEnvironment();
-  const char *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
+  SDL_Environment *env                  = SDL_GetEnvironment();
+  const char      *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
   if (ppu_log_priority_str != NULL) {
     int ppu_log_priority = atoi(ppu_log_priority_str);
     SDL_SetLogPriority(GB_LOG_CATEGORY_PPU, ppu_log_priority);
@@ -239,7 +239,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
 
   uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
-  uint8_t pixels[8 * 8];
+  uint8_t  pixels[8 * 8];
   gb_tile_to_8bit_indexed(gb_tile, pixels);
   SDL_Surface *tile_surface = SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_INDEX8, &pixels, 8);
   SDL_SetSurfacePalette(tile_surface, palette);
@@ -287,10 +287,10 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   }
 
   for (int i = 0; i < (32 * 32); i++) {
-    const int x                   = i % 32;
-    const int y                   = i / 32;
-    const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
-    const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
+    const int      x               = i % 32;
+    const int      y               = i / 32;
+    const uint8_t  tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
+    const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
@@ -333,10 +333,10 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   // TODO: Check if this is actually needed, I don't think it is.
   SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
   for (int i = 0; i < 32; i++) {
-    const int x                   = i;
-    const int y                   = gb_state->win_line_counter / 8;
-    const uint8_t tile_data_index = read_mem8(gb_state, win_tile_map_start + x + (y * 32));
-    const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
+    const int      x               = i;
+    const int      y               = gb_state->win_line_counter / 8;
+    const uint8_t  tile_data_index = read_mem8(gb_state, win_tile_map_start + x + (y * 32));
+    const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     uint8_t display_x = (x * 8) + gb_state->regs.io.wx - 7;
     uint8_t display_y = (gb_state->regs.io.ly / 8) * 8;
@@ -355,7 +355,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
   // TODO: I need to change this to choose the (up to) ten objects on this line in OAM_SCAN. I'll also want to properly
   // sort objects with equal X positions so that the first one has higher draw priority.
   for (int i = 0; i < 10; i++) {
-    uint8_t tile_idx;
+    uint8_t                 tile_idx;
     const struct oam_entry *oam_entry = gb_state->oam_entries[i];
     if (oam_entry == NULL) break;
     enum draw_tile_flags flags = 0;
@@ -396,7 +396,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
 }
 
 void gb_composite_line(struct gb_state *gb_state) {
-  bool success;
+  bool     success;
   SDL_Rect line_rect = {
       .x = 0,
       .y = gb_state->regs.io.ly,
@@ -487,8 +487,8 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
     if (oam_entries_pos >= 10) {
       break;
     }
-    const struct oam_entry *oam_entry = get_oam_entry(gb_state, i);
-    const bool draw_double_height     = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    const struct oam_entry *oam_entry          = get_oam_entry(gb_state, i);
+    const bool              draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
     if (!gb_is_tile_in_scanline(gb_state, oam_entry->y_pos - 16, (draw_double_height) ? 16 : 8)) {
       continue;
     }
@@ -537,16 +537,11 @@ void gb_draw(struct gb_state *gb_state) {
 }
 
 static void gb_draw_dbg_text(struct gb_state *gb_state) {
-  bool success;
-  success = SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
-  GB_assert(success);
+  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
+  GB_CheckSDLCall(TTF_SetTextColor(gb_state->ttf_text, 0, 255, 0, 255));
+  GB_CheckSDLCall(TTF_DrawRendererText(gb_state->ttf_text, 0, 0));
 
-  success = TTF_SetTextColor(text, 0, 255, 0, 255);
-  GB_assert(success);
-  success = TTF_DrawRendererText(text, 0, 0);
-
-  GB_assert(success);
-  TTF_DestroyText(text);
+  TTF_DestroyText(gb_state->ttf_text);
 
   SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -560,7 +555,7 @@ void gb_present(struct gb_state *gb_state) {
   gb_state->wy_cond          = 0;
 
   /* NULL means that we are selecting the window as the target */
-  success                    = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
+  success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
   GB_assert(success);
   success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
   GB_assert(success);
