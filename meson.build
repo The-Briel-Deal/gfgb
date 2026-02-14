@@ -14,7 +14,7 @@ if get_option('dbg_green_bg')
 endif
 
 
-sdl3_dep = dependency('sdl3')
+sdl3_deps = [dependency('sdl3'), dependency('sdl3-ttf')]
 tracy_dep = dependency(
   'tracy',
   static : true,
@@ -35,7 +35,7 @@ shared_lib = shared_library(
   'gfgb', 
   [sources],
   include_directories : include_directories(['src/']),
-  dependencies : [sdl3_dep, global_deps],
+  dependencies : [sdl3_deps, global_deps],
 )
 
 py = import('python').find_installation()
@@ -55,14 +55,14 @@ gfgb_py_ext = py.extension_module(
   include_directories : include_directories(['src/']),
   link_whole : [gfgb_obj],
   install : true,
-  dependencies : [sdl3_dep, global_deps],
+  dependencies : [sdl3_deps, global_deps],
 )
 
 exe = executable(
   'gb_emu',
   [sources, 'src/main.c'],
   include_directories : include_directories(['src/']),
-  dependencies : [sdl3_dep, global_deps],
+  dependencies : [sdl3_deps, global_deps],
   install : true,
 )
 
@@ -71,7 +71,7 @@ cpu_test_exe = executable(
   sources,
   c_args : '-DRUN_CPU_TESTS=1',
   include_directories : include_directories(['src/']),
-  dependencies : [sdl3_dep, global_deps],
+  dependencies : [sdl3_deps, global_deps],
 )
 
 ppu_test_exe = executable(
@@ -79,7 +79,7 @@ ppu_test_exe = executable(
   sources,
   c_args : '-DRUN_PPU_TESTS=1',
   include_directories : include_directories(['src/']),
-  dependencies : [sdl3_dep, global_deps],
+  dependencies : [sdl3_deps, global_deps],
 )
 
 disasm_test_exe = executable(
@@ -87,7 +87,7 @@ disasm_test_exe = executable(
   sources,
   c_args : '-DRUN_DISASSEMBLE_TESTS=1',
   include_directories : include_directories(['src/']),
-  dependencies : [sdl3_dep, global_deps],
+  dependencies : [sdl3_deps, global_deps],
 )
 
 current_src_dir = meson.current_source_dir()

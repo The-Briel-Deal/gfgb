@@ -4,6 +4,7 @@
 #include <tracy/TracyC.h>
 
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -149,6 +150,7 @@ struct gb_state {
   // background and window.
   SDL_Surface *sdl_obj_priority_target;
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
+  TTF_TextEngine *ttf_text_engine;
   struct regs {
     uint8_t a;
     uint8_t b;

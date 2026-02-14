@@ -1,4 +1,5 @@
 #include "ppu.h"
+#include <SDL3_ttf/SDL_ttf.h>
 
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
 #include "common.h"
@@ -9,7 +10,7 @@
 #include <string.h>
 
 bool gb_video_init(struct gb_state *gb_state) {
-  SDL_Environment *env = SDL_GetEnvironment();
+  SDL_Environment *env             = SDL_GetEnvironment();
   const char *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
   if (ppu_log_priority_str != NULL) {
     int ppu_log_priority = atoi(ppu_log_priority_str);
@@ -66,6 +67,9 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_composite_target != NULL);
+
+  gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
+  GF_assert(gb_state->ttf_text_engine != NULL);
 
   return true;
 }
@@ -192,20 +196,20 @@ const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) 
   return oam_entry;
 }
 enum lcdc_flags {
-  LCDC_BG_WIN_ENABLE = 1 << 0,
-  LCDC_OBJ_ENABLE = 1 << 1,
-  LCDC_OBJ_SIZE = 1 << 2,
-  LCDC_BG_TILE_MAP_AREA = 1 << 3,
+  LCDC_BG_WIN_ENABLE         = 1 << 0,
+  LCDC_OBJ_ENABLE            = 1 << 1,
+  LCDC_OBJ_SIZE              = 1 << 2,
+  LCDC_BG_TILE_MAP_AREA      = 1 << 3,
   LCDC_BG_WIN_TILE_DATA_AREA = 1 << 4,
-  LCDC_WIN_ENABLE = 1 << 5,
-  LCDC_WIN_TILEMAP = 1 << 6,
-  LCDC_ENABLE = 1 << 7,
+  LCDC_WIN_ENABLE            = 1 << 5,
+  LCDC_WIN_TILEMAP           = 1 << 6,
+  LCDC_ENABLE                = 1 << 7,
 };
 
 enum draw_tile_flags {
-  DRAW_TILE_FLIP_X = 1 << 0,
-  DRAW_TILE_FLIP_Y = 1 << 1,
-  DRAW_TILE_PALETTE_BGP = 1 << 2,
+  DRAW_TILE_FLIP_X       = 1 << 0,
+  DRAW_TILE_FLIP_Y       = 1 << 1,
+  DRAW_TILE_PALETTE_BGP  = 1 << 2,
   DRAW_TILE_PALETTE_OBP0 = 1 << 3,
   DRAW_TILE_PALETTE_OBP1 = 1 << 4,
 };
@@ -271,8 +275,8 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   }
 
   for (int i = 0; i < (32 * 32); i++) {
-    const int x = i % 32;
-    const int y = i / 32;
+    const int x                   = i % 32;
+    const int y                   = i / 32;
     const uint8_t tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
@@ -317,8 +321,8 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   // TODO: Check if this is actually needed, I don't think it is.
   SDL_SetSurfacePalette(target, gb_state->sdl_bg_palette);
   for (int i = 0; i < 32; i++) {
-    const int x = i;
-    const int y = gb_state->win_line_counter / 8;
+    const int x                   = i;
+    const int y                   = gb_state->win_line_counter / 8;
     const uint8_t tile_data_index = read_mem8(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
@@ -351,7 +355,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     else
       palette = gb_state->sdl_obj_palette_0;
     bool draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
-    tile_idx = oam_entry->index;
+    tile_idx                = oam_entry->index;
     if (draw_double_height) {
       tile_idx &= 0b1111'1110;
     }
@@ -472,7 +476,7 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
       break;
     }
     const struct oam_entry *oam_entry = get_oam_entry(gb_state, i);
-    const bool draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    const bool draw_double_height     = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
     if (!gb_is_tile_in_scanline(gb_state, oam_entry->y_pos - 16, (draw_double_height) ? 16 : 8)) {
       continue;
     }
@@ -525,10 +529,10 @@ void gb_present(struct gb_state *gb_state) {
   bool success;
 
   gb_state->win_line_counter = 0;
-  gb_state->wy_cond = 0;
+  gb_state->wy_cond          = 0;
 
   /* NULL means that we are selecting the window as the target */
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
+  success                    = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
   GF_assert(success);
   success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
   GF_assert(success);
@@ -549,19 +553,19 @@ void gb_present(struct gb_state *gb_state) {
 #include <assert.h>
 
 void test_gb_tile_to_8bit_indexed() {
-  uint8_t gb_tile_in[16] = {0};
+  uint8_t gb_tile_in[16]                  = {0};
   uint8_t indexed_8bit_tile_expect[8 * 8] = {0};
   uint8_t indexed_8bit_tile_result[8 * 8] = {0};
-  gb_tile_in[0] = 0b1010'1100;
-  gb_tile_in[1] = 0b1100'1011;
-  indexed_8bit_tile_expect[0] = 0b11;
-  indexed_8bit_tile_expect[1] = 0b10;
-  indexed_8bit_tile_expect[2] = 0b01;
-  indexed_8bit_tile_expect[3] = 0b00;
-  indexed_8bit_tile_expect[4] = 0b11;
-  indexed_8bit_tile_expect[5] = 0b01;
-  indexed_8bit_tile_expect[6] = 0b10;
-  indexed_8bit_tile_expect[7] = 0b10;
+  gb_tile_in[0]                           = 0b1010'1100;
+  gb_tile_in[1]                           = 0b1100'1011;
+  indexed_8bit_tile_expect[0]             = 0b11;
+  indexed_8bit_tile_expect[1]             = 0b10;
+  indexed_8bit_tile_expect[2]             = 0b01;
+  indexed_8bit_tile_expect[3]             = 0b00;
+  indexed_8bit_tile_expect[4]             = 0b11;
+  indexed_8bit_tile_expect[5]             = 0b01;
+  indexed_8bit_tile_expect[6]             = 0b10;
+  indexed_8bit_tile_expect[7]             = 0b10;
 
   gb_tile_to_8bit_indexed(gb_tile_in, indexed_8bit_tile_result);
   for (int i = 0; i < 16; i++) {

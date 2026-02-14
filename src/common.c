@@ -191,12 +191,14 @@ void write_io_reg(struct gb_state *gb_state, enum io_reg_addr reg, uint8_t val) 
   case IO_JOYP:
     gb_state->regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
     gb_state->regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
+    break;
   default:
     uint8_t *reg_ptr = get_io_reg(gb_state, reg);
     if (reg_ptr == NULL) {
       LogError("Unknown IO Register at addr = 0x%.4X", reg);
     }
     *reg_ptr = val;
+    break;
   }
 }
 
@@ -266,6 +268,7 @@ static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint6
   case 1: incr_every = 4; break;
   case 2: incr_every = 16; break;
   case 3: incr_every = 64; break;
+  default: unreachable();
   }
   // we want to floor this to the lowest multiple of the increment rate, that way we don't risk missing increments if
   // this is called too frequently.
