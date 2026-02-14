@@ -90,6 +90,8 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->sdl_obj_palette_0 = NULL;
   SDL_DestroyPalette(gb_state->sdl_obj_palette_1);
   gb_state->sdl_obj_palette_1 = NULL;
+  TTF_DestroyRendererTextEngine(gb_state->ttf_text_engine);
+  gb_state->ttf_text_engine = NULL;
   SDL_DestroyRenderer(gb_state->sdl_renderer);
   gb_state->sdl_renderer = NULL;
   SDL_DestroyWindow(gb_state->sdl_window);
@@ -540,6 +542,13 @@ void gb_present(struct gb_state *gb_state) {
   GF_assert(success);
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
   GF_assert(success);
+
+  // TODO: Store these objects on gb_state once I get this working
+  TTF_Font *font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 12);
+  TTF_Text *text = TTF_CreateText(gb_state->ttf_text_engine, font, "Test Text", 0);
+  success        = TTF_DrawRendererText(text, 0, 0);
+  GF_assert(success);
+
   success = SDL_RenderPresent(gb_state->sdl_renderer);
   GF_assert(success);
 
