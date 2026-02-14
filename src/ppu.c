@@ -68,6 +68,8 @@ bool gb_video_init(struct gb_state *gb_state) {
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GF_assert(gb_state->sdl_composite_target != NULL);
 
+  bool success = TTF_Init();
+  GF_assert(success);
   gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
   GF_assert(gb_state->ttf_text_engine != NULL);
 
@@ -545,8 +547,10 @@ void gb_present(struct gb_state *gb_state) {
 
   // TODO: Store these objects on gb_state once I get this working
   TTF_Font *font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 12);
+  GF_assert(font != NULL);
   TTF_Text *text = TTF_CreateText(gb_state->ttf_text_engine, font, "Test Text", 0);
-  success        = TTF_DrawRendererText(text, 0, 0);
+  GF_assert(text != NULL);
+  success = TTF_DrawRendererText(text, 0, 0);
   GF_assert(success);
 
   success = SDL_RenderPresent(gb_state->sdl_renderer);
