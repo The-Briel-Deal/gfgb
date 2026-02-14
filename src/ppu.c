@@ -72,6 +72,8 @@ bool gb_video_init(struct gb_state *gb_state) {
   GF_assert(success);
   gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
   GF_assert(gb_state->ttf_text_engine != NULL);
+  gb_state->ttf_font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 16);
+  GF_assert(gb_state->ttf_font != NULL);
 
   return true;
 }
@@ -528,6 +530,25 @@ void gb_draw(struct gb_state *gb_state) {
   TracyCZoneEnd(render_objs_ctx);
 }
 
+static void gb_draw_dbg_text(struct gb_state *gb_state) {
+  bool success;
+  success = SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
+  GF_assert(success);
+
+  TTF_Text *text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, "Test Text", 0);
+  GF_assert(text != NULL);
+
+  success = TTF_SetTextColor(text, 0, 255, 0, 255);
+  GF_assert(success);
+  success = TTF_DrawRendererText(text, 0, 0);
+
+  GF_assert(success);
+  TTF_DestroyText(text);
+
+  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+}
+
 // called on vblank
 void gb_present(struct gb_state *gb_state) {
   bool success;
@@ -545,13 +566,7 @@ void gb_present(struct gb_state *gb_state) {
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
   GF_assert(success);
 
-  // TODO: Store these objects on gb_state once I get this working
-  TTF_Font *font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 12);
-  GF_assert(font != NULL);
-  TTF_Text *text = TTF_CreateText(gb_state->ttf_text_engine, font, "Test Text", 0);
-  GF_assert(text != NULL);
-  success = TTF_DrawRendererText(text, 0, 0);
-  GF_assert(success);
+  gb_draw_dbg_text(gb_state);
 
   success = SDL_RenderPresent(gb_state->sdl_renderer);
   GF_assert(success);

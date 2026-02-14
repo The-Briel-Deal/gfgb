@@ -151,6 +151,7 @@ struct gb_state {
   SDL_Surface *sdl_obj_priority_target;
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
   TTF_TextEngine *ttf_text_engine;
+  TTF_Font *ttf_font;
   struct regs {
     uint8_t a;
     uint8_t b;
