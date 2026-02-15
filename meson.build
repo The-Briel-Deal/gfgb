@@ -1,6 +1,6 @@
 project(
   'gb_emu',
-  'c', 'cython',
+  'c', 'cpp', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
   default_options : ['warning_level=3', 'c_std=c23'],
