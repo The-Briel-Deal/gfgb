@@ -14,7 +14,8 @@ if get_option('dbg_green_bg')
 endif
 
 
-sdl3_deps = [dependency('sdl3'), dependency('sdl3-ttf')]
+imgui_dep = dependency('imgui')
+sdl3_deps = [dependency('sdl3'), dependency('sdl3-ttf'), imgui_dep]
 tracy_dep = dependency(
   'tracy',
   static : true,
