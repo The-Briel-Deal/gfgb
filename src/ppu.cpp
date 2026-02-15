@@ -1,7 +1,6 @@
-#include <cstdint>
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
-#include "common.h"
 #include "ppu.h"
+#include "common.h"
 
 #include <imgui.h>
 
@@ -271,7 +270,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
   // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
 
-  uint8_t *gb_tile = unmap_address(gb_state, tile_addr);
+  uint8_t *gb_tile = (uint8_t *)unmap_address(gb_state, tile_addr);
   uint8_t  pixels[8 * 8];
   gb_tile_to_8bit_indexed(gb_tile, pixels);
   SDL_Surface *tile_surface = SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_INDEX8, &pixels, 8);
@@ -284,7 +283,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
       .h = 8,
   };
 
-  SDL_FlipMode flip = 0;
+  SDL_FlipMode flip = SDL_FLIP_NONE;
   if (flags & DRAW_TILE_FLIP_X) flip |= SDL_FLIP_HORIZONTAL;
   if (flags & DRAW_TILE_FLIP_Y) flip |= SDL_FLIP_VERTICAL;
 
@@ -433,8 +432,8 @@ void gb_composite_line(struct gb_state *gb_state) {
   SDL_Rect line_rect = {
       .x = 0,
       .y = gb_state->regs.io.ly,
-      .h = 1,
       .w = GB_DISPLAY_WIDTH,
+      .h = 1,
   };
   SDL_Surface *locked_texture;
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
@@ -464,7 +463,12 @@ void gb_composite_line(struct gb_state *gb_state) {
   }
 
   // TODO: Adjust width properly
-  SDL_Rect win_rect = {.x = gb_state->regs.io.wx - 7, .y = 0, .h = 1, .w = GB_DISPLAY_WIDTH};
+  SDL_Rect win_rect = {
+      .x = gb_state->regs.io.wx - 7,
+      .y = 0,
+      .w = GB_DISPLAY_WIDTH,
+      .h = 1,
+  };
 #ifndef NDEBUG
   if (!gb_state->dbg_hide_win)
 #endif

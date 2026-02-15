@@ -13,6 +13,10 @@
 #include "disassemble.h"
 #include "ppu.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define GB_malloc(size)       SDL_malloc(size)
 #define GB_realloc(mem, size) SDL_realloc(mem, size)
 #define GB_free(mem)          SDL_free(mem)
@@ -412,5 +416,8 @@ inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
   GB_assert(tex_index >= 0);
   return tex_index;
 }
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GB_COMMON_H

@@ -3,7 +3,7 @@ project(
   'c', 'cpp', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
-  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=c++20'],
+  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++20', 'cpp_args=-fpermissive'],
 )
 
 if get_option('enable_logging')
@@ -78,7 +78,7 @@ cpu_test_exe = executable(
 ppu_test_exe = executable(
   'ppu_test_exe',
   sources,
-  c_args : '-DRUN_PPU_TESTS=1',
+  cpp_args : '-DRUN_PPU_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : [sdl3_deps, global_deps],
 )
