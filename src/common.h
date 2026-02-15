@@ -3,8 +3,6 @@
 
 #include <tracy/TracyC.h>
 
-#include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -196,12 +194,6 @@ struct gb_state {
   SDL_Surface *sdl_obj_priority_target;
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
 
-  // Used for displaying state on screen using SDL3-ttf
-  TTF_TextEngine *ttf_text_engine;
-  TTF_Font       *ttf_font;
-  TTF_Text       *ttf_text;
-  gb_dstr_t       debug_state_text;
-
   struct regs {
     uint8_t  a;
     uint8_t  b;
@@ -280,7 +272,7 @@ struct gb_state {
   bool    use_flat_ram;
   union {
     struct gb_ram_banks ram;
-    uint8_t flat_ram[KB(64)];
+    uint8_t             flat_ram[KB(64)];
   };
   struct debug_symbol_list syms;
   SDL_Texture             *textures[DMG_N_TILEDATA_ADDRESSES];

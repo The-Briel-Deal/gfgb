@@ -16,24 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void gb_update_debug_state_text(struct gb_state *gb_state) {
-  size_t     fstr_len;
-  gb_dstr_t *dstr = &gb_state->debug_state_text;
-  gb_dstr_clear(dstr);
-
-  gb_dstr_ensure_space(dstr, 128);
-  fstr_len = snprintf(&dstr->txt[dstr->len], 128, "M-Cycles: %ld\n", gb_state->m_cycles_elapsed);
-  assert(fstr_len <= 128);
-  dstr->len += fstr_len;
-
-  //! If I end up sticking with this approach i'll want to use C++'s format module to format to binary. It looks like
-  //! printf("%b") is a gnu extension.
-  // gb_dstr_ensure_space(dstr, 128);
-  // fstr_len = snprintf(&dstr->txt[dstr->len], 128, "JOYP: 0b%.8b\n", gb_state->regs.io.joyp);
-  // assert(fstr_len <= 128);
-  // dstr->len += fstr_len;
-}
-
 bool gb_video_init(struct gb_state *gb_state) {
   SDL_Environment *env                  = SDL_GetEnvironment();
   const char      *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
@@ -93,25 +75,6 @@ bool gb_video_init(struct gb_state *gb_state) {
                                                      SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GB_assert(gb_state->sdl_composite_target != NULL);
 
-  // Initialize Text Rendering
-  bool success = TTF_Init();
-  GB_assert(success);
-
-  gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
-  GB_assert(gb_state->ttf_text_engine != NULL);
-
-  // if i'm going to stick with this font I should figure out a way to embed it in the bin or ship it with the emu
-  gb_state->ttf_font = TTF_OpenFont("fonts/Monocraft-ttf/Monocraft.ttf", 16);
-  GB_assert(gb_state->ttf_font != NULL);
-
-  gb_dstr_init(&gb_state->debug_state_text, 8);
-
-  gb_update_debug_state_text(gb_state);
-
-  gb_state->ttf_text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, gb_state->debug_state_text.txt,
-                                      gb_state->debug_state_text.len);
-  GB_assert(gb_state->ttf_text != NULL);
-
   // Initialize ImGui
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -152,8 +115,6 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->sdl_obj_palette_0 = NULL;
   SDL_DestroyPalette(gb_state->sdl_obj_palette_1);
   gb_state->sdl_obj_palette_1 = NULL;
-  TTF_DestroyRendererTextEngine(gb_state->ttf_text_engine);
-  gb_state->ttf_text_engine = NULL;
   SDL_DestroyRenderer(gb_state->sdl_renderer);
   gb_state->sdl_renderer = NULL;
   SDL_DestroyWindow(gb_state->sdl_window);
@@ -597,17 +558,6 @@ void gb_draw(struct gb_state *gb_state) {
   TracyCZoneEnd(render_objs_ctx);
 }
 
-static void gb_draw_dbg_text(struct gb_state *gb_state) {
-  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
-  GB_CheckSDLCall(TTF_SetTextColor(gb_state->ttf_text, 0, 255, 0, 255));
-  GB_CheckSDLCall(
-      TTF_SetTextString(gb_state->ttf_text, gb_state->debug_state_text.txt, gb_state->debug_state_text.len));
-  GB_CheckSDLCall(TTF_DrawRendererText(gb_state->ttf_text, 0, 0));
-
-  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
-                                                   SDL_LOGICAL_PRESENTATION_LETTERBOX));
-}
-
 // called on vblank
 void gb_present(struct gb_state *gb_state) {
   bool success;
@@ -624,9 +574,6 @@ void gb_present(struct gb_state *gb_state) {
   GB_assert(success);
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
   GB_assert(success);
-
-  gb_update_debug_state_text(gb_state);
-  gb_draw_dbg_text(gb_state);
 
   GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   // Start ImGui frame

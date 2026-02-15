@@ -15,7 +15,7 @@ endif
 
 
 imgui_dep = dependency('imgui')
-sdl3_deps = [dependency('sdl3'), dependency('sdl3-ttf'), imgui_dep]
+sdl3_deps = [dependency('sdl3'), imgui_dep]
 tracy_dep = dependency(
   'tracy',
   static : true,
