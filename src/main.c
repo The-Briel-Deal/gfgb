@@ -243,7 +243,7 @@ void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event)
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   struct gb_state *gb_state = appstate;
-  (void)gb_state;
+  gb_video_handle_sdl_event(gb_state, event);
   switch (event->type) {
   case SDL_EVENT_KEY_UP:
   case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;

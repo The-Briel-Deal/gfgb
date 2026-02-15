@@ -12,6 +12,7 @@ struct gb_state;
 
 bool gb_video_init(struct gb_state *gb_state);
 void gb_video_free(struct gb_state *gb_state);
+void gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
 
 #define OBP0 0
 #define OBP1 1
@@ -32,6 +33,7 @@ void gb_read_oam_entries(struct gb_state *gb_state); // on OAM-Scan
 void gb_draw(struct gb_state *gb_state);             // on Drawing-Pixels
 void gb_composite_line(struct gb_state *gb_state);   // on H-Blank
 void gb_present(struct gb_state *gb_state);          // on V-Blank
+                                                     //
 
 #ifdef __cplusplus
 }

@@ -161,6 +161,11 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->sdl_window = NULL;
 }
 
+void gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event) {
+  (void)gb_state;
+  ImGui_ImplSDL3_ProcessEvent(event);
+}
+
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)
 
 //! \brief Convert a gameboy tile from it's byte interleaved 2bit format to 8bit indexed.
