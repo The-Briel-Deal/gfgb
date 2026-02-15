@@ -98,7 +98,8 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->ttf_text_engine = TTF_CreateRendererTextEngine(gb_state->sdl_renderer);
   GB_assert(gb_state->ttf_text_engine != NULL);
 
-  gb_state->ttf_font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 16);
+  // if i'm going to stick with this font I should figure out a way to embed it in the bin or ship it with the emu
+  gb_state->ttf_font = TTF_OpenFont("fonts/Monocraft-ttf/Monocraft.ttf", 16);
   GB_assert(gb_state->ttf_font != NULL);
 
   gb_dstr_init(&gb_state->debug_state_text, 8);
