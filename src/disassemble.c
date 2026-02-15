@@ -246,7 +246,6 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
     }
 
     syms->len++;
-    // TODO: dynamically grow beyond starting capacity.
     GB_assert(syms->len < syms->capacity);
   }
   sort_syms(syms);
