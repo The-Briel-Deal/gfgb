@@ -147,11 +147,21 @@ enum GB_LogCategory {
 #define TRACY_COLOR_GREEN 0x00ff00
 #define TRACY_COLOR_BLUE  0x0000ff
 
-struct gb_dyn_str {
-  char  *txt;
+// Simple implementation of a dynamic string.
+typedef struct gb_dstr {
   size_t len;
   size_t cap;
-};
+  char  *txt;
+} gb_dstr_t;
+
+// initialize dynamic string with capacity `cap`
+void gb_dstr_init(gb_dstr_t *dstr, size_t cap);
+// free dynamic string
+void gb_dstr_free(gb_dstr_t *dstr);
+// clear dynamic string without freeing or reallocating
+void gb_dstr_clear(gb_dstr_t *dstr);
+// append text[len] to gb_dstr
+void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 
 struct gb_state {
   SDL_Window   *sdl_window;
@@ -170,10 +180,10 @@ struct gb_state {
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
 
   // Used for displaying state on screen using SDL3-ttf
-  TTF_TextEngine   *ttf_text_engine;
-  TTF_Font         *ttf_font;
-  TTF_Text         *ttf_text;
-  struct gb_dyn_str debug_state_text;
+  TTF_TextEngine *ttf_text_engine;
+  TTF_Font       *ttf_font;
+  TTF_Text       *ttf_text;
+  gb_dstr_t       debug_state_text;
 
   struct regs {
     uint8_t  a;

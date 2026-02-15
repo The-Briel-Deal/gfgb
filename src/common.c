@@ -3,18 +3,45 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+// initialize dynamic string with capacity `cap`
+void gb_dstr_init(gb_dstr_t *dstr, size_t cap) {
+  dstr->cap = cap;
+  dstr->len = 0;
+  dstr->txt = GB_malloc(dstr->cap);
+}
+// free dynamic string
+void gb_dstr_free(gb_dstr_t *dstr) {
+  dstr->cap = 0;
+  dstr->len = 0;
+  GB_free(dstr->txt);
+  dstr->txt = NULL;
+}
+// clear dynamic string without freeing or reallocating
+void gb_dstr_clear(gb_dstr_t *dstr) { dstr->len = 0; }
+// append text[len] to gb_dstr
+void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
+  size_t new_len = dstr->len + len;
+  if (new_len >= dstr->cap) {
+    dstr->cap = new_len * 1.5;
+    dstr->txt = GB_realloc(dstr->txt, dstr->cap);
+  }
+
+  SDL_memcpy(&dstr->txt[dstr->len], text, len);
+  dstr->len = new_len;
+}
+
 void gb_state_init(struct gb_state *gb_state) {
   SDL_zerop(gb_state);
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
-  gb_state->regs.sp                     = WRAM_END + 1;
+  gb_state->regs.sp = WRAM_END + 1;
 
   // This isn't necessary due to me zeroing state above, but I want to
   // explicitly set this as false in case I ever remove the zeroing as a speed
   // up.
-  gb_state->rom_loaded                  = false;
-  gb_state->bootrom_mapped              = false;
+  gb_state->rom_loaded     = false;
+  gb_state->bootrom_mapped = false;
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
   gb_state->regs.io.lcdc                = 0b10010001;
   gb_state->first_oam_scan_after_enable = true;
@@ -22,7 +49,7 @@ void gb_state_init(struct gb_state *gb_state) {
 
 struct gb_state *gb_state_alloc() { return SDL_malloc(sizeof(struct gb_state)); }
 
-void gb_state_free(struct gb_state *gb_state) {
+void             gb_state_free(struct gb_state *gb_state) {
   if (gb_state->serial_port_output != NULL) fclose(gb_state->serial_port_output);
 
   if (gb_state->syms.capacity > 0) {
@@ -251,7 +278,7 @@ void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   }
 }
 
-uint64_t m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
+uint64_t        m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
 
 static uint64_t gb_dots(uint64_t m_cycles) {
   // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support
@@ -351,7 +378,7 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     // We're assuming that mode 3 is always taking the longest possible amount of time.
     // If we wanted to be really precise we would have to calculate the exact length with:
     // https://gbdev.io/pandocs/Rendering.html#obj-penalty-algorithm
-    mode                                  = DRAWING_PIXELS;
+    mode = DRAWING_PIXELS;
   } else {
     mode = HBLANK;
   }
