@@ -18,16 +18,20 @@ void gb_dstr_free(gb_dstr_t *dstr) {
 }
 // clear dynamic string without freeing or reallocating
 void gb_dstr_clear(gb_dstr_t *dstr) { dstr->len = 0; }
-// append text[len] to gb_dstr
-void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
-  size_t new_len = dstr->len + len;
-  if (new_len >= dstr->cap) {
-    dstr->cap = new_len * 1.5;
+// make sure `n` bytes are available after the len of this str
+void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n) {
+  size_t req_len = dstr->len + n;
+  if (req_len >= dstr->cap) {
+    dstr->cap = req_len * 1.5;
     dstr->txt = GB_realloc(dstr->txt, dstr->cap);
   }
+}
 
+// append text[len] to gb_dstr
+void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
+  gb_dstr_ensure_space(dstr, len);
   SDL_memcpy(&dstr->txt[dstr->len], text, len);
-  dstr->len = new_len;
+  dstr->len += len;
 }
 
 void gb_state_init(struct gb_state *gb_state) {

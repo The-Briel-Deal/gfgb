@@ -160,6 +160,8 @@ void gb_dstr_init(gb_dstr_t *dstr, size_t cap);
 void gb_dstr_free(gb_dstr_t *dstr);
 // clear dynamic string without freeing or reallocating
 void gb_dstr_clear(gb_dstr_t *dstr);
+// make sure `n` bytes are available after the len of this str
+void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n);
 // append text[len] to gb_dstr
 void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 

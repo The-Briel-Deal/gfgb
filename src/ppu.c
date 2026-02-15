@@ -1,5 +1,6 @@
 #include "ppu.h"
 #include <SDL3_ttf/SDL_ttf.h>
+#include <stdio.h>
 
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
 #include "common.h"
@@ -8,6 +9,22 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
+void gb_update_debug_state_text(struct gb_state *gb_state) {
+  size_t     fstr_len;
+  gb_dstr_t *dstr = &gb_state->debug_state_text;
+  gb_dstr_clear(dstr);
+
+  gb_dstr_ensure_space(dstr, 128);
+  fstr_len = snprintf(&dstr->txt[dstr->len], 128, "M-Cycles: %ld\n", gb_state->m_cycles_elapsed);
+  assert(fstr_len <= 128);
+  dstr->len += fstr_len;
+
+  gb_dstr_ensure_space(dstr, 128);
+  fstr_len = snprintf(&dstr->txt[dstr->len], 128, "JOYP: 0b%.8b\n", gb_state->regs.io.joyp);
+  assert(fstr_len <= 128);
+  dstr->len += fstr_len;
+}
 
 bool gb_video_init(struct gb_state *gb_state) {
   SDL_Environment *env                  = SDL_GetEnvironment();
@@ -78,7 +95,12 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->ttf_font = TTF_OpenFont("/home/gabe/Downloads/Monocraft-ttf/Monocraft.ttf", 16);
   GB_assert(gb_state->ttf_font != NULL);
 
-  gb_state->ttf_text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, "Test Text", 0);
+  gb_dstr_init(&gb_state->debug_state_text, 8);
+
+  gb_update_debug_state_text(gb_state);
+
+  gb_state->ttf_text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, gb_state->debug_state_text.txt,
+                                      gb_state->debug_state_text.len);
   GB_assert(gb_state->ttf_text != NULL);
 
   return true;
@@ -539,6 +561,8 @@ void gb_draw(struct gb_state *gb_state) {
 static void gb_draw_dbg_text(struct gb_state *gb_state) {
   GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   GB_CheckSDLCall(TTF_SetTextColor(gb_state->ttf_text, 0, 255, 0, 255));
+  GB_CheckSDLCall(
+      TTF_SetTextString(gb_state->ttf_text, gb_state->debug_state_text.txt, gb_state->debug_state_text.len));
   GB_CheckSDLCall(TTF_DrawRendererText(gb_state->ttf_text, 0, 0));
 
   SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
@@ -562,6 +586,7 @@ void gb_present(struct gb_state *gb_state) {
   success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
   GB_assert(success);
 
+  gb_update_debug_state_text(gb_state);
   gb_draw_dbg_text(gb_state);
 
   success = SDL_RenderPresent(gb_state->sdl_renderer);
