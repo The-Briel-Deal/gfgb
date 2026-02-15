@@ -120,6 +120,16 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->sdl_obj_palette_0 = NULL;
   SDL_DestroyPalette(gb_state->sdl_obj_palette_1);
   gb_state->sdl_obj_palette_1 = NULL;
+  SDL_DestroySurface(gb_state->sdl_bg_target);
+  gb_state->sdl_bg_target = NULL;
+  SDL_DestroySurface(gb_state->sdl_win_target);
+  gb_state->sdl_win_target = NULL;
+  SDL_DestroySurface(gb_state->sdl_obj_target);
+  gb_state->sdl_obj_target = NULL;
+  SDL_DestroySurface(gb_state->sdl_obj_priority_target);
+  gb_state->sdl_obj_priority_target = NULL;
+  SDL_DestroyTexture(gb_state->sdl_composite_target);
+  gb_state->sdl_composite_target = NULL;
   SDL_DestroyRenderer(gb_state->sdl_renderer);
   gb_state->sdl_renderer = NULL;
   SDL_DestroyWindow(gb_state->sdl_window);
