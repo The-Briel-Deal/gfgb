@@ -600,8 +600,8 @@ static void gb_draw_dbg_text(struct gb_state *gb_state) {
       TTF_SetTextString(gb_state->ttf_text, gb_state->debug_state_text.txt, gb_state->debug_state_text.len));
   GB_CheckSDLCall(TTF_DrawRendererText(gb_state->ttf_text, 0, 0));
 
-  SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
-                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
+  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                                   SDL_LOGICAL_PRESENTATION_LETTERBOX));
 }
 
 // called on vblank
@@ -623,6 +623,22 @@ void gb_present(struct gb_state *gb_state) {
 
   gb_update_debug_state_text(gb_state);
   gb_draw_dbg_text(gb_state);
+
+  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
+  // Start ImGui frame
+  ImGui_ImplSDLRenderer3_NewFrame();
+  ImGui_ImplSDL3_NewFrame();
+  ImGui::NewFrame();
+
+  // I would persist this on gb_state if I cared about being able to close this window
+  bool show_demo_window = true;
+  ImGui::ShowDemoWindow(&show_demo_window);
+  ImGui::Render();
+
+  ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->sdl_renderer);
+
+  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                                   SDL_LOGICAL_PRESENTATION_LETTERBOX));
 
   SDL_RenderPresent(gb_state->sdl_renderer);
 
