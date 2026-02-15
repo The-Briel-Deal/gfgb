@@ -5,6 +5,8 @@
 #include "common.h"
 
 #include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
 
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -109,6 +111,28 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->ttf_text = TTF_CreateText(gb_state->ttf_text_engine, gb_state->ttf_font, gb_state->debug_state_text.txt,
                                       gb_state->debug_state_text.len);
   GB_assert(gb_state->ttf_text != NULL);
+
+  // Initialize ImGui
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+  ImGui::StyleColorsDark();
+
+  float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+  // Setup scaling
+  ImGuiStyle &style = ImGui::GetStyle();
+  style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling,
+                                   // changing this requires resetting Style + calling this again)
+  style.FontScaleDpi = main_scale; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true
+                                   // automatically overrides this for every window depending on the current monitor)
+
+  // Setup Platform/Renderer backends
+  ImGui_ImplSDL3_InitForSDLRenderer(gb_state->sdl_window, gb_state->sdl_renderer);
+  ImGui_ImplSDLRenderer3_Init(gb_state->sdl_renderer);
 
   return true;
 }
