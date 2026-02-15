@@ -1,3 +1,5 @@
+// This is the one CPP file exclusively because of imgui which I didn't want to have to use a wrapper for.
+
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
 #include "ppu.h"
 #include "common.h"
