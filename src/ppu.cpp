@@ -250,13 +250,6 @@ enum lcdc_flags {
   LCDC_ENABLE                = 1 << 7,
 };
 
-enum draw_tile_flags {
-  DRAW_TILE_FLIP_X       = 1 << 0,
-  DRAW_TILE_FLIP_Y       = 1 << 1,
-  DRAW_TILE_PALETTE_BGP  = 1 << 2,
-  DRAW_TILE_PALETTE_OBP0 = 1 << 3,
-  DRAW_TILE_PALETTE_OBP1 = 1 << 4,
-};
 static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height) {
   uint8_t ly = gb_state->regs.io.ly;
   return ((ly >= y) && (ly <= y + height));
@@ -264,7 +257,7 @@ static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height)
 
 // TODO: check if tile should be double height (8x16)
 static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
-                                    uint16_t tile_addr, enum draw_tile_flags flags) {
+                                    uint16_t tile_addr, SDL_FlipMode flip_mode) {
   GB_assert(x < GB_DISPLAY_WIDTH);
   GB_assert(y < GB_DISPLAY_HEIGHT);
   // TODO: this 8 will need to change to 16 if tile is double height
@@ -283,11 +276,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
       .h = 8,
   };
 
-  SDL_FlipMode flip = SDL_FLIP_NONE;
-  if (flags & DRAW_TILE_FLIP_X) flip |= SDL_FLIP_HORIZONTAL;
-  if (flags & DRAW_TILE_FLIP_Y) flip |= SDL_FLIP_VERTICAL;
-
-  if (flip) SDL_FlipSurface(tile_surface, flip);
+  if (flip_mode) SDL_FlipSurface(tile_surface, flip_mode);
 
   SDL_BlitSurface(tile_surface, NULL, target, &dstrect);
 
@@ -327,7 +316,8 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
     uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
+      gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr,
+                              SDL_FLIP_NONE);
   }
 }
 static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
@@ -373,7 +363,8 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     uint8_t display_x = (x * 8) + gb_state->regs.io.wx - 7;
     uint8_t display_y = (gb_state->regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr, 0);
+      gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr,
+                              SDL_FLIP_NONE);
   }
   gb_state->win_line_counter++;
 }
@@ -390,9 +381,9 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     uint8_t                 tile_idx;
     const struct oam_entry *oam_entry = gb_state->oam_entries[i];
     if (oam_entry == NULL) break;
-    enum draw_tile_flags flags = 0;
-    if (oam_entry->x_flip) flags |= DRAW_TILE_FLIP_X;
-    if (oam_entry->y_flip) flags |= DRAW_TILE_FLIP_Y;
+    uint32_t flags = 0;
+    if (oam_entry->x_flip) flags |= SDL_FLIP_HORIZONTAL;
+    if (oam_entry->y_flip) flags |= SDL_FLIP_VERTICAL;
     SDL_Palette *palette;
     if (oam_entry->dmg_palette)
       palette = gb_state->sdl_obj_palette_1;
@@ -410,9 +401,9 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     }
   draw_obj:
     if (oam_entry->priority) {
-      gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (tile_idx * 16), flags);
+      gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
     } else {
-      gb_draw_tile_to_surface(gb_state, target, palette, x, y, 0x8000 + (tile_idx * 16), flags);
+      gb_draw_tile_to_surface(gb_state, target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
     }
     if (draw_double_height) {
       draw_double_height = false;
@@ -604,8 +595,7 @@ void gb_present(struct gb_state *gb_state) {
   gb_update_debug_state_text(gb_state);
   gb_draw_dbg_text(gb_state);
 
-  success = SDL_RenderPresent(gb_state->sdl_renderer);
-  GB_assert(success);
+  SDL_RenderPresent(gb_state->sdl_renderer);
 
   TracyCFrameMark
 }
