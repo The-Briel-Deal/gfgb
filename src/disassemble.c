@@ -257,7 +257,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 // boot rom goes before that.
 static void disassemble_rom(struct gb_state *gb_state, FILE *stream) {
 
-  while (gb_state->regs.pc < sizeof(gb_state->rom0)) {
+  while (gb_state->regs.pc < sizeof(gb_state->ram.rom0)) {
     fprintf(stream, "  0x%.4X: ", gb_state->regs.pc);
     struct inst inst = fetch(gb_state);
     print_inst(stream, inst);
@@ -319,7 +319,7 @@ static void disassemble_section(FILE *stream, const uint8_t *section_bytes, cons
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   gb_state.regs.pc = 0;
-  memcpy(gb_state.rom0, section_bytes, section_bytes_len);
+  memcpy(gb_state.ram.rom0, section_bytes, section_bytes_len);
 
   while (gb_state.regs.pc < section_bytes_len) {
     fprintf(stream, "0x%.4X: ", gb_state.regs.pc);

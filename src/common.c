@@ -122,29 +122,29 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
 void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->bootrom_mapped && (addr < 0x0100)) {
-    return &gb_state->bootrom[addr];
+    return &gb_state->ram.bootrom[addr];
   }
   if (addr <= ROM0_END) {
-    return &gb_state->rom0[addr - ROM0_START];
+    return &gb_state->ram.rom0[addr - ROM0_START];
   } else if (addr <= ROMN_END) {
     // TODO: Implement bank switching for this region. For now we'll just assume that it's always 01.
-    return &gb_state->rom1[addr - ROMN_START];
+    return &gb_state->ram.rom1[addr - ROMN_START];
   } else if (addr <= VRAM_END) {
-    return &gb_state->vram[addr - VRAM_START];
+    return &gb_state->ram.vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
     // TODO: implement eram bank switching
-    return &gb_state->eram[addr - ERAM_START];
+    return &gb_state->ram.eram[addr - ERAM_START];
   } else if (addr <= WRAM_END) {
-    return &gb_state->wram[addr - WRAM_START];
+    return &gb_state->ram.wram[addr - WRAM_START];
   } else if (addr <= ECHO_RAM_END) {
     // Mirrors wram, probably should never be accessed.
-    return &gb_state->wram[addr - ECHO_RAM_START];
+    return &gb_state->ram.wram[addr - ECHO_RAM_START];
   } else if (addr <= OAM_END) {
-    return &gb_state->oam[addr - OAM_START];
+    return &gb_state->ram.oam[addr - OAM_START];
   } else if (addr <= IO_REG_END) {
     goto not_implemented;
   } else if (addr <= HRAM_END) {
-    return &gb_state->hram[addr - HRAM_START];
+    return &gb_state->ram.hram[addr - HRAM_START];
   }
 not_implemented:
   LogError("`unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);

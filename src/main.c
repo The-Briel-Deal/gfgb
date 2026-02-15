@@ -25,29 +25,29 @@ enum run_mode {
 
 static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name,
                         const char *sym_name) {
-  FILE *f;
-  int err;
+  FILE   *f;
+  int     err;
   uint8_t bytes[KB(16)];
-  int bytes_len;
+  int     bytes_len;
 
   // Load ROM into gb_state->rom0 (rom is optional since the disassembler can
   // also assemble only the boot rom).
   if (rom_name != NULL) {
     // TODO: Load into multiple banks once bank switching is added.
-    f = fopen(rom_name, "r");
+    f         = fopen(rom_name, "r");
     bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
     if ((err = ferror(f))) {
       LogCritical("Error when reading rom file: %d", err);
       return false;
     }
-    memcpy(gb_state->rom0, bytes, bytes_len);
+    memcpy(gb_state->ram.rom0, bytes, bytes_len);
     if (!feof(f)) {
       bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
       if ((err = ferror(f))) {
         LogCritical("Error when reading rom file: %d", err);
         return false;
       }
-      memcpy(gb_state->rom1, bytes, bytes_len);
+      memcpy(gb_state->ram.rom1, bytes, bytes_len);
     }
     fclose(f);
     gb_state->rom_loaded = true;
@@ -67,17 +67,17 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 
   // Load bootrom into gb_state->bootrom (bootrom is optional)
   if (bootrom_name != NULL) {
-    f = fopen(bootrom_name, "r");
-    bytes_len = fread(gb_state->bootrom, sizeof(uint8_t), 0x0100, f);
+    f         = fopen(bootrom_name, "r");
+    bytes_len = fread(gb_state->ram.bootrom, sizeof(uint8_t), 0x0100, f);
     if ((err = ferror(f))) {
       LogCritical("Error when reading bootrom file: %d", err);
       return false;
     }
     fclose(f);
     GB_assert(bytes_len == 0x0100);
-    gb_state->regs.pc = 0x0000;
+    gb_state->regs.pc        = 0x0000;
     gb_state->bootrom_mapped = true;
-    int bootrom_name_len = strlen(bootrom_name);
+    int bootrom_name_len     = strlen(bootrom_name);
     // TODO: Handle case where bootrom name ends with `.bin`
     // TODO: Identifying if a bootrom sym file is present should be moved to a helper fn
     if (memcmp(&bootrom_name[bootrom_name_len - 3], ".gb", 3) == 0) {
@@ -94,8 +94,8 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       LogCritical("Looking for bootrom symbol file at `%s`", bootrom_sym_name);
       f = fopen(bootrom_sym_name, "r");
       if (f == NULL) {
-        const char *error_string = strerror(errno);
-        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?", error_string);
+        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?",
+                 strerror(errno));
       }
 
       if (f != NULL) {
@@ -110,7 +110,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       LogDebug("Bootrom filename `%s` does not end with `.gb`", bootrom_name);
     }
   } else {
-    gb_state->regs.pc = 0x0100;
+    gb_state->regs.pc        = 0x0100;
     gb_state->bootrom_mapped = false;
   }
   return true;
@@ -120,7 +120,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
 
-  int c;
+  int           c;
 
   // e = execute
   // d = disassemble
@@ -173,7 +173,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   case EXECUTE: {
     struct gb_state *gb_state = gb_state_alloc();
 
-    *appstate = gb_state;
+    *appstate                 = gb_state;
     GB_assert(appstate != NULL);
     gb_state_init(*appstate);
     if (!gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename)) return SDL_APP_FAILURE;

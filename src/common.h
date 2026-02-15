@@ -169,6 +169,17 @@ void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n);
 // append text[len] to gb_dstr
 void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 
+struct gb_ram_banks {
+  uint8_t bootrom[DMG_BOOTROM_SIZE];
+  uint8_t rom0[KB(16)];
+  uint8_t rom1[KB(16)];
+  uint8_t wram[KB(8)];
+  uint8_t vram[KB(8)];
+  uint8_t eram[KB(8)];
+  uint8_t hram[0x80];
+  uint8_t oam[4 * 40];
+};
+
 struct gb_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
@@ -268,16 +279,7 @@ struct gb_state {
   bool    rom_loaded;
   bool    use_flat_ram;
   union {
-    struct {
-      uint8_t bootrom[DMG_BOOTROM_SIZE];
-      uint8_t rom0[KB(16)];
-      uint8_t rom1[KB(16)];
-      uint8_t wram[KB(8)];
-      uint8_t vram[KB(8)];
-      uint8_t eram[KB(8)];
-      uint8_t hram[0x80];
-      uint8_t oam[4 * 40];
-    };
+    struct gb_ram_banks ram;
     uint8_t flat_ram[KB(64)];
   };
   struct debug_symbol_list syms;

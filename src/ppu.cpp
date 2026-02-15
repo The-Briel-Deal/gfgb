@@ -22,10 +22,12 @@ void gb_update_debug_state_text(struct gb_state *gb_state) {
   assert(fstr_len <= 128);
   dstr->len += fstr_len;
 
-  gb_dstr_ensure_space(dstr, 128);
-  fstr_len = snprintf(&dstr->txt[dstr->len], 128, "JOYP: 0b%.8b\n", gb_state->regs.io.joyp);
-  assert(fstr_len <= 128);
-  dstr->len += fstr_len;
+  //! If I end up sticking with this approach i'll want to use C++'s format module to format to binary. It looks like
+  //! printf("%b") is a gnu extension.
+  // gb_dstr_ensure_space(dstr, 128);
+  // fstr_len = snprintf(&dstr->txt[dstr->len], 128, "JOYP: 0b%.8b\n", gb_state->regs.io.joyp);
+  // assert(fstr_len <= 128);
+  // dstr->len += fstr_len;
 }
 
 bool gb_video_init(struct gb_state *gb_state) {
@@ -223,7 +225,7 @@ static void update_palettes(struct gb_state *gb_state) {
 
 const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   GB_assert(index < 40);
-  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->oam)[index];
+  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->ram.oam)[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
   printf("OAM Entry %d\n", index);
