@@ -1,12 +1,15 @@
-#include "ppu.h"
-#include <SDL3_ttf/SDL_ttf.h>
-#include <stdio.h>
-
+#include <cstdint>
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
 #include "common.h"
+#include "ppu.h"
+
+#include <imgui.h>
+
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,7 +34,7 @@ bool gb_video_init(struct gb_state *gb_state) {
   const char      *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
   if (ppu_log_priority_str != NULL) {
     int ppu_log_priority = atoi(ppu_log_priority_str);
-    SDL_SetLogPriority(GB_LOG_CATEGORY_PPU, ppu_log_priority);
+    SDL_SetLogPriority(GB_LOG_CATEGORY_PPU, (SDL_LogPriority)ppu_log_priority);
   }
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     LogCritical("Couldn't initialize SDL: %s", SDL_GetError());
@@ -154,59 +157,67 @@ static void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out) {
 #undef PIX
 
 #define GREYSCALE_COLOR(lightness)                                                                                     \
-  (SDL_Color) { .a = 255, .r = 255 * lightness, .g = 255 * lightness, .b = 255 * lightness, }
+  {                                                                                                                    \
+      .r = (uint8_t)(255 * lightness),                                                                                 \
+      .g = (uint8_t)(255 * lightness),                                                                                 \
+      .b = (uint8_t)(255 * lightness),                                                                                 \
+      .a = 255,                                                                                                        \
+  }
 #define TRANSPARENT_COLOR                                                                                              \
-  (SDL_Color) { .a = 0, .r = 0, .g = 0, .b = 0, }
+  {                                                                                                                    \
+      .r = 0,                                                                                                          \
+      .g = 0,                                                                                                          \
+      .b = 0,                                                                                                          \
+      .a = 0,                                                                                                          \
+  }
 
 static void update_palettes(struct gb_state *gb_state) {
-  uint8_t bgp_id_0 = (gb_state->regs.io.bgp >> 0) & 0b11;
-  uint8_t bgp_id_1 = (gb_state->regs.io.bgp >> 2) & 0b11;
-  uint8_t bgp_id_2 = (gb_state->regs.io.bgp >> 4) & 0b11;
-  uint8_t bgp_id_3 = (gb_state->regs.io.bgp >> 6) & 0b11;
-  if (!SDL_SetPaletteColors(gb_state->sdl_bg_palette,
-                            (SDL_Color[4]){
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_0) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
-                            },
-                            0, DMG_PALETTE_N_COLORS)) {
+  uint8_t   bgp_id_0      = (gb_state->regs.io.bgp >> 0) & 0b11;
+  uint8_t   bgp_id_1      = (gb_state->regs.io.bgp >> 2) & 0b11;
+  uint8_t   bgp_id_2      = (gb_state->regs.io.bgp >> 4) & 0b11;
+  uint8_t   bgp_id_3      = (gb_state->regs.io.bgp >> 6) & 0b11;
+  SDL_Color bgp_colors[4] = {
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_0) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
+  };
+  if (!SDL_SetPaletteColors(gb_state->sdl_bg_palette, bgp_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
   }
-  if (!SDL_SetPaletteColors(gb_state->sdl_bg_trans0_palette,
-                            (SDL_Color[4]){
-                                TRANSPARENT_COLOR,
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
-                            },
-                            0, DMG_PALETTE_N_COLORS)) {
+
+  SDL_Color bgp_colors_trans[4] = {
+      TRANSPARENT_COLOR,
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
+  };
+  if (!SDL_SetPaletteColors(gb_state->sdl_bg_trans0_palette, bgp_colors_trans, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
   }
-  uint8_t obp0_id_1 = (gb_state->regs.io.obp0 >> 2) & 0b11;
-  uint8_t obp0_id_2 = (gb_state->regs.io.obp0 >> 4) & 0b11;
-  uint8_t obp0_id_3 = (gb_state->regs.io.obp0 >> 6) & 0b11;
-  if (!SDL_SetPaletteColors(gb_state->sdl_obj_palette_0,
-                            (SDL_Color[4]){
-                                TRANSPARENT_COLOR,
-                                GREYSCALE_COLOR((3.0f - (float)obp0_id_1) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)obp0_id_2) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)obp0_id_3) / 3.0f),
-                            },
-                            0, DMG_PALETTE_N_COLORS)) {
+
+  uint8_t   obp0_id_1      = (gb_state->regs.io.obp0 >> 2) & 0b11;
+  uint8_t   obp0_id_2      = (gb_state->regs.io.obp0 >> 4) & 0b11;
+  uint8_t   obp0_id_3      = (gb_state->regs.io.obp0 >> 6) & 0b11;
+  SDL_Color obp0_colors[4] = {
+      TRANSPARENT_COLOR,
+      GREYSCALE_COLOR((3.0f - (float)obp0_id_1) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)obp0_id_2) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)obp0_id_3) / 3.0f),
+  };
+  if (!SDL_SetPaletteColors(gb_state->sdl_obj_palette_0, obp0_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set obj palette 0 colors: %s", SDL_GetError());
   }
-  uint8_t obp1_id_1 = (gb_state->regs.io.obp1 >> 2) & 0b11;
-  uint8_t obp1_id_2 = (gb_state->regs.io.obp1 >> 4) & 0b11;
-  uint8_t obp1_id_3 = (gb_state->regs.io.obp1 >> 6) & 0b11;
-  if (!SDL_SetPaletteColors(gb_state->sdl_obj_palette_1,
-                            (SDL_Color[4]){
-                                TRANSPARENT_COLOR,
-                                GREYSCALE_COLOR((3.0f - (float)obp1_id_1) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)obp1_id_2) / 3.0f),
-                                GREYSCALE_COLOR((3.0f - (float)obp1_id_3) / 3.0f),
-                            },
-                            0, DMG_PALETTE_N_COLORS)) {
+  uint8_t   obp1_id_1      = (gb_state->regs.io.obp1 >> 2) & 0b11;
+  uint8_t   obp1_id_2      = (gb_state->regs.io.obp1 >> 4) & 0b11;
+  uint8_t   obp1_id_3      = (gb_state->regs.io.obp1 >> 6) & 0b11;
+  SDL_Color obp1_colors[4] = {
+      TRANSPARENT_COLOR,
+      GREYSCALE_COLOR((3.0f - (float)obp1_id_1) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)obp1_id_2) / 3.0f),
+      GREYSCALE_COLOR((3.0f - (float)obp1_id_3) / 3.0f),
+  };
+  if (!SDL_SetPaletteColors(gb_state->sdl_obj_palette_1, obp1_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set obj palette 1 colors: %s", SDL_GetError());
   }
 }

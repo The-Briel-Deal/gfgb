@@ -3,7 +3,7 @@ project(
   'c', 'cpp', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
-  default_options : ['warning_level=3', 'c_std=c23'],
+  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=c++20'],
 )
 
 if get_option('enable_logging')
@@ -29,7 +29,7 @@ sources = [
   'src/disassemble.c',
   'src/common.c',
   'src/cpu.c',
-  'src/ppu.c',
+  'src/ppu.cpp',
 ]
 
 shared_lib = shared_library(
