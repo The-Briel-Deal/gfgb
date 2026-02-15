@@ -107,6 +107,11 @@ void gb_video_free(struct gb_state *gb_state) {
       gb_state->textures[i] = NULL;
     }
   }
+
+  ImGui_ImplSDLRenderer3_Shutdown();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui::DestroyContext();
+
   SDL_DestroyPalette(gb_state->sdl_bg_palette);
   gb_state->sdl_bg_palette = NULL;
   SDL_DestroyPalette(gb_state->sdl_bg_trans0_palette);
