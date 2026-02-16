@@ -574,6 +574,14 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Checkbox("Objs Hidden", &gb_state->dbg_hide_objs);
     }
 
+    if (ImGui::CollapsingHeader("Inspect Memory")) {
+      static uint16_t addr = 0;
+      ImGui::InputScalar("Addr", ImGuiDataType_U16, &addr, NULL, NULL, "%.4x");
+      ImGui::Button("Read");
+      ImGui::SameLine();
+      ImGui::Button("Write");
+    }
+
     ImGui::End();
     ImGui::Render();
 
