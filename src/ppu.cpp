@@ -439,9 +439,9 @@ void gb_composite_line(struct gb_state *gb_state) {
   success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
   GB_assert(success);
 
-#ifdef GF_DBG_GREEN_BG
-  SDL_ClearSurface(locked_texture, 0, 1, 0, 1);
-#endif
+  if (gb_state->dbg_clear_composite) {
+    SDL_ClearSurface(locked_texture, 0, 1, 0, 1);
+  }
 
   // all intermediate targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
   GB_assert(locked_texture->h == gb_state->sdl_bg_target->h);
@@ -453,10 +453,7 @@ void gb_composite_line(struct gb_state *gb_state) {
   GB_assert(locked_texture->h == gb_state->sdl_obj_target->h);
   GB_assert(locked_texture->w == gb_state->sdl_obj_target->w);
 
-#ifndef NDEBUG
-  if (!gb_state->dbg_hide_bg)
-#endif
-  {
+  if (!gb_state->dbg_hide_bg) {
     // bg and win use the same palette
     SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_palette);
     SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
@@ -469,45 +466,30 @@ void gb_composite_line(struct gb_state *gb_state) {
       .w = GB_DISPLAY_WIDTH,
       .h = 1,
   };
-#ifndef NDEBUG
-  if (!gb_state->dbg_hide_win)
-#endif
-  {
+  if (!gb_state->dbg_hide_win) {
     if (!gb_state->win_line_blank) {
       SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_palette);
       SDL_BlitSurface(gb_state->sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
   }
 
-#ifndef NDEBUG
-  if (!gb_state->dbg_hide_objs)
-#endif
-  {
+  if (!gb_state->dbg_hide_objs) {
     SDL_BlitSurface(gb_state->sdl_obj_priority_target, NULL, locked_texture, NULL);
   }
 
-#ifndef NDEBUG
-  if (!gb_state->dbg_hide_bg)
-#endif
-  {
+  if (!gb_state->dbg_hide_bg) {
     SDL_SetSurfacePalette(gb_state->sdl_bg_target, gb_state->sdl_bg_trans0_palette);
     SDL_BlitSurface(gb_state->sdl_bg_target, NULL, locked_texture, NULL);
   }
 
-#ifndef NDEBUG
-  if (!gb_state->dbg_hide_win)
-#endif
-  {
+  if (!gb_state->dbg_hide_win) {
     if (!gb_state->win_line_blank) {
       SDL_SetSurfacePalette(gb_state->sdl_win_target, gb_state->sdl_bg_trans0_palette);
       SDL_BlitSurface(gb_state->sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
   }
 
-#ifndef NDEBUG
-  if (!gb_state->dbg_hide_objs)
-#endif
-  {
+  if (!gb_state->dbg_hide_objs) {
     SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
   }
 
@@ -575,6 +557,7 @@ void gb_draw(struct gb_state *gb_state) {
 
 void gb_imgui_render(struct gb_state *gb_state) {
   ImGuiIO &io = ImGui::GetIO();
+  (void)io;
   GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   // Start ImGui frame
   ImGui_ImplSDLRenderer3_NewFrame();
@@ -582,30 +565,23 @@ void gb_imgui_render(struct gb_state *gb_state) {
   ImGui::NewFrame();
 
   {
-    static float f       = 0.0f;
-    static int   counter = 0;
-
     ImGui::Begin("GB State"); // Create a window called "Hello, world!" and append into it.
 
-    ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
+    if (ImGui::CollapsingHeader("Layers")) {
+      ImGui::Checkbox("Clear Before Render", &gb_state->dbg_clear_composite);
+      ImGui::Checkbox("Background Hidden", &gb_state->dbg_hide_bg);
+      ImGui::Checkbox("Window Hidden", &gb_state->dbg_hide_win);
+      ImGui::Checkbox("Objs Hidden", &gb_state->dbg_hide_objs);
+    }
 
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-
-    if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-      counter++;
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
-
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     ImGui::End();
+    ImGui::Render();
+
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->sdl_renderer);
+
+    GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                                     SDL_LOGICAL_PRESENTATION_LETTERBOX));
   }
-
-  ImGui::Render();
-
-  ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->sdl_renderer);
-
-  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
-                                                   SDL_LOGICAL_PRESENTATION_LETTERBOX));
 }
 
 // called on vblank
