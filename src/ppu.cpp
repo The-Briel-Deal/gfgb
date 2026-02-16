@@ -574,15 +574,32 @@ void gb_draw(struct gb_state *gb_state) {
 }
 
 void gb_imgui_render(struct gb_state *gb_state) {
+  ImGuiIO &io = ImGui::GetIO();
   GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   // Start ImGui frame
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
 
-  // I would persist this on gb_state if I cared about being able to close this window
-  bool show_demo_window = true;
-  ImGui::ShowDemoWindow(&show_demo_window);
+  {
+    static float f       = 0.0f;
+    static int   counter = 0;
+
+    ImGui::Begin("GB State"); // Create a window called "Hello, world!" and append into it.
+
+    ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
+
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
+
+    if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+      counter++;
+    ImGui::SameLine();
+    ImGui::Text("counter = %d", counter);
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    ImGui::End();
+  }
+
   ImGui::Render();
 
   ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->sdl_renderer);
