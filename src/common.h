@@ -311,10 +311,12 @@ struct gb_state {
   bool     err;
 
   // runtime debug toggles
-  bool dbg_clear_composite;
-  bool dbg_hide_bg;
-  bool dbg_hide_win;
-  bool dbg_hide_objs;
+  bool              dbg_clear_composite;
+  bool              dbg_hide_bg;
+  bool              dbg_hide_win;
+  bool              dbg_hide_objs;
+
+  gb_imgui_state_t *imgui_state;
 };
 
 enum io_reg_addr {

@@ -16,6 +16,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct gb_imgui_state {
+  uint16_t addr;
+  // I don't expect the mem_read_msg to ever pass 128 chars.
+  char mem_read_msg[128];
+};
+
 bool gb_video_init(struct gb_state *gb_state) {
   SDL_Environment *env                  = SDL_GetEnvironment();
   const char      *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
@@ -96,6 +102,9 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->sdl_window, gb_state->sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->sdl_renderer);
 
+  // Setup my imgui specific state
+  gb_state->imgui_state = (gb_imgui_state_t *)GB_malloc(sizeof(gb_imgui_state_t));
+
   return true;
 }
 
@@ -112,6 +121,8 @@ void gb_video_free(struct gb_state *gb_state) {
   ImGui_ImplSDL3_Shutdown();
   ImGui::DestroyContext();
 
+  GB_free(gb_state->imgui_state);
+  gb_state->imgui_state = NULL;
   SDL_DestroyPalette(gb_state->sdl_bg_palette);
   gb_state->sdl_bg_palette = NULL;
   SDL_DestroyPalette(gb_state->sdl_bg_trans0_palette);
@@ -556,8 +567,10 @@ void gb_draw(struct gb_state *gb_state) {
 }
 
 void gb_imgui_render(struct gb_state *gb_state) {
-  ImGuiIO &io = ImGui::GetIO();
+  gb_imgui_state_t *imgui_state = gb_state->imgui_state;
+  ImGuiIO          &io          = ImGui::GetIO();
   (void)io;
+
   GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   // Start ImGui frame
   ImGui_ImplSDLRenderer3_NewFrame();
@@ -565,7 +578,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
   ImGui::NewFrame();
 
   {
-    ImGui::Begin("GB State"); // Create a window called "Hello, world!" and append into it.
+    ImGui::Begin("GB State");
 
     if (ImGui::CollapsingHeader("Layers")) {
       ImGui::Checkbox("Clear Before Render", &gb_state->dbg_clear_composite);
@@ -575,8 +588,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
     }
 
     if (ImGui::CollapsingHeader("Inspect Memory")) {
-      static uint16_t addr = 0;
-      ImGui::InputScalar("Addr", ImGuiDataType_U16, &addr, NULL, NULL, "%.4x");
+      ImGui::InputScalar("Addr", ImGuiDataType_U16, &imgui_state->addr, NULL, NULL, "%.4x");
       ImGui::Button("Read");
       ImGui::SameLine();
       ImGui::Button("Write");
