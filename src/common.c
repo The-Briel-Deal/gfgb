@@ -151,6 +151,7 @@ not_implemented:
   return NULL;
 }
 
+// TODO: This and write_mem8() should probably get the gb_ prefix
 uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->use_flat_ram) {
     return gb_state->flat_ram[addr];

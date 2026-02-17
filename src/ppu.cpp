@@ -8,8 +8,6 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
-#include <SDL3_ttf/SDL_ttf.h>
-
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,9 +15,8 @@
 #include <string.h>
 
 struct gb_imgui_state {
-  uint16_t addr;
-  // I don't expect the mem_read_msg to ever pass 128 chars.
-  char mem_read_msg[128];
+  uint16_t mem_inspect_addr;
+  uint8_t  mem_inspect_read_val;
 };
 
 bool gb_video_init(struct gb_state *gb_state) {
@@ -589,10 +586,16 @@ void gb_imgui_render(struct gb_state *gb_state) {
     }
 
     if (ImGui::CollapsingHeader("Inspect Memory")) {
-      ImGui::InputScalar("Addr", ImGuiDataType_U16, &imgui_state->addr, NULL, NULL, "%.4x");
-      ImGui::Button("Read");
+      ImGui::InputScalar("Addr", ImGuiDataType_U16, &imgui_state->mem_inspect_addr, NULL, NULL, "%.4x");
+      if (ImGui::Button("Read")) {
+        imgui_state->mem_inspect_read_val = read_mem8(gb_state, imgui_state->mem_inspect_addr);
+      }
       ImGui::SameLine();
       ImGui::Button("Write");
+      ImGui::Text("Value at 0x%.4x is:", imgui_state->mem_inspect_addr);
+      ImGui::Text("  Hex: 0x%.2x", imgui_state->mem_inspect_read_val);
+      ImGui::Text("  Dec: %d", imgui_state->mem_inspect_read_val);
+      ImGui::Text("  Bin: 0b%.8b", imgui_state->mem_inspect_read_val);
     }
 
     ImGui::End();
