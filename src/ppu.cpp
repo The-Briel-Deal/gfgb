@@ -103,7 +103,8 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDLRenderer3_Init(gb_state->sdl_renderer);
 
   // Setup my imgui specific state
-  gb_state->imgui_state = (gb_imgui_state_t *)GB_malloc(sizeof(gb_imgui_state_t));
+  gb_state->imgui_state = (gb_imgui_state_t *)GB_malloc(sizeof(*gb_state->imgui_state));
+  GB_memset(gb_state->imgui_state, '\0', sizeof(*gb_state->imgui_state));
 
   return true;
 }

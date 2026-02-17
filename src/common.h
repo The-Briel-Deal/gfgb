@@ -15,11 +15,12 @@
 extern "C" {
 #endif
 
-#define GB_malloc(size)       SDL_malloc(size)
-#define GB_realloc(mem, size) SDL_realloc(mem, size)
-#define GB_free(mem)          SDL_free(mem)
+#define GB_malloc(size)           SDL_malloc(size)
+#define GB_realloc(mem, size)     SDL_realloc(mem, size)
+#define GB_free(mem)              SDL_free(mem)
+#define GB_memset(mem, byte, len) SDL_memset(mem, byte, len)
 
-#define GB_assert(expr)       SDL_assert(expr)
+#define GB_assert(expr)           SDL_assert(expr)
 enum GB_LogCategory {
   GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
   GB_LOG_CATEGORY_PPU     = SDL_LOG_CATEGORY_CUSTOM,
