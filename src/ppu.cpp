@@ -145,9 +145,13 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->sdl_window = NULL;
 }
 
-void gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event) {
+bool gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event) {
   (void)gb_state;
+  auto io = ImGui::GetIO();
   ImGui_ImplSDL3_ProcessEvent(event);
+  // If ImGui wants keyboard events don't try to handle keyboard input myself. I don't do anything with mouse atm, this
+  // may change down the road.
+  return io.WantCaptureKeyboard;
 }
 
 #define PIX(x, y) (((tile_in[(y * 2) + 1] >> (7 - x)) & 1) << 1) | (((tile_in[(y * 2) + 0] >> (7 - x)) & 1) << 0)

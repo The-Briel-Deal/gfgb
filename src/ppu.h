@@ -15,7 +15,7 @@ typedef struct gb_imgui_state gb_imgui_state_t;
 
 bool                          gb_video_init(struct gb_state *gb_state);
 void                          gb_video_free(struct gb_state *gb_state);
-void                          gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
+bool                          gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
 
 #define OBP0 0
 #define OBP1 1
