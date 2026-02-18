@@ -147,20 +147,20 @@ typedef struct inst inst_t;
 
 struct gb_state;
 
-uint8_t     get_r8(struct gb_state *gb_state, enum r8 r8);
-void        set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val);
+uint8_t     get_r8(struct gb_state *gb_state, r8_t r8);
+void        set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val);
 
 uint16_t    get_pc(struct gb_state *gb_state);
 void        set_pc(struct gb_state *gb_state, uint16_t new_pc);
 
-uint16_t    get_r16(struct gb_state *gb_state, enum r16 r16);
-void        set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val);
+uint16_t    get_r16(struct gb_state *gb_state, r16_t r16);
+void        set_r16(struct gb_state *gb_state, r16_t r16, uint16_t val);
 
-uint16_t    get_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem);
-void        set_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem, uint8_t val);
+uint16_t    get_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem);
+void        set_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem, uint8_t val);
 
-uint16_t    get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk);
-void        set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val);
+uint16_t    get_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk);
+void        set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val);
 
 void        set_ime(struct gb_state *gb_state, bool on);
 bool        get_ime(struct gb_state *gb_state); // This is only for tests and debugging.
