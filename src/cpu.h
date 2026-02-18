@@ -63,14 +63,20 @@ enum inst_param_type {
   VOID_PARAM_TYPE,
 };
 typedef enum inst_param_type inst_param_type_t;
+
+typedef uint8_t r8_t;
+typedef uint8_t r16_t;
+typedef uint8_t r16_mem_t;
+typedef uint8_t r16_stk_t;
+typedef uint8_t cond_t;
 struct inst_param {
   inst_param_type_t type;
   union {
-    enum r8      r8;
-    enum r16     r16;
-    enum r16_mem r16_mem;
-    enum r16_stk r16_stk;
-    enum cond    cond;
+    r8_t      r8;
+    r16_t     r16;
+    r16_mem_t r16_mem;
+    r16_stk_t r16_stk;
+    cond_t    cond;
     uint8_t      imm8;
     uint16_t     imm16;
     uint8_t      b3;
@@ -78,6 +84,7 @@ struct inst_param {
     uint8_t      unknown_inst_byte;
   };
 };
+typedef struct inst_param inst_param_t;
 
 enum inst_type {
   ADC,
@@ -130,10 +137,11 @@ enum inst_type {
 typedef enum inst_type inst_type_t;
 
 struct inst {
-  inst_type_t       type;
-  struct inst_param p1;
-  struct inst_param p2;
+  inst_type_t  type;
+  inst_param_t p1;
+  inst_param_t p2;
 };
+typedef struct inst inst_t;
 
 struct gb_state;
 
