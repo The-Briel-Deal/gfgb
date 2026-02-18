@@ -45,25 +45,26 @@ enum cond {
   COND_NC = 2,
   COND_C  = 3,
 };
-
+enum inst_param_type {
+  B3, // Bit Index
+  COND,
+  IMM16,
+  IMM16_MEM,
+  IMM8,
+  E8,
+  IMM8_HMEM,
+  R16,
+  R16_MEM,
+  R16_STK,
+  R8,
+  TGT3,    // "rst's target address, divided by 8"
+  SP_IMM8, // Stack Pointer + IMM8
+  UNKNOWN_INST_BYTE,
+  VOID_PARAM_TYPE,
+};
+typedef enum inst_param_type inst_param_type_t;
 struct inst_param {
-  enum inst_param_type {
-    B3, // Bit Index
-    COND,
-    IMM16,
-    IMM16_MEM,
-    IMM8,
-    E8,
-    IMM8_HMEM,
-    R16,
-    R16_MEM,
-    R16_STK,
-    R8,
-    TGT3,    // "rst's target address, divided by 8"
-    SP_IMM8, // Stack Pointer + IMM8
-    UNKNOWN_INST_BYTE,
-    VOID_PARAM_TYPE,
-  } type;
+  inst_param_type_t type;
   union {
     enum r8      r8;
     enum r16     r16;
@@ -78,55 +79,58 @@ struct inst_param {
   };
 };
 
-struct inst {
-  enum inst_type {
-    ADC,
-    ADD,
-    AND,
-    BIT,
-    CALL,
-    CCF,
-    CP,
-    CPL,
-    DAA,
-    DEC,
-    DI,
-    EI,
-    HALT,
-    INC,
-    JP,
-    JR,
-    LD,
-    LDH,
-    NOP,
-    OR,
-    POP,
-    PUSH,
-    RES,
-    RET,
-    RETI,
-    RL,
-    RLA,
-    RLC,
-    RLCA,
-    RR,
-    RRA,
-    RRC,
-    RRCA,
-    RST,
-    SBC,
-    SCF,
-    SET,
-    SLA,
-    SRA,
-    SRL,
-    STOP,
-    SUB,
-    SWAP,
-    XOR,
+enum inst_type {
+  ADC,
+  ADD,
+  AND,
+  BIT,
+  CALL,
+  CCF,
+  CP,
+  CPL,
+  DAA,
+  DEC,
+  DI,
+  EI,
+  HALT,
+  INC,
+  JP,
+  JR,
+  LD,
+  LDH,
+  NOP,
+  OR,
+  POP,
+  PUSH,
+  RES,
+  RET,
+  RETI,
+  RL,
+  RLA,
+  RLC,
+  RLCA,
+  RR,
+  RRA,
+  RRC,
+  RRCA,
+  RST,
+  SBC,
+  SCF,
+  SET,
+  SLA,
+  SRA,
+  SRL,
+  STOP,
+  SUB,
+  SWAP,
+  XOR,
 
-    UNKNOWN_INST,
-  } type;
+  UNKNOWN_INST,
+};
+typedef enum inst_type inst_type_t;
+
+struct inst {
+  inst_type_t       type;
   struct inst_param p1;
   struct inst_param p2;
 };

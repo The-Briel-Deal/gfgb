@@ -149,7 +149,6 @@ enum GB_LogCategory {
 #define TRACY_COLOR_RED   0xff0000
 #define TRACY_COLOR_GREEN 0x00ff00
 #define TRACY_COLOR_BLUE  0x0000ff
-
 // Simple implementation of a dynamic string.
 typedef struct gb_dstr {
   size_t len;
@@ -179,6 +178,71 @@ struct gb_ram_banks {
   uint8_t oam[4 * 40];
 };
 
+struct regs {
+  uint8_t  a;
+  uint8_t  b;
+  uint8_t  c;
+  uint8_t  d;
+  uint8_t  e;
+  uint8_t  f;
+  uint8_t  h;
+  uint8_t  l;
+  uint16_t sp;
+  uint16_t pc;
+  struct io_regs {
+    uint8_t joyp;
+
+    uint8_t sc; // serial control
+
+    uint8_t tima; // timer counter
+    uint8_t tma;  // timer modulo
+    uint8_t tac;  // timer control
+    // Sound
+    uint8_t nr10;
+    uint8_t nr11;
+    uint8_t nr12;
+    uint8_t nr13;
+    uint8_t nr14;
+
+    uint8_t nr21;
+    uint8_t nr22;
+    uint8_t nr23;
+    uint8_t nr24;
+
+    uint8_t nr30;
+    uint8_t nr31;
+    uint8_t nr32;
+    uint8_t nr33;
+    uint8_t nr34;
+
+    uint8_t nr41;
+    uint8_t nr42;
+    uint8_t nr43;
+    uint8_t nr44;
+
+    uint8_t nr50;
+    uint8_t nr51;
+    uint8_t nr52; // sound on/off
+
+    uint8_t ly;
+    uint8_t lyc;
+    uint8_t stat;
+
+    uint8_t lcdc;
+    uint8_t scy;
+    uint8_t scx;
+    uint8_t bgp;
+    uint8_t obp0;
+    uint8_t obp1;
+    uint8_t wx;
+    uint8_t wy;
+    uint8_t ie;            // interupt enable
+    uint8_t if_;           // interupt flag
+    bool    ime;           // interupt master enable
+    bool    set_ime_after; // IME is only set after the following instruction.
+  } io;
+};
+typedef struct regs regs_t;
 struct gb_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
@@ -195,70 +259,7 @@ struct gb_state {
   SDL_Surface *sdl_obj_priority_target;
   SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
 
-  struct regs {
-    uint8_t  a;
-    uint8_t  b;
-    uint8_t  c;
-    uint8_t  d;
-    uint8_t  e;
-    uint8_t  f;
-    uint8_t  h;
-    uint8_t  l;
-    uint16_t sp;
-    uint16_t pc;
-    struct io_regs {
-      uint8_t joyp;
-
-      uint8_t sc; // serial control
-
-      uint8_t tima; // timer counter
-      uint8_t tma;  // timer modulo
-      uint8_t tac;  // timer control
-      // Sound
-      uint8_t nr10;
-      uint8_t nr11;
-      uint8_t nr12;
-      uint8_t nr13;
-      uint8_t nr14;
-
-      uint8_t nr21;
-      uint8_t nr22;
-      uint8_t nr23;
-      uint8_t nr24;
-
-      uint8_t nr30;
-      uint8_t nr31;
-      uint8_t nr32;
-      uint8_t nr33;
-      uint8_t nr34;
-
-      uint8_t nr41;
-      uint8_t nr42;
-      uint8_t nr43;
-      uint8_t nr44;
-
-      uint8_t nr50;
-      uint8_t nr51;
-      uint8_t nr52; // sound on/off
-
-      uint8_t ly;
-      uint8_t lyc;
-      uint8_t stat;
-
-      uint8_t lcdc;
-      uint8_t scy;
-      uint8_t scx;
-      uint8_t bgp;
-      uint8_t obp0;
-      uint8_t obp1;
-      uint8_t wx;
-      uint8_t wy;
-      uint8_t ie;            // interupt enable
-      uint8_t if_;           // interupt flag
-      bool    ime;           // interupt master enable
-      bool    set_ime_after; // IME is only set after the following instruction.
-    } io;
-  } regs;
+  regs_t       regs;
 
   // Window Related
   bool    wy_cond;
@@ -319,6 +320,7 @@ struct gb_state {
 
   gb_imgui_state_t *imgui_state;
 };
+typedef struct gb_state gb_state_t;
 
 enum io_reg_addr {
   IO_JOYP   = 0xFF00,

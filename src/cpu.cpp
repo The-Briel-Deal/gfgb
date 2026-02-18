@@ -63,7 +63,7 @@ static inline uint16_t next16(struct gb_state *gb_state) {
 }
 
 uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   switch (r8) {
   case R8_B: return r->b;
   case R8_C: return r->c;
@@ -78,7 +78,7 @@ uint8_t get_r8(struct gb_state *gb_state, enum r8 r8) {
 }
 
 void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   switch (r8) {
   case R8_B: r->b = val; return;
   case R8_C: r->c = val; return;
@@ -93,10 +93,10 @@ void set_r8(struct gb_state *gb_state, enum r8 r8, uint8_t val) {
 }
 
 uint16_t get_pc(struct gb_state *gb_state) { return gb_state->regs.pc; }
-void set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->regs.pc = new_pc; }
+void     set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->regs.pc = new_pc; }
 
 uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   switch (r16) {
   case R16_BC: return COMBINED_REG((*r), b, c);
   case R16_DE: return COMBINED_REG((*r), d, e);
@@ -107,7 +107,7 @@ uint16_t get_r16(struct gb_state *gb_state, enum r16 r16) {
 }
 
 void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val) {
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   switch (r16) {
   case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
   case R16_DE: SET_COMBINED_REG((*r), d, e, val); return;
@@ -118,7 +118,7 @@ void set_r16(struct gb_state *gb_state, enum r16 r16, uint16_t val) {
 }
 
 void set_r16_mem(struct gb_state *gb_state, enum r16_mem r16_mem, uint8_t val) {
-  struct regs *r = &gb_state->regs;
+  regs_t  *r = &gb_state->regs;
   uint16_t mem_offset;
   switch (r16_mem) {
   case R16_MEM_BC: mem_offset = COMBINED_REG((*r), b, c); break;
@@ -164,7 +164,7 @@ uint16_t get_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk) {
   abort(); // This should never happen unless something is very wrong.
 }
 void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) {
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   switch (r16_stk) {
   case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
   case R16_STK_DE: SET_COMBINED_REG((*r), d, e, val); return;
@@ -190,7 +190,7 @@ void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
 #define ARITHMETIC_OP_MASK  0b00111000
 
 static inline struct inst _fetch(struct gb_state *gb_state);
-struct inst fetch(struct gb_state *gb_state) {
+struct inst               fetch(struct gb_state *gb_state) {
   TracyCZoneN(ctx, "Fetch", true);
   struct inst inst = _fetch(gb_state);
   TracyCZoneEnd(ctx);
@@ -200,7 +200,7 @@ struct inst fetch(struct gb_state *gb_state) {
 static inline struct inst _fetch(struct gb_state *gb_state) {
   GB_assert(!gb_state->halted);
   uint8_t curr_byte = next8(gb_state);
-  uint8_t block = CRUMB0(curr_byte);
+  uint8_t block     = CRUMB0(curr_byte);
   switch (block) {
   case /* block */ 0:
     // First we'll look for all the instructions where params aren't in the first byte. This way we can specify them in
@@ -216,45 +216,45 @@ static inline struct inst _fetch(struct gb_state *gb_state) {
     case 0b0001:
       return (struct inst){
           .type = LD,
-          .p1 = R16_PARAM(CRUMB1(curr_byte)),
-          .p2 = IMM16_PARAM(next16(gb_state)),
+          .p1   = R16_PARAM(CRUMB1(curr_byte)),
+          .p2   = IMM16_PARAM(next16(gb_state)),
       };
     case 0b0010:
       return (struct inst){
           .type = LD,
-          .p1 = R16_MEM_PARAM(CRUMB1(curr_byte)),
-          .p2 = R8_PARAM(R8_A),
+          .p1   = R16_MEM_PARAM(CRUMB1(curr_byte)),
+          .p2   = R8_PARAM(R8_A),
       };
     case 0b0011:
       return (struct inst){
           .type = INC,
-          .p1 = R16_PARAM(CRUMB1(curr_byte)),
-          .p2 = VOID_PARAM,
+          .p1   = R16_PARAM(CRUMB1(curr_byte)),
+          .p2   = VOID_PARAM,
       };
     case 0b1011:
       return (struct inst){
           .type = DEC,
-          .p1 = R16_PARAM(CRUMB1(curr_byte)),
-          .p2 = VOID_PARAM,
+          .p1   = R16_PARAM(CRUMB1(curr_byte)),
+          .p2   = VOID_PARAM,
       };
     case 0b1001:
       return (struct inst){
           .type = ADD,
-          .p1 = R16_PARAM(R16_HL),
-          .p2 = R16_PARAM(CRUMB1(curr_byte)),
+          .p1   = R16_PARAM(R16_HL),
+          .p2   = R16_PARAM(CRUMB1(curr_byte)),
       };
     case 0b1010:
       return (struct inst){
           .type = LD,
-          .p1 = R8_PARAM(R8_A),
-          .p2 = R16_MEM_PARAM(CRUMB1(curr_byte)),
+          .p1   = R8_PARAM(R8_A),
+          .p2   = R16_MEM_PARAM(CRUMB1(curr_byte)),
       };
     case 0b1000:
       if (CRUMB1(curr_byte) == 0b00)
         return (struct inst){
             .type = LD,
-            .p1 = IMM16_MEM_PARAM(next16(gb_state)),
-            .p2 = R16_PARAM(R16_SP),
+            .p1   = IMM16_MEM_PARAM(next16(gb_state)),
+            .p2   = R16_PARAM(R16_SP),
         };
       break;
     }
@@ -390,8 +390,8 @@ static inline struct inst _fetch(struct gb_state *gb_state) {
 
     // 0xCB prefix instructions
     if (curr_byte == 0xCB) {
-      uint8_t cb_suffix = next8(gb_state);
-      struct inst inst = {.type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      uint8_t     cb_suffix = next8(gb_state);
+      struct inst inst      = {.type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
 
       switch (CRUMB0(cb_suffix)) {
       case 0b00:
@@ -464,7 +464,7 @@ static inline struct inst _fetch(struct gb_state *gb_state) {
 
 static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
-  struct inst_param src = inst.p2;
+  struct inst_param src  = inst.p2;
   if (IS_R16(dest) && IS_IMM16(src)) {
     SPEND_MCYCLES(3);
     set_r16(gb_state, dest.r16, src.imm16);
@@ -510,7 +510,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
     GB_assert(dest.r16 == R16_HL); // this inst should always be setting HL
     SPEND_MCYCLES(3);
     uint16_t sp_val = get_r16(gb_state, R16_SP);
-    int8_t add = *(int8_t *)&src.imm8;
+    int8_t   add    = *(int8_t *)&src.imm8;
     uint16_t result = sp_val;
     result += add;
     set_r16(gb_state, dest.r16, result);
@@ -533,8 +533,8 @@ not_implemented:
 }
 static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
-  struct inst_param src = inst.p2;
-  struct regs *r = &gb_state->regs;
+  struct inst_param src  = inst.p2;
+  regs_t           *r    = &gb_state->regs;
   if (src.type == R8 && src.r8 == R8_A) {
     if (dest.type == IMM8_HMEM) {
       SPEND_MCYCLES(3);
@@ -638,7 +638,7 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
 static void ex_adc(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == ADC);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val   = get_r8(gb_state, R8_A);
   uint8_t carry = (gb_state->regs.f & FLAG_C) >> 4;
   uint8_t add;
   if (IS_R8(inst.p2)) {
@@ -660,7 +660,7 @@ static void ex_adc(struct gb_state *gb_state, struct inst inst) {
 static void ex_sbc(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == SBC);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val   = get_r8(gb_state, R8_A);
   uint8_t carry = (gb_state->regs.f & FLAG_C) >> 4;
   uint8_t sub;
   if (IS_R8(inst.p2)) {
@@ -682,7 +682,7 @@ static void ex_sbc(struct gb_state *gb_state, struct inst inst) {
 static void ex_add(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == ADD);
   GB_assert((IS_R8(inst.p1) && inst.p1.r8 == R8_A) ||
-         (IS_R16(inst.p1) && (inst.p1.r16 == R16_HL || inst.p1.r16 == R16_SP)));
+            (IS_R16(inst.p1) && (inst.p1.r16 == R16_HL || inst.p1.r16 == R16_SP)));
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2) || IS_R16(inst.p2) || IS_E8(inst.p2));
 
   if (IS_R8(inst.p1) && inst.p1.r8 == R8_A) {
@@ -720,7 +720,7 @@ static void ex_add(struct gb_state *gb_state, struct inst inst) {
     GB_assert(IS_E8(inst.p2));
     SPEND_MCYCLES(4);
     uint16_t sp_val = get_r16(gb_state, R16_SP);
-    int8_t p2_val = *(int8_t *)&inst.p2.imm8;
+    int8_t   p2_val = *(int8_t *)&inst.p2.imm8;
     uint16_t result = sp_val + p2_val;
     set_r16(gb_state, R16_SP, result);
     set_flags(gb_state, FLAG_N | FLAG_Z, false);
@@ -764,7 +764,7 @@ static void ex_or(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == OR);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   uint8_t p2_val;
   if (IS_R8(inst.p2)) {
     SPEND_MCYCLES(1);
@@ -785,7 +785,7 @@ static void ex_and(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == AND);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   uint8_t p2_val;
   if (IS_R8(inst.p2)) {
     SPEND_MCYCLES(1);
@@ -807,7 +807,7 @@ static void ex_xor(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == XOR);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
-  struct regs *r = &gb_state->regs;
+  regs_t *r = &gb_state->regs;
   uint8_t p2_val;
   if (IS_R8(inst.p2)) {
     SPEND_MCYCLES(1);
@@ -888,7 +888,7 @@ static void ex_rl(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val            = get_r8(gb_state, inst.p1.r8);
   uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
   set_flags(gb_state, FLAG_C, (val >> 7) & 1);
   val <<= 1;
@@ -905,7 +905,7 @@ static void ex_rr(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val            = get_r8(gb_state, inst.p1.r8);
   uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
   set_flags(gb_state, FLAG_C, val & 1);
   val >>= 1;
@@ -921,7 +921,7 @@ static void ex_rla(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p1));
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(1);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val            = get_r8(gb_state, R8_A);
   uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
   set_flags(gb_state, FLAG_C, (val >> 7) & 1);
   val <<= 1;
@@ -936,7 +936,7 @@ static void ex_rra(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p1));
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(1);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val            = get_r8(gb_state, R8_A);
   uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
   set_flags(gb_state, FLAG_C, val & 1);
   val >>= 1;
@@ -952,7 +952,7 @@ static void ex_rlc(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val   = get_r8(gb_state, inst.p1.r8);
   uint8_t carry = (val >> 7) & 1;
   set_flags(gb_state, FLAG_C, carry);
   val <<= 1;
@@ -969,7 +969,7 @@ static void ex_rrc(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val   = get_r8(gb_state, inst.p1.r8);
   uint8_t carry = val & 1;
   set_flags(gb_state, FLAG_C, carry);
   val >>= 1;
@@ -985,7 +985,7 @@ static void ex_rlca(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p1));
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(1);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val   = get_r8(gb_state, R8_A);
   uint8_t carry = (val >> 7) & 1;
   set_flags(gb_state, FLAG_C, carry);
   val <<= 1;
@@ -1000,7 +1000,7 @@ static void ex_rrca(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p1));
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(1);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val   = get_r8(gb_state, R8_A);
   uint8_t carry = val & 1;
   set_flags(gb_state, FLAG_C, carry);
   val >>= 1;
@@ -1026,7 +1026,7 @@ static void ex_sla(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val   = get_r8(gb_state, inst.p1.r8);
   uint8_t carry = (val >> 7) & 1;
   set_flags(gb_state, FLAG_C, carry);
   val <<= 1;
@@ -1042,7 +1042,7 @@ static void ex_sra(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val   = get_r8(gb_state, inst.p1.r8);
   uint8_t carry = val & 1;
   set_flags(gb_state, FLAG_C, carry);
   uint8_t b7 = val & (1 << 7);
@@ -1060,7 +1060,7 @@ static void ex_srl(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val   = get_r8(gb_state, inst.p1.r8);
   uint8_t carry = val & 1;
   set_flags(gb_state, FLAG_C, carry);
   val >>= 1;
@@ -1076,7 +1076,7 @@ static void ex_swap(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(2);
   if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
-  uint8_t val = get_r8(gb_state, inst.p1.r8);
+  uint8_t val    = get_r8(gb_state, inst.p1.r8);
   uint8_t result = ((val & 0x0F) << 4) | ((val & 0xF0) >> 4);
   set_r8(gb_state, inst.p1.r8, result);
 
@@ -1128,7 +1128,7 @@ static void ex_daa(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == DAA);
   GB_assert(IS_VOID(inst.p1) && IS_VOID(inst.p2));
   SPEND_MCYCLES(1);
-  uint8_t val = get_r8(gb_state, R8_A);
+  uint8_t val    = get_r8(gb_state, R8_A);
   uint8_t adjust = 0;
   if ((gb_state->regs.f & FLAG_N) != 0) {
     // The last inst was a subtraction.
@@ -1185,7 +1185,7 @@ static void ex_reti(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   SPEND_MCYCLES(4);
   gb_state->regs.io.ime = true;
-  gb_state->regs.pc = pop16(gb_state);
+  gb_state->regs.pc     = pop16(gb_state);
 }
 
 void call(struct gb_state *gb_state, uint16_t addr) {
@@ -1256,8 +1256,8 @@ static void ex_jp(struct gb_state *gb_state, struct inst inst) {
 static void ex_cp(struct gb_state *gb_state, struct inst inst) {
   // TODO: I'de like for the flags here to be better tested, i'm unsure if I'm
   // doing the carry / half carry flags correctly.
-  uint8_t val1;
-  uint8_t val2;
+  uint8_t  val1;
+  uint8_t  val2;
   uint16_t res;
   if (inst.p1.type == R8) {
     val1 = get_r8(gb_state, inst.p1.r8);
@@ -1335,7 +1335,7 @@ void handle_interrupts(struct gb_state *gb_state) {
 }
 
 static inline void _execute(struct gb_state *gb_state, struct inst inst);
-void execute(struct gb_state *gb_state, struct inst inst) {
+void               execute(struct gb_state *gb_state, struct inst inst) {
   TracyCZoneN(ctx, "Execute", true);
   _execute(gb_state, inst);
   TracyCZoneEnd(ctx);
@@ -1397,7 +1397,7 @@ static inline void _execute(struct gb_state *gb_state, struct inst inst) {
   default: ERR(gb_state, "`execute()` called with `inst.type` that isn't implemented."); break;
   }
   if (set_ime_after_this_inst) {
-    gb_state->regs.io.ime = true;
+    gb_state->regs.io.ime           = true;
     gb_state->regs.io.set_ime_after = false;
   }
 }
@@ -1408,7 +1408,7 @@ static inline void _execute(struct gb_state *gb_state, struct inst inst) {
 
 void test_fetch() {
   struct gb_state gb_state;
-  struct inst inst;
+  struct inst     inst;
 
   gb_state_init(&gb_state);
   gb_state.regs.pc = 0x0100;
@@ -1456,8 +1456,8 @@ void test_execute_load() {
   // Load IMM16 into reg BC
   inst = (struct inst){
       .type = LD,
-      .p1 = R16_PARAM(R16_BC),
-      .p2 = IMM16_PARAM(452),
+      .p1   = R16_PARAM(R16_BC),
+      .p2   = IMM16_PARAM(452),
   };
   execute(&gb_state, inst);
   GB_assert(get_r16(&gb_state, R16_BC) == 452);
@@ -1465,8 +1465,8 @@ void test_execute_load() {
   // Load reg A into addr in reg BC
   inst = (struct inst){
       .type = LD,
-      .p1 = R16_MEM_PARAM(R16_MEM_BC),
-      .p2 = R8_PARAM(R8_A),
+      .p1   = R16_MEM_PARAM(R16_MEM_BC),
+      .p2   = R8_PARAM(R8_A),
   };
   set_r16(&gb_state, R16_BC, 0xC000);
   gb_state.regs.a = 42;
@@ -1476,8 +1476,8 @@ void test_execute_load() {
   // Load contents of addr in reg BC into reg A
   inst = (struct inst){
       .type = LD,
-      .p1 = R8_PARAM(R8_A),
-      .p2 = R16_MEM_PARAM(R16_MEM_BC),
+      .p1   = R8_PARAM(R8_A),
+      .p2   = R16_MEM_PARAM(R16_MEM_BC),
   };
   write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
@@ -1486,8 +1486,8 @@ void test_execute_load() {
   // Load contents of addr in reg HL into reg A and increment the pointer.
   inst = (struct inst){
       .type = LD,
-      .p1 = R8_PARAM(R8_A),
-      .p2 = R16_MEM_PARAM(R16_MEM_HLI),
+      .p1   = R8_PARAM(R8_A),
+      .p2   = R16_MEM_PARAM(R16_MEM_HLI),
   };
   set_r16(&gb_state, R16_HL, 0xC000);
   write_mem8(&gb_state, 0xC000, 134);
@@ -1497,8 +1497,8 @@ void test_execute_load() {
   // Then load contents of reg A into the addr in reg HL.
   inst = (struct inst){
       .type = LD,
-      .p1 = R16_MEM_PARAM(R16_MEM_HLD),
-      .p2 = R8_PARAM(R8_A),
+      .p1   = R16_MEM_PARAM(R16_MEM_HLD),
+      .p2   = R8_PARAM(R8_A),
   };
   set_r8(&gb_state, R8_A, 21);
   execute(&gb_state, inst);
@@ -1508,8 +1508,8 @@ void test_execute_load() {
   // Load stack pointer into addr at IMM16
   inst = (struct inst){
       .type = LD,
-      .p1 = IMM16_MEM_PARAM(0xC010),
-      .p2 = R16_PARAM(R16_SP),
+      .p1   = IMM16_MEM_PARAM(0xC010),
+      .p2   = R16_PARAM(R16_SP),
   };
   set_r16(&gb_state, R16_SP, 0xD123);
   execute(&gb_state, inst);
