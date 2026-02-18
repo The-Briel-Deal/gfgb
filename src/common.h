@@ -12,6 +12,12 @@
 #include "ppu.h"
 
 #ifdef __cplusplus
+#include <utility>
+
+using std::unreachable;
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 

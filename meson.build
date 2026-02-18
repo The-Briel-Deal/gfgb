@@ -3,7 +3,7 @@ project(
   'c', 'cpp', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
-  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++20', 'cpp_args=-fpermissive'],
+  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++23', 'cpp_args=-fpermissive'],
 )
 
 if get_option('enable_logging')
