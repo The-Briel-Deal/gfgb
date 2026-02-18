@@ -6,12 +6,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-enum flags : uint8_t {
+enum gb_flag_reg_bits {
   FLAG_Z = (1 << 7),
   FLAG_N = (1 << 6),
   FLAG_H = (1 << 5),
   FLAG_C = (1 << 4),
 };
+typedef uint8_t gb_flag_reg_bits_t;
 
 #define R8_PARAM(r)                                                                                                    \
   (struct inst_param) { .type = R8, .r8 = r }
@@ -177,7 +178,7 @@ void set_r16_stk(struct gb_state *gb_state, enum r16_stk r16_stk, uint16_t val) 
 void set_ime(struct gb_state *gb_state, bool on) { gb_state->regs.io.ime = on; }
 bool get_ime(struct gb_state *gb_state) { return gb_state->regs.io.ime; } // This is only for tests and debugging.
 
-void set_flags(struct gb_state *gb_state, enum flags flags, bool on) {
+void set_flags(struct gb_state *gb_state, gb_flag_reg_bits_t flags, bool on) {
   if (on) {
     gb_state->regs.f |= flags;
   } else {
