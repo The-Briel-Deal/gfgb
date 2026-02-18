@@ -64,11 +64,11 @@ enum inst_param_type {
 };
 typedef enum inst_param_type inst_param_type_t;
 
-typedef uint8_t r8_t;
-typedef uint8_t r16_t;
-typedef uint8_t r16_mem_t;
-typedef uint8_t r16_stk_t;
-typedef uint8_t cond_t;
+typedef uint8_t              r8_t;
+typedef uint8_t              r16_t;
+typedef uint8_t              r16_mem_t;
+typedef uint8_t              r16_stk_t;
+typedef uint8_t              cond_t;
 struct inst_param {
   inst_param_type_t type;
   union {
@@ -77,11 +77,13 @@ struct inst_param {
     r16_mem_t r16_mem;
     r16_stk_t r16_stk;
     cond_t    cond;
-    uint8_t      imm8;
-    uint16_t     imm16;
-    uint8_t      b3;
-    uint8_t      tgt3;
-    uint8_t      unknown_inst_byte;
+    uint8_t   imm8;
+    uint16_t  imm16;
+    uint8_t   b3;
+    uint8_t   tgt3;
+    uint8_t   unknown_inst_byte;
+    uint8_t   void_val; // I need to put something in the union for cpp compilers to not complain, so I just put 0 in
+                        // here for VOID_PARAM's.
   };
 };
 typedef struct inst_param inst_param_t;
