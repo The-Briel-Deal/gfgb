@@ -1,8 +1,9 @@
 // This is the one CPP file exclusively because of imgui which I didn't want to have to use a wrapper for.
 
+#include <format>
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
-#include "ppu.h"
 #include "common.h"
+#include "ppu.h"
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -596,10 +597,12 @@ void gb_imgui_render(struct gb_state *gb_state) {
       }
       ImGui::SameLine();
       ImGui::Button("Write");
-      ImGui::Text("Value at 0x%.4x is:", imgui_state->mem_inspect_addr);
-      ImGui::Text("  Hex: 0x%.2x", imgui_state->mem_inspect_read_val);
-      ImGui::Text("  Dec: %d", imgui_state->mem_inspect_read_val);
-      ImGui::Text("  Bin: 0b%.8b", imgui_state->mem_inspect_read_val);
+      std::string formatted_text = std::format("Value at {0:#06x} is:\n"
+                                               "  Hex: {1:#04x}\n"
+                                               "  Dec: {1:d}\n"
+                                               "  Bin: {1:#08b}",
+                                               imgui_state->mem_inspect_addr, imgui_state->mem_inspect_read_val);
+      ImGui::TextUnformatted(formatted_text.c_str());
     }
 
     ImGui::End();
