@@ -5,29 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <type_traits>
 
 #define LOC __FILE__, __LINE__, __func__
-
-#ifdef __cplusplus
-template <typename T1, typename T2> void assert_eq(T1 v1, T2 v2) {
-  if constexpr (std::is_same_v<T1, uint8_t>) return assert_uint8_eq_hex(LOC, v1, (T1)v2);
-  if constexpr (std::is_same_v<T1, uint16_t>) return assert_uint16_eq_hex(LOC, v1, (T1)v2);
-  if constexpr (std::is_same_v<T1, uint32_t>) return assert_int_eq(LOC, v1, (T1)v2);
-  if constexpr (std::is_same_v<T1, int>) return assert_int_eq(LOC, v1, (T1)v2);
-  if constexpr (std::is_same_v<T1, char *>) return assert_str_eq(LOC, v1, (T1)v2);
-
-  static_assert(false, "Unsupported type for assert_eq");
-}
-
-#else
-#define assert_eq(v1, v2)                                                                                              \
-  _Generic((v1),                                                                                                       \
-      uint8_t: assert_uint8_eq_hex,                                                                                    \
-      uint16_t: assert_uint16_eq_hex,                                                                                  \
-      uint32_t: assert_int_eq,                                                                                         \
-      int: assert_int_eq,                                                                                              \
-      char *: assert_str_eq)(LOC, v1, v2)
-#endif
 
 static inline void assert_int_eq(const char *fname, int lineno, const char *fxname, int v1, int v2) {
   if (v1 != v2) {
@@ -57,5 +37,33 @@ static inline void assert_str_eq(const char *fname, int lineno, const char *fxna
     abort();
   }
 }
+#ifdef __cplusplus
+template <typename T1, typename T2> void assert_eq(T1 v1, T2 v2) {
+  if constexpr (std::is_same_v<T1, uint8_t>) {
+    return assert_uint8_eq_hex(LOC, v1, (T1)v2);
+  } else if constexpr (std::is_same_v<T1, unsigned char>) {
+    return assert_uint8_eq_hex(LOC, v1, (T1)v2);
+  } else if constexpr (std::is_same_v<T1, uint16_t>) {
+    return assert_uint16_eq_hex(LOC, v1, (T1)v2);
+  } else if constexpr (std::is_same_v<T1, uint32_t>) {
+    return assert_int_eq(LOC, v1, (T1)v2);
+  } else if constexpr (std::is_same_v<T1, int>) {
+    return assert_int_eq(LOC, v1, (T1)v2);
+  } else if constexpr (std::is_same_v<T1, char *>) {
+    return assert_str_eq(LOC, v1, (T1)v2);
+  } else {
+    static_assert(false, "Unsupported type for assert_eq");
+  }
+}
+
+#else
+#define assert_eq(v1, v2)                                                                                              \
+  _Generic((v1),                                                                                                       \
+      uint8_t: assert_uint8_eq_hex,                                                                                    \
+      uint16_t: assert_uint16_eq_hex,                                                                                  \
+      uint32_t: assert_int_eq,                                                                                         \
+      int: assert_int_eq,                                                                                              \
+      char *: assert_str_eq)(LOC, v1, v2)
+#endif
 
 #endif
