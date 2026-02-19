@@ -300,7 +300,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
     TracyCZoneEnd(ctx);
 
-    update_timers(gb_state);
+    gb_update_timers(gb_state);
     handle_interrupts(gb_state);
     uint8_t curr_mode, last_mode;
     curr_mode = gb_state->regs.io.stat & 0b11;

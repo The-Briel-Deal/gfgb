@@ -13,7 +13,7 @@ cdef extern from "common.h":
   bint gb_state_get_err(gb_state *gb_state)
   void gb_state_use_flat_mem(gb_state *gb_state, bint enabled)
 
-  uint64_t m_cycles(gb_state *gb_state)
+  uint64_t gb_m_cycles(gb_state *gb_state)
 
 cdef extern from "cpu.h":
   struct inst: pass

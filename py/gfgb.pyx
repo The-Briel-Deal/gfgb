@@ -76,7 +76,7 @@ class GB_State:
     gfgb.execute(self._gb_state, inst)
 
   def m_cycles(self) -> int:
-    return gfgb.m_cycles(self._gb_state)
+    return gfgb.gb_m_cycles(self._gb_state)
 
   def get_err(self) -> bool:
     return gfgb.gb_state_get_err(self._gb_state)

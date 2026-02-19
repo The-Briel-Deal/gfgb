@@ -393,9 +393,9 @@ enum joy_pad_io_reg_bits : uint8_t {
   JOYP_BUTTON_START  = 1 << 3,
 };
 
-uint64_t         m_cycles(struct gb_state *gb_state);
+uint64_t         gb_m_cycles(struct gb_state *gb_state);
 
-void             update_timers(struct gb_state *gb_state);
+void             gb_update_timers(struct gb_state *gb_state);
 
 void            *gb_unmap_address(struct gb_state *gb_state, uint16_t addr);
 
@@ -416,7 +416,7 @@ bool             gb_state_get_err(struct gb_state *gb_state);
 void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
 
 // This is in common since I need to also use this for marking textures dirty when they are written to.
-inline static uint16_t tile_addr_to_tex_idx(uint16_t tile_addr) {
+inline static uint16_t gb_tile_addr_to_tex_idx(uint16_t tile_addr) {
   int tex_index = (tile_addr - GB_TILEDATA_BLOCK0_START) / 16;
   GB_assert(tex_index < DMG_N_TILEDATA_ADDRESSES);
   GB_assert(tex_index >= 0);

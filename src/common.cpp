@@ -210,7 +210,7 @@ uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
 }
 void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   if (addr >= GB_TILEDATA_BLOCK0_START && addr < GB_TILEDATA_BLOCK2_END) {
-    uint16_t tex_idx                  = tile_addr_to_tex_idx(addr);
+    uint16_t tex_idx                  = gb_tile_addr_to_tex_idx(addr);
     gb_state->dirty_textures[tex_idx] = true;
   }
 }
@@ -283,7 +283,7 @@ void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   }
 }
 
-uint64_t        m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
+uint64_t        gb_m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
 
 static uint64_t gb_dots(uint64_t m_cycles) {
   // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support
@@ -404,9 +404,9 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   if (mode == VBLANK) gb_state->regs.io.if_ |= 0b00001;
 }
 
-void update_timers(struct gb_state *gb_state) {
+void gb_update_timers(struct gb_state *gb_state) {
   TracyCZoneN(ctx, "Update Timers", true);
-  uint64_t curr_m_cycles             = m_cycles(gb_state);
+  uint64_t curr_m_cycles             = gb_m_cycles(gb_state);
   uint64_t prev_m_cycles             = gb_state->last_timer_sync_m_cycles;
   gb_state->last_timer_sync_m_cycles = curr_m_cycles;
 
