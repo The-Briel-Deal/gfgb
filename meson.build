@@ -86,7 +86,7 @@ ppu_test_exe = executable(
 disasm_test_exe = executable(
   'disasm_test_exe',
   sources,
-  c_args : '-DRUN_DISASSEMBLE_TESTS=1',
+  cpp_args : '-DRUN_DISASSEMBLE_TESTS=1',
   include_directories : include_directories(['src/']),
   dependencies : [sdl3_deps, global_deps],
 )

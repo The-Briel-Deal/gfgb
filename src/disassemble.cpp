@@ -143,16 +143,16 @@ void print_inst(FILE *stream, const struct inst inst) {
 #undef PRINT_INST_NAME
 
 void alloc_symbol_list(struct debug_symbol_list *syms) {
-  syms->len = 0;
+  syms->len      = 0;
   syms->capacity = 12;
-  syms->syms = calloc(syms->capacity, sizeof(*syms->syms));
+  syms->syms     = (debug_symbol_t *)GB_malloc(syms->capacity * sizeof(*syms->syms));
 }
 
 // TODO: Shrink array if len is half of capacity.
 void realloc_symbol_list(struct debug_symbol_list *syms) {
   if (syms->len + 1 >= syms->capacity) {
     syms->capacity *= 2;
-    syms->syms = realloc(syms->syms, sizeof(*syms->syms) * syms->capacity);
+    syms->syms = (debug_symbol_t *)GB_realloc(syms->syms, sizeof(*syms->syms) * syms->capacity);
   }
 }
 
@@ -160,15 +160,15 @@ void free_symbol_list(struct debug_symbol_list *syms) {
   GB_assert(syms->capacity != 0);
   free(syms->syms);
   syms->capacity = 0;
-  syms->len = 0;
+  syms->len      = 0;
 }
 
 void sort_syms(struct debug_symbol_list *syms) {
   // This is just bubble sort, since this is just for debugging it should be
   // fine. If it becomes an issue I could use something faster.
   struct debug_symbol tmp_sym;
-  bool swapped;
-  int n = syms->len;
+  bool                swapped;
+  int                 n = syms->len;
 
   for (int i = 0; i < n; i++) {
     swapped = false;
@@ -176,10 +176,10 @@ void sort_syms(struct debug_symbol_list *syms) {
       // TODO: currently i'm just sorting by addr, once bank switching exists we
       // should also sort by bank.
       if (syms->syms[j].start_offset > syms->syms[j + 1].start_offset) {
-        tmp_sym = syms->syms[j];
-        syms->syms[j] = syms->syms[j + 1];
+        tmp_sym           = syms->syms[j];
+        syms->syms[j]     = syms->syms[j + 1];
         syms->syms[j + 1] = tmp_sym;
-        swapped = true;
+        swapped           = true;
       }
     }
     if (!swapped) break;
@@ -189,21 +189,21 @@ void sort_syms(struct debug_symbol_list *syms) {
 void set_sym_lens(struct debug_symbol_list *syms) {
   struct debug_symbol *curr_sym;
   struct debug_symbol *next_sym;
-  int n = syms->len;
+  int                  n = syms->len;
   for (int i = 0; i < n; i++) {
     curr_sym = &syms->syms[i];
 
     // Only set syms length if it is not the last sym.
     curr_sym->len = 0;
     if (i + 1 < n) {
-      next_sym = &syms->syms[i + 1];
+      next_sym      = &syms->syms[i + 1];
       curr_sym->len = next_sym->start_offset - curr_sym->start_offset;
     }
   }
 }
 
 void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
-  char line[KB(1)];
+  char  line[KB(1)];
   char *ret;
   while (!feof(sym_file)) {
     realloc_symbol_list(syms);
@@ -215,18 +215,18 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
       continue;
     }
     if (line[0] == ';') continue;
-    char *endptr;
+    char                *endptr;
     struct debug_symbol *curr_sym = &syms->syms[syms->len];
 
     if (line[0] == 'B') {
       GB_assert(line[1] == 'O' && line[2] == 'O' && line[3] == 'T' && line[4] == ':');
-      endptr = &line[4];
+      endptr         = &line[4];
       curr_sym->bank = DBG_SYM_BOOTROM_BANK;
     } else {
       curr_sym->bank = strtol(&line[0], &endptr, 16);
       GB_assert(endptr == &line[2]);
     }
-    char *bank_endptr = endptr;
+    char *bank_endptr      = endptr;
 
     curr_sym->start_offset = strtol(bank_endptr + 1, &endptr, 16);
     GB_assert(endptr == bank_endptr + 5);
@@ -378,40 +378,40 @@ static const unsigned char _test_disasm_section[] = {
     0x3e, 0x00, 0xea, 0x26, 0xff, 0xcd, 0x89, 0x01, 0xcd, 0xb9, 0x01, 0x3e, 0x10, 0xf5, 0x21, 0x10, 0x90, 0x01, 0xc8,
     0x01, 0xcd, 0x92, 0x01, 0xf1, 0x01, 0x00, 0x98, 0xc5, 0x3e, 0x00, 0xf5, 0x01, 0x00, 0x04, 0xc5, 0xcd, 0x9e, 0x01,
     0xc1, 0xf1, 0xc1, 0x21, 0x04, 0x98, 0x36, 0x01, 0xcd, 0xbf, 0x01, 0x3e, 0xe4, 0xea, 0x47, 0xff, 0xcd, 0xc5, 0x01};
-static const int _test_disasm_section_len = sizeof(_test_disasm_section);
+static const int  _test_disasm_section_len         = sizeof(_test_disasm_section);
 
-static const char _test_expected_disasm_output[] = "0x0000: LD        R8_A        0x00\n"
-                                                   "0x0002: LD        [0xFF26]    R8_A\n"
-                                                   "0x0005: CALL      0x0189      (void)\n"
-                                                   "0x0008: CALL      0x01B9      (void)\n"
-                                                   "0x000B: LD        R8_A        0x10\n"
-                                                   "0x000D: PUSH      R16_STK_AF  (void)\n"
-                                                   "0x000E: LD        R16_HL      0x9010\n"
-                                                   "0x0011: LD        R16_BC      0x01C8\n"
-                                                   "0x0014: CALL      0x0192      (void)\n"
-                                                   "0x0017: POP       R16_STK_AF  (void)\n"
-                                                   "0x0018: LD        R16_BC      0x9800\n"
-                                                   "0x001B: PUSH      R16_STK_BC  (void)\n"
-                                                   "0x001C: LD        R8_A        0x00\n"
-                                                   "0x001E: PUSH      R16_STK_AF  (void)\n"
-                                                   "0x001F: LD        R16_BC      0x0400\n"
-                                                   "0x0022: PUSH      R16_STK_BC  (void)\n"
-                                                   "0x0023: CALL      0x019E      (void)\n"
-                                                   "0x0026: POP       R16_STK_BC  (void)\n"
-                                                   "0x0027: POP       R16_STK_AF  (void)\n"
-                                                   "0x0028: POP       R16_STK_BC  (void)\n"
-                                                   "0x0029: LD        R16_HL      0x9804\n"
-                                                   "0x002C: LD        R8_HL_DREF  0x01\n"
-                                                   "0x002E: CALL      0x01BF      (void)\n"
-                                                   "0x0031: LD        R8_A        0xE4\n"
-                                                   "0x0033: LD        [0xFF47]    R8_A\n"
-                                                   "0x0036: CALL      0x01C5      (void)\n";
+static const char _test_expected_disasm_output[]   = "0x0000: LD        R8_A        0x00\n"
+                                                     "0x0002: LD        [0xFF26]    R8_A\n"
+                                                     "0x0005: CALL      0x0189      (void)\n"
+                                                     "0x0008: CALL      0x01B9      (void)\n"
+                                                     "0x000B: LD        R8_A        0x10\n"
+                                                     "0x000D: PUSH      R16_STK_AF  (void)\n"
+                                                     "0x000E: LD        R16_HL      0x9010\n"
+                                                     "0x0011: LD        R16_BC      0x01C8\n"
+                                                     "0x0014: CALL      0x0192      (void)\n"
+                                                     "0x0017: POP       R16_STK_AF  (void)\n"
+                                                     "0x0018: LD        R16_BC      0x9800\n"
+                                                     "0x001B: PUSH      R16_STK_BC  (void)\n"
+                                                     "0x001C: LD        R8_A        0x00\n"
+                                                     "0x001E: PUSH      R16_STK_AF  (void)\n"
+                                                     "0x001F: LD        R16_BC      0x0400\n"
+                                                     "0x0022: PUSH      R16_STK_BC  (void)\n"
+                                                     "0x0023: CALL      0x019E      (void)\n"
+                                                     "0x0026: POP       R16_STK_BC  (void)\n"
+                                                     "0x0027: POP       R16_STK_AF  (void)\n"
+                                                     "0x0028: POP       R16_STK_BC  (void)\n"
+                                                     "0x0029: LD        R16_HL      0x9804\n"
+                                                     "0x002C: LD        R8_HL_DREF  0x01\n"
+                                                     "0x002E: CALL      0x01BF      (void)\n"
+                                                     "0x0031: LD        R8_A        0xE4\n"
+                                                     "0x0033: LD        [0xFF47]    R8_A\n"
+                                                     "0x0036: CALL      0x01C5      (void)\n";
 
-static const int _test_expected_disasm_output_len = sizeof(_test_expected_disasm_output);
+static const int  _test_expected_disasm_output_len = sizeof(_test_expected_disasm_output);
 
-void test_disasm() {
+void              test_disasm() {
   FILE *stream = tmpfile();
-  char buf[KB(10)];
+  char  buf[KB(10)];
   disassemble_section(stream, _test_disasm_section, _test_disasm_section_len);
   rewind(stream);
   int bytes_read = fread(buf, sizeof(*buf), sizeof(buf), stream);
@@ -421,22 +421,22 @@ void test_disasm() {
   if (_test_expected_disasm_output_len - 1 != bytes_read ||
       strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
     fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n", _test_expected_disasm_output, bytes_read,
-            buf);
+                         buf);
     abort();
   }
 }
 
-static const char _test_parse_debug_sym_input[] = "; File generated by rgblink\n"
-                                                  "00:0150 SimpleSprite\n"
-                                                  "00:0189 WaitForVBlank\n"
-                                                  "00:0192 CopySprite\n"
-                                                  "00:0197 CopySprite.loop\n"
-                                                  "00:019e ClearMem\n"
-                                                  "00:01af ClearMem.loop\n"
-                                                  "00:01b9 LCDOff\n"
-                                                  "00:01bf LCDOn\n"
-                                                  "00:01c5 ThisIsALongSymbolNameToTestTruncation\n"
-                                                  "00:01c8 DoggoSprite";
+static const char _test_parse_debug_sym_input[]         = "; File generated by rgblink\n"
+                                                          "00:0150 SimpleSprite\n"
+                                                          "00:0189 WaitForVBlank\n"
+                                                          "00:0192 CopySprite\n"
+                                                          "00:0197 CopySprite.loop\n"
+                                                          "00:019e ClearMem\n"
+                                                          "00:01af ClearMem.loop\n"
+                                                          "00:01b9 LCDOff\n"
+                                                          "00:01bf LCDOn\n"
+                                                          "00:01c5 ThisIsALongSymbolNameToTestTruncation\n"
+                                                          "00:01c8 DoggoSprite";
 
 static const char _test_parse_bootrom_debug_sym_input[] = "; File generated by rgblink\n"
                                                           "BOOT:0000 EntryPoint\n"
@@ -481,13 +481,13 @@ static const char _test_parse_bootrom_debug_sym_input[] = "; File generated by r
                                                           "00:9800 vMainTilemap\n"
                                                           "00:fffe hStackBottom";
 
-void test_parse_debug_sym() {
+void              test_parse_debug_sym() {
   struct debug_symbol_list syms;
   // Parse rom debug syms
   {
     FILE *stream = tmpfile();
     fwrite(_test_parse_debug_sym_input, sizeof(*_test_parse_debug_sym_input), sizeof(_test_parse_debug_sym_input),
-           stream);
+                        stream);
     fflush(stream);
     rewind(stream);
 
@@ -499,7 +499,7 @@ void test_parse_debug_sym() {
   {
     FILE *stream = tmpfile();
     fwrite(_test_parse_bootrom_debug_sym_input, sizeof(*_test_parse_bootrom_debug_sym_input),
-           sizeof(_test_parse_bootrom_debug_sym_input), stream);
+                        sizeof(_test_parse_bootrom_debug_sym_input), stream);
     fflush(stream);
     rewind(stream);
 
