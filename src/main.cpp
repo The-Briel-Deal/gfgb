@@ -270,6 +270,27 @@ const char *get_inst_symbol(struct gb_state *gb_state) {
 
 const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 
+static void       gb_update_io_joyp(gb_state_t *gb_state) {
+  uint8_t *io_joyp          = &gb_state->regs.io.joyp;
+  uint8_t  new_lower_nibble = 0x0F;
+  if (((*io_joyp) >> 4 & 0b11) == 0b10) {
+    // D-Pad selected
+    if (gb_state->joy_pad_state.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
+    if (gb_state->joy_pad_state.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
+    if (gb_state->joy_pad_state.dpad_up) new_lower_nibble &= ~JOYP_D_PAD_UP;
+    if (gb_state->joy_pad_state.dpad_down) new_lower_nibble &= ~JOYP_D_PAD_DOWN;
+  }
+  if (((*io_joyp) >> 4 & 0b11) == 0b01) {
+    // Buttons selected
+    if (gb_state->joy_pad_state.button_a) new_lower_nibble &= ~JOYP_BUTTON_A;
+    if (gb_state->joy_pad_state.button_b) new_lower_nibble &= ~JOYP_BUTTON_B;
+    if (gb_state->joy_pad_state.button_select) new_lower_nibble &= ~JOYP_BUTTON_SELECT;
+    if (gb_state->joy_pad_state.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
+  }
+
+  *io_joyp |= new_lower_nibble;
+}
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   TracyCFrameMarkStart(TracyFrame_SDL_AppIterate);
@@ -321,6 +342,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         TracyCZoneN(vblank_ctx, "V-Blank", true);
         gb_present(gb_state);
         TracyCZoneEnd(vblank_ctx);
+        gb_update_io_joyp(gb_state);
         break;
       }
     gb_state->last_mode_handled = curr_mode;
