@@ -275,7 +275,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
   // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
 
-  uint8_t *gb_tile = (uint8_t *)unmap_address(gb_state, tile_addr);
+  uint8_t *gb_tile = (uint8_t *)gb_unmap_address(gb_state, tile_addr);
   uint8_t  pixels[8 * 8];
   gb_tile_to_8bit_indexed(gb_tile, pixels);
   SDL_Surface *tile_surface = SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_INDEX8, &pixels, 8);

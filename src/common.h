@@ -397,7 +397,7 @@ uint64_t         m_cycles(struct gb_state *gb_state);
 
 void             update_timers(struct gb_state *gb_state);
 
-void            *unmap_address(struct gb_state *gb_state, uint16_t addr);
+void            *gb_unmap_address(struct gb_state *gb_state, uint16_t addr);
 
 uint8_t          gb_read_mem8(struct gb_state *gb_state, uint16_t addr);
 void             gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val);

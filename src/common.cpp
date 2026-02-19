@@ -120,7 +120,7 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
+void *gb_unmap_address(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->bootrom_mapped && (addr < 0x0100)) {
     return &gb_state->ram.bootrom[addr];
   }
@@ -147,7 +147,7 @@ void *unmap_address(struct gb_state *gb_state, uint16_t addr) {
     return &gb_state->ram.hram[addr - HRAM_START];
   }
 not_implemented:
-  LogError("`unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
+  LogError("`gb_unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
   return NULL;
 }
 
@@ -176,13 +176,13 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
       return val;
     }
 
-    val_ptr = (uint8_t *)unmap_address(gb_state, addr);
+    val_ptr = (uint8_t *)gb_unmap_address(gb_state, addr);
     if (val_ptr != NULL) return *val_ptr;
 
     goto not_implemented;
 
   not_implemented:
-    LogCritical("`read_mem8()` received a null pointer from unmap_address() when addr = 0x%.4X", addr);
+    LogCritical("`read_mem8()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
     return 0;
   }
 }
@@ -196,14 +196,14 @@ uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
     return val;
   } else {
     LogTrace("Reading 16 bits from address 0x%.4X", addr);
-    uint8_t *val_ptr = (uint8_t *)unmap_address(gb_state, addr);
+    uint8_t *val_ptr = (uint8_t *)gb_unmap_address(gb_state, addr);
     if (val_ptr != NULL) {
       uint16_t val = 0x0000;
       val |= val_ptr[0] << 0;
       val |= val_ptr[1] << 8;
       return val;
     } else {
-      LogCritical("`read_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+      LogCritical("`read_mem16()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
       return 0;
     }
   }
@@ -250,7 +250,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
       write_io_reg(gb_state, addr, val);
       return;
     } else {
-      val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
+      val_ptr = ((uint8_t *)gb_unmap_address(gb_state, addr));
     }
     if (val_ptr != NULL) {
       // VRAM is the only place where stuff needs to be uploaded to the GPU (which is expensive). So we mark modified
@@ -260,7 +260,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
       }
       *val_ptr = val;
     } else {
-      LogCritical("`write_mem8()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+      LogCritical("`write_mem8()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
     }
   }
 }
@@ -273,12 +273,12 @@ void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   } else {
     LogTrace("Writing val 0x%.4X to address 0x%.4X", val, addr);
     // little endian
-    uint8_t *val_ptr = ((uint8_t *)unmap_address(gb_state, addr));
+    uint8_t *val_ptr = ((uint8_t *)gb_unmap_address(gb_state, addr));
     if (val_ptr != NULL) {
       val_ptr[0] = (val & 0x00FF) >> 0;
       val_ptr[1] = (val & 0xFF00) >> 8;
     } else {
-      LogCritical("`write_mem16()` received a null pointer from unmap_address() when addr = 0x%04x", addr);
+      LogCritical("`write_mem16()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
     }
   }
 }
