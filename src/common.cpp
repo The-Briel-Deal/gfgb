@@ -7,7 +7,7 @@
 void gb_dstr_init(gb_dstr_t *dstr, size_t cap) {
   dstr->cap = cap;
   dstr->len = 0;
-  dstr->txt = GB_malloc(dstr->cap);
+  dstr->txt = (char *)GB_malloc(dstr->cap);
 }
 // free dynamic string
 void gb_dstr_free(gb_dstr_t *dstr) {
@@ -23,7 +23,7 @@ void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n) {
   size_t req_len = dstr->len + n;
   if (req_len >= dstr->cap) {
     dstr->cap = req_len * 1.5;
-    dstr->txt = GB_realloc(dstr->txt, dstr->cap);
+    dstr->txt = (char *)GB_realloc(dstr->txt, dstr->cap);
   }
 }
 
@@ -51,7 +51,7 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->first_oam_scan_after_enable = true;
 }
 
-struct gb_state *gb_state_alloc() { return SDL_malloc(sizeof(struct gb_state)); }
+struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
 
 void             gb_state_free(struct gb_state *gb_state) {
   if (gb_state->serial_port_output != NULL) fclose(gb_state->serial_port_output);
@@ -153,6 +153,7 @@ not_implemented:
 
 // TODO: This and write_mem8() should probably get the gb_ prefix
 uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+  uint8_t *val_ptr;
   if (gb_state->use_flat_ram) {
     return gb_state->flat_ram[addr];
   } else {
@@ -176,7 +177,7 @@ uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
       return val;
     }
 
-    uint8_t *val_ptr = unmap_address(gb_state, addr);
+    val_ptr = (uint8_t *)unmap_address(gb_state, addr);
     if (val_ptr != NULL) return *val_ptr;
 
     goto not_implemented;
@@ -196,7 +197,7 @@ uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
     return val;
   } else {
     LogTrace("Reading 16 bits from address 0x%.4X", addr);
-    uint8_t *val_ptr = unmap_address(gb_state, addr);
+    uint8_t *val_ptr = (uint8_t *)unmap_address(gb_state, addr);
     if (val_ptr != NULL) {
       uint16_t val = 0x0000;
       val |= val_ptr[0] << 0;
@@ -215,7 +216,7 @@ void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-void write_io_reg(struct gb_state *gb_state, enum io_reg_addr reg, uint8_t val) {
+void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
   // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
   // read-only.
   LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);

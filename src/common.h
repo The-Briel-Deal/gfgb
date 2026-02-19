@@ -375,6 +375,8 @@ enum io_reg_addr {
   IO_OBP1 = 0xFF49,
 };
 
+typedef uint16_t io_reg_addr_t;
+
 enum joy_pad_io_reg_bits : uint8_t {
   JOYP_SELECT_D_PAD = 1 << 4,
   // D-Pad Dirs: if JOYP_SELECT_D_PAD is selected (aka is 0)

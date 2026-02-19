@@ -27,7 +27,7 @@ global_deps = [tracy_dep]
 
 sources = [
   'src/disassemble.cpp',
-  'src/common.c',
+  'src/common.cpp',
   'src/cpu.cpp',
   'src/ppu.cpp',
 ]
