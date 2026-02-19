@@ -187,7 +187,7 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-uint16_t read_mem16(struct gb_state *gb_state, uint16_t addr) {
+uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->use_flat_ram) {
     uint8_t *val_ptr = &gb_state->flat_ram[addr];
     uint16_t val     = 0x0000;
@@ -215,7 +215,7 @@ void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
+static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
   // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
   // read-only.
   LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
@@ -265,7 +265,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   }
 }
 
-void write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
+void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   if (gb_state->use_flat_ram) {
     uint8_t *val_ptr = &gb_state->flat_ram[addr];
     val_ptr[0]       = (val & 0x00FF) >> 0;

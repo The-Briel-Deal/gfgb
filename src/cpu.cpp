@@ -57,7 +57,7 @@ static inline uint8_t next8(struct gb_state *gb_state) {
 }
 
 static inline uint16_t next16(struct gb_state *gb_state) {
-  uint16_t val = read_mem16(gb_state, gb_state->regs.pc);
+  uint16_t val = gb_read_mem16(gb_state, gb_state->regs.pc);
   gb_state->regs.pc += 2;
   return val;
 }
@@ -497,7 +497,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_IMM16_MEM(dest) && IS_R16(src)) {
     SPEND_MCYCLES(5);
-    write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
+    gb_write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
     return;
   }
   if (IS_IMM16_MEM(dest) && IS_R8(src)) {
@@ -1413,7 +1413,7 @@ void test_fetch() {
   gb_state.regs.pc = 0x0100;
 
   gb_write_mem8(&gb_state, 0x100, 0b00100001);
-  write_mem16(&gb_state, 0x101, 452);
+  gb_write_mem16(&gb_state, 0x101, 452);
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == R16);
@@ -1438,7 +1438,7 @@ void test_fetch() {
   GB_assert(inst.p2.r16 == R16_DE);
 
   gb_write_mem8(&gb_state, 0x105, 0b00001000);
-  write_mem16(&gb_state, 0x106, 10403);
+  gb_write_mem16(&gb_state, 0x106, 10403);
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == IMM16_MEM);
@@ -1513,7 +1513,7 @@ void test_execute_load() {
   set_r16(&gb_state, R16_SP, 0xD123);
   execute(&gb_state, inst);
   GB_assert(gb_state.regs.sp == 0xD123);
-  GB_assert(read_mem16(&gb_state, 0xC010) == 0xD123);
+  GB_assert(gb_read_mem16(&gb_state, 0xC010) == 0xD123);
 }
 
 void test_stack_ops() {
@@ -1526,7 +1526,7 @@ void test_stack_ops() {
   // like 16 bit values anywhere else in memory.
   assert_eq(gb_read_mem8(&gb_state, 0xDFFF), 0x12);
   assert_eq(gb_read_mem8(&gb_state, 0xDFFE), 0x34);
-  assert_eq(read_mem16(&gb_state, 0xDFFE), 0x1234);
+  assert_eq(gb_read_mem16(&gb_state, 0xDFFE), 0x1234);
 
   assert_eq(pop16(&gb_state), 0x1234);
 }
@@ -1539,7 +1539,7 @@ void test_execute_call_ret() {
   execute(&gb_state, inst_t{.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
   assert_eq(gb_state.regs.sp, 0xDFFE);
   assert_eq(gb_state.regs.pc, 0x0210);
-  assert_eq(read_mem16(&gb_state, 0xDFFE), 0x0190);
+  assert_eq(gb_read_mem16(&gb_state, 0xDFFE), 0x0190);
   execute(&gb_state, inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
   assert_eq(gb_state.regs.sp, 0xE000);
   assert_eq(gb_state.regs.pc, 0x0190);
