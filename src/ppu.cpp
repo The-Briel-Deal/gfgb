@@ -15,11 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct gb_imgui_state {
-  uint16_t mem_inspect_addr;
-  uint8_t  mem_inspect_read_val;
-};
-
 bool gb_video_init(struct gb_state *gb_state) {
   SDL_Environment *env                  = SDL_GetEnvironment();
   const char      *ppu_log_priority_str = SDL_GetEnvironmentVariable(env, "GB_LOG_PPU_PRIORITY");
@@ -100,10 +95,6 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->sdl_window, gb_state->sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->sdl_renderer);
 
-  // Setup my imgui specific state
-  gb_state->imgui_state = (gb_imgui_state_t *)GB_malloc(sizeof(*gb_state->imgui_state));
-  GB_memset(gb_state->imgui_state, '\0', sizeof(*gb_state->imgui_state));
-
   return true;
 }
 
@@ -120,8 +111,6 @@ void gb_video_free(struct gb_state *gb_state) {
   ImGui_ImplSDL3_Shutdown();
   ImGui::DestroyContext();
 
-  GB_free(gb_state->imgui_state);
-  gb_state->imgui_state = NULL;
   SDL_DestroyPalette(gb_state->sdl_bg_palette);
   gb_state->sdl_bg_palette = NULL;
   SDL_DestroyPalette(gb_state->sdl_bg_trans0_palette);
@@ -570,7 +559,7 @@ void gb_draw(struct gb_state *gb_state) {
 }
 
 void gb_imgui_render(struct gb_state *gb_state) {
-  gb_imgui_state_t *imgui_state = gb_state->imgui_state;
+  gb_imgui_state_t *imgui_state = &gb_state->imgui_state;
   ImGuiIO          &io          = ImGui::GetIO();
   (void)io;
 

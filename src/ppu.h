@@ -10,7 +10,10 @@ extern "C" {
 
 struct gb_state;
 
-struct gb_imgui_state; // Opaque struct since we might need to use cpp types on this struct.
+struct gb_imgui_state {
+  uint16_t mem_inspect_addr;
+  uint8_t  mem_inspect_read_val;
+};
 typedef struct gb_imgui_state gb_imgui_state_t;
 
 bool                          gb_video_init(struct gb_state *gb_state);

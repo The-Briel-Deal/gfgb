@@ -324,7 +324,7 @@ struct gb_state {
   bool              dbg_hide_win;
   bool              dbg_hide_objs;
 
-  gb_imgui_state_t *imgui_state;
+  gb_imgui_state_t imgui_state;
 };
 typedef struct gb_state gb_state_t;
 
