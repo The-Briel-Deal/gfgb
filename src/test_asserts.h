@@ -5,7 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef __cplusplus
 #include <type_traits>
+#endif
 
 #define LOC __FILE__, __LINE__, __func__
 
