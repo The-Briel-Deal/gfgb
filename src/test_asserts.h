@@ -8,10 +8,16 @@
 
 #define LOC __FILE__, __LINE__, __func__
 
-// TODO: Finish this assert_eq template for when tests are running from a cpp file
-template <typename T1, typename T2> void assert_eq(T1 v1, T2 v2) {
-}
 #ifdef __cplusplus
+template <typename T1, typename T2> void assert_eq(T1 v1, T2 v2) {
+  if constexpr (std::is_same_v<T1, uint8_t>) return assert_uint8_eq_hex(LOC, v1, (T1)v2);
+  if constexpr (std::is_same_v<T1, uint16_t>) return assert_uint16_eq_hex(LOC, v1, (T1)v2);
+  if constexpr (std::is_same_v<T1, uint32_t>) return assert_int_eq(LOC, v1, (T1)v2);
+  if constexpr (std::is_same_v<T1, int>) return assert_int_eq(LOC, v1, (T1)v2);
+  if constexpr (std::is_same_v<T1, char *>) return assert_str_eq(LOC, v1, (T1)v2);
+
+  static_assert(false, "Unsupported type for assert_eq");
+}
 
 #else
 #define assert_eq(v1, v2)                                                                                              \
