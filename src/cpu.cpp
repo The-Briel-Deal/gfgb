@@ -47,7 +47,7 @@ typedef uint8_t gb_flag_reg_bits_t;
 #define SPEND_MCYCLES(n) gb_state->m_cycles_elapsed += n
 
 static inline uint8_t next8(struct gb_state *gb_state) {
-  uint8_t val = read_mem8(gb_state, gb_state->regs.pc);
+  uint8_t val = gb_read_mem8(gb_state, gb_state->regs.pc);
   gb_state->regs.pc += 1;
   // unmap the bootrom once the PC makes it passed the end
   if (gb_state->bootrom_mapped && gb_state->regs.pc >= 0x0100) {
@@ -71,7 +71,7 @@ uint8_t get_r8(struct gb_state *gb_state, r8_t r8) {
   case R8_E: return r->e;
   case R8_H: return r->h;
   case R8_L: return r->l;
-  case R8_HL_DREF: return read_mem8(gb_state, COMBINED_REG((*r), h, l));
+  case R8_HL_DREF: return gb_read_mem8(gb_state, COMBINED_REG((*r), h, l));
   case R8_A: return r->a;
   default: abort();
   }
@@ -86,7 +86,7 @@ void set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val) {
   case R8_E: r->e = val; return;
   case R8_H: r->h = val; return;
   case R8_L: r->l = val; return;
-  case R8_HL_DREF: write_mem8(gb_state, COMBINED_REG((*r), h, l), val); return;
+  case R8_HL_DREF: gb_write_mem8(gb_state, COMBINED_REG((*r), h, l), val); return;
   case R8_A: r->a = val; return;
   default: abort();
   }
@@ -133,7 +133,7 @@ void set_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem, uint8_t val) {
     break;
   default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
-  write_mem8(gb_state, mem_offset, val);
+  gb_write_mem8(gb_state, mem_offset, val);
 }
 
 uint16_t get_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem) {
@@ -471,7 +471,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_R16_MEM(dest) && IS_R8(src)) {
     SPEND_MCYCLES(2);
-    write_mem8(gb_state, get_r16_mem(gb_state, dest.r16_mem), get_r8(gb_state, src.r8));
+    gb_write_mem8(gb_state, get_r16_mem(gb_state, dest.r16_mem), get_r8(gb_state, src.r8));
     return;
   }
   if (IS_R8(dest)) {
@@ -479,10 +479,10 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
     if (dest.r8 == R8_HL_DREF) SPEND_MCYCLES(1);
     if (IS_R16_MEM(src)) {
       SPEND_MCYCLES(2);
-      src_val = read_mem8(gb_state, get_r16_mem(gb_state, src.r16_mem));
+      src_val = gb_read_mem8(gb_state, get_r16_mem(gb_state, src.r16_mem));
     } else if (IS_IMM16_MEM(src)) {
       SPEND_MCYCLES(4);
-      src_val = read_mem8(gb_state, src.imm16);
+      src_val = gb_read_mem8(gb_state, src.imm16);
     } else if (IS_IMM8(src)) {
       SPEND_MCYCLES(2);
       src_val = src.imm8;
@@ -502,7 +502,7 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_IMM16_MEM(dest) && IS_R8(src)) {
     SPEND_MCYCLES(4);
-    write_mem8(gb_state, dest.imm16, get_r8(gb_state, src.r8));
+    gb_write_mem8(gb_state, dest.imm16, get_r8(gb_state, src.r8));
     return;
   }
   if (IS_R16(dest) && IS_SP_IMM8(src)) {
@@ -537,12 +537,12 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   if (src.type == R8 && src.r8 == R8_A) {
     if (dest.type == IMM8_HMEM) {
       SPEND_MCYCLES(3);
-      write_mem8(gb_state, 0xFF00 + dest.imm8, r->a);
+      gb_write_mem8(gb_state, 0xFF00 + dest.imm8, r->a);
       return;
     }
     if (dest.type == R8 && dest.r8 == R8_C) {
       SPEND_MCYCLES(2);
-      write_mem8(gb_state, 0xFF00 + r->c, r->a);
+      gb_write_mem8(gb_state, 0xFF00 + r->c, r->a);
       return;
     }
     unreachable();
@@ -550,12 +550,12 @@ static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   if (dest.type == R8 && dest.r8 == R8_A) {
     if (src.type == IMM8_HMEM) {
       SPEND_MCYCLES(3);
-      set_r8(gb_state, R8_A, read_mem8(gb_state, 0xFF00 + src.imm8));
+      set_r8(gb_state, R8_A, gb_read_mem8(gb_state, 0xFF00 + src.imm8));
       return;
     }
     if (src.type == R8 && src.r8 == R8_C) {
       SPEND_MCYCLES(2);
-      set_r8(gb_state, R8_A, read_mem8(gb_state, 0xFF00 + r->c));
+      set_r8(gb_state, R8_A, gb_read_mem8(gb_state, 0xFF00 + r->c));
       return;
     }
     unreachable();
@@ -580,8 +580,8 @@ static void ex_halt(struct gb_state *gb_state, struct inst inst) {
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
-  write_mem8(gb_state, --gb_state->regs.sp, (val & 0xFF00) >> 8);
-  write_mem8(gb_state, --gb_state->regs.sp, (val & 0x00FF) >> 0);
+  gb_write_mem8(gb_state, --gb_state->regs.sp, (val & 0xFF00) >> 8);
+  gb_write_mem8(gb_state, --gb_state->regs.sp, (val & 0x00FF) >> 0);
 }
 static void ex_push(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == PUSH);
@@ -595,8 +595,8 @@ static uint16_t pop16(struct gb_state *gb_state) {
   uint16_t val = 0;
 
   // little endian
-  val |= read_mem8(gb_state, gb_state->regs.sp++) << 0;
-  val |= read_mem8(gb_state, gb_state->regs.sp++) << 8;
+  val |= gb_read_mem8(gb_state, gb_state->regs.sp++) << 0;
+  val |= gb_read_mem8(gb_state, gb_state->regs.sp++) << 8;
   return val;
 }
 static void ex_pop(struct gb_state *gb_state, struct inst inst) {
@@ -1412,7 +1412,7 @@ void test_fetch() {
   gb_state_init(&gb_state);
   gb_state.regs.pc = 0x0100;
 
-  write_mem8(&gb_state, 0x100, 0b00100001);
+  gb_write_mem8(&gb_state, 0x100, 0b00100001);
   write_mem16(&gb_state, 0x101, 452);
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
@@ -1421,7 +1421,7 @@ void test_fetch() {
   GB_assert(inst.p2.type == IMM16);
   GB_assert(inst.p2.imm16 == 452);
 
-  write_mem8(&gb_state, 0x103, 0b00010010);
+  gb_write_mem8(&gb_state, 0x103, 0b00010010);
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == R16_MEM);
@@ -1429,7 +1429,7 @@ void test_fetch() {
   GB_assert(inst.p2.type == R8);
   GB_assert(inst.p2.r8 == R8_A);
 
-  write_mem8(&gb_state, 0x104, 0b00011010);
+  gb_write_mem8(&gb_state, 0x104, 0b00011010);
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == R8);
@@ -1437,7 +1437,7 @@ void test_fetch() {
   GB_assert(inst.p2.type == R16_MEM);
   GB_assert(inst.p2.r16 == R16_DE);
 
-  write_mem8(&gb_state, 0x105, 0b00001000);
+  gb_write_mem8(&gb_state, 0x105, 0b00001000);
   write_mem16(&gb_state, 0x106, 10403);
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
@@ -1470,7 +1470,7 @@ void test_execute_load() {
   set_r16(&gb_state, R16_BC, 0xC000);
   gb_state.regs.a = 42;
   execute(&gb_state, inst);
-  GB_assert(read_mem8(&gb_state, 0xC000) == 42);
+  GB_assert(gb_read_mem8(&gb_state, 0xC000) == 42);
 
   // Load contents of addr in reg BC into reg A
   inst = inst_t{
@@ -1478,7 +1478,7 @@ void test_execute_load() {
       .p1   = R8_PARAM(R8_A),
       .p2   = R16_MEM_PARAM(R16_MEM_BC),
   };
-  write_mem8(&gb_state, 0xC000, 134);
+  gb_write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
   GB_assert(gb_state.regs.a == 134);
 
@@ -1489,7 +1489,7 @@ void test_execute_load() {
       .p2   = R16_MEM_PARAM(R16_MEM_HLI),
   };
   set_r16(&gb_state, R16_HL, 0xC000);
-  write_mem8(&gb_state, 0xC000, 134);
+  gb_write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
   GB_assert(get_r16(&gb_state, R16_HL) == 0xC001);
   GB_assert(gb_state.regs.a == 134);
@@ -1501,7 +1501,7 @@ void test_execute_load() {
   };
   set_r8(&gb_state, R8_A, 21);
   execute(&gb_state, inst);
-  GB_assert(read_mem8(&gb_state, 0xC001) == 21);
+  GB_assert(gb_read_mem8(&gb_state, 0xC001) == 21);
   GB_assert(get_r16(&gb_state, R16_HL) == 0xC000);
 
   // Load stack pointer into addr at IMM16
@@ -1524,8 +1524,8 @@ void test_stack_ops() {
   assert_eq(gb_state.regs.sp, 0xDFFE);
   // 16 bit vals on the stack should be little endian so that they can be read
   // like 16 bit values anywhere else in memory.
-  assert_eq(read_mem8(&gb_state, 0xDFFF), 0x12);
-  assert_eq(read_mem8(&gb_state, 0xDFFE), 0x34);
+  assert_eq(gb_read_mem8(&gb_state, 0xDFFF), 0x12);
+  assert_eq(gb_read_mem8(&gb_state, 0xDFFE), 0x34);
   assert_eq(read_mem16(&gb_state, 0xDFFE), 0x1234);
 
   assert_eq(pop16(&gb_state), 0x1234);

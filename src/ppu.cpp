@@ -322,7 +322,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   for (int i = 0; i < (32 * 32); i++) {
     const int      x               = i % 32;
     const int      y               = i / 32;
-    const uint8_t  tile_data_index = read_mem8(gb_state, bg_tile_map_start + i);
+    const uint8_t  tile_data_index = gb_read_mem8(gb_state, bg_tile_map_start + i);
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
@@ -369,7 +369,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   for (int i = 0; i < 32; i++) {
     const int      x               = i;
     const int      y               = gb_state->win_line_counter / 8;
-    const uint8_t  tile_data_index = read_mem8(gb_state, win_tile_map_start + x + (y * 32));
+    const uint8_t  tile_data_index = gb_read_mem8(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
     uint8_t display_x = (x * 8) + gb_state->regs.io.wx - 7;
@@ -582,7 +582,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
     if (ImGui::CollapsingHeader("Inspect Memory")) {
       ImGui::InputScalar("Addr", ImGuiDataType_U16, &imgui_state->mem_inspect_addr, NULL, NULL, "%.4x");
       if (ImGui::Button("Read")) {
-        imgui_state->mem_inspect_read_val = read_mem8(gb_state, imgui_state->mem_inspect_addr);
+        imgui_state->mem_inspect_read_val = gb_read_mem8(gb_state, imgui_state->mem_inspect_addr);
       }
       ImGui::SameLine();
       ImGui::Button("Write");

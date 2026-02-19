@@ -319,10 +319,10 @@ struct gb_state {
   bool     err;
 
   // runtime debug toggles
-  bool              dbg_clear_composite;
-  bool              dbg_hide_bg;
-  bool              dbg_hide_win;
-  bool              dbg_hide_objs;
+  bool             dbg_clear_composite;
+  bool             dbg_hide_bg;
+  bool             dbg_hide_win;
+  bool             dbg_hide_objs;
 
   gb_imgui_state_t imgui_state;
 };
@@ -399,8 +399,8 @@ void             update_timers(struct gb_state *gb_state);
 
 void            *unmap_address(struct gb_state *gb_state, uint16_t addr);
 
-uint8_t          read_mem8(struct gb_state *gb_state, uint16_t addr);
-void             write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val);
+uint8_t          gb_read_mem8(struct gb_state *gb_state, uint16_t addr);
+void             gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val);
 
 uint16_t         read_mem16(struct gb_state *gb_state, uint16_t addr);
 void             write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val);

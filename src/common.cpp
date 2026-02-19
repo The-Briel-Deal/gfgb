@@ -151,8 +151,7 @@ not_implemented:
   return NULL;
 }
 
-// TODO: This and write_mem8() should probably get the gb_ prefix
-uint8_t read_mem8(struct gb_state *gb_state, uint16_t addr) {
+uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr;
   if (gb_state->use_flat_ram) {
     return gb_state->flat_ram[addr];
@@ -235,7 +234,7 @@ void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
   }
 }
 
-void write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
+void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->use_flat_ram) {
     gb_state->flat_ram[addr] = val;
   } else {
