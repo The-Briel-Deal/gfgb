@@ -61,7 +61,7 @@ gfgb_py_ext = py.extension_module(
 
 exe = executable(
   'gb_emu',
-  [sources, 'src/main.c'],
+  [sources, 'src/main.cpp'],
   include_directories : include_directories(['src/']),
   dependencies : [sdl3_deps, global_deps],
   install : true,

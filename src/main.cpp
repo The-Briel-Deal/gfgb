@@ -83,7 +83,7 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
     if (memcmp(&bootrom_name[bootrom_name_len - 3], ".gb", 3) == 0) {
       // I need a string that is two more chars long since `.sym` is a character longer than `.gb`, and we also need
       // room for a null term.
-      char *bootrom_sym_name = malloc(bootrom_name_len + 2);
+      char *bootrom_sym_name = (char *)malloc(bootrom_name_len + 2);
 
       strcpy(bootrom_sym_name, bootrom_name);
 
@@ -137,14 +137,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     case 'e':
       if (run_mode != UNSET) {
         fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
-        return 1;
+        return SDL_APP_FAILURE;
       }
       run_mode = EXECUTE;
       break;
     case 'd':
       if (run_mode != UNSET) {
         fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
-        return 1;
+        return SDL_APP_FAILURE;
       }
       run_mode = DISASSEMBLE;
       break;
@@ -175,7 +175,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
     *appstate                 = gb_state;
     GB_assert(appstate != NULL);
-    gb_state_init(*appstate);
+    gb_state_init((gb_state_t *)*appstate);
     if (!gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename)) return SDL_APP_FAILURE;
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
@@ -242,7 +242,7 @@ void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event)
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
-  struct gb_state *gb_state = appstate;
+  gb_state_t *gb_state = (gb_state_t *)appstate;
 
   // don't let ImGui swallow quit events
   if (event->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
@@ -260,7 +260,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
-char *get_inst_symbol(struct gb_state *gb_state) {
+const char *get_inst_symbol(struct gb_state *gb_state) {
   // This works because we know the symbols are sorted.
   uint16_t pc = gb_state->regs.pc;
   for (int i = 0; i < gb_state->syms.len; i++) {
@@ -279,7 +279,7 @@ const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   TracyCFrameMarkStart(TracyFrame_SDL_AppIterate);
-  struct gb_state *gb_state = appstate;
+  gb_state_t *gb_state = (gb_state_t *)appstate;
 
   for (int i = 0; i < 100; i++) {
     TracyCZoneN(ctx, "Fetch and Execute", true);
@@ -339,7 +339,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
-  struct gb_state *gb_state = appstate;
+  gb_state_t *gb_state = (gb_state_t *)appstate;
   (void)result;
   // This is still called when disassembling where there is no gb_state passed
   // to SDL.
