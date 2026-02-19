@@ -215,24 +215,6 @@ void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event)
   case SDL_EVENT_KEY_UP: break;
   case SDL_EVENT_KEY_DOWN: {
     switch (event->key) {
-    case SDLK_1: {
-#ifndef NDEBUG
-      gb_state->dbg_hide_bg = !gb_state->dbg_hide_bg;
-#endif
-      break;
-    }
-    case SDLK_2: {
-#ifndef NDEBUG
-      gb_state->dbg_hide_win = !gb_state->dbg_hide_win;
-#endif
-      break;
-    }
-    case SDLK_3: {
-#ifndef NDEBUG
-      gb_state->dbg_hide_objs = !gb_state->dbg_hide_objs;
-#endif
-      break;
-    }
     }
     break;
   }
