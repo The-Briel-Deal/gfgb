@@ -1448,12 +1448,12 @@ void test_fetch() {
 }
 
 void test_execute_load() {
-  struct gb_state gb_state;
+  gb_state_t gb_state;
   gb_state_init(&gb_state);
-  struct inst inst;
+  inst_t inst;
 
   // Load IMM16 into reg BC
-  inst = (struct inst){
+  inst = inst_t{
       .type = LD,
       .p1   = R16_PARAM(R16_BC),
       .p2   = IMM16_PARAM(452),
@@ -1462,7 +1462,7 @@ void test_execute_load() {
   GB_assert(get_r16(&gb_state, R16_BC) == 452);
 
   // Load reg A into addr in reg BC
-  inst = (struct inst){
+  inst = inst_t{
       .type = LD,
       .p1   = R16_MEM_PARAM(R16_MEM_BC),
       .p2   = R8_PARAM(R8_A),
@@ -1473,7 +1473,7 @@ void test_execute_load() {
   GB_assert(read_mem8(&gb_state, 0xC000) == 42);
 
   // Load contents of addr in reg BC into reg A
-  inst = (struct inst){
+  inst = inst_t{
       .type = LD,
       .p1   = R8_PARAM(R8_A),
       .p2   = R16_MEM_PARAM(R16_MEM_BC),
@@ -1483,7 +1483,7 @@ void test_execute_load() {
   GB_assert(gb_state.regs.a == 134);
 
   // Load contents of addr in reg HL into reg A and increment the pointer.
-  inst = (struct inst){
+  inst = inst_t{
       .type = LD,
       .p1   = R8_PARAM(R8_A),
       .p2   = R16_MEM_PARAM(R16_MEM_HLI),
@@ -1494,7 +1494,7 @@ void test_execute_load() {
   GB_assert(get_r16(&gb_state, R16_HL) == 0xC001);
   GB_assert(gb_state.regs.a == 134);
   // Then load contents of reg A into the addr in reg HL.
-  inst = (struct inst){
+  inst = inst_t{
       .type = LD,
       .p1   = R16_MEM_PARAM(R16_MEM_HLD),
       .p2   = R8_PARAM(R8_A),
@@ -1505,7 +1505,7 @@ void test_execute_load() {
   GB_assert(get_r16(&gb_state, R16_HL) == 0xC000);
 
   // Load stack pointer into addr at IMM16
-  inst = (struct inst){
+  inst = inst_t{
       .type = LD,
       .p1   = IMM16_MEM_PARAM(0xC010),
       .p2   = R16_PARAM(R16_SP),
@@ -1517,7 +1517,7 @@ void test_execute_load() {
 }
 
 void test_stack_ops() {
-  struct gb_state gb_state;
+  gb_state_t gb_state;
   gb_state_init(&gb_state);
 
   push16(&gb_state, 0x1234);
@@ -1532,15 +1532,15 @@ void test_stack_ops() {
 }
 
 void test_execute_call_ret() {
-  struct gb_state gb_state;
+  gb_state_t gb_state;
   gb_state_init(&gb_state);
   assert_eq(gb_state.regs.sp, 0xE000);
   gb_state.regs.pc = 0x0190;
-  execute(&gb_state, (struct inst){.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
+  execute(&gb_state, inst_t{.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
   assert_eq(gb_state.regs.sp, 0xDFFE);
   assert_eq(gb_state.regs.pc, 0x0210);
   assert_eq(read_mem16(&gb_state, 0xDFFE), 0x0190);
-  execute(&gb_state, (struct inst){.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
+  execute(&gb_state, inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
   assert_eq(gb_state.regs.sp, 0xE000);
   assert_eq(gb_state.regs.pc, 0x0190);
 }
