@@ -593,6 +593,16 @@ void gb_imgui_render(struct gb_state *gb_state) {
                                                imgui_state->mem_inspect_addr, imgui_state->mem_inspect_read_val);
       ImGui::TextUnformatted(formatted_text.c_str());
     }
+    if (ImGui::CollapsingHeader("Joy-Pad State")) {
+      ImGui::Value("Up", gb_state->joy_pad_state.dpad_up);
+      ImGui::Value("Down", gb_state->joy_pad_state.dpad_down);
+      ImGui::Value("Left", gb_state->joy_pad_state.dpad_left);
+      ImGui::Value("Right", gb_state->joy_pad_state.dpad_right);
+      ImGui::Value("A Button", gb_state->joy_pad_state.button_a);
+      ImGui::Value("B Button", gb_state->joy_pad_state.button_b);
+      ImGui::Value("Start Button", gb_state->joy_pad_state.button_start);
+      ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
+    }
 
     ImGui::End();
     ImGui::Render();

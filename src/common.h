@@ -328,11 +328,11 @@ struct gb_state {
   bool first_oam_scan_after_enable;
 
   // used for updating the timer io regs.
-  uint32_t                  last_timer_sync_m_cycles;
+  uint32_t                    last_timer_sync_m_cycles;
 
-  gb_internal_joy_pad_state joy_pad_state;
+  gb_internal_joy_pad_state_t joy_pad_state;
 
-  bool                      err;
+  bool                        err;
 
   // runtime debug toggles
   bool             dbg_clear_composite;
