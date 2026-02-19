@@ -4,6 +4,8 @@
 #include "ppu.h"
 #include "tracy/TracyC.h"
 
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_keycode.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -212,9 +214,19 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event) {
   (void)gb_state;
   switch (event->type) {
-  case SDL_EVENT_KEY_UP: break;
+  case SDL_EVENT_KEY_UP:
   case SDL_EVENT_KEY_DOWN: {
+    // TODO: I should expose this as user-changable conf
     switch (event->key) {
+    case SDLK_W: gb_state->joy_pad_state.dpad_up = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_A: gb_state->joy_pad_state.dpad_left = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_S: gb_state->joy_pad_state.dpad_down = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_D: gb_state->joy_pad_state.dpad_right = (event->type == SDL_EVENT_KEY_DOWN); break;
+
+    case SDLK_U: gb_state->joy_pad_state.button_a = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_I: gb_state->joy_pad_state.button_b = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_O: gb_state->joy_pad_state.button_start = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_P: gb_state->joy_pad_state.button_select = (event->type == SDL_EVENT_KEY_DOWN); break;
     }
     break;
   }

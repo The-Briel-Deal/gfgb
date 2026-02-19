@@ -184,6 +184,20 @@ struct gb_ram_banks {
   uint8_t oam[4 * 40];
 };
 
+// true if pressed down
+struct gb_internal_joy_pad_state {
+  bool dpad_right;
+  bool dpad_left;
+  bool dpad_up;
+  bool dpad_down;
+
+  bool button_a;
+  bool button_b;
+  bool button_select;
+  bool button_start;
+};
+typedef struct gb_internal_joy_pad_state gb_internal_joy_pad_state_t;
+
 struct regs {
   uint8_t  a;
   uint8_t  b;
@@ -314,9 +328,11 @@ struct gb_state {
   bool first_oam_scan_after_enable;
 
   // used for updating the timer io regs.
-  uint32_t last_timer_sync_m_cycles;
+  uint32_t                  last_timer_sync_m_cycles;
 
-  bool     err;
+  gb_internal_joy_pad_state joy_pad_state;
+
+  bool                      err;
 
   // runtime debug toggles
   bool             dbg_clear_composite;
