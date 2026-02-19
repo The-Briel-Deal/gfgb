@@ -26,7 +26,7 @@ tracy_dep = dependency(
 global_deps = [tracy_dep]
 
 sources = [
-  'src/disassemble.c',
+  'src/disassemble.cpp',
   'src/common.c',
   'src/cpu.cpp',
   'src/ppu.cpp',
