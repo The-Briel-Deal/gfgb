@@ -623,6 +623,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("B Button", gb_state->joy_pad_state.button_b);
       ImGui::Value("Start Button", gb_state->joy_pad_state.button_start);
       ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
+
+      std::string formatted_text = std::format("Joy-Pad IO Reg (0xFF00) Value is:\n"
+                                               "  Hex: {0:#04x}\n"
+                                               "  Dec: {0:d}\n"
+                                               "  Bin: {0:#010b}",
+                                               gb_state->regs.io.joyp);
+      ImGui::TextUnformatted(formatted_text.c_str());
     }
 
     ImGui::End();
