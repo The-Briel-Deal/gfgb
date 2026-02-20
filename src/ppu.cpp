@@ -558,6 +558,15 @@ void gb_draw(struct gb_state *gb_state) {
   TracyCZoneEnd(render_objs_ctx);
 }
 
+static void gb_imgui_show_mem_val(struct gb_state *gb_state, const char *name, const uint16_t addr) {
+  std::string formatted_text = std::format("{0:s} ({1:#04x}) Value is:\n"
+                                           "  Hex: {2:#04x}\n"
+                                           "  Dec: {2:d}\n"
+                                           "  Bin: {2:#010b}",
+                                           name, addr, gb_read_mem8(gb_state, addr));
+  ImGui::TextUnformatted(formatted_text.c_str());
+}
+
 void gb_imgui_render(struct gb_state *gb_state) {
   gb_imgui_state_t *imgui_state = &gb_state->imgui_state;
   ImGuiIO          &io          = ImGui::GetIO();
@@ -624,12 +633,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Start Button", gb_state->joy_pad_state.button_start);
       ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
 
-      std::string formatted_text = std::format("Joy-Pad IO Reg (0xFF00) Value is:\n"
-                                               "  Hex: {0:#04x}\n"
-                                               "  Dec: {0:d}\n"
-                                               "  Bin: {0:#010b}",
-                                               gb_state->regs.io.joyp);
-      ImGui::TextUnformatted(formatted_text.c_str());
+      gb_imgui_show_mem_val(gb_state, "Joy-Pad IO Reg", IO_JOYP);
     }
 
     ImGui::End();
