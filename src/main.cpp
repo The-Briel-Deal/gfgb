@@ -288,6 +288,8 @@ static void       gb_update_io_joyp(gb_state_t *gb_state) {
     if (gb_state->joy_pad_state.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
   }
 
+  // only keep bits 5 and 4 (select buttons and select d-pad)
+  *io_joyp &= 0x30;
   *io_joyp |= new_lower_nibble;
 }
 
