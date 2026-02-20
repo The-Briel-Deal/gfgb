@@ -396,8 +396,23 @@ enum io_reg_addr {
   LIST_OF_IO_REGS
 #undef X
 };
+typedef uint16_t    io_reg_addr_t;
 
-typedef uint16_t io_reg_addr_t;
+const io_reg_addr_t io_regs[] = {
+#define X(name, _) name,
+    LIST_OF_IO_REGS
+#undef X
+};
+
+inline static const char *get_io_reg_name(io_reg_addr_t io_reg) {
+  switch (io_reg) {
+#define X(name, _)                                                                                                     \
+  case name: return #name;
+    LIST_OF_IO_REGS
+#undef X
+  default: unreachable();
+  }
+}
 
 enum joy_pad_io_reg_bits : uint8_t {
   JOYP_SELECT_D_PAD = 1 << 4,
