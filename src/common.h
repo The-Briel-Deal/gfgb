@@ -344,51 +344,57 @@ struct gb_state {
 };
 typedef struct gb_state gb_state_t;
 
+// See the following wikipedia page on X Macro's if you want to understand this idiom. I don't love doing this but I
+// need a good way to display all IO registers in the ImGui debug UI, and I don't want to have to create a seperate
+// lookup table for io reg names, as well as an of all reg addrs since the addresses aren't sequential.
+//
+// https://en.wikipedia.org/wiki/X_macro
+#define LIST_OF_IO_REGS                                                                                                \
+  X(IO_JOYP, 0xFF00)                                                                                                   \
+  X(IO_SB, 0xFF01)                                                                                                     \
+  X(IO_SC, 0xFF02)                                                                                                     \
+  X(IO_TIMA, 0xFF05)                                                                                                   \
+  X(IO_TMA, 0xFF06)                                                                                                    \
+  X(IO_TAC, 0xFF07)                                                                                                    \
+  X(IO_NR10, 0xFF10)                                                                                                   \
+  X(IO_NR11, 0xFF11)                                                                                                   \
+  X(IO_NR12, 0xFF12)                                                                                                   \
+  X(IO_NR13, 0xFF13)                                                                                                   \
+  X(IO_NR14, 0xFF14)                                                                                                   \
+  X(IO_NR21, 0xFF16)                                                                                                   \
+  X(IO_NR22, 0xFF17)                                                                                                   \
+  X(IO_NR23, 0xFF18)                                                                                                   \
+  X(IO_NR24, 0xFF19)                                                                                                   \
+  X(IO_NR30, 0xFF1A)                                                                                                   \
+  X(IO_NR31, 0xFF1B)                                                                                                   \
+  X(IO_NR32, 0xFF1C)                                                                                                   \
+  X(IO_NR33, 0xFF1D)                                                                                                   \
+  X(IO_NR34, 0xFF1E)                                                                                                   \
+  X(IO_NR41, 0xFF20)                                                                                                   \
+  X(IO_NR42, 0xFF21)                                                                                                   \
+  X(IO_NR43, 0xFF22)                                                                                                   \
+  X(IO_NR44, 0xFF23)                                                                                                   \
+  X(IO_NR50, 0xFF24)                                                                                                   \
+  X(IO_NR51, 0xFF25)                                                                                                   \
+  X(IO_IF, 0xFF0F)                                                                                                     \
+  X(IO_IE, 0xFFFF)                                                                                                     \
+  X(IO_SND_ON, 0xFF26)                                                                                                 \
+  X(IO_LCDC, 0xFF40)                                                                                                   \
+  X(IO_SCY, 0xFF42)                                                                                                    \
+  X(IO_SCX, 0xFF43)                                                                                                    \
+  X(IO_WY, 0xFF4A)                                                                                                     \
+  X(IO_WX, 0xFF4B)                                                                                                     \
+  X(IO_LY, 0xFF44)                                                                                                     \
+  X(IO_LYC, 0xFF45)                                                                                                    \
+  X(IO_STAT, 0xFF41)                                                                                                   \
+  X(IO_BGP, 0xFF47)                                                                                                    \
+  X(IO_OBP0, 0xFF48)                                                                                                   \
+  X(IO_OBP1, 0xFF49)
+
 enum io_reg_addr {
-  IO_JOYP   = 0xFF00,
-  IO_SB     = 0xFF01,
-  IO_SC     = 0xFF02,
-  IO_TIMA   = 0xFF05,
-  IO_TMA    = 0xFF06,
-  IO_TAC    = 0xFF07,
-  IO_NR10   = 0xFF10,
-  IO_NR11   = 0xFF11,
-  IO_NR12   = 0xFF12,
-  IO_NR13   = 0xFF13,
-  IO_NR14   = 0xFF14,
-  IO_NR21   = 0xFF16,
-  IO_NR22   = 0xFF17,
-  IO_NR23   = 0xFF18,
-  IO_NR24   = 0xFF19,
-  IO_NR30   = 0xFF1A,
-  IO_NR31   = 0xFF1B,
-  IO_NR32   = 0xFF1C,
-  IO_NR33   = 0xFF1D,
-  IO_NR34   = 0xFF1E,
-  IO_NR41   = 0xFF20,
-  IO_NR42   = 0xFF21,
-  IO_NR43   = 0xFF22,
-  IO_NR44   = 0xFF23,
-  IO_NR50   = 0xFF24,
-  IO_NR51   = 0xFF25,
-  IO_IF     = 0xFF0F,
-  IO_IE     = 0xFFFF,
-  IO_SND_ON = 0xFF26,
-  IO_LCDC   = 0xFF40,
-  IO_SCY    = 0xFF42,
-  IO_SCX    = 0xFF43,
-
-  IO_WY     = 0xFF4A,
-  IO_WX     = 0xFF4B,
-
-  // LCD Status Registers
-  IO_LY   = 0xFF44,
-  IO_LYC  = 0xFF45,
-  IO_STAT = 0xFF41,
-
-  IO_BGP  = 0xFF47,
-  IO_OBP0 = 0xFF48,
-  IO_OBP1 = 0xFF49,
+#define X(name, addr) name = addr,
+  LIST_OF_IO_REGS
+#undef X
 };
 
 typedef uint16_t io_reg_addr_t;
