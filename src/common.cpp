@@ -67,7 +67,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   GB_assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
   case IO_JOYP: return &gb_state->regs.io.joyp;
-  case IO_SB: NOT_IMPLEMENTED("Actual IO_SERIAL_TRANSFER reg not implemented.");
+  case IO_SB: return &gb_state->regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
   case IO_SC: return &gb_state->regs.io.sc;
   case IO_TIMA: return &gb_state->regs.io.tima;
   case IO_TMA: return &gb_state->regs.io.tma;
@@ -101,9 +101,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_WY: return &gb_state->regs.io.wy;
   case IO_WX: return &gb_state->regs.io.wx;
   case IO_LYC: return &gb_state->regs.io.lyc;
-  case IO_STAT:
-    // The least significant 3 bits are RO. I'll need to figure out a way to make sure those bits aren't written to.
-    return &gb_state->regs.io.stat;
+  case IO_STAT: return &gb_state->regs.io.stat; // TODO: Lower 3 bits need to be RO.
   case IO_BGP: return &gb_state->regs.io.bgp;
   case IO_OBP0: return &gb_state->regs.io.obp0;
   case IO_OBP1: return &gb_state->regs.io.obp1;

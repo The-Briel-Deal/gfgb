@@ -212,7 +212,8 @@ struct regs {
   struct io_regs {
     uint8_t joyp;
 
-    uint8_t sc; // serial control
+    uint8_t sb; // serial transfer data (currently unused)
+    uint8_t sc; // serial transfer control (currently unused)
 
     uint8_t tima; // timer counter
     uint8_t tma;  // timer modulo
