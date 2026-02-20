@@ -404,7 +404,7 @@ const io_reg_addr_t io_regs[] = {
 #undef X
 };
 
-inline static const char *get_io_reg_name(io_reg_addr_t io_reg) {
+inline static const char *gb_io_reg_name(io_reg_addr_t io_reg) {
   switch (io_reg) {
 #define X(name, _)                                                                                                     \
   case name: return #name;
