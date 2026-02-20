@@ -7,12 +7,8 @@ project(
 )
 
 if get_option('enable_logging')
-  add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'c')
+  add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'cpp')
 endif
-if get_option('dbg_green_bg')
-  add_global_arguments('-DGF_DBG_GREEN_BG=1', language : 'c')
-endif
-
 
 imgui_dep = dependency('imgui')
 sdl3_deps = [dependency('sdl3'), imgui_dep]
