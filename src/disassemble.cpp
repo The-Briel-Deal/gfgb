@@ -293,7 +293,7 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
   // symbols where available.
   //
   // If bootrom has syms then they will be used in `disassemble_rom_with_sym()`
-  if (gb_state->bootrom_mapped && !gb_state->bootrom_has_syms) {
+  if (gb_state->regs.io.bank && !gb_state->bootrom_has_syms) {
     fprintf(stream, "BootRom:\n");
     disassemble_bootrom(gb_state, stream);
   }

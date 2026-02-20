@@ -77,9 +77,9 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
     }
     fclose(f);
     GB_assert(bytes_len == 0x0100);
-    gb_state->regs.pc        = 0x0000;
-    gb_state->bootrom_mapped = true;
-    int bootrom_name_len     = strlen(bootrom_name);
+    gb_state->regs.pc      = 0x0000;
+    gb_state->regs.io.bank = true;
+    int bootrom_name_len   = strlen(bootrom_name);
     // TODO: Handle case where bootrom name ends with `.bin`
     // TODO: Identifying if a bootrom sym file is present should be moved to a helper fn
     if (memcmp(&bootrom_name[bootrom_name_len - 3], ".gb", 3) == 0) {
@@ -112,8 +112,8 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       LogDebug("Bootrom filename `%s` does not end with `.gb`", bootrom_name);
     }
   } else {
-    gb_state->regs.pc        = 0x0100;
-    gb_state->bootrom_mapped = false;
+    gb_state->regs.pc      = 0x0100;
+    gb_state->regs.io.bank = false;
   }
   return true;
 }

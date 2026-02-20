@@ -44,8 +44,8 @@ void gb_state_init(struct gb_state *gb_state) {
   // This isn't necessary due to me zeroing state above, but I want to
   // explicitly set this as false in case I ever remove the zeroing as a speed
   // up.
-  gb_state->rom_loaded     = false;
-  gb_state->bootrom_mapped = false;
+  gb_state->rom_loaded   = false;
+  gb_state->regs.io.bank = false;
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
   gb_state->regs.io.lcdc                = 0b10010001;
   gb_state->first_oam_scan_after_enable = true;
@@ -120,7 +120,7 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
 }
 
 void *gb_unmap_address(struct gb_state *gb_state, uint16_t addr) {
-  if (gb_state->bootrom_mapped && (addr < 0x0100)) {
+  if (gb_state->regs.io.bank && (addr < 0x0100)) {
     return &gb_state->ram.bootrom[addr];
   }
   if (addr <= ROM0_END) {
@@ -223,10 +223,17 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     gb_state->regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
     gb_state->regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
     break;
+  case IO_BANK:
+    // if bit 0 is set unmap bootrom. This can't be re-enabled without a restart.
+    if (val & 1) {
+      gb_state->regs.io.bank = false;
+    }
+    break;
   default:
     uint8_t *reg_ptr = get_io_reg(gb_state, reg);
     if (reg_ptr == NULL) {
       LogError("Unknown IO Register at addr = 0x%.4X", reg);
+      break;
     }
     *reg_ptr = val;
     break;

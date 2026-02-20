@@ -49,10 +49,6 @@ typedef uint8_t gb_flag_reg_bits_t;
 static inline uint8_t next8(struct gb_state *gb_state) {
   uint8_t val = gb_read_mem8(gb_state, gb_state->regs.pc);
   gb_state->regs.pc += 1;
-  // unmap the bootrom once the PC makes it passed the end
-  if (gb_state->bootrom_mapped && gb_state->regs.pc >= 0x0100) {
-    gb_state->bootrom_mapped = false;
-  }
   return val;
 }
 

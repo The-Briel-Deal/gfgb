@@ -261,6 +261,7 @@ struct regs {
     uint8_t if_;           // interupt flag
     bool    ime;           // interupt master enable
     bool    set_ime_after; // IME is only set after the following instruction.
+    bool    bank; // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
   } io;
 };
 typedef struct regs regs_t;
@@ -289,7 +290,6 @@ struct gb_state {
   bool    win_line_blank;
 
   bool    halted;
-  bool    bootrom_mapped;
   bool    bootrom_has_syms;
   bool    rom_loaded;
   bool    use_flat_ram;
@@ -390,7 +390,8 @@ typedef struct gb_state gb_state_t;
   X(IO_STAT, 0xFF41)                                                                                                   \
   X(IO_BGP, 0xFF47)                                                                                                    \
   X(IO_OBP0, 0xFF48)                                                                                                   \
-  X(IO_OBP1, 0xFF49)
+  X(IO_OBP1, 0xFF49)                                                                                                   \
+  X(IO_BANK, 0xFF50)
 
 enum io_reg_addr {
 #define X(name, addr) name = addr,
