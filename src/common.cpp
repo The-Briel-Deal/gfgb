@@ -66,6 +66,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
   GB_assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
+  case IO_JOYP: return &gb_state->regs.io.joyp;
   case IO_SB: NOT_IMPLEMENTED("Actual IO_SERIAL_TRANSFER reg not implemented.");
   case IO_SC: return &gb_state->regs.io.sc;
   case IO_TIMA: return &gb_state->regs.io.tima;
