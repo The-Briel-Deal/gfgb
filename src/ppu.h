@@ -12,7 +12,14 @@ struct gb_state;
 
 struct gb_imgui_state {
   uint16_t mem_inspect_addr;
-  uint8_t  mem_inspect_read_val;
+  uint16_t mem_inspect_val;
+
+  // We store the val and addr when read button is pressed so that we can display them to the user ever after the original val changes
+  uint16_t mem_inspect_last_read_addr;
+  uint8_t  mem_inspect_last_read_val;
+
+  uint16_t mem_inspect_last_write_addr;
+  uint8_t  mem_inspect_last_write_val;
 };
 typedef struct gb_imgui_state gb_imgui_state_t;
 
@@ -39,7 +46,6 @@ void gb_read_oam_entries(struct gb_state *gb_state); // on OAM-Scan
 void gb_draw(struct gb_state *gb_state);             // on Drawing-Pixels
 void gb_composite_line(struct gb_state *gb_state);   // on H-Blank
 void gb_present(struct gb_state *gb_state);          // on V-Blank
-                                                     //
 
 #ifdef __cplusplus
 }

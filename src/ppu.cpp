@@ -580,18 +580,39 @@ void gb_imgui_render(struct gb_state *gb_state) {
     }
 
     if (ImGui::CollapsingHeader("Inspect Memory")) {
-      ImGui::InputScalar("Addr", ImGuiDataType_U16, &imgui_state->mem_inspect_addr, NULL, NULL, "%.4x");
+
+      ImGui::TextUnformatted("Addr:");
+      ImGui::SameLine();
+      ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->mem_inspect_addr, NULL, NULL, "%.4x");
+
+      ImGui::TextUnformatted("Val: ");
+      ImGui::SameLine();
+      ImGui::InputScalar("##val", ImGuiDataType_U8, &imgui_state->mem_inspect_val, NULL, NULL, "%.2x");
+
       if (ImGui::Button("Read")) {
-        imgui_state->mem_inspect_read_val = gb_read_mem8(gb_state, imgui_state->mem_inspect_addr);
+        imgui_state->mem_inspect_last_read_addr = imgui_state->mem_inspect_addr;
+        imgui_state->mem_inspect_last_read_val  = gb_read_mem8(gb_state, imgui_state->mem_inspect_addr);
       }
       ImGui::SameLine();
-      ImGui::Button("Write");
-      std::string formatted_text = std::format("Value at {0:#06x} is:\n"
-                                               "  Hex: {1:#04x}\n"
-                                               "  Dec: {1:d}\n"
-                                               "  Bin: {1:#08b}",
-                                               imgui_state->mem_inspect_addr, imgui_state->mem_inspect_read_val);
-      ImGui::TextUnformatted(formatted_text.c_str());
+      if (ImGui::Button("Write")) {
+        imgui_state->mem_inspect_last_write_addr = imgui_state->mem_inspect_addr;
+        imgui_state->mem_inspect_last_write_val  = imgui_state->mem_inspect_val;
+        gb_write_mem8(gb_state, imgui_state->mem_inspect_last_write_addr, imgui_state->mem_inspect_last_write_val);
+      }
+      std::string formatted_read_text =
+          std::format("Value read from addr {0:#06x} is:\n"
+                      "  Hex: {1:#04x}\n"
+                      "  Dec: {1:d}\n"
+                      "  Bin: {1:#010b}",
+                      imgui_state->mem_inspect_last_read_addr, imgui_state->mem_inspect_last_read_val);
+      std::string formatted_write_text =
+          std::format("Value written to addr {0:#06x} is:\n"
+                      "  Hex: {1:#04x}\n"
+                      "  Dec: {1:d}\n"
+                      "  Bin: {1:#010b}",
+                      imgui_state->mem_inspect_last_write_addr, imgui_state->mem_inspect_last_write_val);
+      ImGui::TextUnformatted(formatted_read_text.c_str());
+      ImGui::TextUnformatted(formatted_write_text.c_str());
     }
     if (ImGui::CollapsingHeader("Joy-Pad State")) {
       ImGui::Value("Up", gb_state->joy_pad_state.dpad_up);
