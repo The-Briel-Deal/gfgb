@@ -3,8 +3,14 @@ project(
   'c', 'cpp', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
-  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++23', 'cpp_args=-fpermissive'],
+  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++26', 'cpp_args=-fpermissive'],
 )
+
+current_src_dir = meson.current_source_dir()
+  
+add_global_arguments('-Wno-c23-extensions', language : 'cpp')
+
+add_global_arguments(['--embed-dir=' + (current_src_dir / 'embed')], language : 'cpp')
 
 if get_option('enable_logging')
   add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'cpp')
@@ -90,7 +96,6 @@ disasm_test_exe = executable(
   dependencies : [sdl3_deps, global_deps],
 )
 
-current_src_dir = meson.current_source_dir()
 
 test('cpu_test', cpu_test_exe)
 test('ppu_test', ppu_test_exe)
