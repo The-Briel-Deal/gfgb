@@ -697,7 +697,7 @@ void test_gb_tile_to_8bit_indexed() {
   gb_tile_to_8bit_indexed(gb_tile_in, indexed_8bit_tile_result);
   for (int i = 0; i < 16; i++) {
     if (indexed_8bit_tile_expect[i] != indexed_8bit_tile_result[i]) {
-      LogInfo("byte i=%d of indexed_8bit result (%.8b) is not equal to result (%.8b)\n", i, indexed_8bit_tile_result[i],
+      LogInfo("byte i=%d of indexed_8bit result (%.2x) is not equal to result (%.2x)\n", i, indexed_8bit_tile_result[i],
               indexed_8bit_tile_expect[i]);
       abort();
     }
