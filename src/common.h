@@ -261,7 +261,7 @@ struct regs {
     uint8_t if_;           // interupt flag
     bool    ime;           // interupt master enable
     bool    set_ime_after; // IME is only set after the following instruction.
-    bool    bank; // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
+    bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
   } io;
 };
 typedef struct regs regs_t;
@@ -344,6 +344,9 @@ struct gb_state {
   gb_imgui_state_t imgui_state;
 };
 typedef struct gb_state gb_state_t;
+
+// Call with bootrom_name = NULL to use dmg0 as the default.
+void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name);
 
 // See the following wikipedia page on X Macro's if you want to understand this idiom. I don't love doing this but I
 // need a good way to display all IO registers in the ImGui debug UI, and I don't want to have to create a seperate

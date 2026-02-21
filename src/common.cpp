@@ -1,10 +1,9 @@
 #include "common.h"
 #include "incbin.h"
 
-#include <cstdint>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
-
 
 INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
@@ -54,6 +53,62 @@ void gb_state_init(struct gb_state *gb_state) {
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
   gb_state->regs.io.lcdc                = 0b10010001;
   gb_state->first_oam_scan_after_enable = true;
+}
+
+void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
+  // Load bootrom into gb_state->bootrom (bootrom is optional)
+  if (bootrom_name != NULL) {
+    FILE *f;
+    int   bytes_len;
+    int   err;
+    f         = fopen(bootrom_name, "r");
+    bytes_len = fread(gb_state->ram.bootrom, sizeof(uint8_t), 0x0100, f);
+    if ((err = ferror(f))) {
+      LogError("Error when reading bootrom file: %d", err);
+      goto load_default;
+    }
+    fclose(f);
+    GB_assert(bytes_len == 0x0100);
+    gb_state->regs.pc      = 0x0000;
+    gb_state->regs.io.bank = true;
+    int bootrom_name_len   = strlen(bootrom_name);
+    // TODO: Handle case where bootrom name ends with `.bin`
+    // TODO: Identifying if a bootrom sym file is present should be moved to a helper fn
+    if (memcmp(&bootrom_name[bootrom_name_len - 3], ".gb", 3) == 0) {
+      // I need a string that is two more chars long since `.sym` is a character longer than `.gb`, and we also need
+      // room for a null term.
+      char *bootrom_sym_name = (char *)malloc(bootrom_name_len + 2);
+
+      strcpy(bootrom_sym_name, bootrom_name);
+
+      bootrom_sym_name[bootrom_name_len - 2] = 's';
+      bootrom_sym_name[bootrom_name_len - 1] = 'y';
+      bootrom_sym_name[bootrom_name_len - 0] = 'm';
+      bootrom_sym_name[bootrom_name_len + 1] = '\0';
+      LogCritical("Looking for bootrom symbol file at `%s`", bootrom_sym_name);
+      f = fopen(bootrom_sym_name, "r");
+      if (f == NULL) {
+        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?",
+                 strerror(errno));
+      }
+
+      if (f != NULL) {
+        parse_syms(&gb_state->syms, f);
+        if (ferror(f) == 0) {
+          gb_state->bootrom_has_syms = true;
+        }
+        fclose(f);
+      }
+      free(bootrom_sym_name);
+    } else {
+      LogDebug("Bootrom filename `%s` does not end with `.gb`", bootrom_name);
+    }
+  }
+load_default:
+  GB_assert(gdmg0_boot_romSize == 0x0100);
+  memcpy(gb_state->ram.bootrom, gdmg0_boot_romData, 0x0100);
+  gb_state->regs.pc      = 0x0000;
+  gb_state->regs.io.bank = true;
 }
 
 struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
