@@ -10,3 +10,4 @@
 /serial.out
 /output.tracy
 /imgui.ini
+!/bootroms/*.bin
