@@ -3,14 +3,8 @@ project(
   'c', 'cpp', 'cython',
   meson_version : '>= 1.3.0',
   version : '0.1',
-  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++26', 'cpp_args=-fpermissive'],
+  default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++23', 'cpp_args=-fpermissive'],
 )
-
-current_src_dir = meson.current_source_dir()
-  
-add_global_arguments('-Wno-c23-extensions', language : 'cpp')
-
-add_global_arguments(['--embed-dir=' + (current_src_dir / 'embed')], language : 'cpp')
 
 if get_option('enable_logging')
   add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'cpp')
@@ -36,11 +30,12 @@ sources = [
   'src/cpu.cpp',
   'src/ppu.cpp',
 ]
+include = include_directories(['src/', 'embed/'])
 
 shared_lib = shared_library(
   'gfgb', 
   [sources],
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   dependencies : [sdl3_deps, global_deps],
 )
 
@@ -50,7 +45,7 @@ dep_py = py.dependency()
 gfgb_obj = static_library(
   'gfgb',
   'py/gfgb.pyx',
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   dependencies : [dep_py, global_deps],
   override_options : ['warning_level=0'],
 )
@@ -58,7 +53,7 @@ gfgb_obj = static_library(
 gfgb_py_ext = py.extension_module(
   'gfgb',
   [sources],
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   link_whole : [gfgb_obj],
   install : true,
   dependencies : [sdl3_deps, global_deps],
@@ -67,7 +62,7 @@ gfgb_py_ext = py.extension_module(
 exe = executable(
   'gb_emu',
   [sources, 'src/main.cpp'],
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   dependencies : [sdl3_deps, global_deps],
   install : true,
 )
@@ -76,7 +71,7 @@ cpu_test_exe = executable(
   'cpu_test_exe',
   sources,
   cpp_args : '-DRUN_CPU_TESTS=1',
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   dependencies : [sdl3_deps, global_deps],
 )
 
@@ -84,7 +79,7 @@ ppu_test_exe = executable(
   'ppu_test_exe',
   sources,
   cpp_args : '-DRUN_PPU_TESTS=1',
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   dependencies : [sdl3_deps, global_deps],
 )
 
@@ -92,10 +87,11 @@ disasm_test_exe = executable(
   'disasm_test_exe',
   sources,
   cpp_args : '-DRUN_DISASSEMBLE_TESTS=1',
-  include_directories : include_directories(['src/']),
+  include_directories : include,
   dependencies : [sdl3_deps, global_deps],
 )
 
+current_src_dir = meson.current_source_dir()
 
 test('cpu_test', cpu_test_exe)
 test('ppu_test', ppu_test_exe)

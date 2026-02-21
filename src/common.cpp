@@ -1,12 +1,12 @@
 #include "common.h"
+#include "incbin.h"
 
 #include <cstdint>
 #include <stdint.h>
 #include <stdlib.h>
 
-static const uint8_t boot_rom_dmg0[] = {
-#embed "bootroms/dmg0_boot.bin"
-};
+
+INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
 // initialize dynamic string with capacity `cap`
 void gb_dstr_init(gb_dstr_t *dstr, size_t cap) {
