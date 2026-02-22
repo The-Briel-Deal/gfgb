@@ -274,8 +274,25 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
     if ((curr_mode == HBLANK || curr_mode == VBLANK) && gb_state->oam_dma_start) {
       gb_state->oam_dma_start = false;
-      NOT_IMPLEMENTED("OAM DMA Not Yet Implemented");
-      // TODO: implement actual DMA procedure here, I should be able to start with a simple memcpy of 256 bytes
+      // TODO: I would love to copy all 0x9F bytes in one memcpy, but unfortunately, not all banks cleanly end on 256
+      // byte boundaries. This could be addressed by having `gb_unmap_address()` also return the number of bytes
+      // remaining in bank.
+
+      // TODO: Pandocs says that the dma src addr has to be below 0xDF. I need to look into what I should do if it's
+      // past this range. For now i'll just put an assert here and fix this problem when/if it causes problems.
+      // (https://gbdev.io/pandocs/OAM_DMA_Transfer.html)
+      GB_assert(gb_state->regs.io.dma < 0xDF);
+      uint16_t start_src_addr = ((uint16_t)gb_state->regs.io.dma) << 8;
+      for (uint8_t addr_offset = 0; addr_offset <= 0x9F; addr_offset++) {
+        uint16_t src_addr = start_src_addr | addr_offset;
+        uint16_t dst_addr = 0xFE00 | addr_offset;
+        uint8_t  src_byte = gb_read_mem8(gb_state, src_addr);
+        gb_write_mem8(gb_state, dst_addr, src_byte);
+      }
+      // TODO: This is not what I should be doing. I should be copying 1 byte for every 1 m-cycle that elapses. While
+      // this is being done I should be executing other code but making sure HRAM is the only place that memory can be
+      // writen/read.
+      gb_state->m_cycles_elapsed += 160;
     }
 
     {
