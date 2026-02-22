@@ -251,16 +251,6 @@ const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) 
 
   return oam_entry;
 }
-enum lcdc_flags {
-  LCDC_BG_WIN_ENABLE         = 1 << 0,
-  LCDC_OBJ_ENABLE            = 1 << 1,
-  LCDC_OBJ_SIZE              = 1 << 2,
-  LCDC_BG_TILE_MAP_AREA      = 1 << 3,
-  LCDC_BG_WIN_TILE_DATA_AREA = 1 << 4,
-  LCDC_WIN_ENABLE            = 1 << 5,
-  LCDC_WIN_TILEMAP           = 1 << 6,
-  LCDC_ENABLE                = 1 << 7,
-};
 
 static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height) {
   uint8_t ly = gb_state->regs.io.ly;

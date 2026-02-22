@@ -4,8 +4,6 @@
 #include "ppu.h"
 #include "tracy/Tracy.hpp"
 
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_keycode.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -325,6 +323,16 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         }
       gb_state->last_mode_handled = curr_mode;
     }
+  }
+  if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
+    // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui UI.
+    SDL_Surface *locked_texture;
+    GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->sdl_composite_target, NULL, &locked_texture));
+    SDL_ClearSurface(locked_texture, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
+    SDL_UnlockTexture(gb_state->sdl_composite_target);
+
+    gb_present(gb_state);
+    gb_update_io_joyp(gb_state);
   }
 
   FrameMarkEnd(TracyFrame_SDL_AppIterate);

@@ -10,6 +10,17 @@ extern "C" {
 
 struct gb_state;
 
+enum lcdc_flags {
+  LCDC_BG_WIN_ENABLE         = 1 << 0,
+  LCDC_OBJ_ENABLE            = 1 << 1,
+  LCDC_OBJ_SIZE              = 1 << 2,
+  LCDC_BG_TILE_MAP_AREA      = 1 << 3,
+  LCDC_BG_WIN_TILE_DATA_AREA = 1 << 4,
+  LCDC_WIN_ENABLE            = 1 << 5,
+  LCDC_WIN_TILEMAP           = 1 << 6,
+  LCDC_ENABLE                = 1 << 7,
+};
+
 struct gb_imgui_state {
   uint16_t mem_inspect_addr;
   uint16_t mem_inspect_val;
