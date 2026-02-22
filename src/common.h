@@ -257,8 +257,9 @@ struct regs {
     uint8_t obp1;
     uint8_t wx;
     uint8_t wy;
-    uint8_t ie;            // interupt enable
-    uint8_t if_;           // interupt flag
+    uint8_t ie;  // interupt enable
+    uint8_t if_; // interupt flag
+    uint8_t dma;
     bool    ime;           // interupt master enable
     bool    set_ime_after; // IME is only set after the following instruction.
     bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
@@ -328,6 +329,8 @@ struct gb_state {
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;
 
+  bool oam_dma_start;
+
   // used for updating the timer io regs.
   uint32_t                    last_timer_sync_m_cycles;
 
@@ -390,6 +393,7 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name);
   X(IO_WX, 0xFF4B)                                                                                                     \
   X(IO_LY, 0xFF44)                                                                                                     \
   X(IO_LYC, 0xFF45)                                                                                                    \
+  X(IO_DMA, 0xFF46)                                                                                                    \
   X(IO_STAT, 0xFF41)                                                                                                   \
   X(IO_BGP, 0xFF47)                                                                                                    \
   X(IO_OBP0, 0xFF48)                                                                                                   \

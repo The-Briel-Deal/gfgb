@@ -124,6 +124,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_NR51: return &gb_state->regs.io.nr51;
   case IO_IF: return &gb_state->regs.io.if_;
   case IO_IE: return &gb_state->regs.io.ie;
+  case IO_DMA: return &gb_state->regs.io.dma;
   case IO_SND_ON: return &gb_state->regs.io.nr52;
   case IO_LCDC: return &gb_state->regs.io.lcdc;
   case IO_SCY: return &gb_state->regs.io.scy;
@@ -260,6 +261,9 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     }
     break;
   default:
+    if (reg == IO_DMA) {
+      gb_state->oam_dma_start = true;
+    }
     uint8_t *reg_ptr = get_io_reg(gb_state, reg);
     if (reg_ptr == NULL) {
       LogError("Unknown IO Register at addr = 0x%.4X", reg);
