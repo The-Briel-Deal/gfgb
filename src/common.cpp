@@ -1,10 +1,12 @@
 #include "common.h"
-#include "incbin.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#define INCBIN_STYLE INCBIN_STYLE_SNAKE
+#define INCBIN_PREFIX
+#include "incbin.h"
 INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
 // initialize dynamic string with capacity `cap`
@@ -105,8 +107,8 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) 
     }
   }
 load_default:
-  GB_assert(gdmg0_boot_romSize == 0x0100);
-  memcpy(gb_state->ram.bootrom, gdmg0_boot_romData, 0x0100);
+  GB_assert(dmg0_boot_rom_size == 0x0100);
+  memcpy(gb_state->ram.bootrom, dmg0_boot_rom_data, 0x0100);
   gb_state->regs.pc      = 0x0000;
   gb_state->regs.io.bank = true;
 }
