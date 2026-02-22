@@ -2,7 +2,7 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
-#include "tracy/TracyC.h"
+#include "tracy/Tracy.hpp"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_keycode.h>
@@ -219,11 +219,7 @@ const char *get_inst_symbol(struct gb_state *gb_state) {
   return "Unknown";
 }
 
-#define TracyCZoneTextN(ctx, txt) TracyCZoneText(ctx, txt, sizeof(txt));
-
-const char *const TracyFrame_SDL_AppIterate = "App Iteration";
-
-static void       gb_update_io_joyp(gb_state_t *gb_state) {
+static void gb_update_io_joyp(gb_state_t *gb_state) {
   uint8_t *io_joyp          = &gb_state->regs.io.joyp;
   uint8_t  new_lower_nibble = 0x0F;
   if (((*io_joyp) >> 4 & 0b11) == 0b10) {
@@ -246,29 +242,29 @@ static void       gb_update_io_joyp(gb_state_t *gb_state) {
   *io_joyp |= new_lower_nibble;
 }
 
+const char *const TracyFrame_SDL_AppIterate = "App Iteration";
+
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
-  TracyCFrameMarkStart(TracyFrame_SDL_AppIterate);
+  FrameMarkStart(TracyFrame_SDL_AppIterate);
   gb_state_t *gb_state = (gb_state_t *)appstate;
 
   for (int i = 0; i < 100; i++) {
-    TracyCZoneN(ctx, "Fetch and Execute", true);
-    if (!gb_state->halted) {
-      TracyCZoneColor(ctx, TRACY_COLOR_GREEN);
-      TracyCZoneTextN(ctx, "Not Halted");
+    {
+      ZoneScopedN("Fetch and Execute");
+      if (!gb_state->halted) {
+        ZoneTextF("Not Halted");
 #ifdef PRINT_INST_DURING_EXEC
-      printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
+        printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-      struct inst inst = fetch(gb_state);
-      execute(gb_state, inst);
-    } else {
-      // Halted
-      TracyCZoneColor(ctx, TRACY_COLOR_RED);
-      TracyCZoneTextN(ctx, "Halted");
-      // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
-      gb_state->m_cycles_elapsed++;
+        struct inst inst = fetch(gb_state);
+        execute(gb_state, inst);
+      } else {
+        ZoneTextF("Halted");
+        // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
+        gb_state->m_cycles_elapsed++;
+      }
     }
-    TracyCZoneEnd(ctx);
 
     gb_update_timers(gb_state);
     handle_interrupts(gb_state);
@@ -276,35 +272,36 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     curr_mode = gb_state->regs.io.stat & 0b11;
     last_mode = gb_state->last_mode_handled;
 
-    TracyCZoneN(rndr_ctx, "Rendering", true);
-    if (curr_mode != last_mode) switch (curr_mode) {
-      case OAM_SCAN:
-        TracyCZoneN(oam_ctx, "OAM Read", true);
-        gb_read_oam_entries(gb_state);
-        TracyCZoneEnd(oam_ctx);
-        break;
-      case DRAWING_PIXELS:
-        TracyCZoneN(draw_pix_ctx, "Drawing Pixels", true);
-        gb_draw(gb_state);
-        TracyCZoneEnd(draw_pix_ctx);
-        break;
-      case HBLANK:
-        TracyCZoneN(hblank_ctx, "H-Blank", true);
-        gb_composite_line(gb_state);
-        TracyCZoneEnd(hblank_ctx);
-        break;
-      case VBLANK:
-        TracyCZoneN(vblank_ctx, "V-Blank", true);
-        gb_present(gb_state);
-        TracyCZoneEnd(vblank_ctx);
-        gb_update_io_joyp(gb_state);
-        break;
-      }
-    gb_state->last_mode_handled = curr_mode;
-    TracyCZoneEnd(rndr_ctx);
+    {
+      ZoneScopedN("Rendering");
+      if (curr_mode != last_mode) switch (curr_mode) {
+        case OAM_SCAN: {
+          ZoneScopedN("OAM Read");
+          gb_read_oam_entries(gb_state);
+          break;
+        }
+        case DRAWING_PIXELS: {
+          ZoneScopedN("Drawing Pixels");
+          gb_draw(gb_state);
+          break;
+        }
+        case HBLANK: {
+          ZoneScopedN("H-Blank");
+          gb_composite_line(gb_state);
+          break;
+        }
+        case VBLANK: {
+          ZoneScopedN("H-Blank");
+          gb_present(gb_state);
+          gb_update_io_joyp(gb_state);
+          break;
+        }
+        }
+      gb_state->last_mode_handled = curr_mode;
+    }
   }
 
-  TracyCFrameMarkEnd(TracyFrame_SDL_AppIterate);
+  FrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
