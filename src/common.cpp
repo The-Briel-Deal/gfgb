@@ -73,38 +73,6 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) 
     GB_assert(bytes_len == 0x0100);
     gb_state->regs.pc      = 0x0000;
     gb_state->regs.io.bank = true;
-    int bootrom_name_len   = strlen(bootrom_name);
-    // TODO: Handle case where bootrom name ends with `.bin`
-    // TODO: Identifying if a bootrom sym file is present should be moved to a helper fn
-    if (memcmp(&bootrom_name[bootrom_name_len - 3], ".gb", 3) == 0) {
-      // I need a string that is two more chars long since `.sym` is a character longer than `.gb`, and we also need
-      // room for a null term.
-      char *bootrom_sym_name = (char *)malloc(bootrom_name_len + 2);
-
-      strcpy(bootrom_sym_name, bootrom_name);
-
-      bootrom_sym_name[bootrom_name_len - 2] = 's';
-      bootrom_sym_name[bootrom_name_len - 1] = 'y';
-      bootrom_sym_name[bootrom_name_len - 0] = 'm';
-      bootrom_sym_name[bootrom_name_len + 1] = '\0';
-      LogCritical("Looking for bootrom symbol file at `%s`", bootrom_sym_name);
-      f = fopen(bootrom_sym_name, "r");
-      if (f == NULL) {
-        LogDebug("Error '%s' occured in when opening symbol file. Is the file present and accessible?",
-                 strerror(errno));
-      }
-
-      if (f != NULL) {
-        parse_syms(&gb_state->syms, f);
-        if (ferror(f) == 0) {
-          gb_state->bootrom_has_syms = true;
-        }
-        fclose(f);
-      }
-      free(bootrom_sym_name);
-    } else {
-      LogDebug("Bootrom filename `%s` does not end with `.gb`", bootrom_name);
-    }
   }
 load_default:
   GB_assert(dmg0_boot_rom_size == 0x0100);
