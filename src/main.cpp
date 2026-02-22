@@ -272,6 +272,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     curr_mode = gb_state->regs.io.stat & 0b11;
     last_mode = gb_state->last_mode_handled;
 
+    if ((curr_mode == HBLANK || curr_mode == VBLANK) && gb_state->oam_dma_start) {
+      gb_state->oam_dma_start = false;
+      NOT_IMPLEMENTED("OAM DMA Not Yet Implemented");
+      // TODO: implement actual DMA procedure here, I should be able to start with a simple memcpy of 256 bytes
+    }
+
     {
       ZoneScopedN("Rendering");
       if (curr_mode != last_mode) switch (curr_mode) {
@@ -291,7 +297,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           break;
         }
         case VBLANK: {
-          ZoneScopedN("H-Blank");
+          ZoneScopedN("V-Blank");
           gb_present(gb_state);
           gb_update_io_joyp(gb_state);
           break;
