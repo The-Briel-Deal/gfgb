@@ -281,8 +281,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       // TODO: Pandocs says that the dma src addr has to be below 0xDF. I need to look into what I should do if it's
       // past this range. For now i'll just put an assert here and fix this problem when/if it causes problems.
       // (https://gbdev.io/pandocs/OAM_DMA_Transfer.html)
-      GB_assert(gb_state->regs.io.dma < 0xDF);
-      uint16_t start_src_addr = ((uint16_t)gb_state->regs.io.dma) << 8;
+      uint8_t oam_dma = gb_state->regs.io.dma;
+      if (oam_dma > 0xDF) {
+        oam_dma -= 0x20;
+      }
+      uint16_t start_src_addr = ((uint16_t)oam_dma) << 8;
       for (uint8_t addr_offset = 0; addr_offset <= 0x9F; addr_offset++) {
         uint16_t src_addr = start_src_addr | addr_offset;
         uint16_t dst_addr = 0xFE00 | addr_offset;
