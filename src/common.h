@@ -12,6 +12,10 @@
 #include "ppu.h"
 
 #ifdef __cplusplus
+#include <vector>
+#endif
+
+#ifdef __cplusplus
 #include <utility>
 
 using std::unreachable;
@@ -266,6 +270,14 @@ struct regs {
   } io;
 };
 typedef struct regs regs_t;
+
+struct gb_breakpoint {
+  uint16_t addr;
+  // TODO: We will want to also allow breakpoints to only be on a specific bank. So I should add an optional bank field.
+  // TODO: Add a enable/disable toggle for temporarily turning breakpoint off.
+};
+typedef struct gb_breakpoint gb_breakpoint_t;
+
 struct gb_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
@@ -339,12 +351,17 @@ struct gb_state {
   bool                        err;
 
   // runtime debug toggles
-  bool             dbg_clear_composite;
-  bool             dbg_hide_bg;
-  bool             dbg_hide_win;
-  bool             dbg_hide_objs;
+  bool                         dbg_clear_composite;
+  bool                         dbg_hide_bg;
+  bool                         dbg_hide_win;
+  bool                         dbg_hide_objs;
 
-  gb_imgui_state_t imgui_state;
+  gb_imgui_state_t             imgui_state;
+
+
+#ifdef __cplusplus
+  std::vector<gb_breakpoint_t> breakpoints;
+#endif
 };
 typedef struct gb_state gb_state_t;
 

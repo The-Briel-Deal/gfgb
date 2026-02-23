@@ -1,9 +1,6 @@
-// This is the one CPP file exclusively because of imgui which I didn't want to have to use a wrapper for.
-
-#include <format>
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
-#include "common.h"
 #include "ppu.h"
+#include "common.h"
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -14,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <format>
 
 bool gb_video_init(struct gb_state *gb_state) {
   SDL_Environment *env                  = SDL_GetEnvironment();
@@ -576,6 +575,15 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Checkbox("Background Hidden", &gb_state->dbg_hide_bg);
       ImGui::Checkbox("Window Hidden", &gb_state->dbg_hide_win);
       ImGui::Checkbox("Objs Hidden", &gb_state->dbg_hide_objs);
+    }
+    if (ImGui::CollapsingHeader("Breakpoints")) {
+      ImGui::TextUnformatted("Addr:");
+      ImGui::SameLine();
+      ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->mem_inspect_addr, NULL, NULL, "%.4x");
+      if (ImGui::Button("Set Breakpoint")) {
+        imgui_state->mem_inspect_last_read_addr = imgui_state->mem_inspect_addr;
+        imgui_state->mem_inspect_last_read_val  = gb_read_mem8(gb_state, imgui_state->mem_inspect_addr);
+      }
     }
 
     if (ImGui::CollapsingHeader("Inspect Memory")) {
