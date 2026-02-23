@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -255,7 +256,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 #ifdef PRINT_INST_DURING_EXEC
         printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
 #endif
-        struct inst inst = fetch(gb_state);
+        uint16_t    prev_pc = gb_state->regs.pc;
+        struct inst inst    = fetch(gb_state);
+        uint16_t    curr_pc = gb_state->regs.pc;
+        for (gb_breakpoint_t bp : gb_state->breakpoints) {
+          if (bp.addr >= prev_pc && bp.addr < curr_pc) {
+            raise(SIGTRAP);
+          }
+        }
         execute(gb_state, inst);
       } else {
         ZoneTextF("Halted");
