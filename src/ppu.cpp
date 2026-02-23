@@ -623,6 +623,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Start Button", gb_state->joy_pad_state.button_start);
       ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
     }
+    if (ImGui::CollapsingHeader("Reg Values")) {
+      ImGui::Value("IME", gb_state->regs.io.ime);
+    }
     if (ImGui::CollapsingHeader("IO Reg Values")) {
       for (io_reg_addr_t io_reg : io_regs) {
         gb_imgui_show_mem_val(gb_state, gb_io_reg_name(io_reg), io_reg);
