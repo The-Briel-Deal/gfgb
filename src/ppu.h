@@ -31,6 +31,8 @@ struct gb_imgui_state {
 
   uint16_t mem_inspect_last_write_addr;
   uint8_t  mem_inspect_last_write_val;
+
+  uint16_t breakpoint_addr;
 };
 typedef struct gb_imgui_state gb_imgui_state_t;
 

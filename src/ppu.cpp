@@ -579,10 +579,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
     if (ImGui::CollapsingHeader("Breakpoints")) {
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
-      ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->mem_inspect_addr, NULL, NULL, "%.4x");
+      ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");
       if (ImGui::Button("Set Breakpoint")) {
-        imgui_state->mem_inspect_last_read_addr = imgui_state->mem_inspect_addr;
-        imgui_state->mem_inspect_last_read_val  = gb_read_mem8(gb_state, imgui_state->mem_inspect_addr);
+        gb_state->breakpoints.push_back({.addr = imgui_state->breakpoint_addr});
+      }
+      int i = 1;
+      for (gb_breakpoint_t bp : gb_state->breakpoints) {
+        ImGui::Text("Breakpoint %d: %.4x", i++, bp.addr);
       }
     }
 
