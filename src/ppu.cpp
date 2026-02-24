@@ -570,13 +570,8 @@ void gb_imgui_render(struct gb_state *gb_state) {
   {
     ImGui::Begin("GB State");
 
-    if (ImGui::CollapsingHeader("Layers")) {
-      ImGui::Checkbox("Clear Before Render", &gb_state->dbg_clear_composite);
-      ImGui::Checkbox("Background Hidden", &gb_state->dbg_hide_bg);
-      ImGui::Checkbox("Window Hidden", &gb_state->dbg_hide_win);
-      ImGui::Checkbox("Objs Hidden", &gb_state->dbg_hide_objs);
-    }
     if (ImGui::CollapsingHeader("Breakpoints")) {
+      ImGui::Checkbox("Execution Paused", &gb_state->execution_paused);
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");
@@ -587,6 +582,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
       for (gb_breakpoint_t bp : gb_state->breakpoints) {
         ImGui::Text("Breakpoint %d: %.4x", i++, bp.addr);
       }
+    }
+
+    if (ImGui::CollapsingHeader("Layers")) {
+      ImGui::Checkbox("Clear Before Render", &gb_state->dbg_clear_composite);
+      ImGui::Checkbox("Background Hidden", &gb_state->dbg_hide_bg);
+      ImGui::Checkbox("Window Hidden", &gb_state->dbg_hide_win);
+      ImGui::Checkbox("Objs Hidden", &gb_state->dbg_hide_objs);
     }
 
     if (ImGui::CollapsingHeader("Inspect Memory")) {

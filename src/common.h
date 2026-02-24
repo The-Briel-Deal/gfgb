@@ -351,13 +351,14 @@ struct gb_state {
   bool                        err;
 
   // runtime debug toggles
-  bool                         dbg_clear_composite;
-  bool                         dbg_hide_bg;
-  bool                         dbg_hide_win;
-  bool                         dbg_hide_objs;
+  bool             dbg_clear_composite;
+  bool             dbg_hide_bg;
+  bool             dbg_hide_win;
+  bool             dbg_hide_objs;
 
-  gb_imgui_state_t             imgui_state;
+  bool             execution_paused;
 
+  gb_imgui_state_t imgui_state;
 
 #ifdef __cplusplus
   std::vector<gb_breakpoint_t> breakpoints;
@@ -370,7 +371,7 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name);
 
 // See the following wikipedia page on X Macro's if you want to understand this idiom. I don't love doing this but I
 // need a good way to display all IO registers in the ImGui debug UI, and I don't want to have to create a seperate
-// lookup table for io reg names, as well as an of all reg addrs since the addresses aren't sequential.
+// lookup table for io reg names.
 //
 // https://en.wikipedia.org/wiki/X_macro
 #define LIST_OF_IO_REGS                                                                                                \
