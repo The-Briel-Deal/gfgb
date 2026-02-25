@@ -292,7 +292,9 @@ struct gb_state {
   // this is where obj's that have the priority bit set are rendered, these need to be rendered before the bits 1-3 of
   // background and window.
   SDL_Surface *sdl_obj_priority_target;
-  SDL_Texture *sdl_composite_target; // this is what all targets are rendered to line by line
+  // We draw everything line by line into the back, then on v-sync we swap the pointers
+  SDL_Texture *sdl_composite_target_front;
+  SDL_Texture *sdl_composite_target_back; 
 
   regs_t       regs;
 

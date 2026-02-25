@@ -69,9 +69,12 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->sdl_obj_priority_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
   GB_assert(gb_state->sdl_obj_priority_target != NULL);
 
-  gb_state->sdl_composite_target = SDL_CreateTexture(gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32,
-                                                     SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  GB_assert(gb_state->sdl_composite_target != NULL);
+  gb_state->sdl_composite_target_front = SDL_CreateTexture(
+      gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  GB_assert(gb_state->sdl_composite_target_front != NULL);
+  gb_state->sdl_composite_target_back = SDL_CreateTexture(
+      gb_state->sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+  GB_assert(gb_state->sdl_composite_target_back != NULL);
 
   // Initialize ImGui
   IMGUI_CHECKVERSION();
@@ -126,8 +129,10 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->sdl_obj_target = NULL;
   SDL_DestroySurface(gb_state->sdl_obj_priority_target);
   gb_state->sdl_obj_priority_target = NULL;
-  SDL_DestroyTexture(gb_state->sdl_composite_target);
-  gb_state->sdl_composite_target = NULL;
+  SDL_DestroyTexture(gb_state->sdl_composite_target_front);
+  gb_state->sdl_composite_target_front = NULL;
+  SDL_DestroyTexture(gb_state->sdl_composite_target_back);
+  gb_state->sdl_composite_target_back = NULL;
   SDL_DestroyRenderer(gb_state->sdl_renderer);
   gb_state->sdl_renderer = NULL;
   SDL_DestroyWindow(gb_state->sdl_window);
@@ -428,7 +433,7 @@ void gb_composite_line(struct gb_state *gb_state) {
       .h = 1,
   };
   SDL_Surface *locked_texture;
-  success = SDL_LockTextureToSurface(gb_state->sdl_composite_target, &line_rect, &locked_texture);
+  success = SDL_LockTextureToSurface(gb_state->sdl_composite_target_back, &line_rect, &locked_texture);
   GB_assert(success);
 
   if (gb_state->dbg_clear_composite) {
@@ -485,7 +490,7 @@ void gb_composite_line(struct gb_state *gb_state) {
     SDL_BlitSurface(gb_state->sdl_obj_target, NULL, locked_texture, NULL);
   }
 
-  SDL_UnlockTexture(gb_state->sdl_composite_target);
+  SDL_UnlockTexture(gb_state->sdl_composite_target_back);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
@@ -657,24 +662,14 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
 // called on vblank
 void gb_present(struct gb_state *gb_state) {
-  bool success;
 
   gb_state->win_line_counter = 0;
   gb_state->wy_cond          = 0;
 
-  /* NULL means that we are selecting the window as the target */
-  success = SDL_SetRenderTarget(gb_state->sdl_renderer, NULL);
-  GB_assert(success);
-  success = SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT);
-  GB_assert(success);
-  success = SDL_RenderClear(gb_state->sdl_renderer);
-  GB_assert(success);
-  success = SDL_RenderTexture(gb_state->sdl_renderer, gb_state->sdl_composite_target, NULL, NULL);
-  GB_assert(success);
-
-  gb_imgui_render(gb_state);
-
-  SDL_RenderPresent(gb_state->sdl_renderer);
+  SDL_Texture *tmp;
+  tmp                                  = gb_state->sdl_composite_target_front;
+  gb_state->sdl_composite_target_front = gb_state->sdl_composite_target_back;
+  gb_state->sdl_composite_target_back  = tmp;
 
   TracyCFrameMark
 }
