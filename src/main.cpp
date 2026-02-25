@@ -237,7 +237,9 @@ static void check_breakpoints(gb_state_t *gb_state, uint16_t prev_pc, uint16_t c
   }
 }
 
+#ifdef TRACY_ENABLE
 const char *const TracyFrame_SDL_AppIterate = "App Iteration";
+#endif
 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
