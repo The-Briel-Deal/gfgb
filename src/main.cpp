@@ -229,6 +229,14 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   *io_joyp |= new_lower_nibble;
 }
 
+static void check_breakpoints(gb_state_t *gb_state, uint16_t prev_pc, uint16_t curr_pc) {
+  for (gb_breakpoint_t bp : gb_state->breakpoints) {
+    if (bp.addr >= prev_pc && bp.addr < curr_pc) {
+      gb_state->execution_paused = true;
+    }
+  }
+}
+
 const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 
 /* This function runs once per frame, and is the heart of the program. */
@@ -236,88 +244,86 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   FrameMarkStart(TracyFrame_SDL_AppIterate);
   gb_state_t *gb_state = (gb_state_t *)appstate;
 
-  for (int i = 0; i < 100; i++) {
-    {
-      gb_update_io_joyp(gb_state);
-      ZoneScopedN("Fetch and Execute");
-      if (!gb_state->halted) {
-        ZoneTextF("Not Halted");
-        uint16_t    prev_pc = gb_state->regs.pc;
-        struct inst inst    = fetch(gb_state);
-        uint16_t    curr_pc = gb_state->regs.pc;
-        for (gb_breakpoint_t bp : gb_state->breakpoints) {
-          if (bp.addr >= prev_pc && bp.addr < curr_pc) {
-            raise(SIGTRAP);
-          }
-        }
+  if (!gb_state->execution_paused) {
+    for (int i = 0; i < 100; i++) {
+      {
+        gb_update_io_joyp(gb_state);
+        ZoneScopedN("Fetch and Execute");
+        if (!gb_state->halted) {
+          ZoneTextF("Not Halted");
+          uint16_t    prev_pc = gb_state->regs.pc;
+          struct inst inst    = fetch(gb_state);
+          uint16_t    curr_pc = gb_state->regs.pc;
 #ifdef PRINT_INST_DURING_EXEC
-        print_inst(gb_state, stdout, inst, true, prev_pc);
+          print_inst(gb_state, stdout, inst, true, prev_pc);
 #endif
-        execute(gb_state, inst);
-      } else {
-        ZoneTextF("Halted");
-        // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
-        gb_state->m_cycles_elapsed++;
+          check_breakpoints(gb_state, prev_pc, curr_pc);
+          execute(gb_state, inst);
+        } else {
+          ZoneTextF("Halted");
+          // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
+          gb_state->m_cycles_elapsed++;
+        }
       }
-    }
 
-    gb_update_timers(gb_state);
-    handle_interrupts(gb_state);
-    uint8_t curr_mode, last_mode;
-    curr_mode = gb_state->regs.io.stat & 0b11;
-    last_mode = gb_state->last_mode_handled;
+      gb_update_timers(gb_state);
+      handle_interrupts(gb_state);
+      uint8_t curr_mode, last_mode;
+      curr_mode = gb_state->regs.io.stat & 0b11;
+      last_mode = gb_state->last_mode_handled;
 
-    if ((curr_mode == HBLANK || curr_mode == VBLANK) && gb_state->oam_dma_start) {
-      gb_state->oam_dma_start = false;
-      // TODO: I would love to copy all 0x9F bytes in one memcpy, but unfortunately, not all banks cleanly end on 256
-      // byte boundaries. This could be addressed by having `gb_unmap_address()` also return the number of bytes
-      // remaining in bank.
+      if ((curr_mode == HBLANK || curr_mode == VBLANK) && gb_state->oam_dma_start) {
+        gb_state->oam_dma_start = false;
+        // TODO: I would love to copy all 0x9F bytes in one memcpy, but unfortunately, not all banks cleanly end on 256
+        // byte boundaries. This could be addressed by having `gb_unmap_address()` also return the number of bytes
+        // remaining in bank.
 
-      // TODO: Pandocs says that the dma src addr has to be below 0xDF. I need to look into what I should do if it's
-      // past this range. For now i'll just put an assert here and fix this problem when/if it causes problems.
-      // (https://gbdev.io/pandocs/OAM_DMA_Transfer.html)
-      uint8_t oam_dma = gb_state->regs.io.dma;
-      if (oam_dma > 0xDF) {
-        oam_dma -= 0x20;
+        // TODO: Pandocs says that the dma src addr has to be below 0xDF. I need to look into what I should do if it's
+        // past this range. For now i'll just put an assert here and fix this problem when/if it causes problems.
+        // (https://gbdev.io/pandocs/OAM_DMA_Transfer.html)
+        uint8_t oam_dma = gb_state->regs.io.dma;
+        if (oam_dma > 0xDF) {
+          oam_dma -= 0x20;
+        }
+        uint16_t start_src_addr = ((uint16_t)oam_dma) << 8;
+        for (uint8_t addr_offset = 0; addr_offset <= 0x9F; addr_offset++) {
+          uint16_t src_addr = start_src_addr | addr_offset;
+          uint16_t dst_addr = 0xFE00 | addr_offset;
+          uint8_t  src_byte = gb_read_mem8(gb_state, src_addr);
+          gb_write_mem8(gb_state, dst_addr, src_byte);
+        }
+        // TODO: This is not what I should be doing. I should be copying 1 byte for every 1 m-cycle that elapses. While
+        // this is being done I should be executing other code but making sure HRAM is the only place that memory can be
+        // writen/read.
+        gb_state->m_cycles_elapsed += 160;
       }
-      uint16_t start_src_addr = ((uint16_t)oam_dma) << 8;
-      for (uint8_t addr_offset = 0; addr_offset <= 0x9F; addr_offset++) {
-        uint16_t src_addr = start_src_addr | addr_offset;
-        uint16_t dst_addr = 0xFE00 | addr_offset;
-        uint8_t  src_byte = gb_read_mem8(gb_state, src_addr);
-        gb_write_mem8(gb_state, dst_addr, src_byte);
-      }
-      // TODO: This is not what I should be doing. I should be copying 1 byte for every 1 m-cycle that elapses. While
-      // this is being done I should be executing other code but making sure HRAM is the only place that memory can be
-      // writen/read.
-      gb_state->m_cycles_elapsed += 160;
-    }
 
-    {
-      ZoneScopedN("Rendering");
-      if (curr_mode != last_mode) switch (curr_mode) {
-        case OAM_SCAN: {
-          ZoneScopedN("OAM Read");
-          gb_read_oam_entries(gb_state);
-          break;
-        }
-        case DRAWING_PIXELS: {
-          ZoneScopedN("Drawing Pixels");
-          gb_draw(gb_state);
-          break;
-        }
-        case HBLANK: {
-          ZoneScopedN("H-Blank");
-          gb_composite_line(gb_state);
-          break;
-        }
-        case VBLANK: {
-          ZoneScopedN("V-Blank");
-          gb_present(gb_state);
-          break;
-        }
-        }
-      gb_state->last_mode_handled = curr_mode;
+      {
+        ZoneScopedN("Rendering");
+        if (curr_mode != last_mode) switch (curr_mode) {
+          case OAM_SCAN: {
+            ZoneScopedN("OAM Read");
+            gb_read_oam_entries(gb_state);
+            break;
+          }
+          case DRAWING_PIXELS: {
+            ZoneScopedN("Drawing Pixels");
+            gb_draw(gb_state);
+            break;
+          }
+          case HBLANK: {
+            ZoneScopedN("H-Blank");
+            gb_composite_line(gb_state);
+            break;
+          }
+          case VBLANK: {
+            ZoneScopedN("V-Blank");
+            gb_present(gb_state);
+            break;
+          }
+          }
+        gb_state->last_mode_handled = curr_mode;
+      }
     }
   }
   if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
