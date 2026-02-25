@@ -206,18 +206,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
-const char *get_inst_symbol(struct gb_state *gb_state) {
-  // This works because we know the symbols are sorted.
-  uint16_t pc = gb_state->regs.pc;
-  for (int i = 0; i < gb_state->syms.len; i++) {
-    struct debug_symbol *sym = &gb_state->syms.syms[i];
-    if (sym->start_offset <= pc && pc < sym->len + sym->start_offset) {
-      return sym->name;
-    }
-  }
-  return "Unknown";
-}
-
 static void gb_update_io_joyp(gb_state_t *gb_state) {
   uint8_t *io_joyp          = &gb_state->regs.io.joyp;
   uint8_t  new_lower_nibble = 0x0F;
@@ -254,9 +242,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       ZoneScopedN("Fetch and Execute");
       if (!gb_state->halted) {
         ZoneTextF("Not Halted");
-#ifdef PRINT_INST_DURING_EXEC
-        printf("%s:0x%.4x: ", get_inst_symbol(gb_state), gb_state->regs.pc);
-#endif
         uint16_t    prev_pc = gb_state->regs.pc;
         struct inst inst    = fetch(gb_state);
         uint16_t    curr_pc = gb_state->regs.pc;
@@ -265,6 +250,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             raise(SIGTRAP);
           }
         }
+#ifdef PRINT_INST_DURING_EXEC
+        print_inst(gb_state, stdout, inst, true, prev_pc);
+#endif
         execute(gb_state, inst);
       } else {
         ZoneTextF("Halted");

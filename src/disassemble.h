@@ -1,15 +1,18 @@
 #ifndef GB_DISASSEMBLE_H
 #define GB_DISASSEMBLE_H
 
-#include "cpu.h"
-
 #include <stdint.h>
 #include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-void disassemble(struct gb_state *gb_state, FILE *stream);
+
+struct gb_state;
+typedef struct gb_state gb_state_t;
+
+// Disassemble entire loaded rom into stream.
+void disassemble(gb_state_t *gb_state, FILE *stream);
 
 #define DBG_SYM_BOOTROM_BANK -1
 
@@ -31,7 +34,7 @@ void alloc_symbol_list(struct debug_symbol_list *syms);
 void free_symbol_list(struct debug_symbol_list *syms);
 
 void parse_syms(struct debug_symbol_list *syms, FILE *sym_file);
-void print_inst(FILE *stream, const struct inst inst);
+void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr);
 
 #ifdef __cplusplus
 } // extern "C"

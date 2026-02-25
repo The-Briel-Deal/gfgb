@@ -1339,9 +1339,6 @@ void               execute(struct gb_state *gb_state, struct inst inst) {
 static inline void _execute(struct gb_state *gb_state, struct inst inst) {
   GB_assert(!gb_state->halted);
   bool set_ime_after_this_inst = gb_state->regs.io.set_ime_after;
-#ifdef PRINT_INST_DURING_EXEC
-  print_inst(stdout, inst);
-#endif
   switch (inst.type) {
   case ADC: ex_adc(gb_state, inst); break;
   case ADD: ex_add(gb_state, inst); break;
