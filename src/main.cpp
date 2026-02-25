@@ -250,6 +250,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   for (int i = 0; i < 100; i++) {
     {
+      gb_update_io_joyp(gb_state);
       ZoneScopedN("Fetch and Execute");
       if (!gb_state->halted) {
         ZoneTextF("Not Halted");
@@ -325,7 +326,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         case VBLANK: {
           ZoneScopedN("V-Blank");
           gb_present(gb_state);
-          gb_update_io_joyp(gb_state);
           break;
         }
         }
