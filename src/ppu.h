@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 struct gb_state;
+typedef struct gb_state gb_state_t;
 
 enum lcdc_flags {
   LCDC_BG_WIN_ENABLE         = 1 << 0,
@@ -37,9 +38,9 @@ struct gb_imgui_state {
 };
 typedef struct gb_imgui_state gb_imgui_state_t;
 
-bool                          gb_video_init(struct gb_state *gb_state);
-void                          gb_video_free(struct gb_state *gb_state);
-bool                          gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
+bool                          gb_video_init(gb_state_t *gb_state);
+void                          gb_video_free(gb_state_t *gb_state);
+bool                          gb_video_handle_sdl_event(gb_state_t *gb_state, SDL_Event *event);
 
 #define OBP0 0
 #define OBP1 1
@@ -56,12 +57,13 @@ struct __attribute__((packed)) oam_entry {
   bool         priority : 1;
 };
 
-void gb_read_oam_entries(struct gb_state *gb_state); // on OAM-Scan
-void gb_draw(struct gb_state *gb_state);             // on Drawing-Pixels
-void gb_composite_line(struct gb_state *gb_state);   // on H-Blank
-void gb_present(struct gb_state *gb_state);          // on V-Blank
+void gb_read_oam_entries(gb_state_t *gb_state); // on OAM-Scan
+void gb_draw(gb_state_t *gb_state);             // on Drawing-Pixels
+void gb_composite_line(gb_state_t *gb_state);   // on H-Blank
+void gb_flip_frame(gb_state_t *gb_state);       // on V-Blank
 
-void gb_imgui_render(struct gb_state *gb_state);
+void gb_display_render(gb_state_t *gb_state);
+void gb_imgui_render(gb_state_t *gb_state);
 
 #ifdef __cplusplus
 }
