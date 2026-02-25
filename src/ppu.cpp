@@ -319,8 +319,9 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     const uint8_t  tile_data_index = gb_read_mem8(gb_state, bg_tile_map_start + i);
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                     ((tile_data_index % 128) * 16);
-    uint8_t display_x = (x * 8) - gb_state->regs.io.scx;
-    uint8_t display_y = (y * 8) - gb_state->regs.io.scy;
+    // Use signed integers when calculating the display position since we still display tiles where y = 0 to -7
+    int16_t display_x = (x * 8) - gb_state->regs.io.scx;
+    int16_t display_y = (y * 8) - gb_state->regs.io.scy;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr,
                               SDL_FLIP_NONE);
