@@ -248,8 +248,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   if (!gb_state->execution_paused) {
     for (int i = 0; i < 100; i++) {
+      gb_update_io_joyp(gb_state);
       {
-        gb_update_io_joyp(gb_state);
         ZoneScopedN("Fetch and Execute");
         if (!gb_state->halted) {
           ZoneTextF("Not Halted");
