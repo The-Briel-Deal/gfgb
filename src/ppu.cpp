@@ -406,6 +406,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     if (oam_entry->y_flip && draw_double_height) {
       y += 8;
     }
+    if (x >= GB_DISPLAY_WIDTH) continue;
   draw_obj:
     if (oam_entry->priority) {
       gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
