@@ -294,7 +294,7 @@ struct gb_state {
   SDL_Surface *sdl_obj_priority_target;
   // We draw everything line by line into the back, then on v-sync we swap the pointers
   SDL_Texture *sdl_composite_target_front;
-  SDL_Texture *sdl_composite_target_back; 
+  SDL_Texture *sdl_composite_target_back;
 
   regs_t       regs;
 
