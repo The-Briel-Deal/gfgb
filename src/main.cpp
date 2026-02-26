@@ -337,7 +337,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   gb_display_render(gb_state);
   gb_imgui_render(gb_state);
-  SDL_RenderPresent(gb_state->sdl_renderer);
+  GB_CheckSDLCall(SDL_RenderPresent(gb_state->sdl_renderer));
 
   FrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
