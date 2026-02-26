@@ -280,16 +280,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       curr_mode = gb_state->regs.io.stat & 0b11;
       last_mode = gb_state->last_mode_handled;
 
-      if ((curr_mode == HBLANK || curr_mode == VBLANK) && gb_state->oam_dma_start) {
-        gb_state->oam_dma_start = false;
-        // TODO: I would love to copy all 0x9F bytes in one memcpy, but unfortunately, not all banks cleanly end on 256
-        // byte boundaries. This could be addressed by having `gb_unmap_address()` also return the number of bytes
-        // remaining in bank.
+      // TODO: If I want perfect accuracy then I should be copying this incrementally on every iteration for 160
+      // m-cycles. I also need to make all memory except hram is blocked during this period.
 
-        // TODO: Pandocs says that the dma src addr has to be below 0xDF. I need to look into what I should do if it's
-        // past this range. For now i'll just put an assert here and fix this problem when/if it causes problems.
-        // (https://gbdev.io/pandocs/OAM_DMA_Transfer.html)
-        uint8_t oam_dma = gb_state->regs.io.dma;
+      // TODO: There are some quirks when performing a dma transfer mid line (during OAM_SCAN or DRAWING_PIXELS), i'm
+      // currently not sure if this will matter with any real world games so I should look into this.
+      if ((curr_mode == OAM_SCAN || curr_mode == DRAWING_PIXELS || curr_mode == VBLANK) && gb_state->oam_dma_start) {
+        gb_state->oam_dma_start = false;
+        uint8_t oam_dma         = gb_state->regs.io.dma;
         if (oam_dma > 0xDF) {
           oam_dma -= 0x20;
         }
@@ -300,10 +298,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           uint8_t  src_byte = gb_read_mem8(gb_state, src_addr);
           gb_write_mem8(gb_state, dst_addr, src_byte);
         }
-        // TODO: This is not what I should be doing. I should be copying 1 byte for every 1 m-cycle that elapses. While
-        // this is being done I should be executing other code but making sure HRAM is the only place that memory can be
-        // writen/read.
-        gb_state->m_cycles_elapsed += 160;
       }
 
       {
