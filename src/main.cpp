@@ -244,14 +244,16 @@ const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   FrameMarkStart(TracyFrame_SDL_AppIterate);
-  gb_state_t *gb_state = (gb_state_t *)appstate;
+  gb_state_t *gb_state              = (gb_state_t *)appstate;
 
+  uint64_t    prev_ns_elapsed_total = gb_state->ns_elapsed_total;
+  gb_state->ns_elapsed_total        = SDL_GetTicksNS();
   if (!gb_state->execution_paused) {
-    // TODO: This breaks when pausing since SDL ticks keeps going even when execution is paused. We'll want to track
-    // ticks elapsed while executing in our own field.
-
+    // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
+    // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
+    gb_state->ns_elapsed_while_running += (gb_state->ns_elapsed_total - prev_ns_elapsed_total);
     // See `doc/render.md` for an explanation of this.
-    while ((SDL_GetTicksNS() > (gb_state->m_cycles_elapsed * 954))) {
+    while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
       gb_update_io_joyp(gb_state);
       {
         ZoneScopedN("Fetch and Execute");

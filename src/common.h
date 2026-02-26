@@ -322,8 +322,8 @@ struct gb_state {
 
   FILE                   *serial_port_output;
 
-  // used for getting fps
-  uint64_t last_frame_ticks_ns;
+  uint64_t ns_elapsed_while_running;
+  uint64_t ns_elapsed_total;
 
   // total m_cycles_elapsed on the cpu
   //

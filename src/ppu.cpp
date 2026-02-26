@@ -530,14 +530,6 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
 }
 
 void gb_draw(struct gb_state *gb_state) {
-  uint64_t this_frame_ticks_ns = SDL_GetTicksNS();
-
-#ifdef PRINT_FRAME_TIME
-  double seconds_since_last_frame = (double)(this_frame_ticks_ns - gb_state->last_frame_ticks_ns) / NS_PER_SEC;
-  printf("Frame time = %f seconds\n", seconds_since_last_frame);
-#endif
-
-  gb_state->last_frame_ticks_ns = this_frame_ticks_ns;
 
   TracyCZoneN(update_palettes_ctx, "Palette Update", true);
   update_palettes(gb_state);
