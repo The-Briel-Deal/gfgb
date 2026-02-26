@@ -244,10 +244,11 @@ const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   FrameMarkStart(TracyFrame_SDL_AppIterate);
-  gb_state_t *gb_state = (gb_state_t *)appstate;
+  gb_state_t *gb_state              = (gb_state_t *)appstate;
 
+  uint64_t    prev_m_cycles_elapsed = gb_state->m_cycles_elapsed;
   if (!gb_state->execution_paused) {
-    for (int i = 0; i < 100; i++) {
+    while ((gb_state->m_cycles_elapsed - prev_m_cycles_elapsed) < (DOTS_PER_FRAME / 4)) {
       gb_update_io_joyp(gb_state);
       {
         ZoneScopedN("Fetch and Execute");
