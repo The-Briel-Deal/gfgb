@@ -100,6 +100,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_JOYP: return &gb_state->regs.io.joyp;
   case IO_SB: return &gb_state->regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
   case IO_SC: return &gb_state->regs.io.sc;
+  case IO_DIV: return &gb_state->regs.io.div;
   case IO_TIMA: return &gb_state->regs.io.tima;
   case IO_TMA: return &gb_state->regs.io.tma;
   case IO_TAC: return &gb_state->regs.io.tac;
@@ -255,6 +256,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     gb_state->regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
     gb_state->regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
     break;
+  case IO_DIV: gb_state->regs.io.div = 0; break;
   case IO_BANK:
     // if bit 0 is set unmap bootrom. This can't be re-enabled without a restart.
     if (val & 1) {
@@ -450,6 +452,25 @@ void gb_update_timers(struct gb_state *gb_state) {
   uint64_t curr_m_cycles             = gb_m_cycles(gb_state);
   uint64_t prev_m_cycles             = gb_state->last_timer_sync_m_cycles;
   gb_state->last_timer_sync_m_cycles = curr_m_cycles;
+
+  // Update DIV
+  {
+    // TODO: Reset and stop incrementing during stop inst duration
+    uint16_t div_incr_every    = 64;
+    uint64_t div_curr_m_cycles = curr_m_cycles;
+    uint64_t div_prev_m_cycles = prev_m_cycles;
+    // we want to floor this to the lowest multiple of the increment rate, that way we don't risk missing increments if
+    // this is called too frequently.
+    div_curr_m_cycles /= div_incr_every;
+    div_curr_m_cycles *= div_incr_every;
+
+    div_prev_m_cycles /= div_incr_every;
+    div_prev_m_cycles *= div_incr_every;
+
+    uint8_t div_incr_by = (div_curr_m_cycles - div_prev_m_cycles) / div_incr_every;
+
+    gb_state->regs.io.div += div_incr_by;
+  }
 
   update_tima(gb_state, prev_m_cycles, curr_m_cycles);
   update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);

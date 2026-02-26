@@ -219,6 +219,7 @@ struct regs {
     uint8_t sb; // serial transfer data (currently unused)
     uint8_t sc; // serial transfer control (currently unused)
 
+    uint8_t div;  // divider register
     uint8_t tima; // timer counter
     uint8_t tma;  // timer modulo
     uint8_t tac;  // timer control
@@ -322,8 +323,8 @@ struct gb_state {
 
   FILE                   *serial_port_output;
 
-  uint64_t ns_elapsed_while_running;
-  uint64_t ns_elapsed_total;
+  uint64_t                ns_elapsed_while_running;
+  uint64_t                ns_elapsed_total;
 
   // total m_cycles_elapsed on the cpu
   //
@@ -380,6 +381,7 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name);
   X(IO_JOYP, 0xFF00)                                                                                                   \
   X(IO_SB, 0xFF01)                                                                                                     \
   X(IO_SC, 0xFF02)                                                                                                     \
+  X(IO_DIV, 0xFF04)                                                                                                    \
   X(IO_TIMA, 0xFF05)                                                                                                   \
   X(IO_TMA, 0xFF06)                                                                                                    \
   X(IO_TAC, 0xFF07)                                                                                                    \
