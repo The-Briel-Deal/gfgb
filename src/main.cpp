@@ -227,6 +227,7 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   // only keep bits 5 and 4 (select buttons and select d-pad)
   *io_joyp &= 0x30;
   *io_joyp |= new_lower_nibble;
+  *io_joyp |= 0xC0; // most significant two bits are set high since they are unused
 }
 
 static void check_breakpoints(gb_state_t *gb_state, uint16_t prev_pc, uint16_t curr_pc) {
