@@ -554,6 +554,23 @@ static void gb_imgui_show_mem_val(struct gb_state *gb_state, const char *name, c
                                            name, addr, gb_read_mem8(gb_state, addr));
   ImGui::TextUnformatted(formatted_text.c_str());
 }
+static void gb_imgui_show_val(const char *name, const uint8_t val) {
+  std::string formatted_text = std::format("{0:s}:\n"
+                                           "  Hex: {1:#04x}\n"
+                                           "  Dec: {1:d}\n"
+                                           "  Bin: {1:#010b}",
+                                           name, val);
+  ImGui::TextUnformatted(formatted_text.c_str());
+}
+
+static void gb_imgui_show_val(const char *name, const uint16_t val) {
+  std::string formatted_text = std::format("{0:s}:\n"
+                                           "  Hex: {1:#06x}\n"
+                                           "  Dec: {1:d}\n"
+                                           "  Bin: {1:#018b}",
+                                           name, val);
+  ImGui::TextUnformatted(formatted_text.c_str());
+}
 
 void gb_display_render(gb_state_t *gb_state) {
   if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
@@ -653,6 +670,15 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
     }
     if (ImGui::CollapsingHeader("Reg Values")) {
+      gb_imgui_show_val("A", gb_state->regs.a);
+      gb_imgui_show_val("B", gb_state->regs.b);
+      gb_imgui_show_val("C", gb_state->regs.c);
+      gb_imgui_show_val("D", gb_state->regs.d);
+      gb_imgui_show_val("F", gb_state->regs.f);
+      gb_imgui_show_val("H", gb_state->regs.h);
+      gb_imgui_show_val("L", gb_state->regs.l);
+      gb_imgui_show_val("PC", gb_state->regs.pc);
+      gb_imgui_show_val("SP", gb_state->regs.sp);
       ImGui::Value("IME", gb_state->regs.io.ime);
     }
     if (ImGui::CollapsingHeader("IO Reg Values")) {
