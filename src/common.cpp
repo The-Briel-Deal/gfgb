@@ -216,8 +216,9 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
     goto not_implemented;
 
   not_implemented:
-    LogCritical("`read_mem8()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
-    return 0;
+    // It isn't always a critical issue to read unused mem/io-regs, tetris seems to do it unintentionally.
+    LogWarn("`read_mem8()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
+    return 0xFF;
   }
 }
 

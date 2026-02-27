@@ -52,12 +52,14 @@ enum GB_LogCategory {
 #define LogTrace(msg, ...)    SDL_LogTrace(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 #define LogInfo(msg, ...)     SDL_LogInfo(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 #define LogDebug(msg, ...)    SDL_LogDebug(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogWarn(msg, ...)     SDL_LogWarn(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 #define LogError(msg, ...)    SDL_LogError(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 #define LogCritical(msg, ...) SDL_LogCritical(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 #else
 #define LogTrace(msg, ...)
 #define LogInfo(msg, ...)
 #define LogDebug(msg, ...)
+#define LogWarn(msg, ...)
 #define LogError(msg, ...)
 #define LogCritical(msg, ...)
 #endif
