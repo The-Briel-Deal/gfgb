@@ -602,7 +602,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
   {
     ImGui::Begin("GB State");
 
-    if (ImGui::TreeNode("Execution")) {
+    if (ImGui::TreeNodeEx("Execution", ImGuiTreeNodeFlags_Framed)) {
       // Framerate
       // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
       // issue.
@@ -630,7 +630,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
 
-    if (ImGui::TreeNode("Layers")) {
+    if (ImGui::TreeNodeEx("Layers", ImGuiTreeNodeFlags_Framed)) {
       ImGui::Checkbox("Clear Before Render", &gb_state->dbg_clear_composite);
       ImGui::Checkbox("Background Hidden", &gb_state->dbg_hide_bg);
       ImGui::Checkbox("Window Hidden", &gb_state->dbg_hide_win);
@@ -638,7 +638,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
 
-    if (ImGui::TreeNode("Inspect Memory")) {
+    if (ImGui::TreeNodeEx("Inspect Memory", ImGuiTreeNodeFlags_Framed)) {
 
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
@@ -674,7 +674,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TextUnformatted(formatted_write_text.c_str());
       ImGui::TreePop();
     }
-    if (ImGui::TreeNode("Joy-Pad State")) {
+    if (ImGui::TreeNodeEx("Joy-Pad State", ImGuiTreeNodeFlags_Framed)) {
       ImGui::Value("Up", gb_state->joy_pad_state.dpad_up);
       ImGui::Value("Down", gb_state->joy_pad_state.dpad_down);
       ImGui::Value("Left", gb_state->joy_pad_state.dpad_left);
@@ -685,7 +685,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
       ImGui::TreePop();
     }
-    if (ImGui::TreeNode("Reg Values")) {
+    if (ImGui::TreeNodeEx("Reg Values", ImGuiTreeNodeFlags_Framed)) {
       gb_imgui_show_val("A", gb_state->regs.a);
       gb_imgui_show_val("B", gb_state->regs.b);
       gb_imgui_show_val("C", gb_state->regs.c);
@@ -698,7 +698,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("IME", gb_state->regs.io.ime);
       ImGui::TreePop();
     }
-    if (ImGui::TreeNode("IO Reg Values")) {
+    if (ImGui::TreeNodeEx("IO Reg Values", ImGuiTreeNodeFlags_Framed)) {
       for (io_reg_addr_t io_reg : io_regs) {
         gb_imgui_show_mem_val(gb_state, gb_io_reg_name(io_reg), io_reg);
       }
