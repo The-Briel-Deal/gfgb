@@ -55,6 +55,8 @@ void gb_state_init(struct gb_state *gb_state) {
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
   gb_state->regs.io.lcdc                = 0b10010001;
   gb_state->first_oam_scan_after_enable = true;
+
+  gb_state->dbg_speed_factor = 1.0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {

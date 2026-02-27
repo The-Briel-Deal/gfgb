@@ -602,7 +602,8 @@ void gb_imgui_render(struct gb_state *gb_state) {
   {
     ImGui::Begin("GB State");
 
-    if (ImGui::CollapsingHeader("Breakpoints")) {
+    if (ImGui::CollapsingHeader("Execution")) {
+      ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
       ImGui::Checkbox("Execution Paused", &gb_state->execution_paused);
       ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
       ImGui::TextUnformatted("Addr:");

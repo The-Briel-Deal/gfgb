@@ -129,7 +129,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
     *appstate                 = gb_state;
     GB_assert(appstate != NULL);
-    gb_state_init((gb_state_t *)*appstate);
+    gb_state_init(gb_state);
     if (!gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename)) return SDL_APP_FAILURE;
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
@@ -253,7 +253,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   if (!gb_state->execution_paused) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
-    gb_state->ns_elapsed_while_running += (gb_state->ns_elapsed_total - prev_ns_elapsed_total);
+    gb_state->ns_elapsed_while_running += ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg_speed_factor);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
       if (gb_state->execution_paused) break;
