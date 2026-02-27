@@ -603,6 +603,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
     ImGui::Begin("GB State");
 
     if (ImGui::CollapsingHeader("Execution")) {
+      // Framerate
+      // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
+      // issue.
       float last_frametime = (float)gb_state->ns_last_frametime / NS_PER_SEC;
       float last_frame_fps = 0.0f;
       if (last_frametime != 0.0f) {
@@ -610,6 +613,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       }
       ImGui::Value("Last Frametime", last_frametime, "%.6f");
       ImGui::Value("Last Frame FPS", last_frame_fps, "%.6f");
+
       ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
       ImGui::Checkbox("Execution Paused", &gb_state->execution_paused);
       ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
