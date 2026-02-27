@@ -13,7 +13,7 @@ if get_option('print_inst_during_exec')
   add_global_arguments('-DPRINT_INST_DURING_EXEC=1', language : 'cpp')
 endif
 
-imgui_dep = dependency('imgui')
+imgui_dep = dependency('imgui-docking')
 sdl3_deps = [dependency('sdl3'), imgui_dep]
 tracy_dep = dependency(
   'tracy',
