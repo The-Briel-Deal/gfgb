@@ -224,7 +224,7 @@ struct regs {
     uint8_t sb; // serial transfer data (currently unused)
     uint8_t sc; // serial transfer control (currently unused)
 
-    uint8_t div;  // divider register
+    uint16_t div;  // divider register
     uint8_t tima; // timer counter
     uint8_t tma;  // timer modulo
     uint8_t tac;  // timer control

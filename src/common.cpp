@@ -102,7 +102,6 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_JOYP: return &gb_state->regs.io.joyp;
   case IO_SB: return &gb_state->regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
   case IO_SC: return &gb_state->regs.io.sc;
-  case IO_DIV: return &gb_state->regs.io.div;
   case IO_TIMA: return &gb_state->regs.io.tima;
   case IO_TMA: return &gb_state->regs.io.tma;
   case IO_TAC: return &gb_state->regs.io.tac;
@@ -150,6 +149,10 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_LY: {
     return gb_state->regs.io.ly;
   }
+  case IO_DIV: {
+    // Internally div is a 16 bit register but only the most significant 8 bits are mapped to mem.
+    return ((gb_state->regs.io.div >> 8) & 0xFF);
+  }
   default: NOT_IMPLEMENTED("Read Only IO Reg Not Implemented");
   }
 }
@@ -195,6 +198,10 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
       uint8_t val;
       switch (addr) {
       case IO_LY: val = get_ro_io_reg(gb_state, addr); break;
+      case IO_DIV: {
+        val = get_ro_io_reg(gb_state, addr);
+        break;
+      }
       case IO_STAT:
         // stat is partially read only. we also want to make sure bit 7 is high.
         val = *get_io_reg(gb_state, addr);
@@ -461,23 +468,7 @@ void gb_update_timers(struct gb_state *gb_state) {
   gb_state->last_timer_sync_m_cycles = curr_m_cycles;
 
   // Update DIV
-  {
-    // TODO: Reset and stop incrementing during stop inst duration
-    uint16_t div_incr_every    = 64;
-    uint64_t div_curr_m_cycles = curr_m_cycles;
-    uint64_t div_prev_m_cycles = prev_m_cycles;
-    // we want to floor this to the lowest multiple of the increment rate, that way we don't risk missing increments if
-    // this is called too frequently.
-    div_curr_m_cycles /= div_incr_every;
-    div_curr_m_cycles *= div_incr_every;
-
-    div_prev_m_cycles /= div_incr_every;
-    div_prev_m_cycles *= div_incr_every;
-
-    uint8_t div_incr_by = (div_curr_m_cycles - div_prev_m_cycles) / div_incr_every;
-
-    gb_state->regs.io.div += div_incr_by;
-  }
+  gb_state->regs.io.div += (curr_m_cycles - prev_m_cycles) * 4;
 
   update_tima(gb_state, prev_m_cycles, curr_m_cycles);
   update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);
