@@ -53,10 +53,11 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->rom_loaded   = false;
   gb_state->regs.io.bank = false;
   // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
-  gb_state->regs.io.lcdc                = 0b10010001;
+  gb_state->regs.io.lcdc                = 0b1001'0001;
+  gb_state->regs.io.sc                  = 0b0111'1110;
   gb_state->first_oam_scan_after_enable = true;
 
-  gb_state->dbg_speed_factor = 1.0;
+  gb_state->dbg_speed_factor            = 1.0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
@@ -253,6 +254,10 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
   // read-only.
   LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
   switch (reg) {
+  case IO_SC:
+    // TODO: CGB uses bit 1 for clock speed. I'll need to implement that if I add CGB support.
+    *get_io_reg(gb_state, IO_SC) = val | 0b0111'1110;
+    break;
   case IO_JOYP:
     gb_state->regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
     gb_state->regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
