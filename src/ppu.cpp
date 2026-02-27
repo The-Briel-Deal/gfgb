@@ -603,6 +603,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
     ImGui::Begin("GB State");
 
     if (ImGui::CollapsingHeader("Execution")) {
+      float last_frametime = (float)gb_state->ns_last_frametime / NS_PER_SEC;
+      float last_frame_fps = 0.0f;
+      if (last_frametime != 0.0f) {
+        last_frame_fps = 1 / last_frametime;
+      }
+      ImGui::Value("Last Frametime", last_frametime, "%.6f");
+      ImGui::Value("Last Frame FPS", last_frame_fps, "%.6f");
       ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
       ImGui::Checkbox("Execution Paused", &gb_state->execution_paused);
       ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
@@ -701,8 +708,12 @@ void gb_imgui_render(struct gb_state *gb_state) {
 // called on vblank
 void gb_flip_frame(struct gb_state *gb_state) {
 
-  gb_state->win_line_counter = 0;
-  gb_state->wy_cond          = 0;
+  uint64_t curr_ticks_ns             = SDL_GetTicksNS();
+  gb_state->ns_last_frametime        = curr_ticks_ns - gb_state->ns_elapsed_last_gb_vsync;
+  gb_state->ns_elapsed_last_gb_vsync = curr_ticks_ns;
+
+  gb_state->win_line_counter         = 0;
+  gb_state->wy_cond                  = 0;
 
   SDL_Texture *tmp;
   tmp                                  = gb_state->sdl_composite_target_front;

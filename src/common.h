@@ -329,6 +329,9 @@ struct gb_state {
   uint64_t                ns_elapsed_while_running;
   uint64_t                ns_elapsed_total;
 
+  uint64_t                ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
+  uint64_t                ns_last_frametime;
+
   // total m_cycles_elapsed on the cpu
   //
   // This is currently just based on the simple m_cycle timing of each instruction from
