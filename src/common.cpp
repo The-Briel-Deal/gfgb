@@ -42,7 +42,6 @@ void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
 }
 
 void gb_state_init(struct gb_state *gb_state) {
-  SDL_zerop(gb_state);
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
