@@ -230,6 +230,7 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
 }
 
 static void check_breakpoints(gb_state_t *gb_state, uint16_t prev_pc, uint16_t curr_pc) {
+  ZoneScopedN("Check Breakpoints");
   for (gb_breakpoint_t bp : gb_state->breakpoints) {
     if (bp.addr >= prev_pc && bp.addr < curr_pc) {
       gb_state->execution_paused = true;

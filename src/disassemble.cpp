@@ -1,6 +1,7 @@
 #include "disassemble.h"
 #include "common.h"
 #include "cpu.h"
+#include "tracy/Tracy.hpp"
 
 #include <assert.h>
 #include <stdint.h>
@@ -91,6 +92,7 @@ const char *get_inst_symbol(struct gb_state *gb_state, uint16_t pc) {
   }
 
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr) {
+  ZoneScopedN("Print Inst");
   if (show_inst_addr) {
     fprintf(stream, "%s:0x%.4X: ", get_inst_symbol(gb_state, inst_addr), inst_addr);
   }
