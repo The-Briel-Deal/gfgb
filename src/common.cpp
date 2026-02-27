@@ -138,7 +138,7 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_BGP: return &gb_state->regs.io.bgp;
   case IO_OBP0: return &gb_state->regs.io.obp0;
   case IO_OBP1: return &gb_state->regs.io.obp1;
-  default: LogError("IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
+  default: ERR(gb_state, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
   }
 }
 uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {

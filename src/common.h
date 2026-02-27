@@ -71,7 +71,10 @@ enum GB_LogCategory {
 #define ERR(gb_state, msg, ...)                                                                                        \
   {                                                                                                                    \
     LogError(msg, ##__VA_ARGS__);                                                                                      \
-    gb_state->err |= true;                                                                                             \
+    if (gb_state->pause_on_err) {                                                                                      \
+      gb_state->execution_paused = true;                                                                               \
+    }                                                                                                                  \
+    gb_state->err = true;                                                                                              \
   }
 
 #define KB(n)                      (1024 * n)
@@ -359,6 +362,7 @@ struct gb_state {
   bool             dbg_hide_win;
   bool             dbg_hide_objs;
 
+  bool             pause_on_err;
   bool             execution_paused;
 
   gb_imgui_state_t imgui_state;

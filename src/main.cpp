@@ -254,6 +254,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     gb_state->ns_elapsed_while_running += (gb_state->ns_elapsed_total - prev_ns_elapsed_total);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
+      if (gb_state->execution_paused) break;
       gb_update_io_joyp(gb_state);
       {
         ZoneScopedN("Fetch and Execute");

@@ -587,6 +587,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
     if (ImGui::CollapsingHeader("Breakpoints")) {
       ImGui::Checkbox("Execution Paused", &gb_state->execution_paused);
+      ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");
