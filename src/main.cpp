@@ -253,7 +253,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   if (!gb_state->execution_paused) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
-    gb_state->ns_elapsed_while_running += ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg_speed_factor);
+    gb_state->ns_elapsed_while_running +=
+        ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg_speed_factor);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
       if (gb_state->execution_paused) break;
@@ -332,7 +333,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   }
 
-  gb_display_render(gb_state);
+  // If we have fullscreen dockspace enabled then rendering the display to window won't do anything since ImGui will
+  // cover it with the dockspace.
+  if (!gb_state->enable_fs_dockspace) gb_display_render(gb_state);
   gb_imgui_render(gb_state);
   GB_CheckSDLCall(SDL_RenderPresent(gb_state->sdl_renderer));
 

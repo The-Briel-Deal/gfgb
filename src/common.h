@@ -219,15 +219,15 @@ struct regs {
   uint16_t sp;
   uint16_t pc;
   struct io_regs {
-    uint8_t joyp;
+    uint8_t  joyp;
 
-    uint8_t sb; // serial transfer data (currently unused)
-    uint8_t sc; // serial transfer control (currently unused)
+    uint8_t  sb; // serial transfer data (currently unused)
+    uint8_t  sc; // serial transfer control (currently unused)
 
     uint16_t div;  // divider register
-    uint8_t tima; // timer counter
-    uint8_t tma;  // timer modulo
-    uint8_t tac;  // timer control
+    uint8_t  tima; // timer counter
+    uint8_t  tma;  // timer modulo
+    uint8_t  tac;  // timer control
     // Sound
     uint8_t nr10;
     uint8_t nr11;
@@ -371,6 +371,8 @@ struct gb_state {
 
   bool             pause_on_err;
   bool             execution_paused;
+
+  bool             enable_fs_dockspace;
 
   gb_imgui_state_t imgui_state;
 

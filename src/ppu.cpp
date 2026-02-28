@@ -98,6 +98,8 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->sdl_window, gb_state->sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->sdl_renderer);
 
+  gb_state->enable_fs_dockspace = true;
+
   return true;
 }
 
@@ -599,7 +601,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
-  ImGui::DockSpaceOverViewport();
+  if (gb_state->enable_fs_dockspace) {
+    ImGui::DockSpaceOverViewport();
+  }
 
   {
     ImGui::Begin("Display Viewport");
@@ -613,6 +617,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
   {
     ImGui::Begin("GB State");
 
+    if (ImGui::TreeNodeEx("GUI Options", ImGuiTreeNodeFlags_Framed)) {
+      ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);
+      ImGui::TreePop();
+    }
     if (ImGui::TreeNodeEx("Execution", ImGuiTreeNodeFlags_Framed)) {
       // Framerate
       // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
