@@ -325,6 +325,10 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     // Use signed integers when calculating the display position since we still display tiles where y = 0 to -7
     int16_t display_x = (x * 8) - gb_state->regs.io.scx;
     int16_t display_y = (y * 8) - gb_state->regs.io.scy;
+    if (display_x < -7) display_x += 256;
+    if (display_y < -7) display_y += 256;
+    GB_assert(display_x > -8 && display_x < 256);
+    GB_assert(display_y > -8 && display_y < 256);
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr,
                               SDL_FLIP_NONE);
