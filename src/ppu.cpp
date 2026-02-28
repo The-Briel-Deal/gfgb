@@ -80,6 +80,7 @@ bool gb_video_init(struct gb_state *gb_state) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
@@ -598,7 +599,14 @@ void gb_imgui_render(struct gb_state *gb_state) {
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
+  ImGui::DockSpaceOverViewport();
 
+  {
+    ImGui::Begin("Display Viewport");
+    ImGui::Image((ImTextureID)(intptr_t)gb_state->sdl_composite_target_front,
+                 ImVec2(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT));
+    ImGui::End();
+  }
   {
     ImGui::Begin("GB State");
 
