@@ -603,8 +603,11 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
   {
     ImGui::Begin("Display Viewport");
-    ImGui::Image((ImTextureID)(intptr_t)gb_state->sdl_composite_target_front,
-                 ImVec2(GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT));
+    // always keep the correct aspect ratio based off of the window width.
+    ImVec2 win_size;
+    win_size.x = ImGui::GetWindowWidth();
+    win_size.y = ((win_size.x * GB_DISPLAY_HEIGHT) / GB_DISPLAY_WIDTH);
+    ImGui::Image((ImTextureID)(intptr_t)gb_state->sdl_composite_target_front, win_size);
     ImGui::End();
   }
   {
