@@ -575,6 +575,15 @@ static void gb_imgui_show_val(const char *name, const uint16_t val) {
   ImGui::TextUnformatted(formatted_text.c_str());
 }
 
+void gb_display_clear(gb_state_t *gb_state) {
+  SDL_Surface *locked_texture;
+  // We just clear the entire front buffer in one call here. There's no need to flip textures since this all happens at
+  // once (meaning there is no risk of displaying partial frames).
+  GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->sdl_composite_target_front, NULL, &locked_texture));
+  SDL_ClearSurface(locked_texture, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
+  SDL_UnlockTexture(gb_state->sdl_composite_target_front);
+}
+
 void gb_display_render(gb_state_t *gb_state) {
   // We render the front buffer then the imgui UI to make sure we don't display partial frames.
   GB_CheckSDLCall(SDL_SetRenderTarget(gb_state->sdl_renderer, NULL));

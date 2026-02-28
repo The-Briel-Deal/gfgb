@@ -335,11 +335,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
     // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui UI.
-    SDL_Surface *locked_texture;
-    // Clear the front buffer if the screen is disabled.
-    GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->sdl_composite_target_front, NULL, &locked_texture));
-    SDL_ClearSurface(locked_texture, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
-    SDL_UnlockTexture(gb_state->sdl_composite_target_front);
+    gb_display_clear(gb_state);
   }
   // If we have fullscreen dockspace enabled then rendering the display to window won't do anything since ImGui will
   // cover it with the dockspace.

@@ -62,6 +62,7 @@ void gb_draw(gb_state_t *gb_state);             // on Drawing-Pixels
 void gb_composite_line(gb_state_t *gb_state);   // on H-Blank
 void gb_flip_frame(gb_state_t *gb_state);       // on V-Blank
 
+void gb_display_clear(gb_state_t *gb_state);
 void gb_display_render(gb_state_t *gb_state);
 void gb_imgui_render(gb_state_t *gb_state);
 
