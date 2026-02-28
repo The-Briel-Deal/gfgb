@@ -576,14 +576,6 @@ static void gb_imgui_show_val(const char *name, const uint16_t val) {
 }
 
 void gb_display_render(gb_state_t *gb_state) {
-  if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
-    // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui UI.
-    SDL_Surface *locked_texture;
-    // Clear the front buffer if the screen is disabled.
-    GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->sdl_composite_target_front, NULL, &locked_texture));
-    SDL_ClearSurface(locked_texture, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
-    SDL_UnlockTexture(gb_state->sdl_composite_target_front);
-  }
   // We render the front buffer then the imgui UI to make sure we don't display partial frames.
   GB_CheckSDLCall(SDL_SetRenderTarget(gb_state->sdl_renderer, NULL));
   GB_CheckSDLCall(SDL_SetRenderDrawColorFloat(gb_state->sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT));
