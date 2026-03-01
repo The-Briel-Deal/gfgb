@@ -14,7 +14,24 @@ if get_option('print_inst_during_exec')
 endif
 
 imgui_dep = dependency('imgui-docking', default_options : {
-    'glfw' : false,
+    # For now i'm only using sdl3 and sdl3_renderer as backends. GLFW being enabled broke builds on my machine so I disabled everything i'm not using.
+    'sdl3' : 'enabled',
+    'sdl3_renderer' : 'enabled',
+    'allegro5' : 'disabled',
+    'dx10' : 'disabled',
+    'dx11' : 'disabled',
+    'dx12' : 'disabled',
+    'dx9' : 'disabled',
+    'glfw' : 'disabled',
+    'metal' : 'disabled',
+    'opengl' : 'disabled',
+    'osx' : 'disabled',
+    'sdl2' : 'disabled',
+    'sdl2_renderer' : 'disabled',
+    'sdl3_gpu' : 'disabled',
+    'vulkan' : 'disabled',
+    'webgpu' : 'disabled',
+    'win' : 'disabled',
   },
 )
 sdl3_deps = [dependency('sdl3'), imgui_dep]
