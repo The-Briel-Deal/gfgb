@@ -36,3 +36,6 @@ dev = ["cython", "pytest"]
 
 [tool.pyright]
 stubPath = "./stubs/"
+
+[tool.meson-python.wheel]
+exclude = ['{libdir_static}/libtracy.a']
