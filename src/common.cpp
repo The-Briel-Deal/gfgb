@@ -42,22 +42,26 @@ void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
 }
 
 void gb_state_init(struct gb_state *gb_state) {
+  /// Registers
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
-  gb_state->regs.sp = WRAM_END + 1;
-
-  // This isn't necessary due to me zeroing state above, but I want to
-  // explicitly set this as false in case I ever remove the zeroing as a speed
-  // up.
-  gb_state->rom_loaded   = false;
+  gb_state->regs.sp      = WRAM_END + 1;
   gb_state->regs.io.bank = false;
-  // This is what lcdc is initialized to in neviksti's original disassembly: https://www.neviksti.com/DMG/DMG_ROM.asm
-  gb_state->regs.io.lcdc                = 0b1001'0001;
-  gb_state->regs.io.sc                  = 0b0111'1110;
-  gb_state->first_oam_scan_after_enable = true;
+  gb_state->regs.io.lcdc = 0b1001'0001;
+  gb_state->regs.io.sc   = 0b0111'1110;
 
-  gb_state->dbg_speed_factor            = 1.0;
+  /// Internal State
+  gb_state->rom_loaded                  = false;
+  gb_state->halted                      = false;
+  gb_state->first_oam_scan_after_enable = true;
+  gb_state->serial_port_output          = NULL;
+  gb_state->syms.syms                   = NULL;
+  gb_state->syms.capacity               = 0;
+  gb_state->syms.len                    = 0;
+
+  // Debug State
+  gb_state->dbg_speed_factor = 1.0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
