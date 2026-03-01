@@ -42,34 +42,23 @@ void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
 }
 
 void gb_state_init(struct gb_state *gb_state) {
+  // We only manually initialize non-zero vals since we zero gb_state first.
+  GB_memset(gb_state, 0, sizeof(*gb_state));
   /// Registers
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
   gb_state->regs.sp      = WRAM_END + 1;
-  gb_state->regs.io.bank = false;
   gb_state->regs.io.lcdc = 0b1001'0001;
   gb_state->regs.io.sc   = 0b0111'1110;
 
   /// Internal State
-  gb_state->rom_loaded                  = false;
-  gb_state->halted                      = false;
   gb_state->first_oam_scan_after_enable = true;
-  gb_state->serial_port_output          = NULL;
-  gb_state->syms.syms                   = NULL;
-  gb_state->syms.capacity               = 0;
-  gb_state->syms.len                    = 0;
-  gb_state->ns_elapsed_while_running    = 0;
-  gb_state->ns_elapsed_last_gb_vsync    = 0;
-  gb_state->ns_elapsed_total            = 0;
-  gb_state->m_cycles_elapsed            = 0;
-  // TODO: I should probably add a way to start the emulator paused so that you can set breakpoints before it starts
-  // running.
-  gb_state->execution_paused = false;
 
   // Debug State
   gb_state->dbg_speed_factor = 1.0;
-  GB_memset(&gb_state->ram, 0, sizeof(gb_state->ram));
+  gb_state->breakpoints      = new std::vector<gb_breakpoint_t>;
+  assert(gb_state->breakpoints->size() == 0);
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
@@ -104,7 +93,8 @@ void             gb_state_free(struct gb_state *gb_state) {
   if (gb_state->syms.capacity > 0) {
     free_symbol_list(&gb_state->syms);
   }
-  SDL_free(gb_state);
+  delete gb_state->breakpoints;
+  GB_free(gb_state);
 }
 
 uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {

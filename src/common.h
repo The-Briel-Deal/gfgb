@@ -377,7 +377,7 @@ struct gb_state {
   gb_imgui_state_t imgui_state;
 
 #ifdef __cplusplus
-  std::vector<gb_breakpoint_t> breakpoints;
+  std::vector<gb_breakpoint_t> *breakpoints;
 #endif
 };
 typedef struct gb_state gb_state_t;

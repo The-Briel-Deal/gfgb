@@ -645,10 +645,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");
       if (ImGui::Button("Set Breakpoint")) {
-        gb_state->breakpoints.push_back({.addr = imgui_state->breakpoint_addr});
+        gb_state->breakpoints->push_back({.addr = imgui_state->breakpoint_addr});
       }
       int i = 1;
-      for (gb_breakpoint_t bp : gb_state->breakpoints) {
+      for (gb_breakpoint_t bp : *gb_state->breakpoints) {
         ImGui::Text("Breakpoint %d: %.4x", i++, bp.addr);
       }
       ImGui::TreePop();
