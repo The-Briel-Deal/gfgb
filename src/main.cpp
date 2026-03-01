@@ -255,9 +255,13 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
     gb_state->ns_elapsed_while_running +=
         ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg_speed_factor);
+    // If the gameboy execution falls behind we don't want it to stay in this loop forever. So we break this loop after
+    // 1/60th of a second so that we can atleast update the emulator UI.
+    uint64_t loop_timeout = gb_state->ns_elapsed_total + (NS_PER_SEC / 60);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
       if (gb_state->execution_paused) break;
+      if (loop_timeout < SDL_GetTicksNS()) break;
       gb_update_io_joyp(gb_state);
       {
         ZoneScopedN("Fetch and Execute");
