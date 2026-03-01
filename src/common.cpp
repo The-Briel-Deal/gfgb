@@ -59,9 +59,17 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->syms.syms                   = NULL;
   gb_state->syms.capacity               = 0;
   gb_state->syms.len                    = 0;
+  gb_state->ns_elapsed_while_running    = 0;
+  gb_state->ns_elapsed_last_gb_vsync    = 0;
+  gb_state->ns_elapsed_total            = 0;
+  gb_state->m_cycles_elapsed            = 0;
+  // TODO: I should probably add a way to start the emulator paused so that you can set breakpoints before it starts
+  // running.
+  gb_state->execution_paused = false;
 
   // Debug State
   gb_state->dbg_speed_factor = 1.0;
+  GB_memset(&gb_state->ram, 0, sizeof(gb_state->ram));
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
