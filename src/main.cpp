@@ -261,7 +261,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
       if (gb_state->execution_paused) break;
-      if (loop_timeout < SDL_GetTicksNS()) break;
+      if (loop_timeout < SDL_GetTicksNS()) {
+        // reset ns_elapsed_while_running to stop the gameboy to run at super speed to catch up once execution speed
+        // picks up again.
+        gb_state->ns_elapsed_while_running = (gb_state->m_cycles_elapsed * 954);
+        break;
+      }
       gb_update_io_joyp(gb_state);
       {
         ZoneScopedN("Fetch and Execute");
