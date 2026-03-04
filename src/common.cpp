@@ -72,6 +72,7 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->m_cycles_elapsed            = 0;
   gb_state->last_timer_sync_m_cycles    = 0;
   gb_state->ns_elapsed_while_running    = 0;
+  gb_state->lcd_x                       = 0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
