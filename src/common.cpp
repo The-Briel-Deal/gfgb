@@ -364,7 +364,7 @@ static uint64_t gb_dots(uint64_t m_cycles) {
   return m_cycles * 4;
 }
 
-static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
+static void update_tima(struct gb_state *gb_state) {
   uint8_t tac      = gb_state->regs.io.tac;
   bool    this_bit = 0;
   switch (tac & 0b0000'0011) {
@@ -484,7 +484,7 @@ void gb_update_timers(struct gb_state *gb_state) {
   // Update DIV
   gb_state->regs.io.div += (curr_m_cycles - prev_m_cycles) * 4;
 
-  update_tima(gb_state, prev_m_cycles, curr_m_cycles);
+  update_tima(gb_state);
   update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);
   TracyCZoneEnd(ctx);
 }
