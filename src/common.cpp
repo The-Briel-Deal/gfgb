@@ -365,30 +365,28 @@ static uint64_t gb_dots(uint64_t m_cycles) {
 }
 
 static void update_tima(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
-  uint8_t tac = gb_state->regs.io.tac;
-  if ((tac & 0b0100) == 0) return;
-  uint16_t incr_every;
-  switch (tac & 0b0011) {
-  case 0: incr_every = 256; break;
-  case 1: incr_every = 4; break;
-  case 2: incr_every = 16; break;
-  case 3: incr_every = 64; break;
-  default: unreachable();
+  uint8_t tac      = gb_state->regs.io.tac;
+  bool    this_bit = 0;
+  switch (tac & 0b0000'0011) {
+  case 0: // using bit 7
+    this_bit = (gb_state->regs.io.div >> 9) & 1;
+    break;
+  case 3: // using bit 5
+    this_bit = (gb_state->regs.io.div >> 7) & 1;
+    break;
+  case 2: // using bit 3
+    this_bit = (gb_state->regs.io.div >> 5) & 1;
+    break;
+  case 1: // using bit 1
+    this_bit = (gb_state->regs.io.div >> 3) & 1;
+    break;
   }
-  // we want to floor this to the lowest multiple of the increment rate, that way we don't risk missing increments if
-  // this is called too frequently.
-  curr_m_cycles /= incr_every;
-  curr_m_cycles *= incr_every;
+  this_bit &= ((tac & 0b0000'0100) >> 2);
 
-  prev_m_cycles /= incr_every;
-  prev_m_cycles *= incr_every;
+  // Only increment on falling edge (a.k.a. true -> false).
+  if (gb_state->last_tima_bit && (!this_bit)) gb_state->regs.io.tima++;
 
-  uint8_t incr_by = (curr_m_cycles - prev_m_cycles) / incr_every;
-
-  if (((uint32_t)gb_state->regs.io.tima + incr_by) > 0xFF) {
-    gb_state->regs.io.if_ |= 0b00100;
-  }
-  gb_state->regs.io.tima += incr_by;
+  gb_state->last_tima_bit = this_bit;
 }
 
 #define DOTS_PER_LINE   456

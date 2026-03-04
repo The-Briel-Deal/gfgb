@@ -342,6 +342,7 @@ struct gb_state {
   // should be enough to make most games run.
   uint64_t m_cycles_elapsed;
   uint64_t last_timer_sync_m_cycles;
+  bool last_tima_bit;
 
   // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
