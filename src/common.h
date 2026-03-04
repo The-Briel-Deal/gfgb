@@ -341,6 +341,7 @@ struct gb_state {
   // SM83's overlaping fetch/execute and any other timing idiosyncrasies. For now though just using the simple timings
   // should be enough to make most games run.
   uint64_t m_cycles_elapsed;
+  uint64_t last_timer_sync_m_cycles;
 
   // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
@@ -350,12 +351,9 @@ struct gb_state {
   uint8_t  last_mode_handled;
 
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
-  bool first_oam_scan_after_enable;
+  bool                        first_oam_scan_after_enable;
 
-  bool oam_dma_start;
-
-  // used for updating the timer io regs.
-  uint32_t                    last_timer_sync_m_cycles;
+  bool                        oam_dma_start;
 
   gb_internal_joy_pad_state_t joy_pad_state;
 
@@ -487,6 +485,7 @@ uint16_t         gb_read_mem16(struct gb_state *gb_state, uint16_t addr);
 void             gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val);
 
 void             gb_state_init(struct gb_state *gb_state);
+void             gb_state_reset(struct gb_state *gb_state);
 struct gb_state *gb_state_alloc();
 void             gb_state_free(struct gb_state *gb_state);
 

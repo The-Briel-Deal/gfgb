@@ -61,6 +61,17 @@ void gb_state_init(struct gb_state *gb_state) {
   assert(gb_state->breakpoints->size() == 0);
 }
 
+void gb_state_reset(struct gb_state *gb_state) {
+  GB_memset(&gb_state->regs, 0, sizeof(gb_state->regs));
+  gb_state->regs.sp                     = WRAM_END + 1;
+  gb_state->regs.pc                     = 0;
+  gb_state->regs.io.bank                = true;
+  gb_state->first_oam_scan_after_enable = true;
+  gb_state->m_cycles_elapsed            = 0;
+  gb_state->last_timer_sync_m_cycles    = 0;
+  gb_state->ns_elapsed_while_running    = 0;
+}
+
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
   // Load bootrom into gb_state->bootrom (bootrom is optional)
   if (bootrom_name != NULL) {

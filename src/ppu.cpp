@@ -622,14 +622,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
   {
     ImGui::Begin("GB State");
 
-    if (ImGui::TreeNodeEx("GUI Options", ImGuiTreeNodeFlags_Framed)) {
-      ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);
-      ImGui::TreePop();
-    }
     if (ImGui::TreeNodeEx("Execution", ImGuiTreeNodeFlags_Framed)) {
       // Framerate
       // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
       // issue.
+      if (ImGui::Button("Reset")) {
+        gb_state_reset(gb_state);
+      }
       float last_frametime = (float)gb_state->ns_last_frametime / NS_PER_SEC;
       float last_frame_fps = 0.0f;
       if (last_frametime != 0.0f) {
@@ -651,6 +650,11 @@ void gb_imgui_render(struct gb_state *gb_state) {
       for (gb_breakpoint_t bp : *gb_state->breakpoints) {
         ImGui::Text("Breakpoint %d: %.4x", i++, bp.addr);
       }
+      ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("GUI Options", ImGuiTreeNodeFlags_Framed)) {
+      ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);
       ImGui::TreePop();
     }
 
