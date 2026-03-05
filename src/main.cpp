@@ -71,7 +71,14 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
 
-  int           c;
+  CLI::App      app("A GameBoy emulator by Gabriel Ford", "GFGB");
+
+  app.require_subcommand(1, 1);
+
+  app.add_subcommand("exec", "Execute GameBoy ROM");
+  app.add_subcommand("disasm", "Disassemble GameBoy ROM");
+
+  app.parse(argc, argv);
 
   // e = execute
   // d = disassemble
@@ -83,42 +90,42 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   char *serial_output_filename = NULL;
   // b: = boot rom
   char *bootrom_filename = NULL;
-  while ((c = getopt(argc, argv, "edf:s:p:b:")) != -1)
-    switch (c) {
-    case 'e':
-      if (run_mode != UNSET) {
-        fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
-        return SDL_APP_FAILURE;
-      }
-      run_mode = EXECUTE;
-      break;
-    case 'd':
-      if (run_mode != UNSET) {
-        fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
-        return SDL_APP_FAILURE;
-      }
-      run_mode = DISASSEMBLE;
-      break;
-    case 'f': rom_filename = optarg; break;
-    case 's': symbol_filename = optarg; break;
-    case 'p': serial_output_filename = optarg; break;
-    case 'b': bootrom_filename = optarg; break;
-    case '?':
-      switch (optopt) {
-      case 'f':
-      case 's':
-      case 'p':
-      case 'b': fprintf(stderr, "Option -%c requires an argument.\n", optopt); return SDL_APP_FAILURE;
-      default:
-        if (isprint(optopt)) {
-          fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-        } else {
-          fprintf(stderr, "Unknown option character `0x%.2X'.\n", optopt);
-        }
-        return SDL_APP_FAILURE;
-      }
-    default: return SDL_APP_FAILURE;
-    }
+  // while ((c = getopt(argc, argv, "edf:s:p:b:")) != -1)
+  //   switch (c) {
+  //   case 'e':
+  //     if (run_mode != UNSET) {
+  //       fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
+  //       return SDL_APP_FAILURE;
+  //     }
+  //     run_mode = EXECUTE;
+  //     break;
+  //   case 'd':
+  //     if (run_mode != UNSET) {
+  //       fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
+  //       return SDL_APP_FAILURE;
+  //     }
+  //     run_mode = DISASSEMBLE;
+  //     break;
+  //   case 'f': rom_filename = optarg; break;
+  //   case 's': symbol_filename = optarg; break;
+  //   case 'p': serial_output_filename = optarg; break;
+  //   case 'b': bootrom_filename = optarg; break;
+  //   case '?':
+  //     switch (optopt) {
+  //     case 'f':
+  //     case 's':
+  //     case 'p':
+  //     case 'b': fprintf(stderr, "Option -%c requires an argument.\n", optopt); return SDL_APP_FAILURE;
+  //     default:
+  //       if (isprint(optopt)) {
+  //         fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+  //       } else {
+  //         fprintf(stderr, "Unknown option character `0x%.2X'.\n", optopt);
+  //       }
+  //       return SDL_APP_FAILURE;
+  //     }
+  //   default: return SDL_APP_FAILURE;
+  //   }
 
   switch (run_mode) {
   case EXECUTE: {
