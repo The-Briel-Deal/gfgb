@@ -58,8 +58,7 @@ void gb_state_init(struct gb_state *gb_state) {
   // Debug State
   gb_state->dbg_speed_factor = 1.0;
   gb_state->breakpoints      = new std::vector<gb_breakpoint_t>;
-  // TODO: Add cli flag to start paused
-  gb_state->execution_paused = true;
+  gb_state->execution_paused = false;
   assert(gb_state->breakpoints->size() == 0);
 }
 
