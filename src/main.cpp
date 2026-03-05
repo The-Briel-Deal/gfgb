@@ -84,6 +84,10 @@ bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filenam
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  struct gb_state *gb_state = gb_state_alloc();
+  *appstate                 = gb_state;
+  gb_state_init(gb_state);
+
   enum run_mode run_mode = UNSET;
 
   CLI::App      gb_cli("A GameBoy emulator by Gabriel Ford", "GFGB");
@@ -138,6 +142,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
   }
+
   const char *rom_filename_cstr    = rom_filename.c_str();
   const char *symbol_filename_cstr = NULL;
   if (symbol_filename.length() != 0) {
@@ -159,9 +164,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     run_mode = DISASSEMBLE;
   }
 
-  struct gb_state *gb_state = gb_state_alloc();
-  *appstate                 = gb_state;
-  gb_state_init(gb_state);
   if (!gb_load_rom(gb_state, rom_filename_cstr, bootrom_filename_cstr, symbol_filename_cstr)) return SDL_APP_FAILURE;
   SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
