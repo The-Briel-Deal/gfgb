@@ -125,12 +125,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       ->check(CLI::ExistingFile)
       ->check(CLI::ReadPermissions);
 
+  // TODO: There isn't a good built in validator for an output file that may or may not exist. Maybe i'll want to add
+  // one down the road?
   std::string serial_output_filename;
-  gb_cli_exec
-      ->add_option( // Exclusively used for the exec subcommand since nothing is executed in disasm
-          "-p,--serial_port", serial_output_filename,
-          "Filepath to output all data written to SB IO Reg (0xFF01). Used for logging in some test roms.")
-      ->check(CLI::WritePermissions);
+  gb_cli_exec->add_option( // Exclusively used for the exec subcommand since nothing is executed in disasm
+      "-p,--serial_port", serial_output_filename,
+      "Filepath to output all data written to SB IO Reg (0xFF01). Used for logging in some test roms.");
 
   try {
     gb_cli.parse(argc, argv);
