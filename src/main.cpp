@@ -67,6 +67,18 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
   return true;
 }
 
+// Returns true on success, if error occured when opening the file return false.
+bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filename) {
+  if (serial_output_filename != NULL) {
+    gb_state->serial_port_output = fopen(serial_output_filename, "w");
+    if (gb_state->serial_port_output == NULL) {
+      LogCritical("Error when opening serial port output file: %s", strerror(errno));
+      return false;
+    }
+  }
+  return true;
+}
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
@@ -85,16 +97,34 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   std::string symbol_filename;
   gb_cli_exec->add_option("-s,--sym_file", symbol_filename);
   gb_cli_disasm->add_option("-s,--sym_file", symbol_filename);
-  // p: = serial port output file
-  char *serial_output_filename = NULL;
-  // b: = boot rom
-  char *bootrom_filename = NULL;
+
+  std::string bootrom_filename;
+  gb_cli_exec->add_option("-b,--bootrom_file", bootrom_filename);
+  gb_cli_disasm->add_option("-b,--bootrom_file", bootrom_filename);
+
+  std::string serial_output_filename;
+  gb_cli_exec->add_option( // Exclusively used for the exec subcommand since nothing is executed in disasm
+      "-p,--serial_port", serial_output_filename,
+      "Filepath to output all data written to SB IO Reg (0xFF01). Used for logging in some test roms.");
 
   try {
     gb_cli.parse(argc, argv);
   } catch (const CLI ::ParseError &e) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
+  }
+  const char *rom_filename_cstr    = rom_filename.c_str();
+  const char *symbol_filename_cstr = NULL;
+  if (symbol_filename.length() != 0) {
+    symbol_filename_cstr = symbol_filename.c_str();
+  }
+  const char *bootrom_filename_cstr = NULL;
+  if (bootrom_filename.length() != 0) {
+    bootrom_filename_cstr = bootrom_filename.c_str();
+  }
+  const char *serial_output_filename_cstr = NULL;
+  if (serial_output_filename.length() != 0) {
+    serial_output_filename_cstr = serial_output_filename.c_str();
   }
 
   if (gb_cli_exec->parsed()) {
@@ -104,35 +134,20 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     run_mode = DISASSEMBLE;
   }
 
+  struct gb_state *gb_state = gb_state_alloc();
+  *appstate                 = gb_state;
+  gb_state_init(gb_state);
+  if (!gb_load_rom(gb_state, rom_filename_cstr, bootrom_filename_cstr, symbol_filename_cstr)) return SDL_APP_FAILURE;
+  SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
+
   switch (run_mode) {
   case EXECUTE: {
-    struct gb_state *gb_state = gb_state_alloc();
-
-    *appstate                 = gb_state;
-    GB_assert(appstate != NULL);
-    gb_state_init(gb_state);
-    if (!gb_load_rom(gb_state, rom_filename.c_str(), bootrom_filename, symbol_filename.c_str())) return SDL_APP_FAILURE;
-    SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
-
-    if (serial_output_filename != NULL) {
-      gb_state->serial_port_output = fopen(serial_output_filename, "w");
-      if (gb_state->serial_port_output == NULL) {
-        LogCritical("Error when opening serial port output file: %s", strerror(errno));
-        return SDL_APP_FAILURE;
-      }
-    }
-
+    if (!gb_setup_serial_out(gb_state, serial_output_filename_cstr)) return SDL_APP_FAILURE;
     if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
-
     return SDL_APP_CONTINUE; /* carry on with the program! */
   };
   case DISASSEMBLE: {
-
-    struct gb_state gb_state;
-    gb_state_init(&gb_state);
-
-    if (!gb_load_rom(&gb_state, rom_filename.c_str(), bootrom_filename, symbol_filename.c_str())) return SDL_APP_FAILURE;
-    disassemble(&gb_state, stdout);
+    disassemble(gb_state, stdout);
 
     return SDL_APP_SUCCESS;
   }
