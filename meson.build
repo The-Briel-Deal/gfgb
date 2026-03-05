@@ -35,6 +35,7 @@ imgui_dep = dependency('imgui-docking', default_options : {
   },
 )
 sdl3_deps = [dependency('sdl3'), imgui_dep]
+cli11_dep = dependency('CLI11')
 tracy_dep = dependency(
   'tracy',
   static : true,
@@ -83,7 +84,7 @@ exe = executable(
   'gb_emu',
   [sources, 'src/main.cpp'],
   include_directories : include,
-  dependencies : [sdl3_deps, global_deps],
+  dependencies : [sdl3_deps, global_deps, cli11_dep],
   install : true,
 )
 
