@@ -2,7 +2,11 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
-#include "tracy/Tracy.hpp"
+
+#include <CLI/CLI.hpp>
+#include <tracy/Tracy.hpp>
+#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
+#include <SDL3/SDL_main.h>
 
 #include <assert.h>
 #include <ctype.h>
@@ -12,11 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
-#include <SDL3/SDL_main.h>
-
-#include <getopt.h>
 
 enum run_mode {
   UNSET = 0,
