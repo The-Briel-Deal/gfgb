@@ -71,61 +71,38 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   enum run_mode run_mode = UNSET;
 
-  CLI::App      app("A GameBoy emulator by Gabriel Ford", "GFGB");
+  CLI::App      gb_cli("A GameBoy emulator by Gabriel Ford", "GFGB");
 
-  app.require_subcommand(1, 1);
+  gb_cli.require_subcommand(1, 1);
 
-  app.add_subcommand("exec", "Execute GameBoy ROM");
-  app.add_subcommand("disasm", "Disassemble GameBoy ROM");
+  CLI::App   *gb_cli_exec   = gb_cli.add_subcommand("exec", "Execute GameBoy ROM");
+  CLI::App   *gb_cli_disasm = gb_cli.add_subcommand("disasm", "Disassemble GameBoy ROM");
 
-  app.parse(argc, argv);
+  std::string rom_filename;
+  gb_cli_exec->add_option("rom_file", rom_filename)->required();
+  gb_cli_disasm->add_option("rom_file", rom_filename)->required();
 
-  // e = execute
-  // d = disassemble
-  // f: = rom file
-  char *rom_filename = NULL;
-  // s: = sym file
-  char *symbol_filename = NULL;
+  std::string symbol_filename;
+  gb_cli_exec->add_option("-s,--sym_file", symbol_filename);
+  gb_cli_disasm->add_option("-s,--sym_file", symbol_filename);
   // p: = serial port output file
   char *serial_output_filename = NULL;
   // b: = boot rom
   char *bootrom_filename = NULL;
-  // while ((c = getopt(argc, argv, "edf:s:p:b:")) != -1)
-  //   switch (c) {
-  //   case 'e':
-  //     if (run_mode != UNSET) {
-  //       fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
-  //       return SDL_APP_FAILURE;
-  //     }
-  //     run_mode = EXECUTE;
-  //     break;
-  //   case 'd':
-  //     if (run_mode != UNSET) {
-  //       fprintf(stderr, "Option `e` and `d` specified, these are mutually exclusive\n");
-  //       return SDL_APP_FAILURE;
-  //     }
-  //     run_mode = DISASSEMBLE;
-  //     break;
-  //   case 'f': rom_filename = optarg; break;
-  //   case 's': symbol_filename = optarg; break;
-  //   case 'p': serial_output_filename = optarg; break;
-  //   case 'b': bootrom_filename = optarg; break;
-  //   case '?':
-  //     switch (optopt) {
-  //     case 'f':
-  //     case 's':
-  //     case 'p':
-  //     case 'b': fprintf(stderr, "Option -%c requires an argument.\n", optopt); return SDL_APP_FAILURE;
-  //     default:
-  //       if (isprint(optopt)) {
-  //         fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-  //       } else {
-  //         fprintf(stderr, "Unknown option character `0x%.2X'.\n", optopt);
-  //       }
-  //       return SDL_APP_FAILURE;
-  //     }
-  //   default: return SDL_APP_FAILURE;
-  //   }
+
+  try {
+    gb_cli.parse(argc, argv);
+  } catch (const CLI ::ParseError &e) {
+    gb_cli.exit(e);
+    return SDL_APP_FAILURE;
+  }
+
+  if (gb_cli_exec->parsed()) {
+    run_mode = EXECUTE;
+  }
+  if (gb_cli_disasm->parsed()) {
+    run_mode = DISASSEMBLE;
+  }
 
   switch (run_mode) {
   case EXECUTE: {
@@ -134,7 +111,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     *appstate                 = gb_state;
     GB_assert(appstate != NULL);
     gb_state_init(gb_state);
-    if (!gb_load_rom(gb_state, rom_filename, bootrom_filename, symbol_filename)) return SDL_APP_FAILURE;
+    if (!gb_load_rom(gb_state, rom_filename.c_str(), bootrom_filename, symbol_filename.c_str())) return SDL_APP_FAILURE;
     SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
     if (serial_output_filename != NULL) {
@@ -154,14 +131,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     struct gb_state gb_state;
     gb_state_init(&gb_state);
 
-    if (!gb_load_rom(&gb_state, rom_filename, bootrom_filename, symbol_filename)) return SDL_APP_FAILURE;
+    if (!gb_load_rom(&gb_state, rom_filename.c_str(), bootrom_filename, symbol_filename.c_str())) return SDL_APP_FAILURE;
     disassemble(&gb_state, stdout);
 
     return SDL_APP_SUCCESS;
   }
   case UNSET:
-    fprintf(stderr, "Run Mode unset, please specify either `-e` to execute or "
-                    "`-d` to disassemble.\n");
+    fprintf(stderr, "Run Mode unset, please specify either `exec` to execute or "
+                    "`disasm` to disassemble.\n");
     return SDL_APP_FAILURE;
   default: return SDL_APP_FAILURE;
   }
