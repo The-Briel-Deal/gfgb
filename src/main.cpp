@@ -3,9 +3,12 @@
 #include "disassemble.h"
 #include "ppu.h"
 
-#include <CLI/CLI.hpp>
 #include <tracy/Tracy.hpp>
-#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
+/* enable file permission validators which are locked behind this ifdef for the time being */
+#define CLI11_ENABLE_EXTRA_VALIDATORS 1
+#include <CLI/CLI.hpp>
+/* use the callbacks instead of main() */
+#define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL_main.h>
 
 #include <assert.h>
@@ -91,21 +94,43 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   CLI::App   *gb_cli_disasm = gb_cli.add_subcommand("disasm", "Disassemble GameBoy ROM");
 
   std::string rom_filename;
-  gb_cli_exec->add_option("rom_file", rom_filename)->required();
-  gb_cli_disasm->add_option("rom_file", rom_filename)->required();
+  gb_cli_exec
+      ->add_option("rom_file", rom_filename) // (these comments are just here to make clang-fmt break these calls)
+      ->required()
+      ->check(CLI::ExistingFile)
+      ->check(CLI::ReadPermissions);
+  gb_cli_disasm
+      ->add_option("rom_file", rom_filename) //
+      ->required()
+      ->check(CLI::ExistingFile)
+      ->check(CLI::ReadPermissions);
 
   std::string symbol_filename;
-  gb_cli_exec->add_option("-s,--sym_file", symbol_filename);
-  gb_cli_disasm->add_option("-s,--sym_file", symbol_filename);
+  gb_cli_exec
+      ->add_option("-s,--sym_file", symbol_filename) //
+      ->check(CLI::ExistingFile)
+      ->check(CLI::ReadPermissions);
+  gb_cli_disasm
+      ->add_option("-s,--sym_file", symbol_filename) //
+      ->check(CLI::ExistingFile)
+      ->check(CLI::ReadPermissions);
 
   std::string bootrom_filename;
-  gb_cli_exec->add_option("-b,--bootrom_file", bootrom_filename);
-  gb_cli_disasm->add_option("-b,--bootrom_file", bootrom_filename);
+  gb_cli_exec
+      ->add_option("-b,--bootrom_file", bootrom_filename) //
+      ->check(CLI::ExistingFile)
+      ->check(CLI::ReadPermissions);
+  gb_cli_disasm
+      ->add_option("-b,--bootrom_file", bootrom_filename) //
+      ->check(CLI::ExistingFile)
+      ->check(CLI::ReadPermissions);
 
   std::string serial_output_filename;
-  gb_cli_exec->add_option( // Exclusively used for the exec subcommand since nothing is executed in disasm
-      "-p,--serial_port", serial_output_filename,
-      "Filepath to output all data written to SB IO Reg (0xFF01). Used for logging in some test roms.");
+  gb_cli_exec
+      ->add_option( // Exclusively used for the exec subcommand since nothing is executed in disasm
+          "-p,--serial_port", serial_output_filename,
+          "Filepath to output all data written to SB IO Reg (0xFF01). Used for logging in some test roms.")
+      ->check(CLI::WritePermissions);
 
   try {
     gb_cli.parse(argc, argv);
