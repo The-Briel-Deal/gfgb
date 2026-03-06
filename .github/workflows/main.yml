@@ -7,11 +7,6 @@ jobs:
     name: Run tests
     runs-on: ubuntu-22.04
     steps:
-      - name: Print a greeting
-        env:
-          MY_VAR: Hi there! My name is
-          FIRST_NAME: Mona
-          MIDDLE_NAME: The
-          LAST_NAME: Octocat
+      - name: Install Meson Build System
         run: |
-          echo $MY_VAR $FIRST_NAME $MIDDLE_NAME $LAST_NAME.
+          apt update && apt install meson
