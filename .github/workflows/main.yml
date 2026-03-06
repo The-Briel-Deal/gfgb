@@ -1,13 +1,11 @@
 on:
   push:
     branches:
-    - main
+    - '**'
 jobs:
   run_tests:
     name: Run tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - name: Install Meson Build System
-        run: |
-          sudo apt update
-          sudo apt install meson
+      - uses: actions/checkout@v5
+      # TODO: ubuntu24.04 uses gcc-13 I need gcc-14 so I need to use ubuntu-25.04 (in a container since there isn't a runner for 25.04)
