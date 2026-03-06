@@ -13,6 +13,8 @@ if get_option('print_inst_during_exec')
   add_global_arguments('-DPRINT_INST_DURING_EXEC=1', language : 'cpp')
 endif
 
+sdl3_dep = dependency('sdl3', version : '>=3.4.0')
+
 imgui_dep = dependency('imgui-docking', default_options : {
     # For now i'm only using sdl3 and sdl3_renderer as backends. GLFW being enabled broke builds on my machine so I disabled everything i'm not using.
     'sdl3' : 'enabled',
@@ -34,7 +36,7 @@ imgui_dep = dependency('imgui-docking', default_options : {
     'win' : 'disabled',
   },
 )
-sdl3_deps = [dependency('sdl3', version : '>=3.4.0'), imgui_dep]
+gui_deps = [sdl3_dep, imgui_dep]
 cli11_dep = dependency('CLI11')
 tracy_dep = dependency(
   'tracy',
@@ -57,7 +59,7 @@ shared_lib = shared_library(
   'gfgb', 
   [sources],
   include_directories : include,
-  dependencies : [sdl3_deps, global_deps],
+  dependencies : [gui_deps, global_deps],
 )
 
 py = import('python').find_installation()
@@ -67,7 +69,7 @@ gfgb_obj = static_library(
   'gfgb',
   'py/gfgb.pyx',
   include_directories : include,
-  dependencies : [dep_py, global_deps],
+  dependencies : [dep_py, global_deps, sdl3_dep],
   override_options : ['warning_level=0'],
 )
 
@@ -77,14 +79,14 @@ gfgb_py_ext = py.extension_module(
   include_directories : include,
   link_whole : [gfgb_obj],
   install : true,
-  dependencies : [sdl3_deps, global_deps],
+  dependencies : [gui_deps, global_deps],
 )
 
 exe = executable(
   'gb_emu',
   [sources, 'src/main.cpp'],
   include_directories : include,
-  dependencies : [sdl3_deps, global_deps, cli11_dep],
+  dependencies : [gui_deps, global_deps, cli11_dep],
   install : true,
 )
 
@@ -93,7 +95,7 @@ cpu_test_exe = executable(
   sources,
   cpp_args : '-DRUN_CPU_TESTS=1',
   include_directories : include,
-  dependencies : [sdl3_deps, global_deps],
+  dependencies : [gui_deps, global_deps],
 )
 
 ppu_test_exe = executable(
@@ -101,7 +103,7 @@ ppu_test_exe = executable(
   sources,
   cpp_args : '-DRUN_PPU_TESTS=1',
   include_directories : include,
-  dependencies : [sdl3_deps, global_deps],
+  dependencies : [gui_deps, global_deps],
 )
 
 disasm_test_exe = executable(
@@ -109,7 +111,7 @@ disasm_test_exe = executable(
   sources,
   cpp_args : '-DRUN_DISASSEMBLE_TESTS=1',
   include_directories : include,
-  dependencies : [sdl3_deps, global_deps],
+  dependencies : [gui_deps, global_deps],
 )
 
 current_src_dir = meson.current_source_dir()
