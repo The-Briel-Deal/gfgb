@@ -271,7 +271,6 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
 static void disassemble_rom(struct gb_state *gb_state, FILE *stream) {
-
   while (gb_state->regs.pc < sizeof(gb_state->ram.rom0)) {
     uint16_t    inst_addr = gb_state->regs.pc;
     struct inst inst      = fetch(gb_state);
@@ -292,7 +291,6 @@ static void disassemble_bootrom(struct gb_state *gb_state, FILE *stream) {
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
 static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
-
   const struct debug_symbol *curr_sym;
   for (int i = 0; i < gb_state->syms.len; i++) {
     curr_sym = &gb_state->syms.syms[i];
