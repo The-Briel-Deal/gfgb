@@ -9,4 +9,5 @@ jobs:
     steps:
       - name: Install Meson Build System
         run: |
-          apt update && apt install meson
+          sudo apt update
+          sudo apt install meson
