@@ -38,4 +38,4 @@ dev = ["cython", "pytest"]
 stubPath = "./stubs/"
 
 [tool.meson-python.wheel]
-exclude = ['{libdir_static}/libtracy.a']
+exclude = ['{libdir_static}/libtracy.a', 'share/pkgconfig/CLI11.pc']
