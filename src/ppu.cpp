@@ -99,11 +99,13 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDLRenderer3_Init(gb_state->sdl_renderer);
 
   gb_state->enable_fs_dockspace = true;
+  gb_state->video_initialized   = true;
 
   return true;
 }
 
 void gb_video_free(struct gb_state *gb_state) {
+  if (!gb_state->video_initialized) return;
   // free all textures
   for (int i = 0; i < DMG_N_TILEDATA_ADDRESSES; i++) {
     if (gb_state->textures[i] != NULL) {

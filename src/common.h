@@ -313,7 +313,9 @@ struct gb_state {
   bool    halted;
   bool    bootrom_has_syms;
   bool    rom_loaded;
-  bool    use_flat_ram;
+  bool    video_initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
+                             // argparsing. So we want to make sure we don't try to free what was never created.
+  bool use_flat_ram;
   union {
     struct gb_ram_banks ram;
     uint8_t             flat_ram[KB(64)];
@@ -342,7 +344,7 @@ struct gb_state {
   // should be enough to make most games run.
   uint64_t m_cycles_elapsed;
   uint64_t last_timer_sync_m_cycles;
-  bool last_tima_bit;
+  bool     last_tima_bit;
 
   // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
