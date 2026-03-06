@@ -275,6 +275,7 @@ static void disassemble_rom(struct gb_state *gb_state, FILE *stream) {
   while (gb_state->regs.pc < sizeof(gb_state->ram.rom0)) {
     uint16_t    inst_addr = gb_state->regs.pc;
     struct inst inst      = fetch(gb_state);
+    fprintf(stream, "  ");
     print_inst(gb_state, stream, inst, true, inst_addr);
   }
 }
@@ -283,6 +284,7 @@ static void disassemble_bootrom(struct gb_state *gb_state, FILE *stream) {
   while (gb_state->regs.pc < 0x0100) {
     uint16_t    inst_addr = gb_state->regs.pc;
     struct inst inst      = fetch(gb_state);
+    fprintf(stream, "  ");
     print_inst(gb_state, stream, inst, true, inst_addr);
   }
 }
@@ -299,6 +301,7 @@ static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
     while (gb_state->regs.pc < curr_sym->start_offset + curr_sym->len) {
       uint16_t    inst_addr = gb_state->regs.pc;
       struct inst inst      = fetch(gb_state);
+      fprintf(stream, "    ");
       print_inst(gb_state, stream, inst, true, inst_addr);
     }
   }
