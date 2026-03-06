@@ -9,5 +9,5 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: |
-          docker run -it --mount=type=bind,source=$PWD,destination=/gb_emu --entrypoint=/gb_emu/scripts/run_tests_ubuntu25_04.sh ubuntu:25.04
+          docker run -i --mount=type=bind,source=$PWD,destination=/gb_emu --entrypoint=/gb_emu/scripts/run_tests_ubuntu25_04.sh ubuntu:25.04
       # TODO: ubuntu24.04 uses gcc-13 I need gcc-14 so I need to use ubuntu-25.04 (in a container since there isn't a runner for 25.04)
