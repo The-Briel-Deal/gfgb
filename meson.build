@@ -34,7 +34,7 @@ imgui_dep = dependency('imgui-docking', default_options : {
     'win' : 'disabled',
   },
 )
-sdl3_deps = [dependency('sdl3'), imgui_dep]
+sdl3_deps = [dependency('sdl3', version : '>=3.4.0'), imgui_dep]
 cli11_dep = dependency('CLI11')
 tracy_dep = dependency(
   'tracy',
