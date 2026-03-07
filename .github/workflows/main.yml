@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+      # TODO: I can probably run tests directly on the runner, I originally
+      # used a container with ubuntu 25.04 so that I could use gcc 14.x.x
+      # instead of gcc 13.x.x. But it turns out there is actually a gcc-14
+      # package on 24.04.
       - run: |
-          docker run -i --mount=type=bind,source=$PWD,destination=/gb_emu --entrypoint=/gb_emu/scripts/run_tests_ubuntu25_04.sh ubuntu:25.04
-      # TODO: ubuntu24.04 uses gcc-13 I need gcc-14 so I need to use ubuntu-25.04 (in a container since there isn't a runner for 25.04)
+          docker run -i \
+            --mount=type=bind,source=$PWD,destination=/gb_emu \
+            --entrypoint=/gb_emu/scripts/run_tests_ubuntu25_04.sh \
+            ubuntu:25.04
