@@ -13,12 +13,12 @@ sed -Ei 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sour
 
 apt-get -y update
 apt-get -y upgrade
-apt-get -y install meson gcc git python3 python3-pip python3-venv python3-pytest
+apt-get -y install meson gcc git python3 python3-pip python3-venv
 apt-get -y build-dep libsdl3-dev
 
 python3 -m venv /venv
 source /venv/bin/activate
-pip install Cython==3.2.4
+pip install Cython==3.2.4 pytest==8.4.2 pytest-tap==3.5
 
 meson setup /build
 meson test -C/build --verbose
