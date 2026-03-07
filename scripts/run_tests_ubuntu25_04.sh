@@ -5,8 +5,6 @@ set -e
 export TZ=America/New_York
 export DEBIAN_FRONTEND=noninteractive
 
-cd /gb_emu/
-
 # There are a ton of deps required for building SDL3, so I just make sure we
 # populate deb-src sources so that we can use apt-get to install build-deps.
 # sed -Ei 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
