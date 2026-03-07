@@ -21,4 +21,4 @@ source /venv/bin/activate
 pip install Cython==3.2.4
 
 meson setup /build
-meson test -C/build
+meson test -C/build --verbose
