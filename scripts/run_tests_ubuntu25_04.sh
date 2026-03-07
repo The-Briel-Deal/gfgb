@@ -13,9 +13,9 @@ sudo apt-get -y update
 sudo apt-get -y upgrade
 sudo apt-get -y install gcc-14 git python3 python3-pip python3-venv
 
-python3 -m venv /venv
-source /venv/bin/activate
+python3 -m venv ./venv
+source ./venv/bin/activate
 pip install Cython==3.2.4 pytest==8.4.2 pytest-tap==3.5 meson==1.10.1 meson-python==0.19.0
 
-meson setup /build -Dpython_install=/venv/bin/python
-meson test -C/build --verbose
+meson setup ./build -Dpython_install=./venv/bin/python
+meson test -C./build --verbose
