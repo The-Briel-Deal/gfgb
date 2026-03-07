@@ -20,5 +20,5 @@ python3 -m venv /venv
 source /venv/bin/activate
 pip install Cython==3.2.4 pytest==8.4.2 pytest-tap==3.5
 
-meson setup /build
+meson setup /build -Dpython_install=/venv/bin/python
 meson test -C/build --verbose

@@ -12,6 +12,13 @@ endif
 if get_option('print_inst_during_exec')
   add_global_arguments('-DPRINT_INST_DURING_EXEC=1', language : 'cpp')
 endif
+python_install_path = get_option('python_install')
+if python_install_path != ''
+  py = import('python').find_installation(python_install_path)
+else
+  py = import('python').find_installation()
+endif
+dep_py = py.dependency()
 
 sdl3_dep = dependency('sdl3', version : '>=3.4.0')
 
@@ -62,8 +69,6 @@ shared_lib = shared_library(
   dependencies : [gui_deps, global_deps],
 )
 
-py = import('python').find_installation()
-dep_py = py.dependency()
 
 gfgb_obj = static_library(
   'gfgb',
