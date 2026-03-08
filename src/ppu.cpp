@@ -654,6 +654,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
       }
       ImGui::TreePop();
     }
+    if (ImGui::TreeNodeEx("Serial Port Output", ImGuiTreeNodeFlags_Framed)) {
+      ImGui::TextUnformatted(gb_state->serial_port_output_string->c_str());
+      ImGui::TreePop();
+    }
 
     if (ImGui::TreeNodeEx("GUI Options", ImGuiTreeNodeFlags_Framed)) {
       ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);

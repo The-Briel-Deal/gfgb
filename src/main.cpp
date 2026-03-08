@@ -73,8 +73,8 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 // Returns true on success, if error occured when opening the file return false.
 bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filename) {
   if (serial_output_filename != NULL) {
-    gb_state->serial_port_output = fopen(serial_output_filename, "w");
-    if (gb_state->serial_port_output == NULL) {
+    gb_state->serial_port_output_file = fopen(serial_output_filename, "w");
+    if (gb_state->serial_port_output_file == NULL) {
       LogCritical("Error when opening serial port output file: %s", strerror(errno));
       return false;
     }

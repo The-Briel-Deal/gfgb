@@ -56,10 +56,11 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->first_oam_scan_after_enable = true;
 
   // Debug State
-  gb_state->dbg_speed_factor  = 1.0;
-  gb_state->breakpoints       = new std::vector<gb_breakpoint_t>;
-  gb_state->execution_paused  = false;
-  gb_state->video_initialized = false;
+  gb_state->dbg_speed_factor          = 1.0;
+  gb_state->breakpoints               = new std::vector<gb_breakpoint_t>;
+  gb_state->serial_port_output_string = new std::string;
+  gb_state->execution_paused          = false;
+  gb_state->video_initialized         = false;
   assert(gb_state->breakpoints->size() == 0);
 }
 
@@ -102,12 +103,13 @@ load_default:
 struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
 
 void             gb_state_free(struct gb_state *gb_state) {
-  if (gb_state->serial_port_output != NULL) fclose(gb_state->serial_port_output);
+  if (gb_state->serial_port_output_file != NULL) fclose(gb_state->serial_port_output_file);
 
   if (gb_state->syms.capacity > 0) {
     free_symbol_list(&gb_state->syms);
   }
   delete gb_state->breakpoints;
+  delete gb_state->serial_port_output_string;
   GB_free(gb_state);
 }
 
@@ -315,7 +317,8 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     if (addr == IO_SB) {
       // TODO: This just logs out every character written to this port. If I
       // actually want to implement gamelink support there is more to do.
-      if (gb_state->serial_port_output != NULL) fputc(val, gb_state->serial_port_output);
+      if (gb_state->serial_port_output_file != NULL) fputc(val, gb_state->serial_port_output_file);
+      gb_state->serial_port_output_string->push_back(val);
       return;
     }
     uint8_t *val_ptr;

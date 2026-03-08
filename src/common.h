@@ -12,11 +12,9 @@
 #include "ppu.h"
 
 #ifdef __cplusplus
-#include <vector>
-#endif
-
-#ifdef __cplusplus
+#include <string>
 #include <utility>
+#include <vector>
 
 using std::unreachable;
 #endif
@@ -328,7 +326,7 @@ struct gb_state {
   // window
   const struct oam_entry *oam_entries[10];
 
-  FILE                   *serial_port_output;
+  FILE                   *serial_port_output_file;
 
   uint64_t                ns_elapsed_while_running;
   uint64_t                ns_elapsed_total;
@@ -378,6 +376,7 @@ struct gb_state {
   gb_imgui_state_t imgui_state;
 
 #ifdef __cplusplus
+  std::string                  *serial_port_output_string;
   std::vector<gb_breakpoint_t> *breakpoints;
 #endif
 };
