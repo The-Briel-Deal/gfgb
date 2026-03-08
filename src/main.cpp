@@ -133,16 +133,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
                         "test rom passed or failed");
-  std::string test_mode_fail_regex;
-  gb_cli_exec
-      ->add_option("--test_fail_regex", test_mode_fail_regex,
-                   "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect failure")
-      ->default_val<const char *>(".*Passed.*");
   std::string test_mode_pass_regex;
   gb_cli_exec
       ->add_option("--test_pass_regex", test_mode_pass_regex,
                    "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect success")
       ->default_val<const char *>(".*Failed.*");
+  std::string test_mode_fail_regex;
+  gb_cli_exec
+      ->add_option("--test_fail_regex", test_mode_fail_regex,
+                   "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect failure")
+      ->default_val<const char *>(".*Passed.*");
 
   // TODO: There isn't a good built in validator for an output file that may or may not exist. Maybe i'll want to add
   // one down the road?
@@ -157,19 +157,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
   }
-  if (test_mode_fail_regex.length() > sizeof(gb_state->test_mode_fail_regex) - 1) {
-    ERR(gb_state, "--test_fail_regex is over the max size of 15 characters");
-    return SDL_APP_FAILURE;
-  }
   if (test_mode_pass_regex.length() > sizeof(gb_state->test_mode_pass_regex) - 1) {
     ERR(gb_state, "--test_pass_regex is over the max size of 15 characters");
     return SDL_APP_FAILURE;
   }
-  test_mode_fail_regex.copy(gb_state->test_mode_fail_regex, sizeof(gb_state->test_mode_fail_regex));
-  test_mode_pass_regex.copy(gb_state->test_mode_pass_regex, sizeof(gb_state->test_mode_pass_regex));
-
-  printf("GF_DEBUG: test_mode_fail_regex = %s\n", gb_state->test_mode_fail_regex);
-  printf("GF_DEBUG: test_mode_pass_regex = %s\n", gb_state->test_mode_pass_regex);
+  if (test_mode_fail_regex.length() > sizeof(gb_state->test_mode_fail_regex) - 1) {
+    ERR(gb_state, "--test_fail_regex is over the max size of 15 characters");
+    return SDL_APP_FAILURE;
+  }
+  test_mode_pass_regex.copy(gb_state->test_mode_pass_regex, sizeof(gb_state->test_mode_pass_regex) - 1);
+  test_mode_fail_regex.copy(gb_state->test_mode_fail_regex, sizeof(gb_state->test_mode_fail_regex) - 1);
 
   const char *rom_filename_cstr    = rom_filename.c_str();
   const char *symbol_filename_cstr = NULL;
