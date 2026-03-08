@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <regex>
+
 enum run_mode {
   UNSET = 0,
   EXECUTE,
@@ -137,12 +139,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_cli_exec
       ->add_option("--test_pass_regex", test_mode_pass_regex,
                    "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect success")
-      ->default_val<const char *>(".*Failed.*");
+      ->default_val<const char *>(".*Passed.*");
   std::string test_mode_fail_regex;
   gb_cli_exec
       ->add_option("--test_fail_regex", test_mode_fail_regex,
                    "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect failure")
-      ->default_val<const char *>(".*Passed.*");
+      ->default_val<const char *>(".*Failed.*");
 
   // TODO: There isn't a good built in validator for an output file that may or may not exist. Maybe i'll want to add
   // one down the road?
@@ -294,10 +296,17 @@ const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate) {
   FrameMarkStart(TracyFrame_SDL_AppIterate);
-  gb_state_t *gb_state              = (gb_state_t *)appstate;
+  gb_state_t *gb_state = (gb_state_t *)appstate;
 
-  uint64_t    prev_ns_elapsed_total = gb_state->ns_elapsed_total;
-  gb_state->ns_elapsed_total        = SDL_GetTicksNS();
+  if (gb_state->test_mode) {
+    std::basic_regex compiled_pass_regex(gb_state->test_mode_pass_regex);
+    if (std::regex_search(*gb_state->serial_port_output_string, compiled_pass_regex)) return SDL_APP_SUCCESS;
+    std::basic_regex compiled_fail_regex(gb_state->test_mode_fail_regex);
+    if (std::regex_search(*gb_state->serial_port_output_string, compiled_fail_regex)) return SDL_APP_FAILURE;
+  }
+
+  uint64_t prev_ns_elapsed_total = gb_state->ns_elapsed_total;
+  gb_state->ns_elapsed_total     = SDL_GetTicksNS();
   if (!gb_state->execution_paused) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
