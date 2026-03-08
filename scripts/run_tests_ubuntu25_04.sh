@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ev
 
 export TZ=America/New_York
 export DEBIAN_FRONTEND=noninteractive
