@@ -2,6 +2,8 @@
 
 set -e
 
+echo $XDG_RUNTIME_DIR
+
 export TZ=America/New_York
 export DEBIAN_FRONTEND=noninteractive
 
