@@ -373,6 +373,10 @@ struct gb_state {
 
   bool             enable_fs_dockspace;
 
+  bool             test_mode; // If enabled then use serial_port output to look for a pass/fail string
+  char             test_mode_pass_regex[16];
+  char             test_mode_fail_regex[16];
+
   gb_imgui_state_t imgui_state;
 
 #ifdef __cplusplus
