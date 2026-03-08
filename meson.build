@@ -128,6 +128,7 @@ test(
   'blargg_cpu_01-special',
   exe,
   args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual/01-special.gb', '--test_mode'],
+  env : ['SDL_VIDEODRIVER=dummy'],
 )
 test(
   'single_step_tests',
