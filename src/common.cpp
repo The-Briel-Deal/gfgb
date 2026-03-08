@@ -364,29 +364,38 @@ static uint64_t gb_dots(uint64_t m_cycles) {
   return m_cycles * 4;
 }
 
-static void update_tima(struct gb_state *gb_state) {
-  uint8_t tac      = gb_state->regs.io.tac;
-  bool    this_bit = 0;
-  switch (tac & 0b0000'0011) {
-  case 0: // using bit 7
-    this_bit = (gb_state->regs.io.div >> 9) & 1;
-    break;
-  case 3: // using bit 5
-    this_bit = (gb_state->regs.io.div >> 7) & 1;
-    break;
-  case 2: // using bit 3
-    this_bit = (gb_state->regs.io.div >> 5) & 1;
-    break;
-  case 1: // using bit 1
-    this_bit = (gb_state->regs.io.div >> 3) & 1;
-    break;
+static void update_tima(struct gb_state *gb_state, uint16_t prev_div) {
+  uint8_t tac = gb_state->regs.io.tac;
+  // TODO: This is slow but accurate, since we increment multiple cycles at once in many places we need to make sure
+  // that we don't miss the falling edge. There's probably a better way to do this if I take a bit to think on this.
+  for (uint16_t curr_div = prev_div; curr_div != gb_state->regs.io.div; curr_div++) {
+    bool this_bit = 0;
+    switch (tac & 0b0000'0011) {
+    case 0: // using bit 7
+      this_bit = (curr_div >> 9) & 1;
+      break;
+    case 3: // using bit 5
+      this_bit = (curr_div >> 7) & 1;
+      break;
+    case 2: // using bit 3
+      this_bit = (curr_div >> 5) & 1;
+      break;
+    case 1: // using bit 1
+      this_bit = (curr_div >> 3) & 1;
+      break;
+    }
+    this_bit &= ((tac & 0b0000'0100) >> 2);
+
+    // Only increment on falling edge (a.k.a. true -> false).
+    if (gb_state->last_tima_bit && (!this_bit)) {
+      if (gb_state->regs.io.tima == 0xFF) {
+        gb_state->regs.io.if_ |= 0b00100;
+      }
+      gb_state->regs.io.tima++;
+    }
+
+    gb_state->last_tima_bit = this_bit;
   }
-  this_bit &= ((tac & 0b0000'0100) >> 2);
-
-  // Only increment on falling edge (a.k.a. true -> false).
-  if (gb_state->last_tima_bit && (!this_bit)) gb_state->regs.io.tima++;
-
-  gb_state->last_tima_bit = this_bit;
 }
 
 #define DOTS_PER_LINE   456
@@ -482,9 +491,10 @@ void gb_update_timers(struct gb_state *gb_state) {
   gb_state->last_timer_sync_m_cycles = curr_m_cycles;
 
   // Update DIV
+  uint16_t prev_div = gb_state->regs.io.div;
   gb_state->regs.io.div += (curr_m_cycles - prev_m_cycles) * 4;
 
-  update_tima(gb_state);
+  update_tima(gb_state, prev_div);
   update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);
   TracyCZoneEnd(ctx);
 }
