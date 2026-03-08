@@ -1,8 +1,8 @@
 #!/bin/bash
 
-set -e
+set -ev
 
-echo $XDG_RUNTIME_DIR
+echo XDG_RUNTIME_DIR = $XDG_RUNTIME_DIR
 
 export TZ=America/New_York
 export DEBIAN_FRONTEND=noninteractive
