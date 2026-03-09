@@ -21,7 +21,9 @@ endif
 dep_py = py.dependency()
 
 cmake = import('cmake')
-sdl_sub_pro = cmake.subproject('sdl')
+sdl_sub_pro_opts = cmake.subproject_options()
+sdl_sub_pro_opts.add_cmake_defines({'SDL_X11_XTEST' : false})
+sdl_sub_pro = cmake.subproject('sdl', options : sdl_sub_pro_opts)
 sdl3_dep = sdl_sub_pro.dependency('SDL3_shared')
 
 imgui_dep = dependency('imgui-docking', default_options : {
