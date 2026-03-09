@@ -300,9 +300,15 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   if (gb_state->test_mode) {
     std::basic_regex compiled_pass_regex(gb_state->test_mode_pass_regex);
-    if (std::regex_search(*gb_state->serial_port_output_string, compiled_pass_regex)) return SDL_APP_SUCCESS;
+    if (std::regex_search(*gb_state->serial_port_output_string, compiled_pass_regex)) {
+      printf("Test succeeded with serial port output: %s\n", gb_state->serial_port_output_string->c_str());
+      return SDL_APP_SUCCESS;
+    }
     std::basic_regex compiled_fail_regex(gb_state->test_mode_fail_regex);
-    if (std::regex_search(*gb_state->serial_port_output_string, compiled_fail_regex)) return SDL_APP_FAILURE;
+    if (std::regex_search(*gb_state->serial_port_output_string, compiled_fail_regex)) {
+      printf("Test failed with serial port output: %s\n", gb_state->serial_port_output_string->c_str());
+      return SDL_APP_FAILURE;
+    }
   }
 
   uint64_t prev_ns_elapsed_total = gb_state->ns_elapsed_total;
