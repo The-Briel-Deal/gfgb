@@ -25,6 +25,7 @@ sdl_sub_pro_opts = cmake.subproject_options()
 sdl_sub_pro_opts.add_cmake_defines({'SDL_X11_XTEST' : false})
 sdl_sub_pro = cmake.subproject('sdl', options : sdl_sub_pro_opts)
 sdl3_dep = sdl_sub_pro.dependency('SDL3_shared')
+meson.override_dependency('sdl3', sdl3_dep)
 
 imgui_dep = dependency('imgui-docking', default_options : {
     # For now i'm only using sdl3 and sdl3_renderer as backends. GLFW being enabled broke builds on my machine so I disabled everything i'm not using.
