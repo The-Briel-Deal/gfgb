@@ -10,4 +10,5 @@
 /serial.out
 /output.tracy
 /imgui.ini
+!/subprojects/sdl/
 !/embed/bootroms/*.bin
