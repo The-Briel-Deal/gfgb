@@ -131,6 +131,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       ->check(CLI::ExistingFile)
       ->check(CLI::ReadPermissions);
 
+  gb_cli_exec->add_option("--exec_speed", gb_state->dbg_speed_factor);
+
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
