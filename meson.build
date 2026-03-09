@@ -155,6 +155,13 @@ foreach test : blargg_cpu_tests
 endforeach
 
 test(
+  'blargg_instr_timing',
+  exe,
+  args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=5'],
+  env : ['SDL_VIDEODRIVER=dummy'],
+)
+
+test(
   'single_step_tests',
   py,
   args : ['-mpytest', '--tap', current_src_dir / 'test/sst/'],
