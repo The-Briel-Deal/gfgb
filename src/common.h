@@ -361,17 +361,20 @@ struct gb_state {
   bool                        err;
 
   // runtime debug toggles
-  bool             dbg_clear_composite;
-  bool             dbg_hide_bg;
-  bool             dbg_hide_win;
-  bool             dbg_hide_objs;
+  bool  dbg_clear_composite;
+  bool  dbg_hide_bg;
+  bool  dbg_hide_win;
+  bool  dbg_hide_objs;
 
-  float            dbg_speed_factor;
+  float dbg_speed_factor;
 
-  bool             pause_on_err;
-  bool             execution_paused;
+  bool  pause_on_err;
+  bool  execution_paused;
 
-  bool             enable_fs_dockspace;
+  bool  enable_fs_dockspace;
+
+  bool  headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
+                       // speeds up rom tests in CI.
 
   bool             test_mode; // If enabled then use serial_port output to look for a pass/fail string
   char             test_mode_pass_regex[16];

@@ -405,15 +405,18 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   }
 
-  if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
-    // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui UI.
-    gb_display_clear(gb_state);
+  if (!gb_state->headless_mode) {
+    if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
+      // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui
+      // UI.
+      gb_display_clear(gb_state);
+    }
+    // If we have fullscreen dockspace enabled then rendering the display to window won't do anything since ImGui will
+    // cover it with the dockspace.
+    if (!gb_state->enable_fs_dockspace) gb_display_render(gb_state);
+    gb_imgui_render(gb_state);
+    GB_CheckSDLCall(SDL_RenderPresent(gb_state->sdl_renderer));
   }
-  // If we have fullscreen dockspace enabled then rendering the display to window won't do anything since ImGui will
-  // cover it with the dockspace.
-  if (!gb_state->enable_fs_dockspace) gb_display_render(gb_state);
-  gb_imgui_render(gb_state);
-  GB_CheckSDLCall(SDL_RenderPresent(gb_state->sdl_renderer));
 
   FrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
