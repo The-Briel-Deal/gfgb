@@ -357,7 +357,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       last_mode = gb_state->last_mode_handled;
 
       // TODO: If I want perfect accuracy then I should be copying this incrementally on every iteration for 160
-      // m-cycles. I also need to make all memory except hram is blocked during this period.
+      // m-cycles. I also need to make all memory except hram blocked during this period.
 
       // TODO: There are some quirks when performing a dma transfer mid line (during OAM_SCAN or DRAWING_PIXELS), i'm
       // currently not sure if this will matter with any real world games so I should look into this.
