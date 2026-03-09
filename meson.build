@@ -134,12 +134,6 @@ test(
   exe,
   args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual/01-special.gb', '--test_mode'],
   env : ['SDL_VIDEODRIVER=dummy'],
-  timeout : 120, # Currently I need to increase the timeout for this to finish
-                 # on the github actions CI runner since it's using the dummy
-                 # video driver which is much slower since it does a bunch of
-                 # rendering operations on the CPU. This can be sped up by just
-                 # skipping all texture related SDL calls when using the dummy
-                 # driver.
 )
 test(
   'single_step_tests',
