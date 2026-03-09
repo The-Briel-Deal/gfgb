@@ -20,7 +20,9 @@ else
 endif
 dep_py = py.dependency()
 
-sdl3_dep = dependency('sdl3', version : '>=3.4.0')
+cmake = import('cmake')
+sdl_sub_pro = cmake.subproject('sdl')
+sdl3_dep = sdl_sub_pro.dependency('SDL3_shared')
 
 imgui_dep = dependency('imgui-docking', default_options : {
     # For now i'm only using sdl3 and sdl3_renderer as backends. GLFW being enabled broke builds on my machine so I disabled everything i'm not using.
