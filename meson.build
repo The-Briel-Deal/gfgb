@@ -129,12 +129,31 @@ current_src_dir = meson.current_source_dir()
 test('cpu_test', cpu_test_exe)
 test('ppu_test', ppu_test_exe)
 test('disasm_test', disasm_test_exe)
-test(
-  'blargg_cpu_01-special',
-  exe,
-  args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual/01-special.gb', '--test_mode', '--exec_speed=5'],
-  env : ['SDL_VIDEODRIVER=dummy'],
-)
+
+blargg_cpu_tests = [
+  '01-special.gb',
+  '02-interrupts.gb',
+  '03-op sp,hl.gb',
+  '04-op r,imm.gb',
+  '05-op rp.gb',
+  '06-ld r,r.gb',
+  '07-jr,jp,call,ret,rst.gb',
+  '08-misc instrs.gb',
+  '09-op r,r.gb',
+  '10-bit ops.gb',
+  '11-op a,(hl).gb',
+]
+
+foreach test : blargg_cpu_tests
+  test(
+    'blargg_cpu_' + test,
+    exe,
+    args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=5'],
+    env : ['SDL_VIDEODRIVER=dummy'],
+  )
+
+endforeach
+
 test(
   'single_step_tests',
   py,
