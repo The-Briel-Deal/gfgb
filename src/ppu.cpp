@@ -25,6 +25,7 @@ bool gb_video_init(struct gb_state *gb_state) {
     LogCritical("Couldn't initialize SDL: %s", SDL_GetError());
     return false;
   }
+  LogInfo("SDL Video Driver: %s", SDL_GetCurrentVideoDriver());
 
   if (!SDL_CreateWindowAndRenderer("GF-GB", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->sdl_window,
                                    &gb_state->sdl_renderer)) {
