@@ -132,7 +132,7 @@ test('disasm_test', disasm_test_exe)
 test(
   'blargg_cpu_01-special',
   exe,
-  args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual/01-special.gb', '--test_mode'],
+  args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual/01-special.gb', '--test_mode', '--exec_speed=5'],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
 test(
