@@ -154,17 +154,25 @@ foreach test : blargg_cpu_tests
 
 endforeach
 
+blargg_mem_timing_tests = [
+  '01-read_timing.gb',
+  '02-write_timing.gb',
+  '03-modify_timing.gb',
+]
+
+foreach test : blargg_mem_timing_tests
+  test(
+    'blargg_mem_timing_' + test,
+    exe,
+    args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=5'],
+    env : ['SDL_VIDEODRIVER=dummy'],
+  )
+endforeach
+
 test(
   'blargg_instr_timing',
   exe,
   args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=5'],
-  env : ['SDL_VIDEODRIVER=dummy'],
-)
-
-test(
-  'blargg_mem_timing_01-read_timing',
-  exe,
-  args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual/01-read_timing.gb', '--test_mode', '--exec_speed=5'],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
 
