@@ -610,9 +610,10 @@ static void ex_inc(struct gb_state *gb_state, struct inst inst) {
 
   if (IS_R8(inst.p1)) {
     SPEND_MCYCLES(1);
-    if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(2);
     uint8_t val;
+    if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(1);
     val = get_r8(gb_state, inst.p1.r8);
+    if (inst.p1.r8 == R8_HL_DREF) SPEND_MCYCLES(1);
     set_r8(gb_state, inst.p1.r8, val + 1);
     set_flags(gb_state, FLAG_Z, (uint8_t)(val + 1) == 0x00);
     set_flags(gb_state, FLAG_N, 0);
