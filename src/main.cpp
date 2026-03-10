@@ -378,7 +378,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         }
       }
 
-      {
+      if (!gb_state->headless_mode) {
         ZoneScopedN("Rendering");
         if (curr_mode != last_mode) switch (curr_mode) {
           case OAM_SCAN: {
