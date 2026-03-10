@@ -212,6 +212,8 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
     return gb_state->flat_ram[addr];
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
+    // We need to update timers on read/write, sometimes io reg's like TIMA are updated mid-execution.
+    gb_update_timers(gb_state);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
       uint8_t val;
       switch (addr) {
