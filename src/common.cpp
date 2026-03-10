@@ -316,6 +316,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     gb_state->flat_ram[addr] = val;
   } else {
     LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
+    gb_update_timers(gb_state);
     if (addr == IO_SB) {
       // TODO: This just logs out every character written to this port. If I
       // actually want to implement gamelink support there is more to do.
