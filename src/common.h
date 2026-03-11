@@ -361,22 +361,24 @@ struct gb_state {
   bool                        err;
 
   // runtime debug toggles
-  bool  dbg_clear_composite;
-  bool  dbg_hide_bg;
-  bool  dbg_hide_win;
-  bool  dbg_hide_objs;
+  bool     dbg_clear_composite;
+  bool     dbg_hide_bg;
+  bool     dbg_hide_win;
+  bool     dbg_hide_objs;
 
-  float dbg_speed_factor;
+  bool     dbg_print_inst_during_exec;
 
-  bool  dbg_print_inst_during_exec;
+  float    dbg_speed_factor;
 
-  bool  pause_on_err;
-  bool  execution_paused;
+  uint32_t dbg_step_inst_count; // the number of instructions to run until breaking
 
-  bool  enable_fs_dockspace;
+  bool     pause_on_err;
+  bool     execution_paused;
 
-  bool  headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
-                       // speeds up rom tests in CI.
+  bool     enable_fs_dockspace;
+
+  bool     headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
+                          // speeds up rom tests in CI.
 
   bool             test_mode; // If enabled then use serial_port output to look for a pass/fail string
   char             test_mode_pass_regex[16];

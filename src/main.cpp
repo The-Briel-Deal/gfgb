@@ -317,7 +317,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   uint64_t prev_ns_elapsed_total = gb_state->ns_elapsed_total;
   gb_state->ns_elapsed_total     = SDL_GetTicksNS();
-  if (!gb_state->execution_paused) {
+  if ((!gb_state->execution_paused) || (gb_state->dbg_step_inst_count > 0)) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
     gb_state->ns_elapsed_while_running +=
@@ -327,7 +327,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     uint64_t loop_timeout = gb_state->ns_elapsed_total + (NS_PER_SEC / 60);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
-      if (gb_state->execution_paused) break;
+      if (gb_state->execution_paused) {
+        if (gb_state->dbg_step_inst_count == 0) break;
+        gb_state->dbg_step_inst_count--;
+      }
       if (loop_timeout < SDL_GetTicksNS()) {
         // reset ns_elapsed_while_running to stop the gameboy to run at super speed to catch up once execution speed
         // picks up again.

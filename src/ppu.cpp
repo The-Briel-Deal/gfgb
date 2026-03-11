@@ -637,6 +637,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
       if (ImGui::Button("Reset")) {
         gb_state_reset(gb_state);
       }
+      {
+        ImGui::BeginDisabled(!gb_state->execution_paused);
+        if (ImGui::Button("Step Instruction")) {
+          gb_state->dbg_step_inst_count++;
+        }
+        ImGui::EndDisabled();
+      }
       float last_frametime = (float)gb_state->ns_last_frametime / NS_PER_SEC;
       float last_frame_fps = 0.0f;
       if (last_frametime != 0.0f) {
