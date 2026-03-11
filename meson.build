@@ -29,6 +29,7 @@ if not sdl3_dep.found()
   sdl_sub_pro_opts.set_override_option('warning_level', '0')
   sdl_sub_pro = cmake.subproject('sdl', options : sdl_sub_pro_opts)
   sdl3_dep = sdl_sub_pro.dependency('SDL3_shared')
+  meson.override_dependency('sdl3', sdl3_dep)
 endif
 
 
