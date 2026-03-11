@@ -648,6 +648,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
       ImGui::Checkbox("Execution Paused", &gb_state->execution_paused);
       ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
+      ImGui::Checkbox("Print Instructions", &gb_state->dbg_print_inst_during_exec);
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");

@@ -368,6 +368,8 @@ struct gb_state {
 
   float dbg_speed_factor;
 
+  bool  dbg_print_inst_during_exec;
+
   bool  pause_on_err;
   bool  execution_paused;
 

@@ -133,19 +133,21 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   gb_cli_exec->add_option("--exec_speed", gb_state->dbg_speed_factor);
 
-  gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused");
+  gb_cli_exec->add_flag("--print_instrs", gb_state->dbg_print_inst_during_exec,
+                        "Print instructions to stdout as the rom is executing.");
+  gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
-                        "test rom passed or failed");
+                        "test rom passed or failed.");
   std::string test_mode_pass_regex;
   gb_cli_exec
       ->add_option("--test_pass_regex", test_mode_pass_regex,
-                   "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect success")
+                   "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect success.")
       ->default_val<const char *>(".*Passed.*");
   std::string test_mode_fail_regex;
   gb_cli_exec
       ->add_option("--test_fail_regex", test_mode_fail_regex,
-                   "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect failure")
+                   "Used with --test_mode flag, the regex exp to scan the serial_port output for to detect failure.")
       ->default_val<const char *>(".*Failed.*");
 
   // TODO: There isn't a good built in validator for an output file that may or may not exist. Maybe i'll want to add
@@ -162,7 +164,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
   if (test_mode_pass_regex.length() > sizeof(gb_state->test_mode_pass_regex) - 1) {
-    ERR(gb_state, "--test_pass_regex is over the max size of 15 characters");
+    ERR(gb_state, "--test_pass_regex is over the max size of 15 characters.");
     return SDL_APP_FAILURE;
   }
   if (test_mode_fail_regex.length() > sizeof(gb_state->test_mode_fail_regex) - 1) {
@@ -340,9 +342,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           uint16_t    prev_pc = gb_state->regs.pc;
           struct inst inst    = fetch(gb_state);
           uint16_t    curr_pc = gb_state->regs.pc;
-#ifdef PRINT_INST_DURING_EXEC
-          print_inst(gb_state, stdout, inst, true, prev_pc);
-#endif
+          if (gb_state->dbg_print_inst_during_exec) print_inst(gb_state, stdout, inst, true, prev_pc);
           check_breakpoints(gb_state, prev_pc, curr_pc);
           execute(gb_state, inst);
         } else {

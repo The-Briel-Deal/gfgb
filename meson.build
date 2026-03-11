@@ -9,9 +9,6 @@ project(
 if get_option('enable_logging')
   add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'cpp')
 endif
-if get_option('print_inst_during_exec')
-  add_global_arguments('-DPRINT_INST_DURING_EXEC=1', language : 'cpp')
-endif
 python_install_path = get_option('python_install')
 if python_install_path != ''
   py = import('python').find_installation(python_install_path)
