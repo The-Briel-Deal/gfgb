@@ -423,7 +423,7 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
     break;
   case VBLANK:
     if (m1_select) return true;
-    if (m2_select) return true;
+    if (m2_select && gb_state->regs.io.ly == 144) return true;
     break;
   case OAM_SCAN:
     if (m2_select) return true;

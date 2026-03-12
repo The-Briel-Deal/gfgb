@@ -1335,6 +1335,8 @@ void handle_interrupts(struct gb_state *gb_state) {
     }
     goto interrupt_handled_end;
   interrupt_handled:
+    // According to PanDocs this process takes 5 M-Cycles
+    SPEND_MCYCLES(5);
     gb_state->regs.io.ime = false;
   interrupt_handled_end:
   }
