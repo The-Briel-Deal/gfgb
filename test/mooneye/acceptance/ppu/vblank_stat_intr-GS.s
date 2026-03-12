@@ -121,13 +121,13 @@ finish_round2:
   halt_until INTR_VBLANK
 
 test_round3:
-  ld hl, intr_vec_stat
-  ld a, $C3
-  ld (hl+), a ; JP nnnn
-  ld a, <finish_round3
-  ld (hl+), a
-  ld a, >finish_round3
-  ld (hl), a
+  ld hl, intr_vec_stat ; | Get the address of the location that is called when a stat interrupt is called
+  ld a, $C3            ; | JP &finish_round3
+  ld (hl+), a          ; |
+  ld a, <finish_round3 ; |
+  ld (hl+), a          ; |
+  ld a, >finish_round3 ; |
+  ld (hl), a           ; |
 
   wait_ly 143
 
