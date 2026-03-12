@@ -44,7 +44,7 @@ $(BUILD_PATH)/%.link: $(BUILD_PATH)/%.o
 	@printf "[objects]\n%s\n" $< > $@
 
 $(BUILD_PATH)/%.gb: $(BUILD_PATH)/%.link
-	@$(WLALINK) -d -S $(WLALINKFLAGS) $< $(abspath $@)
+	@$(WLALINK) -d -s $(WLALINKFLAGS) $< $(abspath $@)
 	@echo --- $(notdir $(basename $@))
 
 tags: common/**/*.s $(BUILD_PATH)/flags
