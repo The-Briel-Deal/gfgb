@@ -33,6 +33,7 @@
 .endm
 
 .macro wait_mode ARGS mode
+
 - ldh a, (<STAT)
   and $03
   cp mode
