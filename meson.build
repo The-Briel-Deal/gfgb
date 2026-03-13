@@ -152,7 +152,7 @@ foreach test : blargg_cpu_tests
   test(
     'blargg_cpu_' + test,
     exe,
-    args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=5'],
+    args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=100'],
     env : ['SDL_VIDEODRIVER=dummy'],
   )
 
@@ -168,7 +168,7 @@ foreach test : blargg_mem_timing_tests
   test(
     'blargg_mem_timing_' + test,
     exe,
-    args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=5'],
+    args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=100'],
     env : ['SDL_VIDEODRIVER=dummy'],
   )
 endforeach
@@ -176,7 +176,7 @@ endforeach
 test(
   'blargg_instr_timing',
   exe,
-  args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=5'],
+  args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=100'],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
 test(
@@ -185,7 +185,7 @@ test(
   args : [
     'exec', current_src_dir / 'test/mooneye/build/acceptance/ppu/vblank_stat_intr-GS.gb',
     '--test_mode',
-    '--exec_speed=5',
+    '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
   ],
