@@ -214,9 +214,10 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
     return gb_state->flat_ram[addr];
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
-    // We need to update timers on read/write, sometimes io reg's like TIMA are updated mid-execution.
-    gb_update_timers(gb_state);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
+      // We need to update timers before accessing some IO registers, this probably could just be called on those
+      // specific timer related registers but this shouldn't have too much overhead.
+      gb_update_timers(gb_state);
       uint8_t val;
       switch (addr) {
       case IO_LY: val = get_ro_io_reg(gb_state, addr); break;
@@ -319,15 +320,18 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   } else {
     LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
     gb_update_timers(gb_state);
-    if (addr == IO_SB) {
-      // TODO: This just logs out every character written to this port. If I
-      // actually want to implement gamelink support there is more to do.
-      if (gb_state->serial_port_output_file != NULL) fputc(val, gb_state->serial_port_output_file);
-      gb_state->serial_port_output_string->push_back(val);
-      return;
-    }
     uint8_t *val_ptr;
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
+      // We need to update timers before accessing some IO registers, this probably could just be called on those
+      // specific timer related registers but this shouldn't have too much overhead.
+      gb_update_timers(gb_state);
+      if (addr == IO_SB) {
+        // TODO: This just logs out every character written to this port. If I
+        // actually want to implement gamelink support there is more to do.
+        if (gb_state->serial_port_output_file != NULL) fputc(val, gb_state->serial_port_output_file);
+        gb_state->serial_port_output_string->push_back(val);
+        return;
+      }
       write_io_reg(gb_state, addr, val);
       return;
     } else {
