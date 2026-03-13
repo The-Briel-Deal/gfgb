@@ -110,6 +110,8 @@ void             gb_state_free(struct gb_state *gb_state) {
   }
   delete gb_state->breakpoints;
   delete gb_state->serial_port_output_string;
+  delete gb_state->compiled_pass_regex;
+  delete gb_state->compiled_fail_regex;
   GB_free(gb_state);
 }
 

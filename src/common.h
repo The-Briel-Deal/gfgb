@@ -12,6 +12,7 @@
 #include "ppu.h"
 
 #ifdef __cplusplus
+#include <regex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -388,6 +389,8 @@ struct gb_state {
 
 #ifdef __cplusplus
   std::string                  *serial_port_output_string;
+  std::basic_regex<char>       *compiled_pass_regex;
+  std::basic_regex<char>       *compiled_fail_regex;
   std::vector<gb_breakpoint_t> *breakpoints;
 #endif
 };

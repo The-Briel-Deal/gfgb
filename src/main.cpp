@@ -163,16 +163,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
   }
-  if (test_mode_pass_regex.length() > sizeof(gb_state->test_mode_pass_regex) - 1) {
-    ERR(gb_state, "--test_pass_regex is over the max size of 15 characters.");
-    return SDL_APP_FAILURE;
+  if (gb_state->test_mode) {
+    gb_state->compiled_pass_regex = new std::basic_regex(test_mode_pass_regex);
+    gb_state->compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
   }
-  if (test_mode_fail_regex.length() > sizeof(gb_state->test_mode_fail_regex) - 1) {
-    ERR(gb_state, "--test_fail_regex is over the max size of 15 characters");
-    return SDL_APP_FAILURE;
-  }
-  test_mode_pass_regex.copy(gb_state->test_mode_pass_regex, sizeof(gb_state->test_mode_pass_regex) - 1);
-  test_mode_fail_regex.copy(gb_state->test_mode_fail_regex, sizeof(gb_state->test_mode_fail_regex) - 1);
 
   const char *rom_filename_cstr    = rom_filename.c_str();
   const char *symbol_filename_cstr = NULL;
@@ -313,14 +307,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   gb_state_t *gb_state = (gb_state_t *)appstate;
 
   if (gb_state->test_mode) {
-    std::basic_regex compiled_pass_regex(gb_state->test_mode_pass_regex);
-    if (std::regex_search(*gb_state->serial_port_output_string, compiled_pass_regex)) {
+    if (std::regex_search(*gb_state->serial_port_output_string, *gb_state->compiled_pass_regex)) {
       printf("Test succeeded with serial port output:\n");
       print_serial_port_escaped(gb_state);
       return SDL_APP_SUCCESS;
     }
-    std::basic_regex compiled_fail_regex(gb_state->test_mode_fail_regex);
-    if (std::regex_search(*gb_state->serial_port_output_string, compiled_fail_regex)) {
+    if (std::regex_search(*gb_state->serial_port_output_string, *gb_state->compiled_fail_regex)) {
       printf("Test failed with serial port output:\n");
       print_serial_port_escaped(gb_state);
       return SDL_APP_FAILURE;
