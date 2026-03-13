@@ -6257,17 +6257,17 @@ Call_000_1ff2:
     ld c, $02
     ld a, $2f
 
-jr_000_1ffc:
-    ld b, $0a
-
-jr_000_1ffe:
-    ld [hl+], a
-    dec b
-    jr nz, jr_000_1ffe
-
-    add hl, de
-    dec c
-    jr nz, jr_000_1ffc
+jr_000_1ffc:           ; for (c = 2; c != 0; c--) {
+    ld b, $0a          ;
+                       ;
+jr_000_1ffe:           ;     for (b = 10; b != 0; b--) {
+    ld [hl+], a        ;         [0xCBC2++] = 0x2f;
+    dec b              ;
+    jr nz, jr_000_1ffe ;     }
+                       ;
+    add hl, de         ;
+    dec c              ;
+    jr nz, jr_000_1ffc ; }
 
     ret
 
