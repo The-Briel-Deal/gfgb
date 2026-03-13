@@ -738,6 +738,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       gb_imgui_show_val("B", gb_state->regs.b);
       gb_imgui_show_val("C", gb_state->regs.c);
       gb_imgui_show_val("D", gb_state->regs.d);
+      gb_imgui_show_val("E", gb_state->regs.e);
       gb_imgui_show_val("F", gb_state->regs.f);
       gb_imgui_show_val("H", gb_state->regs.h);
       gb_imgui_show_val("L", gb_state->regs.l);
