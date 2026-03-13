@@ -293,6 +293,16 @@ static void check_breakpoints(gb_state_t *gb_state, uint16_t prev_pc, uint16_t c
   }
 }
 
+void print_serial_port_escaped(gb_state_t *gb_state) {
+  for (char c : *gb_state->serial_port_output_string) {
+    if (isprint(c)) {
+      putchar(c);
+    } else {
+      printf("\\x%.2X", c);
+    }
+  }
+}
+
 #ifdef TRACY_ENABLE
 const char *const TracyFrame_SDL_AppIterate = "App Iteration";
 #endif
@@ -305,12 +315,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   if (gb_state->test_mode) {
     std::basic_regex compiled_pass_regex(gb_state->test_mode_pass_regex);
     if (std::regex_search(*gb_state->serial_port_output_string, compiled_pass_regex)) {
-      printf("Test succeeded with serial port output: %s\n", gb_state->serial_port_output_string->c_str());
+      printf("Test succeeded with serial port output:\n");
+      print_serial_port_escaped(gb_state);
       return SDL_APP_SUCCESS;
     }
     std::basic_regex compiled_fail_regex(gb_state->test_mode_fail_regex);
     if (std::regex_search(*gb_state->serial_port_output_string, compiled_fail_regex)) {
-      printf("Test failed with serial port output: %s\n", gb_state->serial_port_output_string->c_str());
+      printf("Test failed with serial port output:\n");
+      print_serial_port_escaped(gb_state);
       return SDL_APP_FAILURE;
     }
   }

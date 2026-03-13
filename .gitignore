@@ -8,6 +8,7 @@
 /out/
 /subprojects/*/
 /serial.out
+/serial.txt
 /output.tracy
 /imgui.ini
 !/subprojects/sdl/
