@@ -179,6 +179,18 @@ test(
   args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=5'],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
+test(
+  'mooneye_vblank_stat_intr',
+  exe,
+  args : [
+    'exec', current_src_dir / 'test/mooneye/build/acceptance/ppu/vblank_stat_intr-GS.gb',
+    '--test_mode',
+    '--exec_speed=5',
+    '--test_fail_regex=BBBBBB',
+    '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+  ],
+  env : ['SDL_VIDEODRIVER=dummy'],
+)
 
 test(
   'single_step_tests',
