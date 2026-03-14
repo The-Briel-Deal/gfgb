@@ -666,6 +666,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
       }
       ImGui::TreePop();
     }
+    if (ImGui::TreeNodeEx("PPU", ImGuiTreeNodeFlags_Framed)) {
+      ImGui::TextUnformatted(std::format("LCDC: {0:#010b}", gb_state->regs.io.lcdc).c_str());
+      ImGui::TreePop();
+    }
     if (ImGui::TreeNodeEx("Serial Port Output", ImGuiTreeNodeFlags_Framed)) {
       ImGui::TextUnformatted(gb_state->serial_port_output_string->c_str());
       ImGui::TreePop();
