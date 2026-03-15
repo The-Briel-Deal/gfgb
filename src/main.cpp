@@ -482,6 +482,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     GB_CheckSDLCall(SDL_RenderPresent(gb_state->sdl_renderer));
   }
 
+  // If you are tailing the output while stepping we don't want trace data to sit in the buffer so we flush it at the
+  // end of each SDL Iteration.
+  fflush(gb_state->dbg_trace_exec_fout);
   FrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
