@@ -84,16 +84,14 @@ bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filenam
   return true;
 }
 bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename) {
-  if (gb_state->dbg_trace_exec) {
-    if (trace_exec_filename != NULL) {
-      gb_state->dbg_trace_exec_fout = fopen(trace_exec_filename, "w");
-      if (gb_state->dbg_trace_exec_fout == NULL) {
-        LogCritical("An error occured when opening file with name '%s': %s", trace_exec_filename, strerror(errno));
-        return false;
-      }
-    } else {
-      gb_state->dbg_trace_exec_fout = stdout;
+  if (trace_exec_filename != NULL) {
+    gb_state->dbg_trace_exec_fout = fopen(trace_exec_filename, "w");
+    if (gb_state->dbg_trace_exec_fout == NULL) {
+      LogCritical("An error occured when opening file with name '%s': %s", trace_exec_filename, strerror(errno));
+      return false;
     }
+  } else {
+    gb_state->dbg_trace_exec_fout = stdout;
   }
   return true;
 }
@@ -148,9 +146,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_cli_exec->add_option("--exec_speed", gb_state->dbg_speed_factor);
 
   gb_cli_exec->add_flag("--trace_exec", gb_state->dbg_trace_exec,
-                        "Print instructions to file as the rom is executing (stdout by default).");
+                        "Print instructions to file/stdout as the rom is executing. This can be toggled at runtime in Debug UI as well.");
   std::string trace_exec_filename;
-  gb_cli_exec->add_option("--trace_out", trace_exec_filename, "File to write trace to if `--trace_exec` is enabled.");
+  gb_cli_exec->add_option("--trace_out", trace_exec_filename, "File to write trace to if execution tracing is enabled.");
 
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
