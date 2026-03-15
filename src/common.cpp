@@ -63,6 +63,7 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->video_initialized         = false;
 }
 
+// TODO: This doesn't seem to always work, I need to figure out what other state I need set.
 void gb_state_reset(struct gb_state *gb_state) {
   GB_memset(&gb_state->regs, 0, sizeof(gb_state->regs));
   gb_state->regs.sp                     = WRAM_END + 1;
