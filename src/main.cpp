@@ -83,11 +83,25 @@ bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filenam
   }
   return true;
 }
+bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename) {
+  if (gb_state->dbg_trace_exec) {
+    if (trace_exec_filename != NULL) {
+      gb_state->dbg_trace_exec_fout = fopen(trace_exec_filename, "w");
+      if (gb_state->dbg_trace_exec_fout == NULL) {
+        LogCritical("An error occured when opening file with name '%s': %s", trace_exec_filename, strerror(errno));
+        return false;
+      }
+    } else {
+      gb_state->dbg_trace_exec_fout = stdout;
+    }
+  }
+  return true;
+}
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  struct gb_state *gb_state = gb_state_alloc();
-  *appstate                 = gb_state;
+  gb_state_t *gb_state = gb_state_alloc();
+  *appstate            = gb_state;
   gb_state_init(gb_state);
 
   enum run_mode run_mode = UNSET;
@@ -133,8 +147,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   gb_cli_exec->add_option("--exec_speed", gb_state->dbg_speed_factor);
 
-  gb_cli_exec->add_flag("--print_instrs", gb_state->dbg_print_inst_during_exec,
-                        "Print instructions to stdout as the rom is executing.");
+  gb_cli_exec->add_flag("--trace_exec", gb_state->dbg_trace_exec,
+                        "Print instructions to file as the rom is executing (stdout by default).");
+  std::string trace_exec_filename;
+  gb_cli_exec->add_option("--trace_out", trace_exec_filename, "File to write trace to if `--trace_exec` is enabled.");
+
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
@@ -177,6 +194,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   if (bootrom_filename.length() != 0) {
     bootrom_filename_cstr = bootrom_filename.c_str();
   }
+  const char *trace_exec_filename_cstr = NULL;
+  if (trace_exec_filename.length() != 0) {
+    trace_exec_filename_cstr = trace_exec_filename.c_str();
+  }
   const char *serial_output_filename_cstr = NULL;
   if (serial_output_filename.length() != 0) {
     serial_output_filename_cstr = serial_output_filename.c_str();
@@ -195,6 +216,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   switch (run_mode) {
   case EXECUTE: {
     if (!gb_setup_serial_out(gb_state, serial_output_filename_cstr)) return SDL_APP_FAILURE;
+    if (!gb_setup_exec_tracing(gb_state, trace_exec_filename_cstr)) return SDL_APP_FAILURE;
     if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
     return SDL_APP_CONTINUE; /* carry on with the program! */
   };
@@ -349,7 +371,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           uint16_t    prev_pc = gb_state->regs.pc;
           struct inst inst    = fetch(gb_state);
           uint16_t    curr_pc = gb_state->regs.pc;
-          if (gb_state->dbg_print_inst_during_exec) print_inst(gb_state, stdout, inst, true, prev_pc);
+          if (gb_state->dbg_trace_exec) print_inst(gb_state, gb_state->dbg_trace_exec_fout, inst, true, prev_pc);
           check_breakpoints(gb_state, prev_pc, curr_pc);
           execute(gb_state, inst);
         } else {

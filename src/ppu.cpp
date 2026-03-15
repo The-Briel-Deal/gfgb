@@ -687,7 +687,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
       ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);
       ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
-      ImGui::Checkbox("Print Instructions", &gb_state->dbg_print_inst_during_exec);
+      ImGui::Checkbox("Print Instructions", &gb_state->dbg_trace_exec);
       ImGui::TreePop();
     }
 

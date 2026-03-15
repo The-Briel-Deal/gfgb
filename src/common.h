@@ -367,7 +367,8 @@ struct gb_state {
   bool     dbg_hide_win;
   bool     dbg_hide_objs;
 
-  bool     dbg_print_inst_during_exec;
+  bool     dbg_trace_exec;
+  FILE    *dbg_trace_exec_fout;
 
   float    dbg_speed_factor;
 
