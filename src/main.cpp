@@ -145,10 +145,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   gb_cli_exec->add_option("--exec_speed", gb_state->dbg_speed_factor);
 
-  gb_cli_exec->add_flag("--trace_exec", gb_state->dbg_trace_exec,
-                        "Print instructions to file/stdout as the rom is executing. This can be toggled at runtime in Debug UI as well.");
+  gb_cli_exec->add_flag(
+      "--trace_exec", gb_state->dbg_trace_exec,
+      "Print instructions to file/stdout as the rom is executing. This can be toggled at runtime in Debug UI as well.");
   std::string trace_exec_filename;
-  gb_cli_exec->add_option("--trace_out", trace_exec_filename, "File to write trace to if execution tracing is enabled.");
+  gb_cli_exec->add_option("--trace_out", trace_exec_filename,
+                          "File to write trace to if execution tracing is enabled.");
 
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
