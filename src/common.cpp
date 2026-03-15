@@ -61,7 +61,6 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->serial_port_output_string = new std::string;
   gb_state->execution_paused          = false;
   gb_state->video_initialized         = false;
-  assert(gb_state->breakpoints->size() == 0);
 }
 
 void gb_state_reset(struct gb_state *gb_state) {

@@ -157,7 +157,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   std::vector<std::string> breakpoints;
   gb_cli_exec
       ->add_option("--bp,--breakpoint", breakpoints,
-                   "A breakpoint identifier, can be a GB 16 bit addr in hex, or a debug symbol name.")
+                   "A breakpoint identifier, can be a GB 16 bit addr in hex if prefixed with `$`, or a debug symbol name.")
       ->expected(0, -1);
 
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
