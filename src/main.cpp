@@ -97,6 +97,24 @@ bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename
   return true;
 }
 
+bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len) {
+  if (bp_str_len == 5 && bp_str[0] == '$') {
+    char    *endptr;
+    uint16_t bp_addr = strtoul(bp_str + 1, &endptr, 16);
+    if ((endptr - bp_str) != 5) {
+      LogCritical("'%.*s' is not a valid 16 bit hex addr.", bp_str_len, bp_str);
+      return false;
+    }
+    gb_breakpoint_t bp = {.addr = bp_addr};
+    gb_state->breakpoints->push_back(bp);
+    return true;
+  }
+  // TODO: Add support for breakpoints at symbols.
+  LogCritical("'%.*s' is not a valid breakpoint string, currently only 16 bit hex addr's are supported.", bp_str_len,
+              bp_str);
+  return false;
+}
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_state_t *gb_state = gb_state_alloc();
@@ -156,8 +174,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   // TODO: Bank should be specifiable as well.
   std::vector<std::string> breakpoints;
   gb_cli_exec
-      ->add_option("--bp,--breakpoint", breakpoints,
-                   "A breakpoint identifier, can be a GB 16 bit addr in hex if prefixed with `$`, or a debug symbol name.")
+      ->add_option(
+          "--bp,--breakpoint", breakpoints,
+          "A breakpoint identifier, can be a GB 16 bit addr in hex if prefixed with `$`, or a debug symbol name.")
       ->expected(0, -1);
 
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
@@ -191,6 +210,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   if (gb_state->test_mode) {
     gb_state->compiled_pass_regex = new std::basic_regex(test_mode_pass_regex);
     gb_state->compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
+  }
+
+  for (std::string bp : breakpoints) {
+    if (!gb_set_breakpoint(gb_state, bp.c_str(), bp.length())) {
+      return SDL_APP_FAILURE;
+    }
   }
 
   const char *rom_filename_cstr    = rom_filename.c_str();
