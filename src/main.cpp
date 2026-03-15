@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include <regex>
+#include <vector>
 
 enum run_mode {
   UNSET = 0,
@@ -151,6 +152,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   std::string trace_exec_filename;
   gb_cli_exec->add_option("--trace_out", trace_exec_filename,
                           "File to write trace to if execution tracing is enabled.");
+
+  // TODO: Bank should be specifiable as well.
+  std::vector<std::string> breakpoints;
+  gb_cli_exec
+      ->add_option("--bp,--breakpoint", breakpoints,
+                   "A breakpoint identifier, can be a GB 16 bit addr in hex, or a debug symbol name.")
+      ->expected(0, -1);
 
   gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
