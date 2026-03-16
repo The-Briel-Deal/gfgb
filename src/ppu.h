@@ -45,7 +45,7 @@ bool                          gb_video_handle_sdl_event(gb_state_t *gb_state, SD
 #define OBP0 0
 #define OBP1 1
 
-struct __attribute__((packed)) oam_entry {
+typedef struct __attribute__((packed)) oam_entry {
   uint8_t      y_pos : 8;
   uint8_t      x_pos : 8;
   uint8_t      index : 8;
@@ -55,7 +55,7 @@ struct __attribute__((packed)) oam_entry {
   bool         x_flip : 1;
   bool         y_flip : 1;
   bool         priority : 1;
-};
+} oam_entry_t;
 
 void gb_read_oam_entries(gb_state_t *gb_state); // on OAM-Scan
 void gb_draw(gb_state_t *gb_state);             // on Drawing-Pixels

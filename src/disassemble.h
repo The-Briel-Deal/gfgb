@@ -16,20 +16,19 @@ void disassemble(gb_state_t *gb_state, FILE *stream);
 
 #define DBG_SYM_BOOTROM_BANK -1
 
-struct debug_symbol {
+typedef struct debug_symbol {
   char     name[32];
   int      bank;
   uint16_t start_offset;
   uint16_t len;
-};
-typedef struct debug_symbol debug_symbol_t;
+} debug_symbol_t;
 
 // I'm treating sections and labels the same in the parsed data structure.
-struct debug_symbol_list {
+typedef struct debug_symbol_list {
   debug_symbol_t *syms;
   uint16_t        len;
   uint16_t        capacity;
-};
+} debug_symbol_list_t;
 void alloc_symbol_list(struct debug_symbol_list *syms);
 void free_symbol_list(struct debug_symbol_list *syms);
 

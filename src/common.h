@@ -184,7 +184,7 @@ void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n);
 // append text[len] to gb_dstr
 void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 
-struct gb_ram_banks {
+typedef struct gb_ram_banks {
   uint8_t bootrom[DMG_BOOTROM_SIZE];
   uint8_t rom0[KB(16)];
   uint8_t rom1[KB(16)];
@@ -193,10 +193,10 @@ struct gb_ram_banks {
   uint8_t eram[KB(8)];
   uint8_t hram[0x80];
   uint8_t oam[4 * 40];
-};
+} gb_ram_banks_t;
 
 // true if pressed down
-struct gb_internal_joy_pad_state {
+typedef struct gb_internal_joy_pad_state {
   bool dpad_right;
   bool dpad_left;
   bool dpad_up;
@@ -206,85 +206,84 @@ struct gb_internal_joy_pad_state {
   bool button_b;
   bool button_select;
   bool button_start;
-};
-typedef struct gb_internal_joy_pad_state gb_internal_joy_pad_state_t;
+} gb_internal_joy_pad_state_t;
 
-struct regs {
-  uint8_t  a;
-  uint8_t  b;
-  uint8_t  c;
-  uint8_t  d;
-  uint8_t  e;
-  uint8_t  f;
-  uint8_t  h;
-  uint8_t  l;
-  uint16_t sp;
-  uint16_t pc;
-  struct io_regs {
-    uint8_t  joyp;
+typedef struct io_regs {
+  uint8_t  joyp;
 
-    uint8_t  sb; // serial transfer data (currently unused)
-    uint8_t  sc; // serial transfer control (currently unused)
+  uint8_t  sb; // serial transfer data (currently unused)
+  uint8_t  sc; // serial transfer control (currently unused)
 
-    uint16_t div;  // divider register
-    uint8_t  tima; // timer counter
-    uint8_t  tma;  // timer modulo
-    uint8_t  tac;  // timer control
-    // Sound
-    uint8_t nr10;
-    uint8_t nr11;
-    uint8_t nr12;
-    uint8_t nr13;
-    uint8_t nr14;
+  uint16_t div;  // divider register
+  uint8_t  tima; // timer counter
+  uint8_t  tma;  // timer modulo
+  uint8_t  tac;  // timer control
+  // Sound
+  uint8_t nr10;
+  uint8_t nr11;
+  uint8_t nr12;
+  uint8_t nr13;
+  uint8_t nr14;
 
-    uint8_t nr21;
-    uint8_t nr22;
-    uint8_t nr23;
-    uint8_t nr24;
+  uint8_t nr21;
+  uint8_t nr22;
+  uint8_t nr23;
+  uint8_t nr24;
 
-    uint8_t nr30;
-    uint8_t nr31;
-    uint8_t nr32;
-    uint8_t nr33;
-    uint8_t nr34;
+  uint8_t nr30;
+  uint8_t nr31;
+  uint8_t nr32;
+  uint8_t nr33;
+  uint8_t nr34;
 
-    uint8_t nr41;
-    uint8_t nr42;
-    uint8_t nr43;
-    uint8_t nr44;
+  uint8_t nr41;
+  uint8_t nr42;
+  uint8_t nr43;
+  uint8_t nr44;
 
-    uint8_t nr50;
-    uint8_t nr51;
-    uint8_t nr52; // sound on/off
+  uint8_t nr50;
+  uint8_t nr51;
+  uint8_t nr52; // sound on/off
 
-    uint8_t ly;
-    uint8_t lyc;
-    uint8_t stat;
+  uint8_t ly;
+  uint8_t lyc;
+  uint8_t stat;
 
-    uint8_t lcdc;
-    uint8_t scy;
-    uint8_t scx;
-    uint8_t bgp;
-    uint8_t obp0;
-    uint8_t obp1;
-    uint8_t wx;
-    uint8_t wy;
-    uint8_t ie;  // interupt enable
-    uint8_t if_; // interupt flag
-    uint8_t dma;
-    bool    ime;           // interupt master enable
-    bool    set_ime_after; // IME is only set after the following instruction.
-    bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
-  } io;
-};
-typedef struct regs regs_t;
+  uint8_t lcdc;
+  uint8_t scy;
+  uint8_t scx;
+  uint8_t bgp;
+  uint8_t obp0;
+  uint8_t obp1;
+  uint8_t wx;
+  uint8_t wy;
+  uint8_t ie;  // interupt enable
+  uint8_t if_; // interupt flag
+  uint8_t dma;
+  bool    ime;           // interupt master enable
+  bool    set_ime_after; // IME is only set after the following instruction.
+  bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
+} io_regs_t;
 
-struct gb_breakpoint {
+typedef struct regs {
+  uint8_t   a;
+  uint8_t   b;
+  uint8_t   c;
+  uint8_t   d;
+  uint8_t   e;
+  uint8_t   f;
+  uint8_t   h;
+  uint8_t   l;
+  uint16_t  sp;
+  uint16_t  pc;
+  io_regs_t io;
+} regs_t;
+
+typedef struct gb_breakpoint {
   uint16_t addr;
   // TODO: We will want to also allow breakpoints to only be on a specific bank. So I should add an optional bank field.
   // TODO: Add a enable/disable toggle for temporarily turning breakpoint off.
-};
-typedef struct gb_breakpoint gb_breakpoint_t;
+} gb_breakpoint_t;
 
 typedef enum stack_entry_type {
   CALL_RET,
@@ -309,7 +308,7 @@ typedef struct stack_entry {
   };
 } stack_entry_t;
 
-struct gb_state {
+typedef struct gb_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
   SDL_Palette  *sdl_bg_palette;
@@ -342,24 +341,24 @@ struct gb_state {
                              // argparsing. So we want to make sure we don't try to free what was never created.
   bool use_flat_ram;
   union {
-    struct gb_ram_banks ram;
-    uint8_t             flat_ram[KB(64)];
+    gb_ram_banks_t ram;
+    uint8_t        flat_ram[KB(64)];
   };
-  struct debug_symbol_list syms;
-  SDL_Texture             *textures[DMG_N_TILEDATA_ADDRESSES];
-  bool                     dirty_textures[DMG_N_TILEDATA_ADDRESSES];
+  debug_symbol_list_t syms;
+  SDL_Texture        *textures[DMG_N_TILEDATA_ADDRESSES];
+  bool                dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
   // this is where all of the oam entries to be drawn on the current line are gathered and ordered during the oam read
   // window
-  const struct oam_entry *oam_entries[10];
+  const oam_entry_t *oam_entries[10];
 
-  FILE                   *serial_port_output_file;
+  FILE              *serial_port_output_file;
 
-  uint64_t                ns_elapsed_while_running;
-  uint64_t                ns_elapsed_total;
+  uint64_t           ns_elapsed_while_running;
+  uint64_t           ns_elapsed_total;
 
-  uint64_t                ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
-  uint64_t                ns_last_frametime;
+  uint64_t           ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
+  uint64_t           ns_last_frametime;
 
   // total m_cycles_elapsed on the cpu
   //
@@ -423,11 +422,10 @@ struct gb_state {
   std::stack<stack_entry_t>    *shadow_stack;
   std::vector<gb_breakpoint_t> *breakpoints;
 #endif
-};
-typedef struct gb_state gb_state_t;
+} gb_state_t;
 
 // Call with bootrom_name = NULL to use dmg0 as the default.
-void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name);
+void gb_state_load_bootrom(gb_state_t *gb_state, const char *bootrom_name);
 
 // See the following wikipedia page on X Macro's if you want to understand this idiom. I don't love doing this but I
 // need a good way to display all IO registers in the ImGui debug UI, and I don't want to have to create a seperate
@@ -518,28 +516,28 @@ enum joy_pad_io_reg_bits : uint8_t {
   JOYP_BUTTON_START  = 1 << 3,
 };
 
-uint64_t         gb_m_cycles(struct gb_state *gb_state);
+uint64_t    gb_m_cycles(gb_state_t *gb_state);
 
-void             gb_update_timers(struct gb_state *gb_state);
+void        gb_update_timers(gb_state_t *gb_state);
 
-void            *gb_unmap_address(struct gb_state *gb_state, uint16_t addr);
+void       *gb_unmap_address(gb_state_t *gb_state, uint16_t addr);
 
-uint8_t          gb_read_mem8(struct gb_state *gb_state, uint16_t addr);
-void             gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val);
+uint8_t     gb_read_mem8(gb_state_t *gb_state, uint16_t addr);
+void        gb_write_mem8(gb_state_t *gb_state, uint16_t addr, uint8_t val);
 
-uint16_t         gb_read_mem16(struct gb_state *gb_state, uint16_t addr);
-void             gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val);
+uint16_t    gb_read_mem16(gb_state_t *gb_state, uint16_t addr);
+void        gb_write_mem16(gb_state_t *gb_state, uint16_t addr, uint16_t val);
 
-void             gb_state_init(struct gb_state *gb_state);
-void             gb_state_reset(struct gb_state *gb_state);
-struct gb_state *gb_state_alloc();
-void             gb_state_free(struct gb_state *gb_state);
+void        gb_state_init(gb_state_t *gb_state);
+void        gb_state_reset(gb_state_t *gb_state);
+gb_state_t *gb_state_alloc();
+void        gb_state_free(gb_state_t *gb_state);
 
-bool             gb_state_get_err(struct gb_state *gb_state);
+bool        gb_state_get_err(gb_state_t *gb_state);
 
 // Whether or not to use flat memory, this is currently exclusively used for single step tests where they expect memory
 // to be a flat 64KB bank.
-void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled);
+void gb_state_use_flat_mem(gb_state_t *gb_state, bool enabled);
 
 // This is in common since I need to also use this for marking textures dirty when they are written to.
 inline static uint16_t gb_tile_addr_to_tex_idx(uint16_t tile_addr) {
