@@ -373,9 +373,13 @@ typedef struct gb_state {
   // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
 
-  bool     last_stat_interrupt;
+  // Used to identify if update_lcd_status() is being called for the first time since the mode switched to v-blank. So
+  // this variable is set to true as soon as the update_lcd_status() sees that the ppu is in v-blank, and it's set to
+  // false once update_lcd_status() sees that the ppu is in any other mode.
+  bool last_vblank_interrupt;
+  bool last_stat_interrupt; // Same as last_vblank_interrupt except identifies if the stat interrupt is currently high.
 
-  uint8_t  last_mode_handled;
+  uint8_t last_mode_handled;
 
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool                        first_oam_scan_after_enable;
