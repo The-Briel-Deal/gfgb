@@ -286,29 +286,28 @@ struct gb_breakpoint {
 };
 typedef struct gb_breakpoint gb_breakpoint_t;
 
-enum stack_entry_type {
+typedef enum stack_entry_type {
   CALL_RET,
   PUSH_VAL,
-};
-typedef enum stack_entry_type stack_entry_type_t;
+} stack_entry_type_t;
 
-struct stack_entry {
+typedef struct call_ret_metadata {
+  debug_symbol_t *callee_symbol;
+  debug_symbol_t *caller_symbol;
+} call_ret_metadata_t;
+
+typedef struct push_val_metadata {
+  uint16_t push_inst_addr;
+} push_val_metadata_t;
+
+typedef struct stack_entry {
   stack_entry_type_t type;
   uint16_t           val;
-
-  struct call_ret_metadata {
-    debug_symbol_t *callee_symbol;
-    debug_symbol_t *caller_symbol;
-  };
-  struct push_val_metadata {
-    uint16_t push_inst_addr;
-  };
   union {
-    struct call_ret_metadata call_ret;
-    struct push_val_metadata push_val;
+    call_ret_metadata_t call_ret;
+    push_val_metadata_t push_val;
   };
-};
-typedef struct stack_entry stack_entry_t;
+} stack_entry_t;
 
 struct gb_state {
   SDL_Window   *sdl_window;
