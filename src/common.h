@@ -12,13 +12,16 @@
 #include "ppu.h"
 
 #ifdef __cplusplus
+
 #include <regex>
+#include <stack>
 #include <string>
 #include <utility>
 #include <vector>
 
 using std::unreachable;
-#endif
+
+#endif // #ifdef __cplusplus
 
 #ifdef __cplusplus
 extern "C" {
@@ -283,6 +286,30 @@ struct gb_breakpoint {
 };
 typedef struct gb_breakpoint gb_breakpoint_t;
 
+enum stack_entry_type {
+  CALL_RET,
+  PUSH_VAL,
+};
+typedef enum stack_entry_type stack_entry_type_t;
+
+struct stack_entry {
+  stack_entry_type_t type;
+  uint16_t           val;
+
+  struct call_ret_metadata {
+    debug_symbol_t *callee_symbol;
+    debug_symbol_t *caller_symbol;
+  };
+  struct push_val_metadata {
+    uint16_t push_inst_addr;
+  };
+  union {
+    struct call_ret_metadata call_ret;
+    struct push_val_metadata push_val;
+  };
+};
+typedef struct stack_entry stack_entry_t;
+
 struct gb_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
@@ -389,9 +416,12 @@ struct gb_state {
   gb_imgui_state_t imgui_state;
 
 #ifdef __cplusplus
-  std::string                  *serial_port_output_string;
-  std::basic_regex<char>       *compiled_pass_regex;
-  std::basic_regex<char>       *compiled_fail_regex;
+  std::string            *serial_port_output_string;
+  std::basic_regex<char> *compiled_pass_regex;
+  std::basic_regex<char> *compiled_fail_regex;
+  // The shadow stack is used for debugging to keep track of stack entries along with metadata so that we can display it
+  // in the debug UI.
+  std::stack<stack_entry_t>    *shadow_stack;
   std::vector<gb_breakpoint_t> *breakpoints;
 #endif
 };
