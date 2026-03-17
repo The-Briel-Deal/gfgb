@@ -111,7 +111,7 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
     return true;
   }
   const debug_symbol_t *sym;
-  if ((sym = lookup_symbol_name(&gb_state->syms, bp_str))) {
+  if ((sym = symbol_from_name(&gb_state->syms, bp_str))) {
     gb_breakpoint_t bp = {.addr = sym->start_offset, .enable = true};
     gb_state->breakpoints->push_back(bp);
     return true;

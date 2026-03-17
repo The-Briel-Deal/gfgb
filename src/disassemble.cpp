@@ -74,15 +74,15 @@ static void print_inst_param(char *inst_param_str, const struct inst_param inst_
 }
 #undef PRINT_ENUM_CASE
 
-const char *get_inst_symbol(struct gb_state *gb_state, uint16_t pc) {
+const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t addr){
   // This works because we know the symbols are sorted.
-  for (int i = 0; i < gb_state->syms.len; i++) {
-    struct debug_symbol *sym = &gb_state->syms.syms[i];
-    if (sym->start_offset <= pc && pc < sym->len + sym->start_offset) {
-      return sym->name;
+  for (int i = 0; i < syms->len; i++) {
+    debug_symbol_t *sym = &syms->syms[i];
+    if (sym->start_offset <= addr && addr < sym->len + sym->start_offset) {
+      return sym;
     }
   }
-  return "Unknown";
+  return NULL;
 }
 
 #define PRINT_INST_NAME(stream, inst_name)                                                                             \
@@ -94,7 +94,7 @@ const char *get_inst_symbol(struct gb_state *gb_state, uint16_t pc) {
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr) {
   ZoneScopedN("Print Inst");
   if (show_inst_addr) {
-    fprintf(stream, "%s:0x%.4X: ", get_inst_symbol(gb_state, inst_addr), inst_addr);
+    fprintf(stream, "%s:0x%.4X: ", symbol_from_addr(&gb_state->syms, inst_addr)->name, inst_addr);
   }
   switch (inst.type) {
     PRINT_INST_NAME(stream, ADC)
@@ -179,7 +179,7 @@ void free_symbol_list(struct debug_symbol_list *syms) {
   syms->len      = 0;
 }
 
-const debug_symbol_t *lookup_symbol_name(const debug_symbol_list_t *syms, const char *name) {
+const debug_symbol_t *symbol_from_name(const debug_symbol_list_t *syms, const char *name) {
   for (int i = 0; i < syms->len; i++) {
     if (strcmp(syms->syms[i].name, name) == 0) return &syms->syms[i];
   }
