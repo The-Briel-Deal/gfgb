@@ -656,6 +656,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
       ImGui::Checkbox("Paused", &gb_state->execution_paused);
       ImGui::Checkbox("Halted", &gb_state->halted);
+
+      ImGui::TextUnformatted(
+          std::format("Sys Clock (a.k.a. Full Div): {0:#018b} - {0:#06x}", gb_state->regs.io.div).c_str());
+
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");

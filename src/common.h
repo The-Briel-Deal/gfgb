@@ -214,6 +214,7 @@ typedef struct io_regs {
   uint8_t  sb; // serial transfer data (currently unused)
   uint8_t  sc; // serial transfer control (currently unused)
 
+  // This is technically the system clock which is essentially the full 16 bit version of DIV, the DIV register just returns the most significant 8 bits.
   uint16_t div;  // divider register
   uint8_t  tima; // timer counter
   uint8_t  tma;  // timer modulo
