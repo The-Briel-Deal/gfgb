@@ -1,6 +1,8 @@
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_PPU
-#include "ppu.h"
 #include "common.h"
+
+#include "disassemble.h"
+#include "ppu.h"
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -666,7 +668,12 @@ void gb_imgui_render(struct gb_state *gb_state) {
         ImGui::PushID(i);
         ImGui::Checkbox("##bp_enabled", &bp.enable);
         ImGui::SameLine();
-        ImGui::Text("Breakpoint %d: %.4x", i, bp.addr);
+        const debug_symbol_t *sym = symbol_from_addr(&gb_state->syms, bp.addr);
+        if (sym != NULL) {
+          ImGui::Text("Breakpoint %d: [%s+$%X] [$%.4X]", i, sym->name, bp.addr - sym->start_offset, bp.addr);
+        } else {
+          ImGui::Text("Breakpoint %d: [$%.4X]", i, bp.addr);
+        }
         i++;
         ImGui::PopID();
       }
