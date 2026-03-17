@@ -179,6 +179,13 @@ void free_symbol_list(struct debug_symbol_list *syms) {
   syms->len      = 0;
 }
 
+const debug_symbol_t *lookup_symbol_name(const debug_symbol_list_t *syms, const char *name) {
+  for (int i = 0; i < syms->len; i++) {
+    if (strcmp(syms->syms[i].name, name) == 0) return &syms->syms[i];
+  }
+  return NULL;
+}
+
 void sort_syms(struct debug_symbol_list *syms) {
   // This is just bubble sort, since this is just for debugging it should be
   // fine. If it becomes an issue I could use something faster.
@@ -438,7 +445,7 @@ void              test_disasm() {
   if (_test_expected_disasm_output_len - 1 != bytes_read ||
       strncmp(buf, _test_expected_disasm_output, bytes_read) != 0) {
     fprintf(stderr, "text_disasm failed, expected:\n%s\nreceived:\n%.*s\n", _test_expected_disasm_output, bytes_read,
-                         buf);
+            buf);
     abort();
   }
 }
@@ -504,7 +511,7 @@ void              test_parse_debug_sym() {
   {
     FILE *stream = tmpfile();
     fwrite(_test_parse_debug_sym_input, sizeof(*_test_parse_debug_sym_input), sizeof(_test_parse_debug_sym_input),
-                        stream);
+           stream);
     fflush(stream);
     rewind(stream);
 
@@ -516,7 +523,7 @@ void              test_parse_debug_sym() {
   {
     FILE *stream = tmpfile();
     fwrite(_test_parse_bootrom_debug_sym_input, sizeof(*_test_parse_bootrom_debug_sym_input),
-                        sizeof(_test_parse_bootrom_debug_sym_input), stream);
+           sizeof(_test_parse_bootrom_debug_sym_input), stream);
     fflush(stream);
     rewind(stream);
 

@@ -98,6 +98,7 @@ bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename
 }
 
 bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len) {
+  assert(bp_str != NULL);
   if (bp_str_len == 5 && bp_str[0] == '$') {
     char    *endptr;
     uint16_t bp_addr = strtoul(bp_str + 1, &endptr, 16);
@@ -109,9 +110,15 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
     gb_state->breakpoints->push_back(bp);
     return true;
   }
-  // TODO: Add support for breakpoints at symbols.
-  LogCritical("'%.*s' is not a valid breakpoint string, currently only 16 bit hex addr's are supported.", bp_str_len,
-              bp_str);
+  const debug_symbol_t *sym;
+  if ((sym = lookup_symbol_name(&gb_state->syms, bp_str))) {
+    gb_breakpoint_t bp = {.addr = sym->start_offset};
+    gb_state->breakpoints->push_back(bp);
+    return true;
+  }
+  LogCritical("'%.*s' is not a valid breakpoint string, currently only 16 bit hex addrs prefixed with `$` and exact "
+              "symbol names are supported.",
+              bp_str_len, bp_str);
   return false;
 }
 
@@ -212,12 +219,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_state->compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
   }
 
-  for (std::string bp : breakpoints) {
-    if (!gb_set_breakpoint(gb_state, bp.c_str(), bp.length())) {
-      return SDL_APP_FAILURE;
-    }
-  }
-
   const char *rom_filename_cstr    = rom_filename.c_str();
   const char *symbol_filename_cstr = NULL;
   if (symbol_filename.length() != 0) {
@@ -244,6 +245,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   }
 
   if (!gb_load_rom(gb_state, rom_filename_cstr, bootrom_filename_cstr, symbol_filename_cstr)) return SDL_APP_FAILURE;
+
+  for (std::string bp : breakpoints) {
+    if (!gb_set_breakpoint(gb_state, bp.c_str(), bp.length())) {
+      return SDL_APP_FAILURE;
+    }
+  }
+
   SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
   switch (run_mode) {

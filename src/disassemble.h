@@ -29,10 +29,12 @@ typedef struct debug_symbol_list {
   uint16_t        len;
   uint16_t        capacity;
 } debug_symbol_list_t;
-void alloc_symbol_list(struct debug_symbol_list *syms);
-void free_symbol_list(struct debug_symbol_list *syms);
+void                  alloc_symbol_list(debug_symbol_list_t *syms);
+void                  free_symbol_list(debug_symbol_list_t *syms);
 
-void parse_syms(struct debug_symbol_list *syms, FILE *sym_file);
+const debug_symbol_t *lookup_symbol_name(const debug_symbol_list_t *syms, const char *name);
+
+void                  parse_syms(debug_symbol_list_t *syms, FILE *sym_file);
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr);
 
 #ifdef __cplusplus
