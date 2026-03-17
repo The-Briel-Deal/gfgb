@@ -329,7 +329,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     const int      y               = i / 32;
     const uint8_t  tile_data_index = gb_read_mem8(gb_state, bg_tile_map_start + i);
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
-                                    ((tile_data_index % 128) * 16);
+                                     ((tile_data_index % 128) * 16);
     // Use signed integers when calculating the display position since we still display tiles where y = 0 to -7
     int16_t display_x = (x * 8) - gb_state->regs.io.scx;
     int16_t display_y = (y * 8) - gb_state->regs.io.scy;
@@ -381,9 +381,9 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     const int      y               = gb_state->win_line_counter / 8;
     const uint8_t  tile_data_index = gb_read_mem8(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
-                                    ((tile_data_index % 128) * 16);
-    uint8_t display_x = (x * 8) + gb_state->regs.io.wx - 7;
-    uint8_t display_y = (gb_state->regs.io.ly / 8) * 8;
+                                     ((tile_data_index % 128) * 16);
+    uint8_t        display_x       = (x * 8) + gb_state->regs.io.wx - 7;
+    uint8_t        display_y       = (gb_state->regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->sdl_bg_palette, display_x, display_y, tile_data_addr,
                               SDL_FLIP_NONE);
@@ -658,11 +658,17 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");
       if (ImGui::Button("Set Breakpoint")) {
-        gb_state->breakpoints->push_back({.addr = imgui_state->breakpoint_addr});
+        gb_state->breakpoints->push_back({.addr = imgui_state->breakpoint_addr, .enable = true});
       }
       int i = 1;
-      for (gb_breakpoint_t bp : *gb_state->breakpoints) {
-        ImGui::Text("Breakpoint %d: %.4x", i++, bp.addr);
+      for (gb_breakpoint_t &bp : *gb_state->breakpoints) {
+
+        ImGui::PushID(i);
+        ImGui::Checkbox("##bp_enabled", &bp.enable);
+        ImGui::SameLine();
+        ImGui::Text("Breakpoint %d: %.4x", i, bp.addr);
+        i++;
+        ImGui::PopID();
       }
       ImGui::TreePop();
     }

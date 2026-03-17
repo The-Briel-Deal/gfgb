@@ -106,13 +106,13 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
       LogCritical("'%.*s' is not a valid 16 bit hex addr.", bp_str_len, bp_str);
       return false;
     }
-    gb_breakpoint_t bp = {.addr = bp_addr};
+    gb_breakpoint_t bp = {.addr = bp_addr, .enable = true};
     gb_state->breakpoints->push_back(bp);
     return true;
   }
   const debug_symbol_t *sym;
   if ((sym = lookup_symbol_name(&gb_state->syms, bp_str))) {
-    gb_breakpoint_t bp = {.addr = sym->start_offset};
+    gb_breakpoint_t bp = {.addr = sym->start_offset, .enable = true};
     gb_state->breakpoints->push_back(bp);
     return true;
   }
@@ -340,13 +340,19 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   *io_joyp |= new_lower_nibble;
   *io_joyp |= 0xC0; // most significant two bits are set high since they are unused
 }
+static bool in_range(uint16_t val, uint16_t bot, uint16_t top) {
+  if (val < bot) return false;
+  if (val >= top) return false;
+  return true;
+}
 
-static void check_breakpoints(gb_state_t *gb_state, uint16_t prev_pc, uint16_t curr_pc) {
+static void check_breakpoints(gb_state_t *gb_state, uint16_t inst_start, uint16_t inst_end) {
   ZoneScopedN("Check Breakpoints");
   for (gb_breakpoint_t bp : *gb_state->breakpoints) {
-    if (bp.addr >= prev_pc && bp.addr < curr_pc) {
-      gb_state->execution_paused = true;
-    }
+    if (!bp.enable) continue;
+    if (!in_range(bp.addr, inst_start, inst_end)) continue;
+    gb_state->execution_paused = true;
+    return;
   }
 }
 
@@ -409,11 +415,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         ZoneScopedN("Fetch and Execute");
         if (!gb_state->halted) {
           ZoneTextF("Not Halted");
-          uint16_t    prev_pc = gb_state->regs.pc;
-          struct inst inst    = fetch(gb_state);
-          uint16_t    curr_pc = gb_state->regs.pc;
-          if (gb_state->dbg_trace_exec) print_inst(gb_state, gb_state->dbg_trace_exec_fout, inst, true, prev_pc);
-          check_breakpoints(gb_state, prev_pc, curr_pc);
+          uint16_t    inst_start = gb_state->regs.pc;
+          struct inst inst       = fetch(gb_state);
+          uint16_t    inst_end   = gb_state->regs.pc;
+          if (gb_state->dbg_trace_exec) print_inst(gb_state, gb_state->dbg_trace_exec_fout, inst, true, inst_start);
+          check_breakpoints(gb_state, inst_start, inst_end);
           execute(gb_state, inst);
         } else {
           ZoneTextF("Halted");

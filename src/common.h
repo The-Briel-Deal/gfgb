@@ -282,7 +282,7 @@ typedef struct regs {
 typedef struct gb_breakpoint {
   uint16_t addr;
   // TODO: We will want to also allow breakpoints to only be on a specific bank. So I should add an optional bank field.
-  // TODO: Add a enable/disable toggle for temporarily turning breakpoint off.
+  bool enable;
 } gb_breakpoint_t;
 
 typedef enum stack_entry_type {
