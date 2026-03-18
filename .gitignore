@@ -3,6 +3,7 @@
 *.o
 *.png
 *.sym
+/.cache/
 /build/
 /dist/
 /out/

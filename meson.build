@@ -71,7 +71,7 @@ sources = [
 ]
 include = include_directories(['src/', 'embed/'])
 
-shared_lib = shared_library(
+shared_library(
   'gfgb', 
   [sources],
   include_directories : include,
