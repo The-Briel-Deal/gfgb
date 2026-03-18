@@ -74,7 +74,7 @@ static void print_inst_param(char *inst_param_str, const struct inst_param inst_
 }
 #undef PRINT_ENUM_CASE
 
-const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t addr){
+const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t addr) {
   // This works because we know the symbols are sorted.
   for (int i = 0; i < syms->len; i++) {
     debug_symbol_t *sym = &syms->syms[i];
@@ -94,7 +94,14 @@ const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr) {
   ZoneScopedN("Print Inst");
   if (show_inst_addr) {
-    fprintf(stream, "%s:0x%.4X: ", symbol_from_addr(&gb_state->syms, inst_addr)->name, inst_addr);
+    const debug_symbol_t *sym = symbol_from_addr(&gb_state->syms, inst_addr);
+    const char           *sym_name;
+    if (sym != NULL) {
+      sym_name = sym->name;
+    } else {
+      sym_name = "Unknown";
+    }
+    fprintf(stream, "%s:0x%.4X: ", sym_name, inst_addr);
   }
   switch (inst.type) {
     PRINT_INST_NAME(stream, ADC)
