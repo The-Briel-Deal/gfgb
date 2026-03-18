@@ -461,6 +461,8 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   gb_state->lcd_x %= DOTS_PER_LINE;
   gb_state->regs.io.ly %= LINES_PER_FRAME;
 
+  // TODO: we need to see if the previous state already triggered an interupt, if there was already an interrupt being
+  // triggered then we don't trigger another one.
   uint8_t mode;
   if (gb_state->regs.io.ly >= 144) {
     mode = VBLANK;
@@ -492,10 +494,7 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   if ((!prev_triggered) && curr_triggered) {
     gb_state->regs.io.if_ |= 0b00010;
   }
-  prev_triggered                  = gb_state->last_vblank_interrupt;
-  curr_triggered                  = (mode == VBLANK);
-  gb_state->last_vblank_interrupt = curr_triggered;
-  if ((!prev_triggered) && curr_triggered) gb_state->regs.io.if_ |= 0b00001;
+  if (mode == VBLANK) gb_state->regs.io.if_ |= 0b00001;
 }
 
 void gb_update_timers(struct gb_state *gb_state) {
