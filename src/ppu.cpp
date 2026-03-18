@@ -684,6 +684,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("PPU", ImGuiTreeNodeFlags_Framed)) {
+      ImGui::Value("LCD X", gb_state->lcd_x);
+      ImGui::Value("LCD Y", gb_state->regs.io.ly);
+
       ImGui::TextUnformatted(std::format("LCDC: {0:#010b}", gb_state->regs.io.lcdc).c_str());
       ImGui::Value("LCDC[7] - LCD Enabled", (gb_state->regs.io.lcdc & LCDC_ENABLE) != 0);
       ImGui::Value("LCDC[6] - Window Tilemap", (gb_state->regs.io.lcdc & LCDC_WIN_TILEMAP) != 0);
