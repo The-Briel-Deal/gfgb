@@ -66,12 +66,17 @@ test_round1:
   ld a, >finish_round1
   ld (hl), a
 
+  ; 114 m-cycles in a line
   wait_ly 143
 
-  nops 54
-  ldh (<DIV), a
+  nops 54 ; should be 216 dots through the line, with 240 dots remaining.
+  ldh (<DIV), a ; div reset to 0
 
-  halt_until INTR_VBLANK
+  ; Once this is called, div should be at roughly 240, then it takes 5 m_cycles
+  ; or 20 t_cycles to handle the interrupt, so by the time the interrupt is
+  ; called we should be at 260 (meaning that div should be incremented before
+  ; this is even called)
+  halt_until INTR_VBLANK 
 
 finish_round1:
   ldh a, (<DIV)
