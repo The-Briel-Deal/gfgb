@@ -69,6 +69,7 @@ test_round1:
   ; 114 m-cycles in a line
   wait_ly 143
 
+  @nop_start:
   nops 54 ; should be 216 dots through the line, with 240 dots remaining.
   ldh (<DIV), a ; div reset to 0
 
