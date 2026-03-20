@@ -372,6 +372,9 @@ typedef struct gb_state_unsaved {
 #endif
 } gb_state_unsaved_t;
 
+// This is primarily broken up into two nested structs, gb_state_saved and gb_state_unsaved based on whether or not the
+// data should be saved when making a save state.
+// TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
   gb_state_saved_t saved;
 
