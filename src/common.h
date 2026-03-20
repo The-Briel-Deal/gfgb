@@ -430,7 +430,7 @@ typedef struct gb_state {
 
   gb_imgui_state_t   imgui_state;
 
-  gb_state_unsaved_t unsaved_state;
+  gb_state_unsaved_t unsaved;
 } gb_state_t;
 
 // Call with bootrom_name = NULL to use dmg0 as the default.

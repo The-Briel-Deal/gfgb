@@ -107,13 +107,13 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
       return false;
     }
     gb_breakpoint_t bp = {.addr = bp_addr, .enable = true};
-    gb_state->breakpoints->push_back(bp);
+    gb_state->unsaved.breakpoints->push_back(bp);
     return true;
   }
   const debug_symbol_t *sym;
   if ((sym = symbol_from_name(&gb_state->syms, bp_str))) {
     gb_breakpoint_t bp = {.addr = sym->start_offset, .enable = true};
-    gb_state->breakpoints->push_back(bp);
+    gb_state->unsaved.breakpoints->push_back(bp);
     return true;
   }
   LogCritical("'%.*s' is not a valid breakpoint string, currently only 16 bit hex addrs prefixed with `$` and exact "
@@ -215,8 +215,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
   if (gb_state->test_mode) {
-    gb_state->compiled_pass_regex = new std::basic_regex(test_mode_pass_regex);
-    gb_state->compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
+    gb_state->unsaved.compiled_pass_regex = new std::basic_regex(test_mode_pass_regex);
+    gb_state->unsaved.compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
   }
 
   const char *rom_filename_cstr    = rom_filename.c_str();
@@ -348,7 +348,7 @@ static bool in_range(uint16_t val, uint16_t bot, uint16_t top) {
 
 static void check_breakpoints(gb_state_t *gb_state, uint16_t inst_start, uint16_t inst_end) {
   ZoneScopedN("Check Breakpoints");
-  for (gb_breakpoint_t bp : *gb_state->breakpoints) {
+  for (gb_breakpoint_t bp : *gb_state->unsaved.breakpoints) {
     if (!bp.enable) continue;
     if (!in_range(bp.addr, inst_start, inst_end)) continue;
     gb_state->execution_paused = true;
@@ -357,7 +357,7 @@ static void check_breakpoints(gb_state_t *gb_state, uint16_t inst_start, uint16_
 }
 
 void print_serial_port_escaped(gb_state_t *gb_state) {
-  for (char c : *gb_state->serial_port_output_string) {
+  for (char c : *gb_state->unsaved.serial_port_output_string) {
     if (isprint(c)) {
       putchar(c);
     } else {
@@ -376,12 +376,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   gb_state_t *gb_state = (gb_state_t *)appstate;
 
   if (gb_state->test_mode) {
-    if (std::regex_search(*gb_state->serial_port_output_string, *gb_state->compiled_pass_regex)) {
+    if (std::regex_search(*gb_state->unsaved.serial_port_output_string, *gb_state->unsaved.compiled_pass_regex)) {
       printf("Test succeeded with serial port output:\n");
       print_serial_port_escaped(gb_state);
       return SDL_APP_SUCCESS;
     }
-    if (std::regex_search(*gb_state->serial_port_output_string, *gb_state->compiled_fail_regex)) {
+    if (std::regex_search(*gb_state->unsaved.serial_port_output_string, *gb_state->unsaved.compiled_fail_regex)) {
       printf("Test failed with serial port output:\n");
       print_serial_port_escaped(gb_state);
       return SDL_APP_FAILURE;
@@ -493,7 +493,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // cover it with the dockspace.
     if (!gb_state->enable_fs_dockspace) gb_display_render(gb_state);
     gb_imgui_render(gb_state);
-    GB_CheckSDLCall(SDL_RenderPresent(gb_state->sdl_renderer));
+    GB_CheckSDLCall(SDL_RenderPresent(gb_state->unsaved.sdl_renderer));
   }
 
   // If you are tailing the output while stepping we don't want trace data to sit in the buffer so we flush it at the
