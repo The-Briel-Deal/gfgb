@@ -39,7 +39,7 @@ const debug_symbol_t *symbol_from_name(const debug_symbol_list_t *syms, const ch
 // TODO: This will need to change to also take the mem bank once I add support for banking
 const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t addr);
 
-void                  parse_syms(debug_symbol_list_t *syms, FILE *sym_file);
+void parse_syms(debug_symbol_list_t *syms, FILE *sym_file);
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr);
 
 #ifdef __cplusplus

@@ -32,7 +32,7 @@ extern "C" {
 #define GB_free(mem)              SDL_free(mem)
 #define GB_memset(mem, byte, len) SDL_memset(mem, byte, len)
 
-#define GB_assert(expr)           SDL_assert(expr)
+#define GB_assert(expr) SDL_assert(expr)
 enum GB_LogCategory {
   GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
   GB_LOG_CATEGORY_PPU     = SDL_LOG_CATEGORY_CUSTOM,
@@ -81,74 +81,74 @@ enum GB_LogCategory {
     gb_state->err = true;                                                                                              \
   }
 
-#define KB(n)                      (1024 * n)
+#define KB(n) (1024 * n)
 
-#define NIBBLE0(byte)              ((byte & 0xF0) >> 4)
-#define NIBBLE1(byte)              ((byte & 0x0F) >> 0)
+#define NIBBLE0(byte) ((byte & 0xF0) >> 4)
+#define NIBBLE1(byte) ((byte & 0x0F) >> 0)
 
-#define OCTAL0(byte)               ((byte & 0700) >> 6)
-#define OCTAL1(byte)               ((byte & 0070) >> 3)
-#define OCTAL2(byte)               ((byte & 0007) >> 0)
+#define OCTAL0(byte) ((byte & 0700) >> 6)
+#define OCTAL1(byte) ((byte & 0070) >> 3)
+#define OCTAL2(byte) ((byte & 0007) >> 0)
 
-#define CRUMB0(byte)               ((byte & 0b11000000) >> 6)
-#define CRUMB1(byte)               ((byte & 0b00110000) >> 4)
-#define CRUMB2(byte)               ((byte & 0b00001100) >> 2)
-#define CRUMB3(byte)               ((byte & 0b00000011) >> 0)
+#define CRUMB0(byte) ((byte & 0b11000000) >> 6)
+#define CRUMB1(byte) ((byte & 0b00110000) >> 4)
+#define CRUMB2(byte) ((byte & 0b00001100) >> 2)
+#define CRUMB3(byte) ((byte & 0b00000011) >> 0)
 
-#define GB_BG_WIDTH                256
-#define GB_BG_HEIGHT               256
+#define GB_BG_WIDTH  256
+#define GB_BG_HEIGHT 256
 
-#define GB_DISPLAY_WIDTH           160
-#define GB_DISPLAY_HEIGHT          144
+#define GB_DISPLAY_WIDTH  160
+#define GB_DISPLAY_HEIGHT 144
 
-#define GB_TILEDATA_BLOCK0_START   0x8000
-#define GB_TILEDATA_BLOCK1_START   0x8800
-#define GB_TILEDATA_BLOCK2_START   0x9000
-#define GB_TILEDATA_BLOCK2_END     0x9800
+#define GB_TILEDATA_BLOCK0_START 0x8000
+#define GB_TILEDATA_BLOCK1_START 0x8800
+#define GB_TILEDATA_BLOCK2_START 0x9000
+#define GB_TILEDATA_BLOCK2_END   0x9800
 
-#define GB_TILEMAP_BLOCK0_START    0x9800
-#define GB_TILEMAP_BLOCK1_START    0x9C00
+#define GB_TILEMAP_BLOCK0_START 0x9800
+#define GB_TILEMAP_BLOCK1_START 0x9C00
 
-#define DMG_PALETTE_N_COLORS       4
-#define DMG_N_TILEDATA_ADDRESSES   (128 * 3)
-#define DMG_BOOTROM_SIZE           0x100
+#define DMG_PALETTE_N_COLORS     4
+#define DMG_N_TILEDATA_ADDRESSES (128 * 3)
+#define DMG_BOOTROM_SIZE         0x100
 
-#define NS_PER_SEC                 (1 * 1000 * 1000 * 1000)
+#define NS_PER_SEC (1 * 1000 * 1000 * 1000)
 
-#define DMG_CLOCK_HZ               (1 << 22)
+#define DMG_CLOCK_HZ (1 << 22)
 
-#define DOTS_PER_FRAME             70224
+#define DOTS_PER_FRAME 70224
 
-#define ROM0_START                 0x0000
-#define ROM0_END                   0x3FFF
+#define ROM0_START 0x0000
+#define ROM0_END   0x3FFF
 
-#define ROMN_START                 0x4000
-#define ROMN_END                   0x7FFF
+#define ROMN_START 0x4000
+#define ROMN_END   0x7FFF
 
 // VRAM on CGB is switchable across 2 8KB banks, on DMG this is just one 8KB
 // block. I won't worry about this until DMG is finished.
-#define VRAM_START                 0x8000
-#define VRAM_END                   0x9FFF
+#define VRAM_START 0x8000
+#define VRAM_END   0x9FFF
 
-#define ERAM_START                 0xA000
-#define ERAM_END                   0xBFFF
+#define ERAM_START 0xA000
+#define ERAM_END   0xBFFF
 
 // This is split in two on the CGB and the second half is switchable. I'm just
 // worrying about DMG for now.
-#define WRAM_START                 0xC000
-#define WRAM_END                   0xDFFF
+#define WRAM_START 0xC000
+#define WRAM_END   0xDFFF
 
-#define ECHO_RAM_START             0xE000
-#define ECHO_RAM_END               0xFDFF
+#define ECHO_RAM_START 0xE000
+#define ECHO_RAM_END   0xFDFF
 
-#define OAM_START                  0xFE00
-#define OAM_END                    0xFE9F
+#define OAM_START 0xFE00
+#define OAM_END   0xFE9F
 
-#define IO_REG_START               0xFF00
-#define IO_REG_END                 0xFF7F
+#define IO_REG_START 0xFF00
+#define IO_REG_END   0xFF7F
 
-#define HRAM_START                 0xFF80
-#define HRAM_END                   0xFFFE
+#define HRAM_START 0xFF80
+#define HRAM_END   0xFFFE
 
 // This is little endian, so the number is constructed as r2,r1
 #define COMBINED_REG(regs, r1, r2) (((uint16_t)regs.r1 << 8) | ((uint16_t)regs.r2 << 0))
@@ -158,10 +158,10 @@ enum GB_LogCategory {
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
-#define HBLANK            0
-#define VBLANK            1
-#define OAM_SCAN          2
-#define DRAWING_PIXELS    3
+#define HBLANK         0
+#define VBLANK         1
+#define OAM_SCAN       2
+#define DRAWING_PIXELS 3
 
 #define TRACY_COLOR_RED   0xff0000
 #define TRACY_COLOR_GREEN 0x00ff00
@@ -351,11 +351,11 @@ typedef struct gb_state {
   uint8_t win_line_counter;
   bool    win_line_blank;
 
-  bool    halted;
-  bool    bootrom_has_syms;
-  bool    rom_loaded;
-  bool    video_initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
-                             // argparsing. So we want to make sure we don't try to free what was never created.
+  bool halted;
+  bool bootrom_has_syms;
+  bool rom_loaded;
+  bool video_initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
+                          // argparsing. So we want to make sure we don't try to free what was never created.
   bool use_flat_ram;
   union {
     gb_ram_banks_t ram;
@@ -369,13 +369,13 @@ typedef struct gb_state {
   // window
   const oam_entry_t *oam_entries[10];
 
-  FILE              *serial_port_output_file;
+  FILE *serial_port_output_file;
 
-  uint64_t           ns_elapsed_while_running;
-  uint64_t           ns_elapsed_total;
+  uint64_t ns_elapsed_while_running;
+  uint64_t ns_elapsed_total;
 
-  uint64_t           ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
-  uint64_t           ns_last_frametime;
+  uint64_t ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
+  uint64_t ns_last_frametime;
 
   // total m_cycles_elapsed on the cpu
   //
@@ -390,45 +390,40 @@ typedef struct gb_state {
   // used for identifying when we are in hblank, and for knowing when we can increment ly.
   uint32_t lcd_x;
 
-  bool     last_stat_interrupt;
+  bool last_stat_interrupt;
 
-  uint8_t  last_mode_handled;
+  uint8_t last_mode_handled;
 
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
-  bool                        first_oam_scan_after_enable;
+  bool first_oam_scan_after_enable;
 
-  bool                        oam_dma_start;
+  bool oam_dma_start;
 
   gb_internal_joy_pad_state_t joy_pad_state;
 
-  bool                        err;
+  bool err;
 
   // runtime debug toggles
   bool     dbg_clear_composite;
   bool     dbg_hide_bg;
   bool     dbg_hide_win;
   bool     dbg_hide_objs;
-
   bool     dbg_trace_exec;
   FILE    *dbg_trace_exec_fout;
-
   float    dbg_speed_factor;
-
   uint32_t dbg_step_inst_count; // the number of instructions to run until breaking
-
   bool     pause_on_err;
   bool     execution_paused;
 
-  bool     enable_fs_dockspace;
+  bool enable_fs_dockspace;
+  bool headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
+                      // speeds up rom tests in CI.
 
-  bool     headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
-                          // speeds up rom tests in CI.
+  bool test_mode; // If enabled then use serial_port output to look for a pass/fail string
+  char test_mode_pass_regex[16];
+  char test_mode_fail_regex[16];
 
-  bool               test_mode; // If enabled then use serial_port output to look for a pass/fail string
-  char               test_mode_pass_regex[16];
-  char               test_mode_fail_regex[16];
-
-  gb_imgui_state_t   imgui_state;
+  gb_imgui_state_t imgui_state;
 
   gb_state_unsaved_t unsaved;
 } gb_state_t;
@@ -491,7 +486,7 @@ enum io_reg_addr {
   LIST_OF_IO_REGS
 #undef X
 };
-typedef uint16_t    io_reg_addr_t;
+typedef uint16_t io_reg_addr_t;
 
 const io_reg_addr_t io_regs[] = {
 #define X(name, _) name,
@@ -512,10 +507,10 @@ inline static const char *gb_io_reg_name(io_reg_addr_t io_reg) {
 enum joy_pad_io_reg_bits : uint8_t {
   JOYP_SELECT_D_PAD = 1 << 4,
   // D-Pad Dirs: if JOYP_SELECT_D_PAD is selected (aka is 0)
-  JOYP_D_PAD_RIGHT    = 1 << 0,
-  JOYP_D_PAD_LEFT     = 1 << 1,
-  JOYP_D_PAD_UP       = 1 << 2,
-  JOYP_D_PAD_DOWN     = 1 << 3,
+  JOYP_D_PAD_RIGHT = 1 << 0,
+  JOYP_D_PAD_LEFT  = 1 << 1,
+  JOYP_D_PAD_UP    = 1 << 2,
+  JOYP_D_PAD_DOWN  = 1 << 3,
 
   JOYP_SELECT_BUTTONS = 1 << 5,
   // Buttons: if JOYP_SELECT_BUTTONS is selected (aka is 0)
@@ -525,24 +520,24 @@ enum joy_pad_io_reg_bits : uint8_t {
   JOYP_BUTTON_START  = 1 << 3,
 };
 
-uint64_t    gb_m_cycles(gb_state_t *gb_state);
+uint64_t gb_m_cycles(gb_state_t *gb_state);
 
-void        gb_update_timers(gb_state_t *gb_state);
+void gb_update_timers(gb_state_t *gb_state);
 
-void       *gb_unmap_address(gb_state_t *gb_state, uint16_t addr);
+void *gb_unmap_address(gb_state_t *gb_state, uint16_t addr);
 
-uint8_t     gb_read_mem8(gb_state_t *gb_state, uint16_t addr);
-void        gb_write_mem8(gb_state_t *gb_state, uint16_t addr, uint8_t val);
+uint8_t gb_read_mem8(gb_state_t *gb_state, uint16_t addr);
+void    gb_write_mem8(gb_state_t *gb_state, uint16_t addr, uint8_t val);
 
-uint16_t    gb_read_mem16(gb_state_t *gb_state, uint16_t addr);
-void        gb_write_mem16(gb_state_t *gb_state, uint16_t addr, uint16_t val);
+uint16_t gb_read_mem16(gb_state_t *gb_state, uint16_t addr);
+void     gb_write_mem16(gb_state_t *gb_state, uint16_t addr, uint16_t val);
 
 void        gb_state_init(gb_state_t *gb_state);
 void        gb_state_reset(gb_state_t *gb_state);
 gb_state_t *gb_state_alloc();
 void        gb_state_free(gb_state_t *gb_state);
 
-bool        gb_state_get_err(gb_state_t *gb_state);
+bool gb_state_get_err(gb_state_t *gb_state);
 
 // Whether or not to use flat memory, this is currently exclusively used for single step tests where they expect memory
 // to be a flat 64KB bank.

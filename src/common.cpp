@@ -102,7 +102,7 @@ load_default:
 
 struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
 
-void             gb_state_free(struct gb_state *gb_state) {
+void gb_state_free(struct gb_state *gb_state) {
   if (gb_state->serial_port_output_file != NULL) fclose(gb_state->serial_port_output_file);
 
   if (gb_state->syms.capacity > 0) {
@@ -368,7 +368,7 @@ void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   }
 }
 
-uint64_t        gb_m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
+uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
 
 static uint64_t gb_dots(uint64_t m_cycles) {
   // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support

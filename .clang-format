@@ -1,6 +1,6 @@
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
-AlignConsecutiveMacros: AcrossEmptyLinesAndComments
-AlignConsecutiveAssignments: AcrossEmptyLines 
-AlignConsecutiveDeclarations: AcrossEmptyLines 
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveAssignments: Consecutive 
+AlignConsecutiveDeclarations: Consecutive 
 ColumnLimit: 120

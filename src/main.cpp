@@ -130,12 +130,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   enum run_mode run_mode = UNSET;
 
-  CLI::App      gb_cli("A GameBoy emulator by Gabriel Ford", "GFGB");
+  CLI::App gb_cli("A GameBoy emulator by Gabriel Ford", "GFGB");
 
   gb_cli.require_subcommand(1, 1);
 
-  CLI::App   *gb_cli_exec   = gb_cli.add_subcommand("exec", "Execute GameBoy ROM");
-  CLI::App   *gb_cli_disasm = gb_cli.add_subcommand("disasm", "Disassemble GameBoy ROM");
+  CLI::App *gb_cli_exec   = gb_cli.add_subcommand("exec", "Execute GameBoy ROM");
+  CLI::App *gb_cli_disasm = gb_cli.add_subcommand("disasm", "Disassemble GameBoy ROM");
 
   std::string rom_filename;
   gb_cli_exec

@@ -38,9 +38,9 @@ struct gb_imgui_state {
 };
 typedef struct gb_imgui_state gb_imgui_state_t;
 
-bool                          gb_video_init(gb_state_t *gb_state);
-void                          gb_video_free(gb_state_t *gb_state);
-bool                          gb_video_handle_sdl_event(gb_state_t *gb_state, SDL_Event *event);
+bool gb_video_init(gb_state_t *gb_state);
+void gb_video_free(gb_state_t *gb_state);
+bool gb_video_handle_sdl_event(gb_state_t *gb_state, SDL_Event *event);
 
 #define OBP0 0
 #define OBP1 1

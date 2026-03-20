@@ -64,11 +64,11 @@ enum inst_param_type {
 };
 typedef enum inst_param_type inst_param_type_t;
 
-typedef uint8_t              r8_t;
-typedef uint8_t              r16_t;
-typedef uint8_t              r16_mem_t;
-typedef uint8_t              r16_stk_t;
-typedef uint8_t              cond_t;
+typedef uint8_t r8_t;
+typedef uint8_t r16_t;
+typedef uint8_t r16_mem_t;
+typedef uint8_t r16_stk_t;
+typedef uint8_t cond_t;
 struct inst_param {
   inst_param_type_t type;
   union {
@@ -147,28 +147,28 @@ typedef struct inst inst_t;
 
 struct gb_state;
 
-uint8_t     get_r8(struct gb_state *gb_state, r8_t r8);
-void        set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val);
+uint8_t get_r8(struct gb_state *gb_state, r8_t r8);
+void    set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val);
 
-uint16_t    get_pc(struct gb_state *gb_state);
-void        set_pc(struct gb_state *gb_state, uint16_t new_pc);
+uint16_t get_pc(struct gb_state *gb_state);
+void     set_pc(struct gb_state *gb_state, uint16_t new_pc);
 
-uint16_t    get_r16(struct gb_state *gb_state, r16_t r16);
-void        set_r16(struct gb_state *gb_state, r16_t r16, uint16_t val);
+uint16_t get_r16(struct gb_state *gb_state, r16_t r16);
+void     set_r16(struct gb_state *gb_state, r16_t r16, uint16_t val);
 
-uint16_t    get_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem);
-void        set_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem, uint8_t val);
+uint16_t get_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem);
+void     set_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem, uint8_t val);
 
-uint16_t    get_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk);
-void        set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val);
+uint16_t get_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk);
+void     set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val);
 
-void        set_ime(struct gb_state *gb_state, bool on);
-bool        get_ime(struct gb_state *gb_state); // This is only for tests and debugging.
+void set_ime(struct gb_state *gb_state, bool on);
+bool get_ime(struct gb_state *gb_state); // This is only for tests and debugging.
 
 struct inst fetch(struct gb_state *gb_state);
 void        execute(struct gb_state *gb_state, struct inst inst);
 
-void        handle_interrupts(struct gb_state *gb_state);
+void handle_interrupts(struct gb_state *gb_state);
 
 #ifdef __cplusplus
 }

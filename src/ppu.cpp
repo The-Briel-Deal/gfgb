@@ -805,8 +805,8 @@ void gb_flip_frame(struct gb_state *gb_state) {
   gb_state->ns_last_frametime        = curr_ticks_ns - gb_state->ns_elapsed_last_gb_vsync;
   gb_state->ns_elapsed_last_gb_vsync = curr_ticks_ns;
 
-  gb_state->win_line_counter         = 0;
-  gb_state->wy_cond                  = 0;
+  gb_state->win_line_counter = 0;
+  gb_state->wy_cond          = 0;
 
   SDL_Texture *tmp;
   tmp                                          = gb_state->unsaved.sdl_composite_target_front;
