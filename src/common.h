@@ -75,8 +75,8 @@ enum GB_LogCategory {
 #define ERR(gb_state, msg, ...)                                                                                        \
   {                                                                                                                    \
     LogError(msg, ##__VA_ARGS__);                                                                                      \
-    if (gb_state->pause_on_err) {                                                                                      \
-      gb_state->execution_paused = true;                                                                               \
+    if (gb_state->dbg_pause_on_err) {                                                                                  \
+      gb_state->dbg_execution_paused = true;                                                                           \
     }                                                                                                                  \
     gb_state->err = true;                                                                                              \
   }
@@ -343,24 +343,54 @@ typedef struct gb_state_unsaved {
 
 typedef struct gb_state {
 
+  // Save State Data Start
+  // {
   regs_t regs;
-
-  // Window Related
-  bool    wy_cond;
-  bool    wx_cond;
-  uint8_t win_line_counter;
-  bool    win_line_blank;
-
-  bool halted;
-  bool bootrom_has_syms;
-  bool rom_loaded;
-  bool video_initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
-                          // argparsing. So we want to make sure we don't try to free what was never created.
-  bool use_flat_ram;
   union {
     gb_ram_banks_t ram;
     uint8_t        flat_ram[KB(64)];
   };
+
+  //   PPU Start
+  //   {
+
+  // total m_cycles_elapsed on the cpu
+  //
+  // This is currently just based on the simple m_cycle timing of each instruction from
+  // https://gekkio.fi/files/gb-docs/gbctr.pdf. If I ever want to pass cycle accurate tests i'll need to account for the
+  // SM83's overlaping fetch/execute and any other timing idiosyncrasies. For now though just using the simple timings
+  // should be enough to make most games run.
+  uint64_t m_cycles_elapsed;
+  uint64_t last_timer_sync_m_cycles;
+  bool     last_tima_bit;
+
+  // used for identifying when we are in hblank, and for knowing when we can increment ly.
+  uint32_t lcd_x;
+
+  bool    last_stat_interrupt;
+  uint8_t last_mode_handled;
+
+  //     Window Start
+  //     {
+  bool    wy_cond;
+  bool    wx_cond;
+  uint8_t win_line_counter;
+  bool    win_line_blank;
+  //     }
+  //     Window End
+
+  //   }
+  //   PPU End
+
+  bool halted;
+  // }
+  // Save State Data End
+
+  bool bootrom_has_syms;
+  bool rom_loaded;
+  bool video_initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
+                          // argparsing. So we want to make sure we don't try to free what was never created.
+  bool                use_flat_ram;
   debug_symbol_list_t syms;
   SDL_Texture        *textures[DMG_N_TILEDATA_ADDRESSES];
   bool                dirty_textures[DMG_N_TILEDATA_ADDRESSES];
@@ -377,29 +407,9 @@ typedef struct gb_state {
   uint64_t ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
   uint64_t ns_last_frametime;
 
-  // total m_cycles_elapsed on the cpu
-  //
-  // This is currently just based on the simple m_cycle timing of each instruction from
-  // https://gekkio.fi/files/gb-docs/gbctr.pdf. If I ever want to pass cycle accurate tests i'll need to account for the
-  // SM83's overlaping fetch/execute and any other timing idiosyncrasies. For now though just using the simple timings
-  // should be enough to make most games run.
-  uint64_t m_cycles_elapsed;
-  uint64_t last_timer_sync_m_cycles;
-  bool     last_tima_bit;
-
-  // used for identifying when we are in hblank, and for knowing when we can increment ly.
-  uint32_t lcd_x;
-
-  bool last_stat_interrupt;
-
-  uint8_t last_mode_handled;
-
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;
-
   bool oam_dma_start;
-
-  gb_internal_joy_pad_state_t joy_pad_state;
 
   bool err;
 
@@ -412,8 +422,8 @@ typedef struct gb_state {
   FILE    *dbg_trace_exec_fout;
   float    dbg_speed_factor;
   uint32_t dbg_step_inst_count; // the number of instructions to run until breaking
-  bool     pause_on_err;
-  bool     execution_paused;
+  bool     dbg_pause_on_err;
+  bool     dbg_execution_paused;
 
   bool enable_fs_dockspace;
   bool headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
@@ -423,9 +433,9 @@ typedef struct gb_state {
   char test_mode_pass_regex[16];
   char test_mode_fail_regex[16];
 
-  gb_imgui_state_t imgui_state;
-
-  gb_state_unsaved_t unsaved;
+  gb_imgui_state_t            imgui_state;
+  gb_internal_joy_pad_state_t joy_pad_state;
+  gb_state_unsaved_t          unsaved;
 } gb_state_t;
 
 // Call with bootrom_name = NULL to use dmg0 as the default.

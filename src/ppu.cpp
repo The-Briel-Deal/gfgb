@@ -644,7 +644,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
         gb_state_reset(gb_state);
       }
       {
-        ImGui::BeginDisabled(!gb_state->execution_paused);
+        ImGui::BeginDisabled(!gb_state->dbg_execution_paused);
         if (ImGui::Button("Step Instruction")) {
           gb_state->dbg_step_inst_count++;
         }
@@ -658,7 +658,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Last Frametime", last_frametime, "%.6f");
       ImGui::Value("Last Frame FPS", last_frame_fps, "%.6f");
 
-      ImGui::Checkbox("Paused", &gb_state->execution_paused);
+      ImGui::Checkbox("Paused", &gb_state->dbg_execution_paused);
       ImGui::Checkbox("Halted", &gb_state->halted);
 
       ImGui::TextUnformatted(
@@ -707,7 +707,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
     if (ImGui::TreeNodeEx("Settings", ImGuiTreeNodeFlags_Framed)) {
       ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
       ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);
-      ImGui::Checkbox("Pause on Error", &gb_state->pause_on_err);
+      ImGui::Checkbox("Pause on Error", &gb_state->dbg_pause_on_err);
       ImGui::Checkbox("Print Instructions", &gb_state->dbg_trace_exec);
       ImGui::TreePop();
     }

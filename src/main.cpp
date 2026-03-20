@@ -186,7 +186,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
           "A breakpoint identifier, can be a GB 16 bit addr in hex if prefixed with `$`, or a debug symbol name.")
       ->expected(0, -1);
 
-  gb_cli_exec->add_flag("-p,--paused", gb_state->execution_paused, "Start emulator execution paused.");
+  gb_cli_exec->add_flag("-p,--paused", gb_state->dbg_execution_paused, "Start emulator execution paused.");
   gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
                         "test rom passed or failed.");
@@ -351,7 +351,7 @@ static void check_breakpoints(gb_state_t *gb_state, uint16_t inst_start, uint16_
   for (gb_breakpoint_t bp : *gb_state->unsaved.breakpoints) {
     if (!bp.enable) continue;
     if (!in_range(bp.addr, inst_start, inst_end)) continue;
-    gb_state->execution_paused = true;
+    gb_state->dbg_execution_paused = true;
     return;
   }
 }
@@ -390,7 +390,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   uint64_t prev_ns_elapsed_total = gb_state->ns_elapsed_total;
   gb_state->ns_elapsed_total     = SDL_GetTicksNS();
-  if ((!gb_state->execution_paused) || (gb_state->dbg_step_inst_count > 0)) {
+  if ((!gb_state->dbg_execution_paused) || (gb_state->dbg_step_inst_count > 0)) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
     gb_state->ns_elapsed_while_running +=
@@ -400,7 +400,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     uint64_t loop_timeout = gb_state->ns_elapsed_total + (NS_PER_SEC / 60);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
-      if (gb_state->execution_paused) {
+      if (gb_state->dbg_execution_paused) {
         if (gb_state->dbg_step_inst_count == 0) break;
         gb_state->dbg_step_inst_count--;
       }
