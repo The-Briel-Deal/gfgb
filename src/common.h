@@ -209,12 +209,13 @@ typedef struct gb_internal_joy_pad_state {
 } gb_internal_joy_pad_state_t;
 
 typedef struct io_regs {
-  uint8_t  joyp;
+  uint8_t joyp;
 
-  uint8_t  sb; // serial transfer data (currently unused)
-  uint8_t  sc; // serial transfer control (currently unused)
+  uint8_t sb; // serial transfer data (currently unused)
+  uint8_t sc; // serial transfer control (currently unused)
 
-  // This is technically the system clock which is essentially the full 16 bit version of DIV, the DIV register just returns the most significant 8 bits.
+  // This is technically the system clock which is essentially the full 16 bit version of DIV, the DIV register just
+  // returns the most significant 8 bits.
   uint16_t div;  // divider register
   uint8_t  tima; // timer counter
   uint8_t  tma;  // timer modulo
@@ -309,7 +310,9 @@ typedef struct stack_entry {
   };
 } stack_entry_t;
 
-typedef struct gb_state {
+// This is where all the state that we don't change on reset needs to go, it's stored at the very end of gb_state so
+// that we can ignore it when making/loading a save state or resetting gameboy.
+typedef struct gb_state_unsaved {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
   SDL_Palette  *sdl_bg_palette;
@@ -327,7 +330,20 @@ typedef struct gb_state {
   SDL_Texture *sdl_composite_target_front;
   SDL_Texture *sdl_composite_target_back;
 
-  regs_t       regs;
+#ifdef __cplusplus
+  std::string            *serial_port_output_string;
+  std::basic_regex<char> *compiled_pass_regex;
+  std::basic_regex<char> *compiled_fail_regex;
+  // The shadow stack is used for debugging to keep track of stack entries along with metadata so that we can display it
+  // in the debug UI.
+  std::stack<stack_entry_t>    *shadow_stack;
+  std::vector<gb_breakpoint_t> *breakpoints;
+#endif
+} gb_state_unsaved_t;
+
+typedef struct gb_state {
+
+  regs_t regs;
 
   // Window Related
   bool    wy_cond;
@@ -408,21 +424,13 @@ typedef struct gb_state {
   bool     headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
                           // speeds up rom tests in CI.
 
-  bool             test_mode; // If enabled then use serial_port output to look for a pass/fail string
-  char             test_mode_pass_regex[16];
-  char             test_mode_fail_regex[16];
+  bool               test_mode; // If enabled then use serial_port output to look for a pass/fail string
+  char               test_mode_pass_regex[16];
+  char               test_mode_fail_regex[16];
 
-  gb_imgui_state_t imgui_state;
+  gb_imgui_state_t   imgui_state;
 
-#ifdef __cplusplus
-  std::string            *serial_port_output_string;
-  std::basic_regex<char> *compiled_pass_regex;
-  std::basic_regex<char> *compiled_fail_regex;
-  // The shadow stack is used for debugging to keep track of stack entries along with metadata so that we can display it
-  // in the debug UI.
-  std::stack<stack_entry_t>    *shadow_stack;
-  std::vector<gb_breakpoint_t> *breakpoints;
-#endif
+  gb_state_unsaved_t unsaved;
 } gb_state_t;
 
 // Call with bootrom_name = NULL to use dmg0 as the default.
