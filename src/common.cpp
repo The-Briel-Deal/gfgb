@@ -48,9 +48,9 @@ void gb_state_init(struct gb_state *gb_state) {
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
   // going with the latter approach for now.
-  gb_state->regs.sp      = WRAM_END + 1;
-  gb_state->regs.io.lcdc = 0b1001'0001;
-  gb_state->regs.io.sc   = 0b0111'1110;
+  gb_state->saved.regs.sp      = WRAM_END + 1;
+  gb_state->saved.regs.io.lcdc = 0b1001'0001;
+  gb_state->saved.regs.io.sc   = 0b0111'1110;
 
   /// Internal State
   gb_state->first_oam_scan_after_enable = true;
@@ -65,15 +65,15 @@ void gb_state_init(struct gb_state *gb_state) {
 
 // TODO: This doesn't seem to always work, I need to figure out what other state I need set.
 void gb_state_reset(struct gb_state *gb_state) {
-  GB_memset(&gb_state->regs, 0, sizeof(gb_state->regs));
-  gb_state->regs.sp                     = WRAM_END + 1;
-  gb_state->regs.pc                     = 0;
-  gb_state->regs.io.bank                = true;
-  gb_state->first_oam_scan_after_enable = true;
-  gb_state->m_cycles_elapsed            = 0;
-  gb_state->last_timer_sync_m_cycles    = 0;
-  gb_state->ns_elapsed_while_running    = 0;
-  gb_state->lcd_x                       = 0;
+  GB_memset(&gb_state->saved.regs, 0, sizeof(gb_state->saved.regs));
+  gb_state->saved.regs.sp                  = WRAM_END + 1;
+  gb_state->saved.regs.pc                  = 0;
+  gb_state->saved.regs.io.bank             = true;
+  gb_state->first_oam_scan_after_enable    = true;
+  gb_state->saved.m_cycles_elapsed         = 0;
+  gb_state->saved.last_timer_sync_m_cycles = 0;
+  gb_state->ns_elapsed_while_running       = 0;
+  gb_state->saved.lcd_x                    = 0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
@@ -83,21 +83,21 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) 
     int   bytes_len;
     int   err;
     f         = fopen(bootrom_name, "r");
-    bytes_len = fread(gb_state->ram.bootrom, sizeof(uint8_t), 0x0100, f);
+    bytes_len = fread(gb_state->saved.ram.bootrom, sizeof(uint8_t), 0x0100, f);
     if ((err = ferror(f))) {
       LogError("Error when reading bootrom file: %d", err);
       goto load_default;
     }
     fclose(f);
     GB_assert(bytes_len == 0x0100);
-    gb_state->regs.pc      = 0x0000;
-    gb_state->regs.io.bank = true;
+    gb_state->saved.regs.pc      = 0x0000;
+    gb_state->saved.regs.io.bank = true;
   }
 load_default:
   GB_assert(dmg0_boot_rom_size == 0x0100);
-  memcpy(gb_state->ram.bootrom, dmg0_boot_rom_data, 0x0100);
-  gb_state->regs.pc      = 0x0000;
-  gb_state->regs.io.bank = true;
+  memcpy(gb_state->saved.ram.bootrom, dmg0_boot_rom_data, 0x0100);
+  gb_state->saved.regs.pc      = 0x0000;
+  gb_state->saved.regs.io.bank = true;
 }
 
 struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
@@ -119,46 +119,47 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
   GB_assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
-  case IO_JOYP: return &gb_state->regs.io.joyp;
-  case IO_SB: return &gb_state->regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
-  case IO_SC: return &gb_state->regs.io.sc;
-  case IO_TIMA: return &gb_state->regs.io.tima;
-  case IO_TMA: return &gb_state->regs.io.tma;
-  case IO_TAC: return &gb_state->regs.io.tac;
-  case IO_NR10: return &gb_state->regs.io.nr10;
-  case IO_NR11: return &gb_state->regs.io.nr11;
-  case IO_NR12: return &gb_state->regs.io.nr12;
-  case IO_NR13: return &gb_state->regs.io.nr13;
-  case IO_NR14: return &gb_state->regs.io.nr14;
-  case IO_NR21: return &gb_state->regs.io.nr21;
-  case IO_NR22: return &gb_state->regs.io.nr22;
-  case IO_NR23: return &gb_state->regs.io.nr23;
-  case IO_NR24: return &gb_state->regs.io.nr24;
-  case IO_NR30: return &gb_state->regs.io.nr30;
-  case IO_NR31: return &gb_state->regs.io.nr31;
-  case IO_NR32: return &gb_state->regs.io.nr32;
-  case IO_NR33: return &gb_state->regs.io.nr33;
-  case IO_NR34: return &gb_state->regs.io.nr34;
-  case IO_NR41: return &gb_state->regs.io.nr41;
-  case IO_NR42: return &gb_state->regs.io.nr42;
-  case IO_NR43: return &gb_state->regs.io.nr43;
-  case IO_NR44: return &gb_state->regs.io.nr44;
-  case IO_NR50: return &gb_state->regs.io.nr50;
-  case IO_NR51: return &gb_state->regs.io.nr51;
-  case IO_IF: return &gb_state->regs.io.if_;
-  case IO_IE: return &gb_state->regs.io.ie;
-  case IO_DMA: return &gb_state->regs.io.dma;
-  case IO_SND_ON: return &gb_state->regs.io.nr52;
-  case IO_LCDC: return &gb_state->regs.io.lcdc;
-  case IO_SCY: return &gb_state->regs.io.scy;
-  case IO_SCX: return &gb_state->regs.io.scx;
-  case IO_WY: return &gb_state->regs.io.wy;
-  case IO_WX: return &gb_state->regs.io.wx;
-  case IO_LYC: return &gb_state->regs.io.lyc;
-  case IO_STAT: return &gb_state->regs.io.stat; // TODO: Lower 3 bits need to be RO.
-  case IO_BGP: return &gb_state->regs.io.bgp;
-  case IO_OBP0: return &gb_state->regs.io.obp0;
-  case IO_OBP1: return &gb_state->regs.io.obp1;
+  case IO_JOYP: return &gb_state->saved.regs.io.joyp;
+  case IO_SB:
+    return &gb_state->saved.regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
+  case IO_SC: return &gb_state->saved.regs.io.sc;
+  case IO_TIMA: return &gb_state->saved.regs.io.tima;
+  case IO_TMA: return &gb_state->saved.regs.io.tma;
+  case IO_TAC: return &gb_state->saved.regs.io.tac;
+  case IO_NR10: return &gb_state->saved.regs.io.nr10;
+  case IO_NR11: return &gb_state->saved.regs.io.nr11;
+  case IO_NR12: return &gb_state->saved.regs.io.nr12;
+  case IO_NR13: return &gb_state->saved.regs.io.nr13;
+  case IO_NR14: return &gb_state->saved.regs.io.nr14;
+  case IO_NR21: return &gb_state->saved.regs.io.nr21;
+  case IO_NR22: return &gb_state->saved.regs.io.nr22;
+  case IO_NR23: return &gb_state->saved.regs.io.nr23;
+  case IO_NR24: return &gb_state->saved.regs.io.nr24;
+  case IO_NR30: return &gb_state->saved.regs.io.nr30;
+  case IO_NR31: return &gb_state->saved.regs.io.nr31;
+  case IO_NR32: return &gb_state->saved.regs.io.nr32;
+  case IO_NR33: return &gb_state->saved.regs.io.nr33;
+  case IO_NR34: return &gb_state->saved.regs.io.nr34;
+  case IO_NR41: return &gb_state->saved.regs.io.nr41;
+  case IO_NR42: return &gb_state->saved.regs.io.nr42;
+  case IO_NR43: return &gb_state->saved.regs.io.nr43;
+  case IO_NR44: return &gb_state->saved.regs.io.nr44;
+  case IO_NR50: return &gb_state->saved.regs.io.nr50;
+  case IO_NR51: return &gb_state->saved.regs.io.nr51;
+  case IO_IF: return &gb_state->saved.regs.io.if_;
+  case IO_IE: return &gb_state->saved.regs.io.ie;
+  case IO_DMA: return &gb_state->saved.regs.io.dma;
+  case IO_SND_ON: return &gb_state->saved.regs.io.nr52;
+  case IO_LCDC: return &gb_state->saved.regs.io.lcdc;
+  case IO_SCY: return &gb_state->saved.regs.io.scy;
+  case IO_SCX: return &gb_state->saved.regs.io.scx;
+  case IO_WY: return &gb_state->saved.regs.io.wy;
+  case IO_WX: return &gb_state->saved.regs.io.wx;
+  case IO_LYC: return &gb_state->saved.regs.io.lyc;
+  case IO_STAT: return &gb_state->saved.regs.io.stat; // TODO: Lower 3 bits need to be RO.
+  case IO_BGP: return &gb_state->saved.regs.io.bgp;
+  case IO_OBP0: return &gb_state->saved.regs.io.obp0;
+  case IO_OBP1: return &gb_state->saved.regs.io.obp1;
   default: ERR(gb_state, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
   }
 }
@@ -167,41 +168,41 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
   switch (addr) {
   case IO_LY: {
-    return gb_state->regs.io.ly;
+    return gb_state->saved.regs.io.ly;
   }
   case IO_DIV: {
     // Internally div is a 16 bit register but only the most significant 8 bits are mapped to mem.
-    return ((gb_state->regs.io.div >> 8) & 0xFF);
+    return ((gb_state->saved.regs.io.div >> 8) & 0xFF);
   }
   default: NOT_IMPLEMENTED("Read Only IO Reg Not Implemented");
   }
 }
 
 void *gb_unmap_address(struct gb_state *gb_state, uint16_t addr) {
-  if (gb_state->regs.io.bank && (addr < 0x0100)) {
-    return &gb_state->ram.bootrom[addr];
+  if (gb_state->saved.regs.io.bank && (addr < 0x0100)) {
+    return &gb_state->saved.ram.bootrom[addr];
   }
   if (addr <= ROM0_END) {
-    return &gb_state->ram.rom0[addr - ROM0_START];
+    return &gb_state->saved.ram.rom0[addr - ROM0_START];
   } else if (addr <= ROMN_END) {
     // TODO: Implement bank switching for this region. For now we'll just assume that it's always 01.
-    return &gb_state->ram.rom1[addr - ROMN_START];
+    return &gb_state->saved.ram.rom1[addr - ROMN_START];
   } else if (addr <= VRAM_END) {
-    return &gb_state->ram.vram[addr - VRAM_START];
+    return &gb_state->saved.ram.vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
     // TODO: implement eram bank switching
-    return &gb_state->ram.eram[addr - ERAM_START];
+    return &gb_state->saved.ram.eram[addr - ERAM_START];
   } else if (addr <= WRAM_END) {
-    return &gb_state->ram.wram[addr - WRAM_START];
+    return &gb_state->saved.ram.wram[addr - WRAM_START];
   } else if (addr <= ECHO_RAM_END) {
     // Mirrors wram, probably should never be accessed.
-    return &gb_state->ram.wram[addr - ECHO_RAM_START];
+    return &gb_state->saved.ram.wram[addr - ECHO_RAM_START];
   } else if (addr <= OAM_END) {
-    return &gb_state->ram.oam[addr - OAM_START];
+    return &gb_state->saved.ram.oam[addr - OAM_START];
   } else if (addr <= IO_REG_END) {
     goto not_implemented;
   } else if (addr <= HRAM_END) {
-    return &gb_state->ram.hram[addr - HRAM_START];
+    return &gb_state->saved.ram.hram[addr - HRAM_START];
   }
 not_implemented:
   LogError("`gb_unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
@@ -211,7 +212,7 @@ not_implemented:
 uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr;
   if (gb_state->use_flat_ram) {
-    return gb_state->flat_ram[addr];
+    return gb_state->saved.flat_ram[addr];
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
@@ -254,7 +255,7 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
 
 uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->use_flat_ram) {
-    uint8_t *val_ptr = &gb_state->flat_ram[addr];
+    uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
     uint16_t val     = 0x0000;
     val |= val_ptr[0] << 0;
     val |= val_ptr[1] << 8;
@@ -290,14 +291,14 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     *get_io_reg(gb_state, IO_SC) = val | 0b0111'1110;
     break;
   case IO_JOYP:
-    gb_state->regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
-    gb_state->regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
+    gb_state->saved.regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
+    gb_state->saved.regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
     break;
-  case IO_DIV: gb_state->regs.io.div = 0; break;
+  case IO_DIV: gb_state->saved.regs.io.div = 0; break;
   case IO_BANK:
     // if bit 0 is set unmap bootrom. This can't be re-enabled without a restart.
     if (val & 1) {
-      gb_state->regs.io.bank = false;
+      gb_state->saved.regs.io.bank = false;
     }
     break;
   default:
@@ -316,7 +317,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
 
 void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->use_flat_ram) {
-    gb_state->flat_ram[addr] = val;
+    gb_state->saved.flat_ram[addr] = val;
   } else {
     LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
     gb_update_timers(gb_state);
@@ -352,7 +353,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
 
 void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   if (gb_state->use_flat_ram) {
-    uint8_t *val_ptr = &gb_state->flat_ram[addr];
+    uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
     val_ptr[0]       = (val & 0x00FF) >> 0;
     val_ptr[1]       = (val & 0xFF00) >> 8;
   } else {
@@ -368,7 +369,7 @@ void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   }
 }
 
-uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->m_cycles_elapsed; }
+uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->saved.m_cycles_elapsed; }
 
 static uint64_t gb_dots(uint64_t m_cycles) {
   // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support
@@ -377,10 +378,10 @@ static uint64_t gb_dots(uint64_t m_cycles) {
 }
 
 static void update_tima(struct gb_state *gb_state, uint16_t prev_div) {
-  uint8_t tac = gb_state->regs.io.tac;
+  uint8_t tac = gb_state->saved.regs.io.tac;
   // TODO: This is slow but accurate, since we increment multiple cycles at once in many places we need to make sure
   // that we don't miss the falling edge. There's probably a better way to do this if I take a bit to think on this.
-  for (uint16_t curr_div = prev_div; curr_div != gb_state->regs.io.div; curr_div++) {
+  for (uint16_t curr_div = prev_div; curr_div != gb_state->saved.regs.io.div; curr_div++) {
     bool this_bit = 0;
     switch (tac & 0b0000'0011) {
     case 0: // using bit 7
@@ -399,14 +400,14 @@ static void update_tima(struct gb_state *gb_state, uint16_t prev_div) {
     this_bit &= ((tac & 0b0000'0100) >> 2);
 
     // Only increment on falling edge (a.k.a. true -> false).
-    if (gb_state->last_tima_bit && (!this_bit)) {
-      if (gb_state->regs.io.tima == 0xFF) {
-        gb_state->regs.io.if_ |= 0b00100;
+    if (gb_state->saved.last_tima_bit && (!this_bit)) {
+      if (gb_state->saved.regs.io.tima == 0xFF) {
+        gb_state->saved.regs.io.if_ |= 0b00100;
       }
-      gb_state->regs.io.tima++;
+      gb_state->saved.regs.io.tima++;
     }
 
-    gb_state->last_tima_bit = this_bit;
+    gb_state->saved.last_tima_bit = this_bit;
   }
 }
 
@@ -415,7 +416,7 @@ static void update_tima(struct gb_state *gb_state, uint16_t prev_div) {
 
 static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 
-  uint8_t stat       = gb_state->regs.io.stat;
+  uint8_t stat       = gb_state->saved.regs.io.stat;
   uint8_t mode       = (stat & (0b11 << 0)) >> 0;
   uint8_t lyc_eq_ly  = (stat & (0b1 << 2)) >> 2;
   uint8_t m0_select  = (stat & (0b1 << 3)) >> 3;
@@ -429,7 +430,7 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
     break;
   case VBLANK:
     if (m1_select) return true;
-    if (m2_select && gb_state->regs.io.ly == 144) return true;
+    if (m2_select && gb_state->saved.regs.io.ly == 144) return true;
     break;
   case OAM_SCAN:
     if (m2_select) return true;
@@ -444,34 +445,34 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
 
 static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
   // Don't update anything besides clearing ppu mode and resetting ly and lx when PPU is disabled.
-  if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
+  if ((gb_state->saved.regs.io.lcdc & LCDC_ENABLE) == 0) {
     // PPU mode reports 0 when PPU is disabled.
     // https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
-    gb_state->regs.io.stat &= ~0b0000'0011;
-    gb_state->regs.io.ly                  = 0;
-    gb_state->lcd_x                       = 0;
+    gb_state->saved.regs.io.stat &= ~0b0000'0011;
+    gb_state->saved.regs.io.ly            = 0;
+    gb_state->saved.lcd_x                 = 0;
     gb_state->first_oam_scan_after_enable = true;
     return;
   }
   uint64_t prev_dots    = gb_dots(prev_m_cycles);
   uint64_t curr_dots    = gb_dots(curr_m_cycles);
   uint32_t dots_elapsed = curr_dots - prev_dots;
-  gb_state->lcd_x += dots_elapsed;
-  gb_state->regs.io.ly += (gb_state->lcd_x / DOTS_PER_LINE);
-  gb_state->lcd_x %= DOTS_PER_LINE;
-  gb_state->regs.io.ly %= LINES_PER_FRAME;
+  gb_state->saved.lcd_x += dots_elapsed;
+  gb_state->saved.regs.io.ly += (gb_state->saved.lcd_x / DOTS_PER_LINE);
+  gb_state->saved.lcd_x %= DOTS_PER_LINE;
+  gb_state->saved.regs.io.ly %= LINES_PER_FRAME;
 
   // TODO: we need to see if the previous state already triggered an interupt, if there was already an interrupt being
   // triggered then we don't trigger another one.
   uint8_t mode;
-  if (gb_state->regs.io.ly >= 144) {
+  if (gb_state->saved.regs.io.ly >= 144) {
     mode = VBLANK;
-  } else if (gb_state->lcd_x < 80) {
+  } else if (gb_state->saved.lcd_x < 80) {
     if (gb_state->first_oam_scan_after_enable)
-      mode = (gb_state->regs.io.stat & 0b11);
+      mode = (gb_state->saved.regs.io.stat & 0b11);
     else
       mode = OAM_SCAN;
-  } else if (gb_state->lcd_x < 369) {
+  } else if (gb_state->saved.lcd_x < 369) {
     gb_state->first_oam_scan_after_enable = false;
     // We're assuming that mode 3 is always taking the longest possible amount of time.
     // If we wanted to be really precise we would have to calculate the exact length with:
@@ -480,32 +481,32 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   } else {
     mode = HBLANK;
   }
-  gb_state->regs.io.stat &= ~0b0000'0011;
-  gb_state->regs.io.stat |= mode;
+  gb_state->saved.regs.io.stat &= ~0b0000'0011;
+  gb_state->saved.regs.io.stat |= mode;
 
-  if (gb_state->regs.io.ly == gb_state->regs.io.lyc) {
-    gb_state->regs.io.stat |= 0b0000'0100;
+  if (gb_state->saved.regs.io.ly == gb_state->saved.regs.io.lyc) {
+    gb_state->saved.regs.io.stat |= 0b0000'0100;
   } else {
-    gb_state->regs.io.stat &= ~0b0000'0100;
+    gb_state->saved.regs.io.stat &= ~0b0000'0100;
   }
-  bool prev_triggered           = gb_state->last_stat_interrupt;
-  bool curr_triggered           = lcd_interrupt_triggered(gb_state);
-  gb_state->last_stat_interrupt = curr_triggered;
+  bool prev_triggered                 = gb_state->saved.last_stat_interrupt;
+  bool curr_triggered                 = lcd_interrupt_triggered(gb_state);
+  gb_state->saved.last_stat_interrupt = curr_triggered;
   if ((!prev_triggered) && curr_triggered) {
-    gb_state->regs.io.if_ |= 0b00010;
+    gb_state->saved.regs.io.if_ |= 0b00010;
   }
-  if (mode == VBLANK) gb_state->regs.io.if_ |= 0b00001;
+  if (mode == VBLANK) gb_state->saved.regs.io.if_ |= 0b00001;
 }
 
 void gb_update_timers(struct gb_state *gb_state) {
   TracyCZoneN(ctx, "Update Timers", true);
-  uint64_t curr_m_cycles             = gb_m_cycles(gb_state);
-  uint64_t prev_m_cycles             = gb_state->last_timer_sync_m_cycles;
-  gb_state->last_timer_sync_m_cycles = curr_m_cycles;
+  uint64_t curr_m_cycles                   = gb_m_cycles(gb_state);
+  uint64_t prev_m_cycles                   = gb_state->saved.last_timer_sync_m_cycles;
+  gb_state->saved.last_timer_sync_m_cycles = curr_m_cycles;
 
   // Update DIV
-  uint16_t prev_div = gb_state->regs.io.div;
-  gb_state->regs.io.div += (curr_m_cycles - prev_m_cycles) * 4;
+  uint16_t prev_div = gb_state->saved.regs.io.div;
+  gb_state->saved.regs.io.div += (curr_m_cycles - prev_m_cycles) * 4;
 
   update_tima(gb_state, prev_div);
   update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);

@@ -44,14 +44,14 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       LogCritical("Error when reading rom file: %d", err);
       return false;
     }
-    memcpy(gb_state->ram.rom0, bytes, bytes_len);
+    memcpy(gb_state->saved.ram.rom0, bytes, bytes_len);
     if (!feof(f)) {
       bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
       if ((err = ferror(f))) {
         LogCritical("Error when reading rom file: %d", err);
         return false;
       }
-      memcpy(gb_state->ram.rom1, bytes, bytes_len);
+      memcpy(gb_state->saved.ram.rom1, bytes, bytes_len);
     }
     fclose(f);
     gb_state->rom_loaded = true;
@@ -318,7 +318,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 }
 
 static void gb_update_io_joyp(gb_state_t *gb_state) {
-  uint8_t *io_joyp          = &gb_state->regs.io.joyp;
+  uint8_t *io_joyp          = &gb_state->saved.regs.io.joyp;
   uint8_t  new_lower_nibble = 0x0F;
   if (((*io_joyp) >> 4 & 0b11) == 0b10) {
     // D-Pad selected
@@ -399,7 +399,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // 1/60th of a second so that we can atleast update the emulator UI.
     uint64_t loop_timeout = gb_state->ns_elapsed_total + (NS_PER_SEC / 60);
     // See `doc/render.md` for an explanation of this.
-    while ((gb_state->ns_elapsed_while_running > (gb_state->m_cycles_elapsed * 954))) {
+    while ((gb_state->ns_elapsed_while_running > (gb_state->saved.m_cycles_elapsed * 954))) {
       if (gb_state->dbg_execution_paused) {
         if (gb_state->dbg_step_inst_count == 0) break;
         gb_state->dbg_step_inst_count--;
@@ -407,32 +407,32 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       if (loop_timeout < SDL_GetTicksNS()) {
         // reset ns_elapsed_while_running to stop the gameboy to run at super speed to catch up once execution speed
         // picks up again.
-        gb_state->ns_elapsed_while_running = (gb_state->m_cycles_elapsed * 954);
+        gb_state->ns_elapsed_while_running = (gb_state->saved.m_cycles_elapsed * 954);
         break;
       }
       gb_update_io_joyp(gb_state);
       {
         ZoneScopedN("Fetch and Execute");
-        if (!gb_state->halted) {
+        if (!gb_state->saved.halted) {
           ZoneTextF("Not Halted");
-          uint16_t    inst_start = gb_state->regs.pc;
+          uint16_t    inst_start = gb_state->saved.regs.pc;
           struct inst inst       = fetch(gb_state);
-          uint16_t    inst_end   = gb_state->regs.pc;
+          uint16_t    inst_end   = gb_state->saved.regs.pc;
           if (gb_state->dbg_trace_exec) print_inst(gb_state, gb_state->dbg_trace_exec_fout, inst, true, inst_start);
           check_breakpoints(gb_state, inst_start, inst_end);
           execute(gb_state, inst);
         } else {
           ZoneTextF("Halted");
           // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
-          gb_state->m_cycles_elapsed++;
+          gb_state->saved.m_cycles_elapsed++;
         }
       }
 
       gb_update_timers(gb_state);
       handle_interrupts(gb_state);
       uint8_t curr_mode, last_mode;
-      curr_mode = gb_state->regs.io.stat & 0b11;
-      last_mode = gb_state->last_mode_handled;
+      curr_mode = gb_state->saved.regs.io.stat & 0b11;
+      last_mode = gb_state->saved.last_mode_handled;
 
       // TODO: If I want perfect accuracy then I should be copying this incrementally on every iteration for 160
       // m-cycles. I also need to make all memory except hram blocked during this period.
@@ -441,7 +441,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       // currently not sure if this will matter with any real world games so I should look into this.
       if ((curr_mode == OAM_SCAN || curr_mode == DRAWING_PIXELS || curr_mode == VBLANK) && gb_state->oam_dma_start) {
         gb_state->oam_dma_start = false;
-        uint8_t oam_dma         = gb_state->regs.io.dma;
+        uint8_t oam_dma         = gb_state->saved.regs.io.dma;
         if (oam_dma > 0xDF) {
           oam_dma -= 0x20;
         }
@@ -478,13 +478,13 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             break;
           }
           }
-        gb_state->last_mode_handled = curr_mode;
+        gb_state->saved.last_mode_handled = curr_mode;
       }
     }
   }
 
   if (!gb_state->headless_mode) {
-    if ((gb_state->regs.io.lcdc & LCDC_ENABLE) == 0) {
+    if ((gb_state->saved.regs.io.lcdc & LCDC_ENABLE) == 0) {
       // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui
       // UI.
       gb_display_clear(gb_state);

@@ -202,10 +202,10 @@ static void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out) {
   }
 
 static void update_palettes(struct gb_state *gb_state) {
-  uint8_t   bgp_id_0      = (gb_state->regs.io.bgp >> 0) & 0b11;
-  uint8_t   bgp_id_1      = (gb_state->regs.io.bgp >> 2) & 0b11;
-  uint8_t   bgp_id_2      = (gb_state->regs.io.bgp >> 4) & 0b11;
-  uint8_t   bgp_id_3      = (gb_state->regs.io.bgp >> 6) & 0b11;
+  uint8_t   bgp_id_0      = (gb_state->saved.regs.io.bgp >> 0) & 0b11;
+  uint8_t   bgp_id_1      = (gb_state->saved.regs.io.bgp >> 2) & 0b11;
+  uint8_t   bgp_id_2      = (gb_state->saved.regs.io.bgp >> 4) & 0b11;
+  uint8_t   bgp_id_3      = (gb_state->saved.regs.io.bgp >> 6) & 0b11;
   SDL_Color bgp_colors[4] = {
       GREYSCALE_COLOR((3.0f - (float)bgp_id_0) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
@@ -226,9 +226,9 @@ static void update_palettes(struct gb_state *gb_state) {
     ERR(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
   }
 
-  uint8_t   obp0_id_1      = (gb_state->regs.io.obp0 >> 2) & 0b11;
-  uint8_t   obp0_id_2      = (gb_state->regs.io.obp0 >> 4) & 0b11;
-  uint8_t   obp0_id_3      = (gb_state->regs.io.obp0 >> 6) & 0b11;
+  uint8_t   obp0_id_1      = (gb_state->saved.regs.io.obp0 >> 2) & 0b11;
+  uint8_t   obp0_id_2      = (gb_state->saved.regs.io.obp0 >> 4) & 0b11;
+  uint8_t   obp0_id_3      = (gb_state->saved.regs.io.obp0 >> 6) & 0b11;
   SDL_Color obp0_colors[4] = {
       TRANSPARENT_COLOR,
       GREYSCALE_COLOR((3.0f - (float)obp0_id_1) / 3.0f),
@@ -238,9 +238,9 @@ static void update_palettes(struct gb_state *gb_state) {
   if (!SDL_SetPaletteColors(gb_state->unsaved.sdl_obj_palette_0, obp0_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set obj palette 0 colors: %s", SDL_GetError());
   }
-  uint8_t   obp1_id_1      = (gb_state->regs.io.obp1 >> 2) & 0b11;
-  uint8_t   obp1_id_2      = (gb_state->regs.io.obp1 >> 4) & 0b11;
-  uint8_t   obp1_id_3      = (gb_state->regs.io.obp1 >> 6) & 0b11;
+  uint8_t   obp1_id_1      = (gb_state->saved.regs.io.obp1 >> 2) & 0b11;
+  uint8_t   obp1_id_2      = (gb_state->saved.regs.io.obp1 >> 4) & 0b11;
+  uint8_t   obp1_id_3      = (gb_state->saved.regs.io.obp1 >> 6) & 0b11;
   SDL_Color obp1_colors[4] = {
       TRANSPARENT_COLOR,
       GREYSCALE_COLOR((3.0f - (float)obp1_id_1) / 3.0f),
@@ -254,7 +254,7 @@ static void update_palettes(struct gb_state *gb_state) {
 
 const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   GB_assert(index < 40);
-  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->ram.oam)[index];
+  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->saved.ram.oam)[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
   printf("OAM Entry %d\n", index);
@@ -272,7 +272,7 @@ const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) 
 }
 
 static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height) {
-  uint8_t ly = gb_state->regs.io.ly;
+  uint8_t ly = gb_state->saved.regs.io.ly;
   return ((ly >= y) && (ly <= y + height));
 }
 
@@ -292,7 +292,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
 
   SDL_Rect dstrect = {
       .x = x,
-      .y = y - gb_state->regs.io.ly,
+      .y = y - gb_state->saved.regs.io.ly,
       .w = 8,
       .h = 8,
   };
@@ -313,16 +313,16 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   SDL_SetSurfacePalette(target, gb_state->unsaved.sdl_bg_palette);
   success = SDL_ClearSurface(target, 1.0f, 1.0f, 1.0f, 1.0f);
   GB_assert(success);
-  if (!(gb_state->regs.io.lcdc & LCDC_BG_WIN_ENABLE)) return;
+  if (!(gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_ENABLE)) return;
 
-  if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
+  if (gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
   } else {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK2_START;
   }
   bg_win_tile_data_start_p2 = GB_TILEDATA_BLOCK1_START;
 
-  if (gb_state->regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) {
+  if (gb_state->saved.regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) {
     bg_tile_map_start = GB_TILEMAP_BLOCK1_START;
   } else {
     bg_tile_map_start = GB_TILEMAP_BLOCK0_START;
@@ -335,8 +335,8 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                      ((tile_data_index % 128) * 16);
     // Use signed integers when calculating the display position since we still display tiles where y = 0 to -7
-    int16_t display_x = (x * 8) - gb_state->regs.io.scx;
-    int16_t display_y = (y * 8) - gb_state->regs.io.scy;
+    int16_t display_x = (x * 8) - gb_state->saved.regs.io.scx;
+    int16_t display_y = (y * 8) - gb_state->saved.regs.io.scy;
     if (display_x < -7) display_x += 256;
     if (display_y < -7) display_y += 256;
     GB_assert(display_x > -8 && display_x < 256);
@@ -352,27 +352,27 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   uint16_t bg_win_tile_data_start_p2;
   uint16_t win_tile_map_start;
 
-  LogDebug("Window State: line_counter = %d, wx = %d, wy = %d", gb_state->win_line_counter, gb_state->regs.io.wx,
-           gb_state->regs.io.wy);
+  LogDebug("Window State: line_counter = %d, wx = %d, wy = %d", gb_state->saved.win_line_counter,
+           gb_state->saved.regs.io.wx, gb_state->saved.regs.io.wy);
 
   // Window's X condition in a perfectly accurate pixel FIFO renderer would be checked every pixel, but since my
   // emulator currently uses a scanline based renderer, this should work just as well.
-  gb_state->wx_cond = (gb_state->regs.io.wx < 167);
+  gb_state->saved.wx_cond = (gb_state->saved.regs.io.wx < 167);
 
-  if ((!gb_state->wy_cond) || (!gb_state->wx_cond) || (!(gb_state->regs.io.lcdc & LCDC_WIN_ENABLE))) {
-    gb_state->win_line_blank = true;
+  if ((!gb_state->saved.wy_cond) || (!gb_state->saved.wx_cond) || (!(gb_state->saved.regs.io.lcdc & LCDC_WIN_ENABLE))) {
+    gb_state->saved.win_line_blank = true;
     return;
   }
-  gb_state->win_line_blank = false;
+  gb_state->saved.win_line_blank = false;
 
-  if (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
+  if (gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK0_START;
   } else {
     bg_win_tile_data_start_p1 = GB_TILEDATA_BLOCK2_START;
   }
   bg_win_tile_data_start_p2 = GB_TILEDATA_BLOCK1_START;
 
-  if (gb_state->regs.io.lcdc & LCDC_WIN_TILEMAP) {
+  if (gb_state->saved.regs.io.lcdc & LCDC_WIN_TILEMAP) {
     win_tile_map_start = GB_TILEMAP_BLOCK1_START;
   } else {
     win_tile_map_start = GB_TILEMAP_BLOCK0_START;
@@ -382,17 +382,17 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   SDL_SetSurfacePalette(target, gb_state->unsaved.sdl_bg_palette);
   for (int i = 0; i < 32; i++) {
     const int      x               = i;
-    const int      y               = gb_state->win_line_counter / 8;
+    const int      y               = gb_state->saved.win_line_counter / 8;
     const uint8_t  tile_data_index = gb_read_mem8(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                      ((tile_data_index % 128) * 16);
-    uint8_t        display_x       = (x * 8) + gb_state->regs.io.wx - 7;
-    uint8_t        display_y       = (gb_state->regs.io.ly / 8) * 8;
+    uint8_t        display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
+    uint8_t        display_y       = (gb_state->saved.regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_surface(gb_state, target, gb_state->unsaved.sdl_bg_palette, display_x, display_y, tile_data_addr,
                               SDL_FLIP_NONE);
   }
-  gb_state->win_line_counter++;
+  gb_state->saved.win_line_counter++;
 }
 static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_Surface *priority_target) {
   bool success;
@@ -400,7 +400,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
   GB_assert(success);
   success = SDL_ClearSurface(priority_target, 0, 0, 0, 0);
   GB_assert(success);
-  if (!(gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
+  if (!(gb_state->saved.regs.io.lcdc & LCDC_OBJ_ENABLE)) return;
   // TODO: I need to change this to choose the (up to) ten objects on this line in OAM_SCAN. I'll also want to properly
   // sort objects with equal X positions so that the first one has higher draw priority.
   for (int i = 0; i < 10; i++) {
@@ -415,7 +415,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
       palette = gb_state->unsaved.sdl_obj_palette_1;
     else
       palette = gb_state->unsaved.sdl_obj_palette_0;
-    bool draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    bool draw_double_height = (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
     tile_idx                = oam_entry->index;
     if (draw_double_height) {
       tile_idx &= 0b1111'1110;
@@ -449,7 +449,7 @@ void gb_composite_line(struct gb_state *gb_state) {
   bool     success;
   SDL_Rect line_rect = {
       .x = 0,
-      .y = gb_state->regs.io.ly,
+      .y = gb_state->saved.regs.io.ly,
       .w = GB_DISPLAY_WIDTH,
       .h = 1,
   };
@@ -479,13 +479,13 @@ void gb_composite_line(struct gb_state *gb_state) {
 
   // TODO: Adjust width properly
   SDL_Rect win_rect = {
-      .x = gb_state->regs.io.wx - 7,
+      .x = gb_state->saved.regs.io.wx - 7,
       .y = 0,
       .w = GB_DISPLAY_WIDTH,
       .h = 1,
   };
   if (!gb_state->dbg_hide_win) {
-    if (!gb_state->win_line_blank) {
+    if (!gb_state->saved.win_line_blank) {
       SDL_SetSurfacePalette(gb_state->unsaved.sdl_win_target, gb_state->unsaved.sdl_bg_palette);
       SDL_BlitSurface(gb_state->unsaved.sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
@@ -501,7 +501,7 @@ void gb_composite_line(struct gb_state *gb_state) {
   }
 
   if (!gb_state->dbg_hide_win) {
-    if (!gb_state->win_line_blank) {
+    if (!gb_state->saved.win_line_blank) {
       SDL_SetSurfacePalette(gb_state->unsaved.sdl_win_target, gb_state->unsaved.sdl_bg_trans0_palette);
       SDL_BlitSurface(gb_state->unsaved.sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
@@ -516,8 +516,8 @@ void gb_composite_line(struct gb_state *gb_state) {
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
   // Window's Y condition is checked for at the start of mode 2 (oam scan) every line.
-  if (gb_state->regs.io.ly == gb_state->regs.io.wy) {
-    gb_state->wy_cond = true;
+  if (gb_state->saved.regs.io.ly == gb_state->saved.regs.io.wy) {
+    gb_state->saved.wy_cond = true;
   }
   uint8_t oam_entries_pos = 0;
   for (int i = 0; i < 40; i++) {
@@ -525,7 +525,7 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
       break;
     }
     const struct oam_entry *oam_entry          = get_oam_entry(gb_state, i);
-    const bool              draw_double_height = (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    const bool              draw_double_height = (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
     if (!gb_is_tile_in_scanline(gb_state, oam_entry->y_pos - 16, (draw_double_height) ? 16 : 8)) {
       continue;
     }
@@ -659,10 +659,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Last Frame FPS", last_frame_fps, "%.6f");
 
       ImGui::Checkbox("Paused", &gb_state->dbg_execution_paused);
-      ImGui::Checkbox("Halted", &gb_state->halted);
+      ImGui::Checkbox("Halted", &gb_state->saved.halted);
 
       ImGui::TextUnformatted(
-          std::format("Sys Clock (a.k.a. Full Div): {0:#018b} - {0:#06x}", gb_state->regs.io.div).c_str());
+          std::format("Sys Clock (a.k.a. Full Div): {0:#018b} - {0:#06x}", gb_state->saved.regs.io.div).c_str());
 
       ImGui::TextUnformatted("Addr:");
       ImGui::SameLine();
@@ -688,15 +688,16 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("PPU", ImGuiTreeNodeFlags_Framed)) {
-      ImGui::TextUnformatted(std::format("LCDC: {0:#010b}", gb_state->regs.io.lcdc).c_str());
-      ImGui::Value("LCDC[7] - LCD Enabled", (gb_state->regs.io.lcdc & LCDC_ENABLE) != 0);
-      ImGui::Value("LCDC[6] - Window Tilemap", (gb_state->regs.io.lcdc & LCDC_WIN_TILEMAP) != 0);
-      ImGui::Value("LCDC[5] - Window Enabled", (gb_state->regs.io.lcdc & LCDC_WIN_ENABLE) != 0);
-      ImGui::Value("LCDC[4] - Background/Window Tile Data", (gb_state->regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) != 0);
-      ImGui::Value("LCDC[3] - Screen Enabled", (gb_state->regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) != 0);
-      ImGui::Value("LCDC[2] - Obj Double Height", (gb_state->regs.io.lcdc & LCDC_OBJ_SIZE) != 0);
-      ImGui::Value("LCDC[1] - Obj Enabled", (gb_state->regs.io.lcdc & LCDC_OBJ_ENABLE) != 0);
-      ImGui::Value("LCDC[0] - Background/Window Enabled", (gb_state->regs.io.lcdc & LCDC_BG_WIN_ENABLE) != 0);
+      ImGui::TextUnformatted(std::format("LCDC: {0:#010b}", gb_state->saved.regs.io.lcdc).c_str());
+      ImGui::Value("LCDC[7] - LCD Enabled", (gb_state->saved.regs.io.lcdc & LCDC_ENABLE) != 0);
+      ImGui::Value("LCDC[6] - Window Tilemap", (gb_state->saved.regs.io.lcdc & LCDC_WIN_TILEMAP) != 0);
+      ImGui::Value("LCDC[5] - Window Enabled", (gb_state->saved.regs.io.lcdc & LCDC_WIN_ENABLE) != 0);
+      ImGui::Value("LCDC[4] - Background/Window Tile Data",
+                   (gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) != 0);
+      ImGui::Value("LCDC[3] - Screen Enabled", (gb_state->saved.regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) != 0);
+      ImGui::Value("LCDC[2] - Obj Double Height", (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) != 0);
+      ImGui::Value("LCDC[1] - Obj Enabled", (gb_state->saved.regs.io.lcdc & LCDC_OBJ_ENABLE) != 0);
+      ImGui::Value("LCDC[0] - Background/Window Enabled", (gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_ENABLE) != 0);
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Serial Port Output", ImGuiTreeNodeFlags_Framed)) {
@@ -768,17 +769,17 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Reg Values", ImGuiTreeNodeFlags_Framed)) {
-      gb_imgui_show_val("A", gb_state->regs.a);
-      gb_imgui_show_val("B", gb_state->regs.b);
-      gb_imgui_show_val("C", gb_state->regs.c);
-      gb_imgui_show_val("D", gb_state->regs.d);
-      gb_imgui_show_val("E", gb_state->regs.e);
-      gb_imgui_show_val("F", gb_state->regs.f);
-      gb_imgui_show_val("H", gb_state->regs.h);
-      gb_imgui_show_val("L", gb_state->regs.l);
-      gb_imgui_show_val("PC", gb_state->regs.pc);
-      gb_imgui_show_val("SP", gb_state->regs.sp);
-      ImGui::Value("IME", gb_state->regs.io.ime);
+      gb_imgui_show_val("A", gb_state->saved.regs.a);
+      gb_imgui_show_val("B", gb_state->saved.regs.b);
+      gb_imgui_show_val("C", gb_state->saved.regs.c);
+      gb_imgui_show_val("D", gb_state->saved.regs.d);
+      gb_imgui_show_val("E", gb_state->saved.regs.e);
+      gb_imgui_show_val("F", gb_state->saved.regs.f);
+      gb_imgui_show_val("H", gb_state->saved.regs.h);
+      gb_imgui_show_val("L", gb_state->saved.regs.l);
+      gb_imgui_show_val("PC", gb_state->saved.regs.pc);
+      gb_imgui_show_val("SP", gb_state->saved.regs.sp);
+      ImGui::Value("IME", gb_state->saved.regs.io.ime);
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("IO Reg Values", ImGuiTreeNodeFlags_Framed)) {
@@ -805,8 +806,8 @@ void gb_flip_frame(struct gb_state *gb_state) {
   gb_state->ns_last_frametime        = curr_ticks_ns - gb_state->ns_elapsed_last_gb_vsync;
   gb_state->ns_elapsed_last_gb_vsync = curr_ticks_ns;
 
-  gb_state->win_line_counter = 0;
-  gb_state->wy_cond          = 0;
+  gb_state->saved.win_line_counter = 0;
+  gb_state->saved.wy_cond          = 0;
 
   SDL_Texture *tmp;
   tmp                                          = gb_state->unsaved.sdl_composite_target_front;

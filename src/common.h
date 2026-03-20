@@ -310,6 +310,37 @@ typedef struct stack_entry {
   };
 } stack_entry_t;
 
+typedef struct gb_state_saved {
+  regs_t regs;
+  union {
+    gb_ram_banks_t ram;
+    uint8_t        flat_ram[KB(64)];
+  };
+  bool halted;
+
+  // total m_cycles_elapsed on the cpu
+  //
+  // This is currently just based on the simple m_cycle timing of each instruction from
+  // https://gekkio.fi/files/gb-docs/gbctr.pdf. If I ever want to pass cycle accurate tests i'll need to account for the
+  // SM83's overlaping fetch/execute and any other timing idiosyncrasies. For now though just using the simple timings
+  // should be enough to make most games run.
+  uint64_t m_cycles_elapsed;
+
+  uint64_t last_timer_sync_m_cycles;
+  bool     last_tima_bit;
+
+  // used for identifying when we are in hblank, and for knowing when we can increment ly.
+  uint32_t lcd_x;
+
+  bool    last_stat_interrupt;
+  uint8_t last_mode_handled;
+
+  bool    wy_cond;
+  bool    wx_cond;
+  uint8_t win_line_counter;
+  bool    win_line_blank;
+} gb_state_saved_t;
+
 // This is where all the state that we don't change on reset needs to go, it's stored at the very end of gb_state so
 // that we can ignore it when making/loading a save state or resetting gameboy.
 typedef struct gb_state_unsaved {
@@ -342,49 +373,7 @@ typedef struct gb_state_unsaved {
 } gb_state_unsaved_t;
 
 typedef struct gb_state {
-
-  // Save State Data Start
-  // {
-  regs_t regs;
-  union {
-    gb_ram_banks_t ram;
-    uint8_t        flat_ram[KB(64)];
-  };
-
-  //   PPU Start
-  //   {
-
-  // total m_cycles_elapsed on the cpu
-  //
-  // This is currently just based on the simple m_cycle timing of each instruction from
-  // https://gekkio.fi/files/gb-docs/gbctr.pdf. If I ever want to pass cycle accurate tests i'll need to account for the
-  // SM83's overlaping fetch/execute and any other timing idiosyncrasies. For now though just using the simple timings
-  // should be enough to make most games run.
-  uint64_t m_cycles_elapsed;
-  uint64_t last_timer_sync_m_cycles;
-  bool     last_tima_bit;
-
-  // used for identifying when we are in hblank, and for knowing when we can increment ly.
-  uint32_t lcd_x;
-
-  bool    last_stat_interrupt;
-  uint8_t last_mode_handled;
-
-  //     Window Start
-  //     {
-  bool    wy_cond;
-  bool    wx_cond;
-  uint8_t win_line_counter;
-  bool    win_line_blank;
-  //     }
-  //     Window End
-
-  //   }
-  //   PPU End
-
-  bool halted;
-  // }
-  // Save State Data End
+  gb_state_saved_t saved;
 
   bool bootrom_has_syms;
   bool rom_loaded;

@@ -285,17 +285,17 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
 static void disassemble_rom(struct gb_state *gb_state, FILE *stream) {
-  while (gb_state->regs.pc < sizeof(gb_state->ram.rom0)) {
-    uint16_t    inst_addr = gb_state->regs.pc;
+  while (gb_state->saved.regs.pc < sizeof(gb_state->saved.ram.rom0)) {
+    uint16_t    inst_addr = gb_state->saved.regs.pc;
     struct inst inst      = fetch(gb_state);
     fprintf(stream, "  ");
     print_inst(gb_state, stream, inst, true, inst_addr);
   }
 }
 static void disassemble_bootrom(struct gb_state *gb_state, FILE *stream) {
-  gb_state->regs.pc = 0x0000;
-  while (gb_state->regs.pc < 0x0100) {
-    uint16_t    inst_addr = gb_state->regs.pc;
+  gb_state->saved.regs.pc = 0x0000;
+  while (gb_state->saved.regs.pc < 0x0100) {
+    uint16_t    inst_addr = gb_state->saved.regs.pc;
     struct inst inst      = fetch(gb_state);
     fprintf(stream, "  ");
     print_inst(gb_state, stream, inst, true, inst_addr);
@@ -309,9 +309,9 @@ static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
   for (int i = 0; i < gb_state->syms.len; i++) {
     curr_sym = &gb_state->syms.syms[i];
     fprintf(stream, "  %s:\n", curr_sym->name);
-    gb_state->regs.pc = curr_sym->start_offset;
-    while (gb_state->regs.pc < curr_sym->start_offset + curr_sym->len) {
-      uint16_t    inst_addr = gb_state->regs.pc;
+    gb_state->saved.regs.pc = curr_sym->start_offset;
+    while (gb_state->saved.regs.pc < curr_sym->start_offset + curr_sym->len) {
+      uint16_t    inst_addr = gb_state->saved.regs.pc;
       struct inst inst      = fetch(gb_state);
       fprintf(stream, "    ");
       print_inst(gb_state, stream, inst, true, inst_addr);
@@ -324,7 +324,7 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
   // symbols where available.
   //
   // If bootrom has syms then they will be used in `disassemble_rom_with_sym()`
-  if (gb_state->regs.io.bank && !gb_state->bootrom_has_syms) {
+  if (gb_state->saved.regs.io.bank && !gb_state->bootrom_has_syms) {
     fprintf(stream, "BootRom:\n");
     disassemble_bootrom(gb_state, stream);
   }
@@ -348,11 +348,11 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
 static void disassemble_section(FILE *stream, const uint8_t *section_bytes, const int section_bytes_len) {
   struct gb_state gb_state;
   gb_state_init(&gb_state);
-  gb_state.regs.pc = 0;
-  memcpy(gb_state.ram.rom0, section_bytes, section_bytes_len);
+  gb_state.saved.regs.pc = 0;
+  memcpy(gb_state.saved.ram.rom0, section_bytes, section_bytes_len);
 
-  while (gb_state.regs.pc < section_bytes_len) {
-    uint16_t    inst_addr = gb_state.regs.pc;
+  while (gb_state.saved.regs.pc < section_bytes_len) {
+    uint16_t    inst_addr = gb_state.saved.regs.pc;
     struct inst inst      = fetch(&gb_state);
     print_inst(&gb_state, stream, inst, true, inst_addr);
   }

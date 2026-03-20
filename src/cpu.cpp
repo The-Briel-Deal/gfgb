@@ -44,22 +44,22 @@ typedef uint8_t gb_flag_reg_bits_t;
   inst_param_t { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
 #define VOID_PARAM inst_param_t{.type = VOID_PARAM_TYPE, .void_val = 0}
 
-static void gb_spend_mcycles(gb_state_t *gb_state, uint64_t n) { gb_state->m_cycles_elapsed += n; }
+static void gb_spend_mcycles(gb_state_t *gb_state, uint64_t n) { gb_state->saved.m_cycles_elapsed += n; }
 
 static inline uint8_t next8(struct gb_state *gb_state) {
-  uint8_t val = gb_read_mem8(gb_state, gb_state->regs.pc);
-  gb_state->regs.pc += 1;
+  uint8_t val = gb_read_mem8(gb_state, gb_state->saved.regs.pc);
+  gb_state->saved.regs.pc += 1;
   return val;
 }
 
 static inline uint16_t next16(struct gb_state *gb_state) {
-  uint16_t val = gb_read_mem16(gb_state, gb_state->regs.pc);
-  gb_state->regs.pc += 2;
+  uint16_t val = gb_read_mem16(gb_state, gb_state->saved.regs.pc);
+  gb_state->saved.regs.pc += 2;
   return val;
 }
 
 uint8_t get_r8(struct gb_state *gb_state, r8_t r8) {
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   switch (r8) {
   case R8_B: return r->b;
   case R8_C: return r->c;
@@ -74,7 +74,7 @@ uint8_t get_r8(struct gb_state *gb_state, r8_t r8) {
 }
 
 void set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val) {
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   switch (r8) {
   case R8_B: r->b = val; return;
   case R8_C: r->c = val; return;
@@ -88,11 +88,11 @@ void set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val) {
   }
 }
 
-uint16_t get_pc(struct gb_state *gb_state) { return gb_state->regs.pc; }
-void     set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->regs.pc = new_pc; }
+uint16_t get_pc(struct gb_state *gb_state) { return gb_state->saved.regs.pc; }
+void     set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->saved.regs.pc = new_pc; }
 
 uint16_t get_r16(struct gb_state *gb_state, r16_t r16) {
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   switch (r16) {
   case R16_BC: return COMBINED_REG((*r), b, c);
   case R16_DE: return COMBINED_REG((*r), d, e);
@@ -103,7 +103,7 @@ uint16_t get_r16(struct gb_state *gb_state, r16_t r16) {
 }
 
 void set_r16(struct gb_state *gb_state, r16_t r16, uint16_t val) {
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   switch (r16) {
   case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
   case R16_DE: SET_COMBINED_REG((*r), d, e, val); return;
@@ -114,7 +114,7 @@ void set_r16(struct gb_state *gb_state, r16_t r16, uint16_t val) {
 }
 
 void set_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem, uint8_t val) {
-  regs_t  *r = &gb_state->regs;
+  regs_t  *r = &gb_state->saved.regs;
   uint16_t mem_offset;
   switch (r16_mem) {
   case R16_MEM_BC: mem_offset = COMBINED_REG((*r), b, c); break;
@@ -155,12 +155,12 @@ uint16_t get_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk) {
   case R16_STK_BC: return get_r16(gb_state, R16_BC);
   case R16_STK_DE: return get_r16(gb_state, R16_DE);
   case R16_STK_HL: return get_r16(gb_state, R16_HL);
-  case R16_STK_AF: return COMBINED_REG(gb_state->regs, a, f);
+  case R16_STK_AF: return COMBINED_REG(gb_state->saved.regs, a, f);
   }
   abort(); // This should never happen unless something is very wrong.
 }
 void set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val) {
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   switch (r16_stk) {
   case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
   case R16_STK_DE: SET_COMBINED_REG((*r), d, e, val); return;
@@ -170,14 +170,14 @@ void set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val) {
   }
 }
 
-void set_ime(struct gb_state *gb_state, bool on) { gb_state->regs.io.ime = on; }
-bool get_ime(struct gb_state *gb_state) { return gb_state->regs.io.ime; } // This is only for tests and debugging.
+void set_ime(struct gb_state *gb_state, bool on) { gb_state->saved.regs.io.ime = on; }
+bool get_ime(struct gb_state *gb_state) { return gb_state->saved.regs.io.ime; } // This is only for tests and debugging.
 
 void set_flags(struct gb_state *gb_state, gb_flag_reg_bits_t flags, bool on) {
   if (on) {
-    gb_state->regs.f |= flags;
+    gb_state->saved.regs.f |= flags;
   } else {
-    gb_state->regs.f &= ~flags;
+    gb_state->saved.regs.f &= ~flags;
   }
 }
 
@@ -194,7 +194,7 @@ struct inst               fetch(struct gb_state *gb_state) {
 }
 
 static inline struct inst _fetch(struct gb_state *gb_state) {
-  GB_assert(!gb_state->halted);
+  GB_assert(!gb_state->saved.halted);
   uint8_t curr_byte = next8(gb_state);
   uint8_t block     = CRUMB0(curr_byte);
   switch (block) {
@@ -529,7 +529,7 @@ not_implemented:
 static void ex_ldh(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
   struct inst_param src  = inst.p2;
-  regs_t           *r    = &gb_state->regs;
+  regs_t           *r    = &gb_state->saved.regs;
   if (src.type == R8 && src.r8 == R8_A) {
     if (dest.type == IMM8_HMEM) {
       gb_spend_mcycles(gb_state, 3);
@@ -570,14 +570,14 @@ static void ex_stop(struct gb_state *gb_state, struct inst inst) {
 }
 static void ex_halt(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == HALT);
-  gb_state->halted = true;
+  gb_state->saved.halted = true;
   // TODO: make sure halt bug is implemented
   gb_spend_mcycles(gb_state, 3);
 }
 static void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
-  gb_write_mem8(gb_state, --gb_state->regs.sp, (val & 0xFF00) >> 8);
-  gb_write_mem8(gb_state, --gb_state->regs.sp, (val & 0x00FF) >> 0);
+  gb_write_mem8(gb_state, --gb_state->saved.regs.sp, (val & 0xFF00) >> 8);
+  gb_write_mem8(gb_state, --gb_state->saved.regs.sp, (val & 0x00FF) >> 0);
 }
 static void ex_push(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == PUSH);
@@ -591,8 +591,8 @@ static uint16_t pop16(struct gb_state *gb_state) {
   uint16_t val = 0;
 
   // little endian
-  val |= gb_read_mem8(gb_state, gb_state->regs.sp++) << 0;
-  val |= gb_read_mem8(gb_state, gb_state->regs.sp++) << 8;
+  val |= gb_read_mem8(gb_state, gb_state->saved.regs.sp++) << 0;
+  val |= gb_read_mem8(gb_state, gb_state->saved.regs.sp++) << 8;
   return val;
 }
 static void ex_pop(struct gb_state *gb_state, struct inst inst) {
@@ -635,7 +635,7 @@ static void ex_adc(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == ADC);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   uint8_t val   = get_r8(gb_state, R8_A);
-  uint8_t carry = (gb_state->regs.f & FLAG_C) >> 4;
+  uint8_t carry = (gb_state->saved.regs.f & FLAG_C) >> 4;
   uint8_t add;
   if (IS_R8(inst.p2)) {
     gb_spend_mcycles(gb_state, 1);
@@ -657,7 +657,7 @@ static void ex_sbc(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == SBC);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   uint8_t val   = get_r8(gb_state, R8_A);
-  uint8_t carry = (gb_state->regs.f & FLAG_C) >> 4;
+  uint8_t carry = (gb_state->saved.regs.f & FLAG_C) >> 4;
   uint8_t sub;
   if (IS_R8(inst.p2)) {
     gb_spend_mcycles(gb_state, 1);
@@ -760,7 +760,7 @@ static void ex_or(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == OR);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   uint8_t p2_val;
   if (IS_R8(inst.p2)) {
     gb_spend_mcycles(gb_state, 1);
@@ -781,7 +781,7 @@ static void ex_and(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == AND);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   uint8_t p2_val;
   if (IS_R8(inst.p2)) {
     gb_spend_mcycles(gb_state, 1);
@@ -803,7 +803,7 @@ static void ex_xor(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == XOR);
   GB_assert(IS_R8(inst.p1) && inst.p1.r8 == R8_A);
   GB_assert(IS_R8(inst.p2) || IS_IMM8(inst.p2));
-  regs_t *r = &gb_state->regs;
+  regs_t *r = &gb_state->saved.regs;
   uint8_t p2_val;
   if (IS_R8(inst.p2)) {
     gb_spend_mcycles(gb_state, 1);
@@ -846,7 +846,7 @@ static void ex_ccf(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   gb_spend_mcycles(gb_state, 1);
   set_flags(gb_state, FLAG_N | FLAG_H, false);
-  set_flags(gb_state, FLAG_C, !(gb_state->regs.f & FLAG_C));
+  set_flags(gb_state, FLAG_C, !(gb_state->saved.regs.f & FLAG_C));
 }
 static void ex_set(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == SET);
@@ -887,7 +887,7 @@ static void ex_rl(struct gb_state *gb_state, struct inst inst) {
   gb_spend_mcycles(gb_state, 2);
   if (inst.p1.r8 == R8_HL_DREF) gb_spend_mcycles(gb_state, 1);
   uint8_t val            = get_r8(gb_state, inst.p1.r8);
-  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  uint8_t old_carry_flag = (FLAG_C & gb_state->saved.regs.f) >> 4;
   set_flags(gb_state, FLAG_C, (val >> 7) & 1);
   val <<= 1;
   val |= old_carry_flag;
@@ -905,7 +905,7 @@ static void ex_rr(struct gb_state *gb_state, struct inst inst) {
   gb_spend_mcycles(gb_state, 2);
   if (inst.p1.r8 == R8_HL_DREF) gb_spend_mcycles(gb_state, 1);
   uint8_t val            = get_r8(gb_state, inst.p1.r8);
-  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  uint8_t old_carry_flag = (FLAG_C & gb_state->saved.regs.f) >> 4;
   set_flags(gb_state, FLAG_C, val & 1);
   val >>= 1;
   val |= (old_carry_flag << 7);
@@ -922,7 +922,7 @@ static void ex_rla(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   gb_spend_mcycles(gb_state, 1);
   uint8_t val            = get_r8(gb_state, R8_A);
-  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  uint8_t old_carry_flag = (FLAG_C & gb_state->saved.regs.f) >> 4;
   set_flags(gb_state, FLAG_C, (val >> 7) & 1);
   val <<= 1;
   val |= old_carry_flag;
@@ -937,7 +937,7 @@ static void ex_rra(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   gb_spend_mcycles(gb_state, 1);
   uint8_t val            = get_r8(gb_state, R8_A);
-  uint8_t old_carry_flag = (FLAG_C & gb_state->regs.f) >> 4;
+  uint8_t old_carry_flag = (FLAG_C & gb_state->saved.regs.f) >> 4;
   set_flags(gb_state, FLAG_C, val & 1);
   val >>= 1;
   val |= (old_carry_flag << 7);
@@ -1018,8 +1018,8 @@ static void ex_rst(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   gb_spend_mcycles(gb_state, 4);
   uint16_t addr = inst.p1.tgt3 * 8;
-  push16(gb_state, gb_state->regs.pc);
-  gb_state->regs.pc = addr;
+  push16(gb_state, gb_state->saved.regs.pc);
+  gb_state->saved.regs.pc = addr;
 }
 
 static void ex_sla(struct gb_state *gb_state, struct inst inst) {
@@ -1122,13 +1122,13 @@ static void ex_dec(struct gb_state *gb_state, struct inst inst) {
 static void ex_di(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == DI);
   gb_spend_mcycles(gb_state, 1);
-  gb_state->regs.io.ime = false;
+  gb_state->saved.regs.io.ime = false;
 }
 
 static void ex_ei(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == EI);
   gb_spend_mcycles(gb_state, 1);
-  gb_state->regs.io.set_ime_after = true;
+  gb_state->saved.regs.io.set_ime_after = true;
 }
 
 static void ex_daa(struct gb_state *gb_state, struct inst inst) {
@@ -1137,15 +1137,15 @@ static void ex_daa(struct gb_state *gb_state, struct inst inst) {
   gb_spend_mcycles(gb_state, 1);
   uint8_t val    = get_r8(gb_state, R8_A);
   uint8_t adjust = 0;
-  if ((gb_state->regs.f & FLAG_N) != 0) {
+  if ((gb_state->saved.regs.f & FLAG_N) != 0) {
     // The last inst was a subtraction.
-    if ((gb_state->regs.f & FLAG_H) != 0) adjust += 0x06;
-    if ((gb_state->regs.f & FLAG_C) != 0) adjust += 0x60;
+    if ((gb_state->saved.regs.f & FLAG_H) != 0) adjust += 0x06;
+    if ((gb_state->saved.regs.f & FLAG_C) != 0) adjust += 0x60;
     val -= adjust;
   } else {
     // The last inst was an addition.
-    if (((gb_state->regs.f & FLAG_H) != 0) || (val & 0x0F) > 0x9) adjust += 0x06;
-    if (((gb_state->regs.f & FLAG_C) != 0) || val > 0x99) {
+    if (((gb_state->saved.regs.f & FLAG_H) != 0) || (val & 0x0F) > 0x9) adjust += 0x06;
+    if (((gb_state->saved.regs.f & FLAG_C) != 0) || val > 0x99) {
       adjust += 0x60;
       set_flags(gb_state, FLAG_C, true);
     }
@@ -1159,10 +1159,10 @@ static void ex_daa(struct gb_state *gb_state, struct inst inst) {
 static bool eval_condition(struct gb_state *gb_state, const struct inst_param inst_param) {
   GB_assert(inst_param.type == COND);
   switch (inst_param.cond) {
-  case COND_NZ: return (gb_state->regs.f & (1 << 7)) == 0;
-  case COND_Z: return ((gb_state->regs.f & (1 << 7)) >> 7) == 1;
-  case COND_NC: return (gb_state->regs.f & (1 << 4)) == 0;
-  case COND_C: return ((gb_state->regs.f & (1 << 4)) >> 4) == 1;
+  case COND_NZ: return (gb_state->saved.regs.f & (1 << 7)) == 0;
+  case COND_Z: return ((gb_state->saved.regs.f & (1 << 7)) >> 7) == 1;
+  case COND_NC: return (gb_state->saved.regs.f & (1 << 4)) == 0;
+  case COND_C: return ((gb_state->saved.regs.f & (1 << 4)) >> 4) == 1;
   }
   unreachable();
 }
@@ -1173,14 +1173,14 @@ static void ex_ret(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p2));
   if (inst.p1.type == VOID_PARAM_TYPE) {
     gb_spend_mcycles(gb_state, 4);
-    gb_state->regs.pc = pop16(gb_state);
+    gb_state->saved.regs.pc = pop16(gb_state);
     return;
   }
   if (inst.p1.type == COND) {
     gb_spend_mcycles(gb_state, 2);
     if (eval_condition(gb_state, inst.p1)) {
       gb_spend_mcycles(gb_state, 3);
-      gb_state->regs.pc = pop16(gb_state);
+      gb_state->saved.regs.pc = pop16(gb_state);
     }
     return;
   }
@@ -1191,13 +1191,13 @@ static void ex_reti(struct gb_state *gb_state, struct inst inst) {
   GB_assert(IS_VOID(inst.p1));
   GB_assert(IS_VOID(inst.p2));
   gb_spend_mcycles(gb_state, 4);
-  gb_state->regs.io.ime = true;
-  gb_state->regs.pc     = pop16(gb_state);
+  gb_state->saved.regs.io.ime = true;
+  gb_state->saved.regs.pc     = pop16(gb_state);
 }
 
 void call(struct gb_state *gb_state, uint16_t addr) {
-  push16(gb_state, gb_state->regs.pc);
-  gb_state->regs.pc = addr;
+  push16(gb_state, gb_state->saved.regs.pc);
+  gb_state->saved.regs.pc = addr;
 }
 
 static void ex_call(struct gb_state *gb_state, struct inst inst) {
@@ -1221,7 +1221,7 @@ static void ex_call(struct gb_state *gb_state, struct inst inst) {
 static void ex_jr(struct gb_state *gb_state, struct inst inst) {
   if (IS_IMM8(inst.p1)) {
     gb_spend_mcycles(gb_state, 3);
-    gb_state->regs.pc += *(int8_t *)&inst.p1.imm8;
+    gb_state->saved.regs.pc += *(int8_t *)&inst.p1.imm8;
     return;
   }
   if (IS_COND(inst.p1)) {
@@ -1230,7 +1230,7 @@ static void ex_jr(struct gb_state *gb_state, struct inst inst) {
       if (eval_condition(gb_state, inst.p1)) {
         gb_spend_mcycles(gb_state, 1);
 
-        gb_state->regs.pc += *(int8_t *)&inst.p2.imm8;
+        gb_state->saved.regs.pc += *(int8_t *)&inst.p2.imm8;
       }
       return;
     }
@@ -1241,20 +1241,20 @@ static void ex_jp(struct gb_state *gb_state, struct inst inst) {
   switch (inst.p1.type) {
   case IMM16:
     gb_spend_mcycles(gb_state, 4);
-    gb_state->regs.pc = inst.p1.imm16;
+    gb_state->saved.regs.pc = inst.p1.imm16;
     return;
   case COND:
     GB_assert(IS_IMM16(inst.p2));
     gb_spend_mcycles(gb_state, 3);
     if (eval_condition(gb_state, inst.p1)) {
       gb_spend_mcycles(gb_state, 1);
-      gb_state->regs.pc = inst.p2.imm16;
+      gb_state->saved.regs.pc = inst.p2.imm16;
     }
     return;
   case R16:
     GB_assert(inst.p1.r16 == R16_HL);
     gb_spend_mcycles(gb_state, 1);
-    gb_state->regs.pc = get_r16(gb_state, R16_HL);
+    gb_state->saved.regs.pc = get_r16(gb_state, R16_HL);
     return;
   default: ERR(gb_state, "Unknown JP inst params"); return;
   }
@@ -1305,25 +1305,25 @@ static void ex_cpl(struct gb_state *gb_state, struct inst inst) {
 
 void handle_interrupts(struct gb_state *gb_state) {
   TracyCZoneN(ctx, "Handle Interrupts", true);
-  uint8_t to_handle = gb_state->regs.io.ie & gb_state->regs.io.if_;
+  uint8_t to_handle = gb_state->saved.regs.io.ie & gb_state->saved.regs.io.if_;
 
   // even if ime is false we still want to stop being halted once an interrupt is available
-  if (to_handle) gb_state->halted = false;
+  if (to_handle) gb_state->saved.halted = false;
 
-  if (gb_state->regs.io.ime) {
+  if (gb_state->saved.regs.io.ime) {
     // Interupt handlers
     if (to_handle & 0b00001) { // vblank handler
-      gb_state->regs.io.if_ &= ~0b00001;
+      gb_state->saved.regs.io.if_ &= ~0b00001;
       call(gb_state, 0x0040);
       goto interrupt_handled;
     }
     if (to_handle & 0b00010) { // stat handler
-      gb_state->regs.io.if_ &= ~0b00010;
+      gb_state->saved.regs.io.if_ &= ~0b00010;
       call(gb_state, 0x0048);
       goto interrupt_handled;
     }
     if (to_handle & 0b00100) { // timer handler
-      gb_state->regs.io.if_ &= ~0b00100;
+      gb_state->saved.regs.io.if_ &= ~0b00100;
       call(gb_state, 0x0050);
       goto interrupt_handled;
     }
@@ -1337,7 +1337,7 @@ void handle_interrupts(struct gb_state *gb_state) {
   interrupt_handled:
     // According to PanDocs this process takes 5 M-Cycles
     gb_spend_mcycles(gb_state, 5);
-    gb_state->regs.io.ime = false;
+    gb_state->saved.regs.io.ime = false;
   interrupt_handled_end:
   }
   TracyCZoneEnd(ctx);
@@ -1351,8 +1351,8 @@ void               execute(struct gb_state *gb_state, struct inst inst) {
 }
 
 static inline void _execute(struct gb_state *gb_state, struct inst inst) {
-  GB_assert(!gb_state->halted);
-  bool set_ime_after_this_inst = gb_state->regs.io.set_ime_after;
+  GB_assert(!gb_state->saved.halted);
+  bool set_ime_after_this_inst = gb_state->saved.regs.io.set_ime_after;
   switch (inst.type) {
   case ADC: ex_adc(gb_state, inst); break;
   case ADD: ex_add(gb_state, inst); break;
@@ -1403,8 +1403,8 @@ static inline void _execute(struct gb_state *gb_state, struct inst inst) {
   default: ERR(gb_state, "`execute()` called with `inst.type` that isn't implemented."); break;
   }
   if (set_ime_after_this_inst) {
-    gb_state->regs.io.ime           = true;
-    gb_state->regs.io.set_ime_after = false;
+    gb_state->saved.regs.io.ime           = true;
+    gb_state->saved.regs.io.set_ime_after = false;
   }
 }
 
@@ -1417,7 +1417,7 @@ void test_fetch() {
   struct inst     inst;
 
   gb_state_init(&gb_state);
-  gb_state.regs.pc = 0x0100;
+  gb_state.saved.regs.pc = 0x0100;
 
   gb_write_mem8(&gb_state, 0x100, 0b00100001);
   gb_write_mem16(&gb_state, 0x101, 452);
@@ -1475,7 +1475,7 @@ void test_execute_load() {
       .p2   = R8_PARAM(R8_A),
   };
   set_r16(&gb_state, R16_BC, 0xC000);
-  gb_state.regs.a = 42;
+  gb_state.saved.regs.a = 42;
   execute(&gb_state, inst);
   GB_assert(gb_read_mem8(&gb_state, 0xC000) == 42);
 
@@ -1487,7 +1487,7 @@ void test_execute_load() {
   };
   gb_write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
-  GB_assert(gb_state.regs.a == 134);
+  GB_assert(gb_state.saved.regs.a == 134);
 
   // Load contents of addr in reg HL into reg A and increment the pointer.
   inst = inst_t{
@@ -1499,7 +1499,7 @@ void test_execute_load() {
   gb_write_mem8(&gb_state, 0xC000, 134);
   execute(&gb_state, inst);
   GB_assert(get_r16(&gb_state, R16_HL) == 0xC001);
-  GB_assert(gb_state.regs.a == 134);
+  GB_assert(gb_state.saved.regs.a == 134);
   // Then load contents of reg A into the addr in reg HL.
   inst = inst_t{
       .type = LD,
@@ -1519,7 +1519,7 @@ void test_execute_load() {
   };
   set_r16(&gb_state, R16_SP, 0xD123);
   execute(&gb_state, inst);
-  GB_assert(gb_state.regs.sp == 0xD123);
+  GB_assert(gb_state.saved.regs.sp == 0xD123);
   GB_assert(gb_read_mem16(&gb_state, 0xC010) == 0xD123);
 }
 
@@ -1528,7 +1528,7 @@ void test_stack_ops() {
   gb_state_init(&gb_state);
 
   push16(&gb_state, 0x1234);
-  assert_eq(gb_state.regs.sp, 0xDFFE);
+  assert_eq(gb_state.saved.regs.sp, 0xDFFE);
   // 16 bit vals on the stack should be little endian so that they can be read
   // like 16 bit values anywhere else in memory.
   assert_eq(gb_read_mem8(&gb_state, 0xDFFF), 0x12);
@@ -1541,15 +1541,15 @@ void test_stack_ops() {
 void test_execute_call_ret() {
   gb_state_t gb_state;
   gb_state_init(&gb_state);
-  assert_eq(gb_state.regs.sp, 0xE000);
-  gb_state.regs.pc = 0x0190;
+  assert_eq(gb_state.saved.regs.sp, 0xE000);
+  gb_state.saved.regs.pc = 0x0190;
   execute(&gb_state, inst_t{.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
-  assert_eq(gb_state.regs.sp, 0xDFFE);
-  assert_eq(gb_state.regs.pc, 0x0210);
+  assert_eq(gb_state.saved.regs.sp, 0xDFFE);
+  assert_eq(gb_state.saved.regs.pc, 0x0210);
   assert_eq(gb_read_mem16(&gb_state, 0xDFFE), 0x0190);
   execute(&gb_state, inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
-  assert_eq(gb_state.regs.sp, 0xE000);
-  assert_eq(gb_state.regs.pc, 0x0190);
+  assert_eq(gb_state.saved.regs.sp, 0xE000);
+  assert_eq(gb_state.saved.regs.pc, 0x0190);
 }
 
 #define TEST_CASE(name)                                                                                                \
