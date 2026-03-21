@@ -276,8 +276,8 @@ uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
 }
 void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   if (addr >= GB_TILEDATA_BLOCK0_START && addr < GB_TILEDATA_BLOCK2_END) {
-    uint16_t tex_idx                  = gb_tile_addr_to_tex_idx(addr);
-    gb_state->dirty_textures[tex_idx] = true;
+    uint16_t tex_idx                        = gb_tile_addr_to_tex_idx(addr);
+    gb_state->video.dirty_textures[tex_idx] = true;
   }
 }
 

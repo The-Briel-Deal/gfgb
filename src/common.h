@@ -366,6 +366,8 @@ typedef struct gb_video_state {
   // We draw everything line by line into the back, then on v-sync we swap the pointers
   SDL_Texture *sdl_composite_target_front;
   SDL_Texture *sdl_composite_target_back;
+  SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
+  bool         dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
 } gb_video_state_t;
 
@@ -396,9 +398,6 @@ typedef struct gb_dbg_state {
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
   gb_saved_state_t saved;
-
-  SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
-  bool         dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
   FILE *serial_port_output_file;
 

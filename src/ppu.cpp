@@ -118,9 +118,9 @@ void gb_video_free(struct gb_state *gb_state) {
   if (!gb_state->video.initialized) return;
   // free all textures
   for (int i = 0; i < DMG_N_TILEDATA_ADDRESSES; i++) {
-    if (gb_state->textures[i] != NULL) {
-      SDL_DestroyTexture(gb_state->textures[i]);
-      gb_state->textures[i] = NULL;
+    if (gb_state->video.textures[i] != NULL) {
+      SDL_DestroyTexture(gb_state->video.textures[i]);
+      gb_state->video.textures[i] = NULL;
     }
   }
 
