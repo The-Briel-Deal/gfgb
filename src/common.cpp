@@ -53,7 +53,7 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->saved.regs.io.sc   = 0b0111'1110;
 
   /// Internal State
-  gb_state->first_oam_scan_after_enable = true;
+  gb_state->video.first_oam_scan_after_enable = true;
 
   // Debug State
   gb_state->dbg.speed_factor          = 1.0;
@@ -66,14 +66,14 @@ void gb_state_init(struct gb_state *gb_state) {
 // TODO: This doesn't seem to always work, I need to figure out what other state I need set.
 void gb_state_reset(struct gb_state *gb_state) {
   GB_memset(&gb_state->saved.regs, 0, sizeof(gb_state->saved.regs));
-  gb_state->saved.regs.sp                  = WRAM_END + 1;
-  gb_state->saved.regs.pc                  = 0;
-  gb_state->saved.regs.io.bank             = true;
-  gb_state->first_oam_scan_after_enable    = true;
-  gb_state->saved.m_cycles_elapsed         = 0;
-  gb_state->saved.last_timer_sync_m_cycles = 0;
-  gb_state->ns_elapsed_while_running       = 0;
-  gb_state->saved.lcd_x                    = 0;
+  gb_state->saved.regs.sp                     = WRAM_END + 1;
+  gb_state->saved.regs.pc                     = 0;
+  gb_state->saved.regs.io.bank                = true;
+  gb_state->video.first_oam_scan_after_enable = true;
+  gb_state->saved.m_cycles_elapsed            = 0;
+  gb_state->saved.last_timer_sync_m_cycles    = 0;
+  gb_state->timing.ns_elapsed_while_running   = 0;
+  gb_state->saved.lcd_x                       = 0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
@@ -103,7 +103,7 @@ load_default:
 struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
 
 void gb_state_free(struct gb_state *gb_state) {
-  if (gb_state->serial_port_output_file != NULL) fclose(gb_state->serial_port_output_file);
+  if (gb_state->dbg.serial_port_output_file != NULL) fclose(gb_state->dbg.serial_port_output_file);
 
   if (gb_state->dbg.syms.capacity > 0) {
     free_symbol_list(&gb_state->dbg.syms);
@@ -303,7 +303,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     break;
   default:
     if (reg == IO_DMA) {
-      gb_state->oam_dma_start = true;
+      gb_state->video.oam_dma_start = true;
     }
     uint8_t *reg_ptr = get_io_reg(gb_state, reg);
     if (reg_ptr == NULL) {
@@ -329,7 +329,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
       if (addr == IO_SB) {
         // TODO: This just logs out every character written to this port. If I
         // actually want to implement gamelink support there is more to do.
-        if (gb_state->serial_port_output_file != NULL) fputc(val, gb_state->serial_port_output_file);
+        if (gb_state->dbg.serial_port_output_file != NULL) fputc(val, gb_state->dbg.serial_port_output_file);
         gb_state->serial_port_output_string->push_back(val);
         return;
       }
@@ -449,9 +449,9 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     // PPU mode reports 0 when PPU is disabled.
     // https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
     gb_state->saved.regs.io.stat &= ~0b0000'0011;
-    gb_state->saved.regs.io.ly            = 0;
-    gb_state->saved.lcd_x                 = 0;
-    gb_state->first_oam_scan_after_enable = true;
+    gb_state->saved.regs.io.ly                  = 0;
+    gb_state->saved.lcd_x                       = 0;
+    gb_state->video.first_oam_scan_after_enable = true;
     return;
   }
   uint64_t prev_dots    = gb_dots(prev_m_cycles);
@@ -468,12 +468,12 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
   if (gb_state->saved.regs.io.ly >= 144) {
     mode = VBLANK;
   } else if (gb_state->saved.lcd_x < 80) {
-    if (gb_state->first_oam_scan_after_enable)
+    if (gb_state->video.first_oam_scan_after_enable)
       mode = (gb_state->saved.regs.io.stat & 0b11);
     else
       mode = OAM_SCAN;
   } else if (gb_state->saved.lcd_x < 369) {
-    gb_state->first_oam_scan_after_enable = false;
+    gb_state->video.first_oam_scan_after_enable = false;
     // We're assuming that mode 3 is always taking the longest possible amount of time.
     // If we wanted to be really precise we would have to calculate the exact length with:
     // https://gbdev.io/pandocs/Rendering.html#obj-penalty-algorithm

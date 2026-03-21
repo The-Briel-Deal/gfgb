@@ -76,8 +76,8 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
 // Returns true on success, if error occured when opening the file return false.
 bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filename) {
   if (serial_output_filename != NULL) {
-    gb_state->serial_port_output_file = fopen(serial_output_filename, "w");
-    if (gb_state->serial_port_output_file == NULL) {
+    gb_state->dbg.serial_port_output_file = fopen(serial_output_filename, "w");
+    if (gb_state->dbg.serial_port_output_file == NULL) {
       LogCritical("Error when opening serial port output file: %s", strerror(errno));
       return false;
     }
@@ -388,18 +388,18 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   }
 
-  uint64_t prev_ns_elapsed_total = gb_state->ns_elapsed_total;
-  gb_state->ns_elapsed_total     = SDL_GetTicksNS();
+  uint64_t prev_ns_elapsed_total    = gb_state->timing.ns_elapsed_total;
+  gb_state->timing.ns_elapsed_total = SDL_GetTicksNS();
   if ((!gb_state->dbg.execution_paused) || (gb_state->dbg.step_inst_count > 0)) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
-    gb_state->ns_elapsed_while_running +=
-        ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg.speed_factor);
+    gb_state->timing.ns_elapsed_while_running +=
+        ((gb_state->timing.ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg.speed_factor);
     // If the gameboy execution falls behind we don't want it to stay in this loop forever. So we break this loop after
     // 1/60th of a second so that we can atleast update the emulator UI.
-    uint64_t loop_timeout = gb_state->ns_elapsed_total + (NS_PER_SEC / 60);
+    uint64_t loop_timeout = gb_state->timing.ns_elapsed_total + (NS_PER_SEC / 60);
     // See `doc/render.md` for an explanation of this.
-    while ((gb_state->ns_elapsed_while_running > (gb_state->saved.m_cycles_elapsed * 954))) {
+    while ((gb_state->timing.ns_elapsed_while_running > (gb_state->saved.m_cycles_elapsed * 954))) {
       if (gb_state->dbg.execution_paused) {
         if (gb_state->dbg.step_inst_count == 0) break;
         gb_state->dbg.step_inst_count--;
@@ -407,7 +407,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       if (loop_timeout < SDL_GetTicksNS()) {
         // reset ns_elapsed_while_running to stop the gameboy to run at super speed to catch up once execution speed
         // picks up again.
-        gb_state->ns_elapsed_while_running = (gb_state->saved.m_cycles_elapsed * 954);
+        gb_state->timing.ns_elapsed_while_running = (gb_state->saved.m_cycles_elapsed * 954);
         break;
       }
       gb_update_io_joyp(gb_state);
@@ -439,9 +439,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
       // TODO: There are some quirks when performing a dma transfer mid line (during OAM_SCAN or DRAWING_PIXELS), i'm
       // currently not sure if this will matter with any real world games so I should look into this.
-      if ((curr_mode == OAM_SCAN || curr_mode == DRAWING_PIXELS || curr_mode == VBLANK) && gb_state->oam_dma_start) {
-        gb_state->oam_dma_start = false;
-        uint8_t oam_dma         = gb_state->saved.regs.io.dma;
+      if ((curr_mode == OAM_SCAN || curr_mode == DRAWING_PIXELS || curr_mode == VBLANK) &&
+          gb_state->video.oam_dma_start) {
+        gb_state->video.oam_dma_start = false;
+        uint8_t oam_dma               = gb_state->saved.regs.io.dma;
         if (oam_dma > 0xDF) {
           oam_dma -= 0x20;
         }

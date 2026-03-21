@@ -368,8 +368,15 @@ typedef struct gb_video_state {
   SDL_Texture *sdl_composite_target_back;
   SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
   bool         dirty_textures[DMG_N_TILEDATA_ADDRESSES];
-
+  // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
+  bool first_oam_scan_after_enable;
+  bool oam_dma_start;
 } gb_video_state_t;
+
+typedef struct gb_timing_state {
+  uint64_t ns_elapsed_while_running;
+  uint64_t ns_elapsed_total;
+} gb_timing_state_t;
 
 // runtime debug toggles
 typedef struct gb_dbg_state {
@@ -387,33 +394,25 @@ typedef struct gb_dbg_state {
   bool                headless_mode; // Whether or not there is an actual window to present to.
   bool                test_mode;     // If enabled then use serial_port output to look for a pass/fail string
   bool                trace_exec;
-  FILE               *trace_exec_fout;
   float               speed_factor;
   uint32_t            step_inst_count; // the number of instructions to run until breaking
   char                test_mode_pass_regex[16];
   char                test_mode_fail_regex[16];
   uint64_t            ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
   uint64_t            ns_last_frametime;
+  FILE               *serial_port_output_file;
+  FILE               *trace_exec_fout;
   debug_symbol_list_t syms;
 } gb_dbg_state_t;
 
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
-  gb_saved_state_t saved;
-
-  FILE *serial_port_output_file;
-
-  uint64_t ns_elapsed_while_running;
-  uint64_t ns_elapsed_total;
-
-  // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
-  bool first_oam_scan_after_enable;
-  bool oam_dma_start;
-
+  gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;
   gb_internal_joy_pad_state_t joy_pad;
   gb_video_state_t            video;
+  gb_timing_state_t           timing;
 
   // TODO: This state needs to be at the end of the struct so that this doesn't break layout for C FFI. I should
   // probably just have a private void ptr on the state sections which use cpp structs.
