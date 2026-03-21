@@ -392,6 +392,8 @@ typedef struct gb_dbg_state {
   uint32_t            step_inst_count; // the number of instructions to run until breaking
   char                test_mode_pass_regex[16];
   char                test_mode_fail_regex[16];
+  uint64_t            ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
+  uint64_t            ns_last_frametime;
   debug_symbol_list_t syms;
 } gb_dbg_state_t;
 
@@ -403,9 +405,6 @@ typedef struct gb_state {
 
   uint64_t ns_elapsed_while_running;
   uint64_t ns_elapsed_total;
-
-  uint64_t ns_elapsed_last_gb_vsync; // Used for getting the frametime/fps
-  uint64_t ns_last_frametime;
 
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;

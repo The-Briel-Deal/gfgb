@@ -650,7 +650,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
         }
         ImGui::EndDisabled();
       }
-      float last_frametime = (float)gb_state->ns_last_frametime / NS_PER_SEC;
+      float last_frametime = (float)gb_state->dbg.ns_last_frametime / NS_PER_SEC;
       float last_frame_fps = 0.0f;
       if (last_frametime != 0.0f) {
         last_frame_fps = 1 / last_frametime;
@@ -802,9 +802,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
 // called on vblank
 void gb_flip_frame(struct gb_state *gb_state) {
 
-  uint64_t curr_ticks_ns             = SDL_GetTicksNS();
-  gb_state->ns_last_frametime        = curr_ticks_ns - gb_state->ns_elapsed_last_gb_vsync;
-  gb_state->ns_elapsed_last_gb_vsync = curr_ticks_ns;
+  uint64_t curr_ticks_ns                 = SDL_GetTicksNS();
+  gb_state->dbg.ns_last_frametime        = curr_ticks_ns - gb_state->dbg.ns_elapsed_last_gb_vsync;
+  gb_state->dbg.ns_elapsed_last_gb_vsync = curr_ticks_ns;
 
   gb_state->saved.win_line_counter = 0;
   gb_state->saved.wy_cond          = 0;
