@@ -78,7 +78,7 @@ enum GB_LogCategory {
     if (gb_state->dbg.pause_on_err) {                                                                                  \
       gb_state->dbg.execution_paused = true;                                                                           \
     }                                                                                                                  \
-    gb_state->err = true;                                                                                              \
+    gb_state->dbg.err = true;                                                                                          \
   }
 
 #define KB(n) (1024 * n)
@@ -339,11 +339,17 @@ typedef struct gb_saved_state {
   bool    wx_cond;
   uint8_t win_line_counter;
   bool    win_line_blank;
+
+  // TODO: Since this will be included in save state, we should probably make this a list of oam_entries instead of
+  // ptr's to oam_entries.
+  //
+  // this is where oam entries to be drawn on the current line are gathered during oam read
+  const oam_entry_t *oam_entries[10];
 } gb_saved_state_t;
 
-// This is where all the state that we don't change on reset needs to go, it's stored at the very end of gb_state so
-// that we can ignore it when making/loading a save state or resetting gameboy.
 typedef struct gb_video_state {
+  bool initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
+                    // argparsing. So we want to make sure we don't try to free what was never created.
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
   SDL_Palette  *sdl_bg_palette;
@@ -365,6 +371,7 @@ typedef struct gb_video_state {
 
 // runtime debug toggles
 typedef struct gb_dbg_state {
+  bool     err;
   bool     clear_composite;
   bool     hide_bg;
   bool     hide_win;
@@ -382,24 +389,16 @@ typedef struct gb_dbg_state {
   char     test_mode_fail_regex[16];
 } gb_dbg_state_t;
 
-// This is primarily broken up into two nested structs, gb_state_saved and gb_state_unsaved based on whether or not the
-// data should be saved when making a save state.
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
   gb_saved_state_t saved;
 
-  bool bootrom_has_syms;
-  bool rom_loaded;
-  bool video_initialized; // We don't initalize video in the case of `disasm` subcmd and when an error occurs in
-                          // argparsing. So we want to make sure we don't try to free what was never created.
+  bool                bootrom_has_syms;
+  bool                rom_loaded;
   bool                use_flat_ram;
   debug_symbol_list_t syms;
   SDL_Texture        *textures[DMG_N_TILEDATA_ADDRESSES];
   bool                dirty_textures[DMG_N_TILEDATA_ADDRESSES];
-
-  // this is where all of the oam entries to be drawn on the current line are gathered and ordered during the oam read
-  // window
-  const oam_entry_t *oam_entries[10];
 
   FILE *serial_port_output_file;
 
@@ -412,8 +411,6 @@ typedef struct gb_state {
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;
   bool oam_dma_start;
-
-  bool err;
 
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;

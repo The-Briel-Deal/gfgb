@@ -60,7 +60,7 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->breakpoints               = new std::vector<gb_breakpoint_t>;
   gb_state->serial_port_output_string = new std::string;
   gb_state->dbg.execution_paused      = false;
-  gb_state->video_initialized         = false;
+  gb_state->video.initialized         = false;
 }
 
 // TODO: This doesn't seem to always work, I need to figure out what other state I need set.
@@ -514,8 +514,8 @@ void gb_update_timers(struct gb_state *gb_state) {
 }
 
 bool gb_state_get_err(struct gb_state *gb_state) {
-  bool err      = gb_state->err;
-  gb_state->err = false;
+  bool err          = gb_state->dbg.err;
+  gb_state->dbg.err = false;
   return err;
 }
 

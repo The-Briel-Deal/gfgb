@@ -109,13 +109,13 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer);
 
   gb_state->dbg.fs_dockspace = true;
-  gb_state->video_initialized   = true;
+  gb_state->video.initialized   = true;
 
   return true;
 }
 
 void gb_video_free(struct gb_state *gb_state) {
-  if (!gb_state->video_initialized) return;
+  if (!gb_state->video.initialized) return;
   // free all textures
   for (int i = 0; i < DMG_N_TILEDATA_ADDRESSES; i++) {
     if (gb_state->textures[i] != NULL) {
@@ -405,7 +405,7 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
   // sort objects with equal X positions so that the first one has higher draw priority.
   for (int i = 0; i < 10; i++) {
     uint8_t                 tile_idx;
-    const struct oam_entry *oam_entry = gb_state->oam_entries[i];
+    const struct oam_entry *oam_entry = gb_state->saved.oam_entries[i];
     if (oam_entry == NULL) break;
     uint32_t flags = 0;
     if (oam_entry->x_flip) flags |= SDL_FLIP_HORIZONTAL;
@@ -530,22 +530,22 @@ void gb_read_oam_entries(struct gb_state *gb_state) {
       continue;
     }
     // Sort by x_pos, if x_pos is equal to another entry's x_pos make sure first in oam_mem has highest priority (the
-    // final entry in `gb_state->oam_entries` is highest priority since it's the last to be drawn).
+    // final entry in `gb_state->saved.oam_entries` is highest priority since it's the last to be drawn).
     bool inserted = false;
     for (int j = 0; j < oam_entries_pos; j++) {
-      if (gb_state->oam_entries[j]->x_pos <= oam_entry->x_pos) {
-        memmove(&gb_state->oam_entries[j + 1], &gb_state->oam_entries[j],
+      if (gb_state->saved.oam_entries[j]->x_pos <= oam_entry->x_pos) {
+        memmove(&gb_state->saved.oam_entries[j + 1], &gb_state->saved.oam_entries[j],
                 (oam_entries_pos - j) * sizeof(struct oam_entry *));
-        gb_state->oam_entries[j] = oam_entry;
+        gb_state->saved.oam_entries[j] = oam_entry;
         oam_entries_pos++;
         inserted = true;
         break;
       }
     }
-    if (!inserted) gb_state->oam_entries[oam_entries_pos++] = oam_entry;
+    if (!inserted) gb_state->saved.oam_entries[oam_entries_pos++] = oam_entry;
   }
   if (oam_entries_pos < 10) {
-    gb_state->oam_entries[oam_entries_pos] = NULL;
+    gb_state->saved.oam_entries[oam_entries_pos] = NULL;
   }
 }
 
