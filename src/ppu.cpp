@@ -34,57 +34,57 @@ bool gb_video_init(struct gb_state *gb_state) {
     gb_state->dbg.headless_mode = true;
   }
 
-  if (!SDL_CreateWindowAndRenderer("GF-GB", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->unsaved.sdl_window,
-                                   &gb_state->unsaved.sdl_renderer)) {
+  if (!SDL_CreateWindowAndRenderer("GF-GB", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->video.sdl_window,
+                                   &gb_state->video.sdl_renderer)) {
     LogCritical("Couldn't create window/renderer: %s", SDL_GetError());
     return false;
   }
-  SDL_SetRenderLogicalPresentation(gb_state->unsaved.sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+  SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
-  if (!(gb_state->unsaved.sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+  if (!(gb_state->video.sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
     LogCritical("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
-  if (!(gb_state->unsaved.sdl_bg_trans0_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+  if (!(gb_state->video.sdl_bg_trans0_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
     LogCritical("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
-  if (!(gb_state->unsaved.sdl_obj_palette_0 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+  if (!(gb_state->video.sdl_obj_palette_0 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
     LogCritical("Couldn't create obj palette 0: %s", SDL_GetError());
     return false;
   }
-  if (!(gb_state->unsaved.sdl_obj_palette_1 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+  if (!(gb_state->video.sdl_obj_palette_1 = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
     LogCritical("Couldn't create obj palette 1: %s", SDL_GetError());
     return false;
   }
 
-  SDL_SetDefaultTextureScaleMode(gb_state->unsaved.sdl_renderer, SDL_SCALEMODE_PIXELART);
+  SDL_SetDefaultTextureScaleMode(gb_state->video.sdl_renderer, SDL_SCALEMODE_PIXELART);
 
   // These targets only need to be 1 line tall since i'm just using these surfaces to store the scanline
-  gb_state->unsaved.sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
-  GB_assert(gb_state->unsaved.sdl_bg_target != NULL);
-  SDL_SetSurfaceBlendMode(gb_state->unsaved.sdl_bg_target, SDL_BLENDMODE_BLEND);
+  gb_state->video.sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
+  GB_assert(gb_state->video.sdl_bg_target != NULL);
+  SDL_SetSurfaceBlendMode(gb_state->video.sdl_bg_target, SDL_BLENDMODE_BLEND);
 
-  gb_state->unsaved.sdl_win_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
-  GB_assert(gb_state->unsaved.sdl_win_target != NULL);
-  SDL_SetSurfaceBlendMode(gb_state->unsaved.sdl_win_target, SDL_BLENDMODE_BLEND);
+  gb_state->video.sdl_win_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
+  GB_assert(gb_state->video.sdl_win_target != NULL);
+  SDL_SetSurfaceBlendMode(gb_state->video.sdl_win_target, SDL_BLENDMODE_BLEND);
 
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
-  gb_state->unsaved.sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
-  GB_assert(gb_state->unsaved.sdl_obj_target != NULL);
+  gb_state->video.sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
+  GB_assert(gb_state->video.sdl_obj_target != NULL);
 
-  gb_state->unsaved.sdl_obj_priority_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
-  GB_assert(gb_state->unsaved.sdl_obj_priority_target != NULL);
+  gb_state->video.sdl_obj_priority_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
+  GB_assert(gb_state->video.sdl_obj_priority_target != NULL);
 
-  gb_state->unsaved.sdl_composite_target_front =
-      SDL_CreateTexture(gb_state->unsaved.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+  gb_state->video.sdl_composite_target_front =
+      SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
                         GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  GB_assert(gb_state->unsaved.sdl_composite_target_front != NULL);
-  gb_state->unsaved.sdl_composite_target_back =
-      SDL_CreateTexture(gb_state->unsaved.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+  GB_assert(gb_state->video.sdl_composite_target_front != NULL);
+  gb_state->video.sdl_composite_target_back =
+      SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
                         GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
-  GB_assert(gb_state->unsaved.sdl_composite_target_back != NULL);
+  GB_assert(gb_state->video.sdl_composite_target_back != NULL);
 
   // Initialize ImGui
   IMGUI_CHECKVERSION();
@@ -105,8 +105,8 @@ bool gb_video_init(struct gb_state *gb_state) {
                                    // automatically overrides this for every window depending on the current monitor)
 
   // Setup Platform/Renderer backends
-  ImGui_ImplSDL3_InitForSDLRenderer(gb_state->unsaved.sdl_window, gb_state->unsaved.sdl_renderer);
-  ImGui_ImplSDLRenderer3_Init(gb_state->unsaved.sdl_renderer);
+  ImGui_ImplSDL3_InitForSDLRenderer(gb_state->video.sdl_window, gb_state->video.sdl_renderer);
+  ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer);
 
   gb_state->dbg.fs_dockspace = true;
   gb_state->video_initialized   = true;
@@ -128,30 +128,30 @@ void gb_video_free(struct gb_state *gb_state) {
   ImGui_ImplSDL3_Shutdown();
   ImGui::DestroyContext();
 
-  SDL_DestroyPalette(gb_state->unsaved.sdl_bg_palette);
-  gb_state->unsaved.sdl_bg_palette = NULL;
-  SDL_DestroyPalette(gb_state->unsaved.sdl_bg_trans0_palette);
-  gb_state->unsaved.sdl_bg_trans0_palette = NULL;
-  SDL_DestroyPalette(gb_state->unsaved.sdl_obj_palette_0);
-  gb_state->unsaved.sdl_obj_palette_0 = NULL;
-  SDL_DestroyPalette(gb_state->unsaved.sdl_obj_palette_1);
-  gb_state->unsaved.sdl_obj_palette_1 = NULL;
-  SDL_DestroySurface(gb_state->unsaved.sdl_bg_target);
-  gb_state->unsaved.sdl_bg_target = NULL;
-  SDL_DestroySurface(gb_state->unsaved.sdl_win_target);
-  gb_state->unsaved.sdl_win_target = NULL;
-  SDL_DestroySurface(gb_state->unsaved.sdl_obj_target);
-  gb_state->unsaved.sdl_obj_target = NULL;
-  SDL_DestroySurface(gb_state->unsaved.sdl_obj_priority_target);
-  gb_state->unsaved.sdl_obj_priority_target = NULL;
-  SDL_DestroyTexture(gb_state->unsaved.sdl_composite_target_front);
-  gb_state->unsaved.sdl_composite_target_front = NULL;
-  SDL_DestroyTexture(gb_state->unsaved.sdl_composite_target_back);
-  gb_state->unsaved.sdl_composite_target_back = NULL;
-  SDL_DestroyRenderer(gb_state->unsaved.sdl_renderer);
-  gb_state->unsaved.sdl_renderer = NULL;
-  SDL_DestroyWindow(gb_state->unsaved.sdl_window);
-  gb_state->unsaved.sdl_window = NULL;
+  SDL_DestroyPalette(gb_state->video.sdl_bg_palette);
+  gb_state->video.sdl_bg_palette = NULL;
+  SDL_DestroyPalette(gb_state->video.sdl_bg_trans0_palette);
+  gb_state->video.sdl_bg_trans0_palette = NULL;
+  SDL_DestroyPalette(gb_state->video.sdl_obj_palette_0);
+  gb_state->video.sdl_obj_palette_0 = NULL;
+  SDL_DestroyPalette(gb_state->video.sdl_obj_palette_1);
+  gb_state->video.sdl_obj_palette_1 = NULL;
+  SDL_DestroySurface(gb_state->video.sdl_bg_target);
+  gb_state->video.sdl_bg_target = NULL;
+  SDL_DestroySurface(gb_state->video.sdl_win_target);
+  gb_state->video.sdl_win_target = NULL;
+  SDL_DestroySurface(gb_state->video.sdl_obj_target);
+  gb_state->video.sdl_obj_target = NULL;
+  SDL_DestroySurface(gb_state->video.sdl_obj_priority_target);
+  gb_state->video.sdl_obj_priority_target = NULL;
+  SDL_DestroyTexture(gb_state->video.sdl_composite_target_front);
+  gb_state->video.sdl_composite_target_front = NULL;
+  SDL_DestroyTexture(gb_state->video.sdl_composite_target_back);
+  gb_state->video.sdl_composite_target_back = NULL;
+  SDL_DestroyRenderer(gb_state->video.sdl_renderer);
+  gb_state->video.sdl_renderer = NULL;
+  SDL_DestroyWindow(gb_state->video.sdl_window);
+  gb_state->video.sdl_window = NULL;
 }
 
 bool gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event) {
@@ -212,7 +212,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
   };
-  if (!SDL_SetPaletteColors(gb_state->unsaved.sdl_bg_palette, bgp_colors, 0, DMG_PALETTE_N_COLORS)) {
+  if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_palette, bgp_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
   }
 
@@ -222,7 +222,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
   };
-  if (!SDL_SetPaletteColors(gb_state->unsaved.sdl_bg_trans0_palette, bgp_colors_trans, 0, DMG_PALETTE_N_COLORS)) {
+  if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_trans0_palette, bgp_colors_trans, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
   }
 
@@ -235,7 +235,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)obp0_id_2) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)obp0_id_3) / 3.0f),
   };
-  if (!SDL_SetPaletteColors(gb_state->unsaved.sdl_obj_palette_0, obp0_colors, 0, DMG_PALETTE_N_COLORS)) {
+  if (!SDL_SetPaletteColors(gb_state->video.sdl_obj_palette_0, obp0_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set obj palette 0 colors: %s", SDL_GetError());
   }
   uint8_t   obp1_id_1      = (gb_state->saved.regs.io.obp1 >> 2) & 0b11;
@@ -247,7 +247,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)obp1_id_2) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)obp1_id_3) / 3.0f),
   };
-  if (!SDL_SetPaletteColors(gb_state->unsaved.sdl_obj_palette_1, obp1_colors, 0, DMG_PALETTE_N_COLORS)) {
+  if (!SDL_SetPaletteColors(gb_state->video.sdl_obj_palette_1, obp1_colors, 0, DMG_PALETTE_N_COLORS)) {
     ERR(gb_state, "Couldn't set obj palette 1 colors: %s", SDL_GetError());
   }
 }
@@ -310,7 +310,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   uint16_t bg_win_tile_data_start_p1;
   uint16_t bg_win_tile_data_start_p2;
   uint16_t bg_tile_map_start;
-  SDL_SetSurfacePalette(target, gb_state->unsaved.sdl_bg_palette);
+  SDL_SetSurfacePalette(target, gb_state->video.sdl_bg_palette);
   success = SDL_ClearSurface(target, 1.0f, 1.0f, 1.0f, 1.0f);
   GB_assert(success);
   if (!(gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_ENABLE)) return;
@@ -342,7 +342,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     GB_assert(display_x > -8 && display_x < 256);
     GB_assert(display_y > -8 && display_y < 256);
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, gb_state->unsaved.sdl_bg_palette, display_x, display_y, tile_data_addr,
+      gb_draw_tile_to_surface(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
                               SDL_FLIP_NONE);
   }
 }
@@ -379,7 +379,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   }
 
   // TODO: Check if this is actually needed, I don't think it is.
-  SDL_SetSurfacePalette(target, gb_state->unsaved.sdl_bg_palette);
+  SDL_SetSurfacePalette(target, gb_state->video.sdl_bg_palette);
   for (int i = 0; i < 32; i++) {
     const int      x               = i;
     const int      y               = gb_state->saved.win_line_counter / 8;
@@ -389,7 +389,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     uint8_t        display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
     uint8_t        display_y       = (gb_state->saved.regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, gb_state->unsaved.sdl_bg_palette, display_x, display_y, tile_data_addr,
+      gb_draw_tile_to_surface(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
                               SDL_FLIP_NONE);
   }
   gb_state->saved.win_line_counter++;
@@ -412,9 +412,9 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     if (oam_entry->y_flip) flags |= SDL_FLIP_VERTICAL;
     SDL_Palette *palette;
     if (oam_entry->dmg_palette)
-      palette = gb_state->unsaved.sdl_obj_palette_1;
+      palette = gb_state->video.sdl_obj_palette_1;
     else
-      palette = gb_state->unsaved.sdl_obj_palette_0;
+      palette = gb_state->video.sdl_obj_palette_0;
     bool draw_double_height = (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
     tile_idx                = oam_entry->index;
     if (draw_double_height) {
@@ -454,7 +454,7 @@ void gb_composite_line(struct gb_state *gb_state) {
       .h = 1,
   };
   SDL_Surface *locked_texture;
-  success = SDL_LockTextureToSurface(gb_state->unsaved.sdl_composite_target_back, &line_rect, &locked_texture);
+  success = SDL_LockTextureToSurface(gb_state->video.sdl_composite_target_back, &line_rect, &locked_texture);
   GB_assert(success);
 
   if (gb_state->dbg.clear_composite) {
@@ -462,19 +462,19 @@ void gb_composite_line(struct gb_state *gb_state) {
   }
 
   // all intermediate targets should have equal dimensions to the locked line (w=GB_DISPLAY_WIDTH h=1)
-  GB_assert(locked_texture->h == gb_state->unsaved.sdl_bg_target->h);
-  GB_assert(locked_texture->w == gb_state->unsaved.sdl_bg_target->w);
+  GB_assert(locked_texture->h == gb_state->video.sdl_bg_target->h);
+  GB_assert(locked_texture->w == gb_state->video.sdl_bg_target->w);
 
-  GB_assert(locked_texture->h == gb_state->unsaved.sdl_obj_priority_target->h);
-  GB_assert(locked_texture->w == gb_state->unsaved.sdl_obj_priority_target->w);
+  GB_assert(locked_texture->h == gb_state->video.sdl_obj_priority_target->h);
+  GB_assert(locked_texture->w == gb_state->video.sdl_obj_priority_target->w);
 
-  GB_assert(locked_texture->h == gb_state->unsaved.sdl_obj_target->h);
-  GB_assert(locked_texture->w == gb_state->unsaved.sdl_obj_target->w);
+  GB_assert(locked_texture->h == gb_state->video.sdl_obj_target->h);
+  GB_assert(locked_texture->w == gb_state->video.sdl_obj_target->w);
 
   if (!gb_state->dbg.hide_bg) {
     // bg and win use the same palette
-    SDL_SetSurfacePalette(gb_state->unsaved.sdl_bg_target, gb_state->unsaved.sdl_bg_palette);
-    SDL_BlitSurface(gb_state->unsaved.sdl_bg_target, NULL, locked_texture, NULL);
+    SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_palette);
+    SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
   }
 
   // TODO: Adjust width properly
@@ -486,32 +486,32 @@ void gb_composite_line(struct gb_state *gb_state) {
   };
   if (!gb_state->dbg.hide_win) {
     if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->unsaved.sdl_win_target, gb_state->unsaved.sdl_bg_palette);
-      SDL_BlitSurface(gb_state->unsaved.sdl_win_target, &win_rect, locked_texture, &win_rect);
+      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_palette);
+      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
   }
 
   if (!gb_state->dbg.hide_objs) {
-    SDL_BlitSurface(gb_state->unsaved.sdl_obj_priority_target, NULL, locked_texture, NULL);
+    SDL_BlitSurface(gb_state->video.sdl_obj_priority_target, NULL, locked_texture, NULL);
   }
 
   if (!gb_state->dbg.hide_bg) {
-    SDL_SetSurfacePalette(gb_state->unsaved.sdl_bg_target, gb_state->unsaved.sdl_bg_trans0_palette);
-    SDL_BlitSurface(gb_state->unsaved.sdl_bg_target, NULL, locked_texture, NULL);
+    SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_trans0_palette);
+    SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
   }
 
   if (!gb_state->dbg.hide_win) {
     if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->unsaved.sdl_win_target, gb_state->unsaved.sdl_bg_trans0_palette);
-      SDL_BlitSurface(gb_state->unsaved.sdl_win_target, &win_rect, locked_texture, &win_rect);
+      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_trans0_palette);
+      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
   }
 
   if (!gb_state->dbg.hide_objs) {
-    SDL_BlitSurface(gb_state->unsaved.sdl_obj_target, NULL, locked_texture, NULL);
+    SDL_BlitSurface(gb_state->video.sdl_obj_target, NULL, locked_texture, NULL);
   }
 
-  SDL_UnlockTexture(gb_state->unsaved.sdl_composite_target_back);
+  SDL_UnlockTexture(gb_state->video.sdl_composite_target_back);
 }
 
 void gb_read_oam_entries(struct gb_state *gb_state) {
@@ -555,13 +555,13 @@ void gb_draw(struct gb_state *gb_state) {
   update_palettes(gb_state);
   TracyCZoneEnd(update_palettes_ctx);
   TracyCZoneN(render_bg_ctx, "Background Render", true);
-  gb_render_bg(gb_state, gb_state->unsaved.sdl_bg_target);
+  gb_render_bg(gb_state, gb_state->video.sdl_bg_target);
   TracyCZoneEnd(render_bg_ctx);
   TracyCZoneN(render_win_ctx, "Window Render", true);
-  gb_render_win(gb_state, gb_state->unsaved.sdl_win_target);
+  gb_render_win(gb_state, gb_state->video.sdl_win_target);
   TracyCZoneEnd(render_win_ctx);
   TracyCZoneN(render_objs_ctx, "Object Render", true);
-  gb_render_objs(gb_state, gb_state->unsaved.sdl_obj_target, gb_state->unsaved.sdl_obj_priority_target);
+  gb_render_objs(gb_state, gb_state->video.sdl_obj_target, gb_state->video.sdl_obj_priority_target);
   TracyCZoneEnd(render_objs_ctx);
 }
 
@@ -595,18 +595,18 @@ void gb_display_clear(gb_state_t *gb_state) {
   SDL_Surface *locked_texture;
   // We just clear the entire front buffer in one call here. There's no need to flip textures since this all happens at
   // once (meaning there is no risk of displaying partial frames).
-  GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->unsaved.sdl_composite_target_front, NULL, &locked_texture));
+  GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->video.sdl_composite_target_front, NULL, &locked_texture));
   SDL_ClearSurface(locked_texture, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
-  SDL_UnlockTexture(gb_state->unsaved.sdl_composite_target_front);
+  SDL_UnlockTexture(gb_state->video.sdl_composite_target_front);
 }
 
 void gb_display_render(gb_state_t *gb_state) {
   // We render the front buffer then the imgui UI to make sure we don't display partial frames.
-  GB_CheckSDLCall(SDL_SetRenderTarget(gb_state->unsaved.sdl_renderer, NULL));
-  GB_CheckSDLCall(SDL_SetRenderDrawColorFloat(gb_state->unsaved.sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT));
-  GB_CheckSDLCall(SDL_RenderClear(gb_state->unsaved.sdl_renderer));
+  GB_CheckSDLCall(SDL_SetRenderTarget(gb_state->video.sdl_renderer, NULL));
+  GB_CheckSDLCall(SDL_SetRenderDrawColorFloat(gb_state->video.sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT));
+  GB_CheckSDLCall(SDL_RenderClear(gb_state->video.sdl_renderer));
   GB_CheckSDLCall(
-      SDL_RenderTexture(gb_state->unsaved.sdl_renderer, gb_state->unsaved.sdl_composite_target_front, NULL, NULL));
+      SDL_RenderTexture(gb_state->video.sdl_renderer, gb_state->video.sdl_composite_target_front, NULL, NULL));
 }
 
 void gb_imgui_render(struct gb_state *gb_state) {
@@ -615,7 +615,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
   (void)io;
 
   GB_CheckSDLCall(
-      SDL_SetRenderLogicalPresentation(gb_state->unsaved.sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
+      SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   // Start ImGui frame
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
@@ -630,7 +630,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
     ImVec2 win_size;
     win_size.x = ImGui::GetWindowWidth();
     win_size.y = ((win_size.x * GB_DISPLAY_HEIGHT) / GB_DISPLAY_WIDTH);
-    ImGui::Image((ImTextureID)(intptr_t)gb_state->unsaved.sdl_composite_target_front, win_size);
+    ImGui::Image((ImTextureID)(intptr_t)gb_state->video.sdl_composite_target_front, win_size);
     ImGui::End();
   }
   {
@@ -792,9 +792,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
     ImGui::End();
     ImGui::Render();
 
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->unsaved.sdl_renderer);
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->video.sdl_renderer);
 
-    GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->unsaved.sdl_renderer, GB_DISPLAY_WIDTH,
+    GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH,
                                                      GB_DISPLAY_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX));
   }
 }
@@ -810,9 +810,9 @@ void gb_flip_frame(struct gb_state *gb_state) {
   gb_state->saved.wy_cond          = 0;
 
   SDL_Texture *tmp;
-  tmp                                          = gb_state->unsaved.sdl_composite_target_front;
-  gb_state->unsaved.sdl_composite_target_front = gb_state->unsaved.sdl_composite_target_back;
-  gb_state->unsaved.sdl_composite_target_back  = tmp;
+  tmp                                          = gb_state->video.sdl_composite_target_front;
+  gb_state->video.sdl_composite_target_front = gb_state->video.sdl_composite_target_back;
+  gb_state->video.sdl_composite_target_back  = tmp;
 
   TracyCFrameMark
 }

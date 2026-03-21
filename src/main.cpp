@@ -493,7 +493,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // cover it with the dockspace.
     if (!gb_state->dbg.fs_dockspace) gb_display_render(gb_state);
     gb_imgui_render(gb_state);
-    GB_CheckSDLCall(SDL_RenderPresent(gb_state->unsaved.sdl_renderer));
+    GB_CheckSDLCall(SDL_RenderPresent(gb_state->video.sdl_renderer));
   }
 
   // If you are tailing the output while stepping we don't want trace data to sit in the buffer so we flush it at the

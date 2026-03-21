@@ -343,7 +343,7 @@ typedef struct gb_saved_state {
 
 // This is where all the state that we don't change on reset needs to go, it's stored at the very end of gb_state so
 // that we can ignore it when making/loading a save state or resetting gameboy.
-typedef struct gb_unsaved_state {
+typedef struct gb_video_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
   SDL_Palette  *sdl_bg_palette;
@@ -361,7 +361,7 @@ typedef struct gb_unsaved_state {
   SDL_Texture *sdl_composite_target_front;
   SDL_Texture *sdl_composite_target_back;
 
-} gb_unsaved_state_t;
+} gb_video_state_t;
 
 // runtime debug toggles
 typedef struct gb_dbg_state {
@@ -418,7 +418,7 @@ typedef struct gb_state {
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;
   gb_internal_joy_pad_state_t joy_pad;
-  gb_unsaved_state_t          unsaved;
+  gb_video_state_t            video;
 
   // TODO: This state needs to be at the end of the struct so that this doesn't break layout for C FFI. I should
   // probably just have a private void ptr on the state sections which use cpp structs.
