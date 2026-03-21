@@ -86,13 +86,13 @@ bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filenam
 }
 bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename) {
   if (trace_exec_filename != NULL) {
-    gb_state->dbg_trace_exec_fout = fopen(trace_exec_filename, "w");
-    if (gb_state->dbg_trace_exec_fout == NULL) {
+    gb_state->dbg.trace_exec_fout = fopen(trace_exec_filename, "w");
+    if (gb_state->dbg.trace_exec_fout == NULL) {
       LogCritical("An error occured when opening file with name '%s': %s", trace_exec_filename, strerror(errno));
       return false;
     }
   } else {
-    gb_state->dbg_trace_exec_fout = stdout;
+    gb_state->dbg.trace_exec_fout = stdout;
   }
   return true;
 }
@@ -169,10 +169,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       ->check(CLI::ExistingFile)
       ->check(CLI::ReadPermissions);
 
-  gb_cli_exec->add_option("--exec_speed", gb_state->dbg_speed_factor);
+  gb_cli_exec->add_option("--exec_speed", gb_state->dbg.speed_factor);
 
   gb_cli_exec->add_flag(
-      "--trace_exec", gb_state->dbg_trace_exec,
+      "--trace_exec", gb_state->dbg.trace_exec,
       "Print instructions to file/stdout as the rom is executing. This can be toggled at runtime in Debug UI as well.");
   std::string trace_exec_filename;
   gb_cli_exec->add_option("--trace_out", trace_exec_filename,
@@ -186,8 +186,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
           "A breakpoint identifier, can be a GB 16 bit addr in hex if prefixed with `$`, or a debug symbol name.")
       ->expected(0, -1);
 
-  gb_cli_exec->add_flag("-p,--paused", gb_state->dbg_execution_paused, "Start emulator execution paused.");
-  gb_cli_exec->add_flag("-t,--test_mode", gb_state->test_mode,
+  gb_cli_exec->add_flag("-p,--paused", gb_state->dbg.execution_paused, "Start emulator execution paused.");
+  gb_cli_exec->add_flag("-t,--test_mode", gb_state->dbg.test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
                         "test rom passed or failed.");
   std::string test_mode_pass_regex;
@@ -214,7 +214,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
   }
-  if (gb_state->test_mode) {
+  if (gb_state->dbg.test_mode) {
     gb_state->unsaved.compiled_pass_regex = new std::basic_regex(test_mode_pass_regex);
     gb_state->unsaved.compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
   }
@@ -351,7 +351,7 @@ static void check_breakpoints(gb_state_t *gb_state, uint16_t inst_start, uint16_
   for (gb_breakpoint_t bp : *gb_state->unsaved.breakpoints) {
     if (!bp.enable) continue;
     if (!in_range(bp.addr, inst_start, inst_end)) continue;
-    gb_state->dbg_execution_paused = true;
+    gb_state->dbg.execution_paused = true;
     return;
   }
 }
@@ -375,7 +375,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   FrameMarkStart(TracyFrame_SDL_AppIterate);
   gb_state_t *gb_state = (gb_state_t *)appstate;
 
-  if (gb_state->test_mode) {
+  if (gb_state->dbg.test_mode) {
     if (std::regex_search(*gb_state->unsaved.serial_port_output_string, *gb_state->unsaved.compiled_pass_regex)) {
       printf("Test succeeded with serial port output:\n");
       print_serial_port_escaped(gb_state);
@@ -390,19 +390,19 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   uint64_t prev_ns_elapsed_total = gb_state->ns_elapsed_total;
   gb_state->ns_elapsed_total     = SDL_GetTicksNS();
-  if ((!gb_state->dbg_execution_paused) || (gb_state->dbg_step_inst_count > 0)) {
+  if ((!gb_state->dbg.execution_paused) || (gb_state->dbg.step_inst_count > 0)) {
     // We only increment this timer when execution hasn't been paused for debugging. If I just used the result of
     // SDL_GetTicksNS() then execution would run super fast after resuming to catch up with the timer.
     gb_state->ns_elapsed_while_running +=
-        ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg_speed_factor);
+        ((gb_state->ns_elapsed_total - prev_ns_elapsed_total) * gb_state->dbg.speed_factor);
     // If the gameboy execution falls behind we don't want it to stay in this loop forever. So we break this loop after
     // 1/60th of a second so that we can atleast update the emulator UI.
     uint64_t loop_timeout = gb_state->ns_elapsed_total + (NS_PER_SEC / 60);
     // See `doc/render.md` for an explanation of this.
     while ((gb_state->ns_elapsed_while_running > (gb_state->saved.m_cycles_elapsed * 954))) {
-      if (gb_state->dbg_execution_paused) {
-        if (gb_state->dbg_step_inst_count == 0) break;
-        gb_state->dbg_step_inst_count--;
+      if (gb_state->dbg.execution_paused) {
+        if (gb_state->dbg.step_inst_count == 0) break;
+        gb_state->dbg.step_inst_count--;
       }
       if (loop_timeout < SDL_GetTicksNS()) {
         // reset ns_elapsed_while_running to stop the gameboy to run at super speed to catch up once execution speed
@@ -418,7 +418,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           uint16_t    inst_start = gb_state->saved.regs.pc;
           struct inst inst       = fetch(gb_state);
           uint16_t    inst_end   = gb_state->saved.regs.pc;
-          if (gb_state->dbg_trace_exec) print_inst(gb_state, gb_state->dbg_trace_exec_fout, inst, true, inst_start);
+          if (gb_state->dbg.trace_exec) print_inst(gb_state, gb_state->dbg.trace_exec_fout, inst, true, inst_start);
           check_breakpoints(gb_state, inst_start, inst_end);
           execute(gb_state, inst);
         } else {
@@ -454,7 +454,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         }
       }
 
-      if (!gb_state->headless_mode) {
+      if (!gb_state->dbg.headless_mode) {
         ZoneScopedN("Rendering");
         if (curr_mode != last_mode) switch (curr_mode) {
           case OAM_SCAN: {
@@ -483,7 +483,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   }
 
-  if (!gb_state->headless_mode) {
+  if (!gb_state->dbg.headless_mode) {
     if ((gb_state->saved.regs.io.lcdc & LCDC_ENABLE) == 0) {
       // If screen is disabled we still want to present a blank screen once an iteration so that we can see the imgui
       // UI.
@@ -491,14 +491,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
     // If we have fullscreen dockspace enabled then rendering the display to window won't do anything since ImGui will
     // cover it with the dockspace.
-    if (!gb_state->enable_fs_dockspace) gb_display_render(gb_state);
+    if (!gb_state->dbg.fs_dockspace) gb_display_render(gb_state);
     gb_imgui_render(gb_state);
     GB_CheckSDLCall(SDL_RenderPresent(gb_state->unsaved.sdl_renderer));
   }
 
   // If you are tailing the output while stepping we don't want trace data to sit in the buffer so we flush it at the
   // end of each SDL Iteration.
-  fflush(gb_state->dbg_trace_exec_fout);
+  fflush(gb_state->dbg.trace_exec_fout);
   FrameMarkEnd(TracyFrame_SDL_AppIterate);
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }

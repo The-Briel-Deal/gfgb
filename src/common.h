@@ -75,8 +75,8 @@ enum GB_LogCategory {
 #define ERR(gb_state, msg, ...)                                                                                        \
   {                                                                                                                    \
     LogError(msg, ##__VA_ARGS__);                                                                                      \
-    if (gb_state->dbg_pause_on_err) {                                                                                  \
-      gb_state->dbg_execution_paused = true;                                                                           \
+    if (gb_state->dbg.pause_on_err) {                                                                                  \
+      gb_state->dbg.execution_paused = true;                                                                           \
     }                                                                                                                  \
     gb_state->err = true;                                                                                              \
   }
@@ -310,7 +310,7 @@ typedef struct stack_entry {
   };
 } stack_entry_t;
 
-typedef struct gb_state_saved {
+typedef struct gb_saved_state {
   regs_t regs;
   union {
     gb_ram_banks_t ram;
@@ -339,11 +339,11 @@ typedef struct gb_state_saved {
   bool    wx_cond;
   uint8_t win_line_counter;
   bool    win_line_blank;
-} gb_state_saved_t;
+} gb_saved_state_t;
 
 // This is where all the state that we don't change on reset needs to go, it's stored at the very end of gb_state so
 // that we can ignore it when making/loading a save state or resetting gameboy.
-typedef struct gb_state_unsaved {
+typedef struct gb_unsaved_state {
   SDL_Window   *sdl_window;
   SDL_Renderer *sdl_renderer;
   SDL_Palette  *sdl_bg_palette;
@@ -370,13 +370,32 @@ typedef struct gb_state_unsaved {
   std::stack<stack_entry_t>    *shadow_stack;
   std::vector<gb_breakpoint_t> *breakpoints;
 #endif
-} gb_state_unsaved_t;
+} gb_unsaved_state_t;
+
+// runtime debug toggles
+typedef struct gb_dbg_state {
+  bool     clear_composite;
+  bool     hide_bg;
+  bool     hide_win;
+  bool     hide_objs;
+  bool     trace_exec;
+  FILE    *trace_exec_fout;
+  float    speed_factor;
+  uint32_t step_inst_count; // the number of instructions to run until breaking
+  bool     pause_on_err;
+  bool     execution_paused;
+  bool     fs_dockspace;
+  bool     headless_mode; // Whether or not there is an actual window to present to.
+  bool     test_mode;     // If enabled then use serial_port output to look for a pass/fail string
+  char     test_mode_pass_regex[16];
+  char     test_mode_fail_regex[16];
+} gb_dbg_state_t;
 
 // This is primarily broken up into two nested structs, gb_state_saved and gb_state_unsaved based on whether or not the
 // data should be saved when making a save state.
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
-  gb_state_saved_t saved;
+  gb_saved_state_t saved;
 
   bool bootrom_has_syms;
   bool rom_loaded;
@@ -405,29 +424,10 @@ typedef struct gb_state {
 
   bool err;
 
-  // runtime debug toggles
-  bool     dbg_clear_composite;
-  bool     dbg_hide_bg;
-  bool     dbg_hide_win;
-  bool     dbg_hide_objs;
-  bool     dbg_trace_exec;
-  FILE    *dbg_trace_exec_fout;
-  float    dbg_speed_factor;
-  uint32_t dbg_step_inst_count; // the number of instructions to run until breaking
-  bool     dbg_pause_on_err;
-  bool     dbg_execution_paused;
-
-  bool enable_fs_dockspace;
-  bool headless_mode; // Whether or not there is an actual window to present to. Skipping presentation signicantly
-                      // speeds up rom tests in CI.
-
-  bool test_mode; // If enabled then use serial_port output to look for a pass/fail string
-  char test_mode_pass_regex[16];
-  char test_mode_fail_regex[16];
-
+  gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;
   gb_internal_joy_pad_state_t joy_pad;
-  gb_state_unsaved_t          unsaved;
+  gb_unsaved_state_t          unsaved;
 } gb_state_t;
 
 // Call with bootrom_name = NULL to use dmg0 as the default.

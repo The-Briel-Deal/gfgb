@@ -31,7 +31,7 @@ bool gb_video_init(struct gb_state *gb_state) {
   LogInfo("SDL Video Driver: %s", video_driver);
 
   if (memcmp(video_driver, "dummy", 5) == 0) {
-    gb_state->headless_mode = true;
+    gb_state->dbg.headless_mode = true;
   }
 
   if (!SDL_CreateWindowAndRenderer("GF-GB", 1600, 1440, SDL_WINDOW_RESIZABLE, &gb_state->unsaved.sdl_window,
@@ -108,7 +108,7 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->unsaved.sdl_window, gb_state->unsaved.sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->unsaved.sdl_renderer);
 
-  gb_state->enable_fs_dockspace = true;
+  gb_state->dbg.fs_dockspace = true;
   gb_state->video_initialized   = true;
 
   return true;
@@ -457,7 +457,7 @@ void gb_composite_line(struct gb_state *gb_state) {
   success = SDL_LockTextureToSurface(gb_state->unsaved.sdl_composite_target_back, &line_rect, &locked_texture);
   GB_assert(success);
 
-  if (gb_state->dbg_clear_composite) {
+  if (gb_state->dbg.clear_composite) {
     SDL_ClearSurface(locked_texture, 0, 1, 0, 1);
   }
 
@@ -471,7 +471,7 @@ void gb_composite_line(struct gb_state *gb_state) {
   GB_assert(locked_texture->h == gb_state->unsaved.sdl_obj_target->h);
   GB_assert(locked_texture->w == gb_state->unsaved.sdl_obj_target->w);
 
-  if (!gb_state->dbg_hide_bg) {
+  if (!gb_state->dbg.hide_bg) {
     // bg and win use the same palette
     SDL_SetSurfacePalette(gb_state->unsaved.sdl_bg_target, gb_state->unsaved.sdl_bg_palette);
     SDL_BlitSurface(gb_state->unsaved.sdl_bg_target, NULL, locked_texture, NULL);
@@ -484,30 +484,30 @@ void gb_composite_line(struct gb_state *gb_state) {
       .w = GB_DISPLAY_WIDTH,
       .h = 1,
   };
-  if (!gb_state->dbg_hide_win) {
+  if (!gb_state->dbg.hide_win) {
     if (!gb_state->saved.win_line_blank) {
       SDL_SetSurfacePalette(gb_state->unsaved.sdl_win_target, gb_state->unsaved.sdl_bg_palette);
       SDL_BlitSurface(gb_state->unsaved.sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
   }
 
-  if (!gb_state->dbg_hide_objs) {
+  if (!gb_state->dbg.hide_objs) {
     SDL_BlitSurface(gb_state->unsaved.sdl_obj_priority_target, NULL, locked_texture, NULL);
   }
 
-  if (!gb_state->dbg_hide_bg) {
+  if (!gb_state->dbg.hide_bg) {
     SDL_SetSurfacePalette(gb_state->unsaved.sdl_bg_target, gb_state->unsaved.sdl_bg_trans0_palette);
     SDL_BlitSurface(gb_state->unsaved.sdl_bg_target, NULL, locked_texture, NULL);
   }
 
-  if (!gb_state->dbg_hide_win) {
+  if (!gb_state->dbg.hide_win) {
     if (!gb_state->saved.win_line_blank) {
       SDL_SetSurfacePalette(gb_state->unsaved.sdl_win_target, gb_state->unsaved.sdl_bg_trans0_palette);
       SDL_BlitSurface(gb_state->unsaved.sdl_win_target, &win_rect, locked_texture, &win_rect);
     }
   }
 
-  if (!gb_state->dbg_hide_objs) {
+  if (!gb_state->dbg.hide_objs) {
     SDL_BlitSurface(gb_state->unsaved.sdl_obj_target, NULL, locked_texture, NULL);
   }
 
@@ -620,7 +620,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
-  if (gb_state->enable_fs_dockspace) {
+  if (gb_state->dbg.fs_dockspace) {
     ImGui::DockSpaceOverViewport();
   }
 
@@ -644,9 +644,9 @@ void gb_imgui_render(struct gb_state *gb_state) {
         gb_state_reset(gb_state);
       }
       {
-        ImGui::BeginDisabled(!gb_state->dbg_execution_paused);
+        ImGui::BeginDisabled(!gb_state->dbg.execution_paused);
         if (ImGui::Button("Step Instruction")) {
-          gb_state->dbg_step_inst_count++;
+          gb_state->dbg.step_inst_count++;
         }
         ImGui::EndDisabled();
       }
@@ -658,7 +658,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Last Frametime", last_frametime, "%.6f");
       ImGui::Value("Last Frame FPS", last_frame_fps, "%.6f");
 
-      ImGui::Checkbox("Paused", &gb_state->dbg_execution_paused);
+      ImGui::Checkbox("Paused", &gb_state->dbg.execution_paused);
       ImGui::Checkbox("Halted", &gb_state->saved.halted);
 
       ImGui::TextUnformatted(
@@ -706,18 +706,18 @@ void gb_imgui_render(struct gb_state *gb_state) {
     }
 
     if (ImGui::TreeNodeEx("Settings", ImGuiTreeNodeFlags_Framed)) {
-      ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg_speed_factor, 0.0f, 10.0f);
-      ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->enable_fs_dockspace);
-      ImGui::Checkbox("Pause on Error", &gb_state->dbg_pause_on_err);
-      ImGui::Checkbox("Print Instructions", &gb_state->dbg_trace_exec);
+      ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg.speed_factor, 0.0f, 10.0f);
+      ImGui::Checkbox("Enable Fullscreen Dockspace", &gb_state->dbg.fs_dockspace);
+      ImGui::Checkbox("Pause on Error", &gb_state->dbg.pause_on_err);
+      ImGui::Checkbox("Print Instructions", &gb_state->dbg.trace_exec);
       ImGui::TreePop();
     }
 
     if (ImGui::TreeNodeEx("Layers", ImGuiTreeNodeFlags_Framed)) {
-      ImGui::Checkbox("Clear Before Render", &gb_state->dbg_clear_composite);
-      ImGui::Checkbox("Background Hidden", &gb_state->dbg_hide_bg);
-      ImGui::Checkbox("Window Hidden", &gb_state->dbg_hide_win);
-      ImGui::Checkbox("Objs Hidden", &gb_state->dbg_hide_objs);
+      ImGui::Checkbox("Clear Before Render", &gb_state->dbg.clear_composite);
+      ImGui::Checkbox("Background Hidden", &gb_state->dbg.hide_bg);
+      ImGui::Checkbox("Window Hidden", &gb_state->dbg.hide_win);
+      ImGui::Checkbox("Objs Hidden", &gb_state->dbg.hide_objs);
       ImGui::TreePop();
     }
 

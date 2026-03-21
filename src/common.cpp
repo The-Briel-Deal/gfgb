@@ -56,10 +56,10 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->first_oam_scan_after_enable = true;
 
   // Debug State
-  gb_state->dbg_speed_factor                  = 1.0;
+  gb_state->dbg.speed_factor                  = 1.0;
   gb_state->unsaved.breakpoints               = new std::vector<gb_breakpoint_t>;
   gb_state->unsaved.serial_port_output_string = new std::string;
-  gb_state->dbg_execution_paused              = false;
+  gb_state->dbg.execution_paused              = false;
   gb_state->video_initialized                 = false;
 }
 
