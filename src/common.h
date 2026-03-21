@@ -1,6 +1,7 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
+#include <cstdint>
 #include <tracy/TracyC.h>
 
 #include <assert.h>
@@ -157,11 +158,6 @@ enum GB_LogCategory {
     regs.r1 = (0xFF00 & val) >> 8;                                                                                     \
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
-
-#define HBLANK         0
-#define VBLANK         1
-#define OAM_SCAN       2
-#define DRAWING_PIXELS 3
 
 #define TRACY_COLOR_RED   0xff0000
 #define TRACY_COLOR_GREEN 0x00ff00
@@ -329,12 +325,6 @@ typedef struct gb_saved_state {
   uint64_t last_timer_sync_m_cycles;
   bool     last_tima_bit;
 
-  // used for identifying when we are in hblank, and for knowing when we can increment ly.
-  uint32_t lcd_x;
-
-  bool    last_stat_interrupt;
-  uint8_t last_mode_handled;
-
   bool    wy_cond;
   bool    wx_cond;
   uint8_t win_line_counter;
@@ -371,11 +361,16 @@ typedef struct gb_video_state {
   // the first oam_scan after enabling the PPU still shows as mode 0 despite it scanning oam
   bool first_oam_scan_after_enable;
   bool oam_dma_start;
+
+  gb_ppu_mode_t ppu_mode;
+  uint64_t      frame_num;
 } gb_video_state_t;
 
 typedef struct gb_timing_state {
   uint64_t ns_elapsed_while_running;
   uint64_t ns_elapsed_total;
+  uint16_t sysclk; // (T-Cycles) The heart of the timing system, div is just the most significant 8 bits of this.
+  uint32_t ppu_frame_dots; // A value in dots between 0 and 70,224 (which is the total number of dots in a frame).
 } gb_timing_state_t;
 
 // runtime debug toggles
@@ -520,8 +515,6 @@ enum joy_pad_io_reg_bits : uint8_t {
 };
 
 uint64_t gb_m_cycles(gb_state_t *gb_state);
-
-void gb_update_timers(gb_state_t *gb_state);
 
 void *gb_unmap_address(gb_state_t *gb_state, uint16_t addr);
 

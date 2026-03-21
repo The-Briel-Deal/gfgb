@@ -216,9 +216,6 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
-      // We need to update timers before accessing some IO registers, this probably could just be called on those
-      // specific timer related registers but this shouldn't have too much overhead.
-      gb_update_timers(gb_state);
       uint8_t val;
       switch (addr) {
       case IO_LY: val = get_ro_io_reg(gb_state, addr); break;
@@ -320,12 +317,8 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     gb_state->saved.flat_ram[addr] = val;
   } else {
     LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
-    gb_update_timers(gb_state);
     uint8_t *val_ptr;
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
-      // We need to update timers before accessing some IO registers, this probably could just be called on those
-      // specific timer related registers but this shouldn't have too much overhead.
-      gb_update_timers(gb_state);
       if (addr == IO_SB) {
         // TODO: This just logs out every character written to this port. If I
         // actually want to implement gamelink support there is more to do.
@@ -496,21 +489,6 @@ static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles,
     gb_state->saved.regs.io.if_ |= 0b00010;
   }
   if (mode == VBLANK) gb_state->saved.regs.io.if_ |= 0b00001;
-}
-
-void gb_update_timers(struct gb_state *gb_state) {
-  TracyCZoneN(ctx, "Update Timers", true);
-  uint64_t curr_m_cycles                   = gb_m_cycles(gb_state);
-  uint64_t prev_m_cycles                   = gb_state->saved.last_timer_sync_m_cycles;
-  gb_state->saved.last_timer_sync_m_cycles = curr_m_cycles;
-
-  // Update DIV
-  uint16_t prev_div = gb_state->saved.regs.io.div;
-  gb_state->saved.regs.io.div += (curr_m_cycles - prev_m_cycles) * 4;
-
-  update_tima(gb_state, prev_div);
-  update_lcd_status(gb_state, prev_m_cycles, curr_m_cycles);
-  TracyCZoneEnd(ctx);
 }
 
 bool gb_state_get_err(struct gb_state *gb_state) {

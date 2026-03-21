@@ -22,6 +22,13 @@ enum lcdc_flags {
   LCDC_ENABLE                = 1 << 7,
 };
 
+typedef enum gb_ppu_mode {
+  HBLANK         = 0,
+  VBLANK         = 1,
+  OAM_SCAN       = 2,
+  DRAWING_PIXELS = 3,
+} gb_ppu_mode_t;
+
 struct gb_imgui_state {
   uint16_t mem_inspect_addr;
   uint16_t mem_inspect_val;
