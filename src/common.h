@@ -371,34 +371,34 @@ typedef struct gb_video_state {
 
 // runtime debug toggles
 typedef struct gb_dbg_state {
-  bool     err;
-  bool     clear_composite;
-  bool     hide_bg;
-  bool     hide_win;
-  bool     hide_objs;
-  bool     trace_exec;
-  FILE    *trace_exec_fout;
-  float    speed_factor;
-  uint32_t step_inst_count; // the number of instructions to run until breaking
-  bool     pause_on_err;
-  bool     execution_paused;
-  bool     fs_dockspace;
-  bool     headless_mode; // Whether or not there is an actual window to present to.
-  bool     test_mode;     // If enabled then use serial_port output to look for a pass/fail string
-  char     test_mode_pass_regex[16];
-  char     test_mode_fail_regex[16];
+  bool                err;
+  bool                clear_composite;
+  bool                rom_loaded;
+  bool                bootrom_has_syms;
+  bool                use_flat_ram;
+  bool                hide_bg;
+  bool                hide_win;
+  bool                hide_objs;
+  bool                pause_on_err;
+  bool                execution_paused;
+  bool                fs_dockspace;
+  bool                headless_mode; // Whether or not there is an actual window to present to.
+  bool                test_mode;     // If enabled then use serial_port output to look for a pass/fail string
+  bool                trace_exec;
+  FILE               *trace_exec_fout;
+  float               speed_factor;
+  uint32_t            step_inst_count; // the number of instructions to run until breaking
+  char                test_mode_pass_regex[16];
+  char                test_mode_fail_regex[16];
+  debug_symbol_list_t syms;
 } gb_dbg_state_t;
 
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
   gb_saved_state_t saved;
 
-  bool                bootrom_has_syms;
-  bool                rom_loaded;
-  bool                use_flat_ram;
-  debug_symbol_list_t syms;
-  SDL_Texture        *textures[DMG_N_TILEDATA_ADDRESSES];
-  bool                dirty_textures[DMG_N_TILEDATA_ADDRESSES];
+  SDL_Texture *textures[DMG_N_TILEDATA_ADDRESSES];
+  bool         dirty_textures[DMG_N_TILEDATA_ADDRESSES];
 
   FILE *serial_port_output_file;
 

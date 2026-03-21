@@ -105,8 +105,8 @@ struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct g
 void gb_state_free(struct gb_state *gb_state) {
   if (gb_state->serial_port_output_file != NULL) fclose(gb_state->serial_port_output_file);
 
-  if (gb_state->syms.capacity > 0) {
-    free_symbol_list(&gb_state->syms);
+  if (gb_state->dbg.syms.capacity > 0) {
+    free_symbol_list(&gb_state->dbg.syms);
   }
   delete gb_state->breakpoints;
   delete gb_state->serial_port_output_string;
@@ -211,7 +211,7 @@ not_implemented:
 
 uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr;
-  if (gb_state->use_flat_ram) {
+  if (gb_state->dbg.use_flat_ram) {
     return gb_state->saved.flat_ram[addr];
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
@@ -254,7 +254,7 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
 }
 
 uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
-  if (gb_state->use_flat_ram) {
+  if (gb_state->dbg.use_flat_ram) {
     uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
     uint16_t val     = 0x0000;
     val |= val_ptr[0] << 0;
@@ -316,7 +316,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
 }
 
 void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
-  if (gb_state->use_flat_ram) {
+  if (gb_state->dbg.use_flat_ram) {
     gb_state->saved.flat_ram[addr] = val;
   } else {
     LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
@@ -352,7 +352,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
 }
 
 void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
-  if (gb_state->use_flat_ram) {
+  if (gb_state->dbg.use_flat_ram) {
     uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
     val_ptr[0]       = (val & 0x00FF) >> 0;
     val_ptr[1]       = (val & 0xFF00) >> 8;
@@ -519,4 +519,4 @@ bool gb_state_get_err(struct gb_state *gb_state) {
   return err;
 }
 
-void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->use_flat_ram = enabled; }
+void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->dbg.use_flat_ram = enabled; }

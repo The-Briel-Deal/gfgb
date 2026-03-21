@@ -54,14 +54,14 @@ static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const c
       memcpy(gb_state->saved.ram.rom1, bytes, bytes_len);
     }
     fclose(f);
-    gb_state->rom_loaded = true;
+    gb_state->dbg.rom_loaded = true;
   }
 
   // Load debug symbols into gb_state->syms (symbols are optional)
   if (sym_name != NULL) {
-    alloc_symbol_list(&gb_state->syms);
+    alloc_symbol_list(&gb_state->dbg.syms);
     f = fopen(sym_name, "r");
-    parse_syms(&gb_state->syms, f);
+    parse_syms(&gb_state->dbg.syms, f);
     if ((err = ferror(f))) {
       LogCritical("Error when reading symbol file: %d", err);
       return false;
@@ -111,7 +111,7 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
     return true;
   }
   const debug_symbol_t *sym;
-  if ((sym = symbol_from_name(&gb_state->syms, bp_str))) {
+  if ((sym = symbol_from_name(&gb_state->dbg.syms, bp_str))) {
     gb_breakpoint_t bp = {.addr = sym->start_offset, .enable = true};
     gb_state->breakpoints->push_back(bp);
     return true;

@@ -94,7 +94,7 @@ const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr) {
   ZoneScopedN("Print Inst");
   if (show_inst_addr) {
-    const debug_symbol_t *sym = symbol_from_addr(&gb_state->syms, inst_addr);
+    const debug_symbol_t *sym = symbol_from_addr(&gb_state->dbg.syms, inst_addr);
     const char           *sym_name;
     if (sym != NULL) {
       sym_name = sym->name;
@@ -306,8 +306,8 @@ static void disassemble_bootrom(struct gb_state *gb_state, FILE *stream) {
 // boot rom goes before that.
 static void disassemble_rom_with_sym(struct gb_state *gb_state, FILE *stream) {
   const struct debug_symbol *curr_sym;
-  for (int i = 0; i < gb_state->syms.len; i++) {
-    curr_sym = &gb_state->syms.syms[i];
+  for (int i = 0; i < gb_state->dbg.syms.len; i++) {
+    curr_sym = &gb_state->dbg.syms.syms[i];
     fprintf(stream, "  %s:\n", curr_sym->name);
     gb_state->saved.regs.pc = curr_sym->start_offset;
     while (gb_state->saved.regs.pc < curr_sym->start_offset + curr_sym->len) {
@@ -324,14 +324,14 @@ void disassemble(struct gb_state *gb_state, FILE *stream) {
   // symbols where available.
   //
   // If bootrom has syms then they will be used in `disassemble_rom_with_sym()`
-  if (gb_state->saved.regs.io.bank && !gb_state->bootrom_has_syms) {
+  if (gb_state->saved.regs.io.bank && !gb_state->dbg.bootrom_has_syms) {
     fprintf(stream, "BootRom:\n");
     disassemble_bootrom(gb_state, stream);
   }
 
-  if (gb_state->rom_loaded) {
+  if (gb_state->dbg.rom_loaded) {
     fprintf(stream, "RomStart:\n");
-    if (gb_state->syms.capacity > 0) {
+    if (gb_state->dbg.syms.capacity > 0) {
       disassemble_rom_with_sym(gb_state, stream);
     } else {
       disassemble_rom(gb_state, stream);

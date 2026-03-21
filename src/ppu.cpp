@@ -676,7 +676,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
         ImGui::PushID(i);
         ImGui::Checkbox("##bp_enabled", &bp.enable);
         ImGui::SameLine();
-        const debug_symbol_t *sym = symbol_from_addr(&gb_state->syms, bp.addr);
+        const debug_symbol_t *sym = symbol_from_addr(&gb_state->dbg.syms, bp.addr);
         if (sym != NULL) {
           ImGui::Text("Breakpoint %d: [%s+$%X] [$%.4X]", i, sym->name, bp.addr - sym->start_offset, bp.addr);
         } else {
