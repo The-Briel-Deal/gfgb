@@ -668,10 +668,10 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::SameLine();
       ImGui::InputScalar("##addr", ImGuiDataType_U16, &imgui_state->breakpoint_addr, NULL, NULL, "%.4x");
       if (ImGui::Button("Set Breakpoint")) {
-        gb_state->unsaved.breakpoints->push_back({.addr = imgui_state->breakpoint_addr, .enable = true});
+        gb_state->breakpoints->push_back({.addr = imgui_state->breakpoint_addr, .enable = true});
       }
       int i = 1;
-      for (gb_breakpoint_t &bp : *gb_state->unsaved.breakpoints) {
+      for (gb_breakpoint_t &bp : *gb_state->breakpoints) {
 
         ImGui::PushID(i);
         ImGui::Checkbox("##bp_enabled", &bp.enable);
@@ -701,7 +701,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Serial Port Output", ImGuiTreeNodeFlags_Framed)) {
-      ImGui::TextUnformatted(gb_state->unsaved.serial_port_output_string->c_str());
+      ImGui::TextUnformatted(gb_state->serial_port_output_string->c_str());
       ImGui::TreePop();
     }
 

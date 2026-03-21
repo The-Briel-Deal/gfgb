@@ -361,15 +361,6 @@ typedef struct gb_unsaved_state {
   SDL_Texture *sdl_composite_target_front;
   SDL_Texture *sdl_composite_target_back;
 
-#ifdef __cplusplus
-  std::string            *serial_port_output_string;
-  std::basic_regex<char> *compiled_pass_regex;
-  std::basic_regex<char> *compiled_fail_regex;
-  // The shadow stack is used for debugging to keep track of stack entries along with metadata so that we can display it
-  // in the debug UI.
-  std::stack<stack_entry_t>    *shadow_stack;
-  std::vector<gb_breakpoint_t> *breakpoints;
-#endif
 } gb_unsaved_state_t;
 
 // runtime debug toggles
@@ -428,6 +419,18 @@ typedef struct gb_state {
   gb_imgui_state_t            imgui;
   gb_internal_joy_pad_state_t joy_pad;
   gb_unsaved_state_t          unsaved;
+
+  // TODO: This state needs to be at the end of the struct so that this doesn't break layout for C FFI. I should
+  // probably just have a private void ptr on the state sections which use cpp structs.
+#ifdef __cplusplus
+  std::string            *serial_port_output_string;
+  std::basic_regex<char> *compiled_pass_regex;
+  std::basic_regex<char> *compiled_fail_regex;
+  // The shadow stack is used for debugging to keep track of stack entries along with metadata so that we can display it
+  // in the debug UI.
+  std::stack<stack_entry_t>    *shadow_stack;
+  std::vector<gb_breakpoint_t> *breakpoints;
+#endif
 } gb_state_t;
 
 // Call with bootrom_name = NULL to use dmg0 as the default.

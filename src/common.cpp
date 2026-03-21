@@ -56,11 +56,11 @@ void gb_state_init(struct gb_state *gb_state) {
   gb_state->first_oam_scan_after_enable = true;
 
   // Debug State
-  gb_state->dbg.speed_factor                  = 1.0;
-  gb_state->unsaved.breakpoints               = new std::vector<gb_breakpoint_t>;
-  gb_state->unsaved.serial_port_output_string = new std::string;
-  gb_state->dbg.execution_paused              = false;
-  gb_state->video_initialized                 = false;
+  gb_state->dbg.speed_factor          = 1.0;
+  gb_state->breakpoints               = new std::vector<gb_breakpoint_t>;
+  gb_state->serial_port_output_string = new std::string;
+  gb_state->dbg.execution_paused      = false;
+  gb_state->video_initialized         = false;
 }
 
 // TODO: This doesn't seem to always work, I need to figure out what other state I need set.
@@ -108,10 +108,10 @@ void gb_state_free(struct gb_state *gb_state) {
   if (gb_state->syms.capacity > 0) {
     free_symbol_list(&gb_state->syms);
   }
-  delete gb_state->unsaved.breakpoints;
-  delete gb_state->unsaved.serial_port_output_string;
-  delete gb_state->unsaved.compiled_pass_regex;
-  delete gb_state->unsaved.compiled_fail_regex;
+  delete gb_state->breakpoints;
+  delete gb_state->serial_port_output_string;
+  delete gb_state->compiled_pass_regex;
+  delete gb_state->compiled_fail_regex;
   GB_free(gb_state);
 }
 
@@ -330,7 +330,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
         // TODO: This just logs out every character written to this port. If I
         // actually want to implement gamelink support there is more to do.
         if (gb_state->serial_port_output_file != NULL) fputc(val, gb_state->serial_port_output_file);
-        gb_state->unsaved.serial_port_output_string->push_back(val);
+        gb_state->serial_port_output_string->push_back(val);
         return;
       }
       write_io_reg(gb_state, addr, val);
