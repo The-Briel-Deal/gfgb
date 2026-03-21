@@ -108,8 +108,8 @@ bool gb_video_init(struct gb_state *gb_state) {
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->video.sdl_window, gb_state->video.sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer);
 
-  gb_state->dbg.fs_dockspace = true;
-  gb_state->video.initialized   = true;
+  gb_state->dbg.fs_dockspace  = true;
+  gb_state->video.initialized = true;
 
   return true;
 }
@@ -794,8 +794,8 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->video.sdl_renderer);
 
-    GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH,
-                                                     GB_DISPLAY_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX));
+    GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                                     SDL_LOGICAL_PRESENTATION_LETTERBOX));
   }
 }
 
@@ -810,7 +810,7 @@ void gb_flip_frame(struct gb_state *gb_state) {
   gb_state->saved.wy_cond          = 0;
 
   SDL_Texture *tmp;
-  tmp                                          = gb_state->video.sdl_composite_target_front;
+  tmp                                        = gb_state->video.sdl_composite_target_front;
   gb_state->video.sdl_composite_target_front = gb_state->video.sdl_composite_target_back;
   gb_state->video.sdl_composite_target_back  = tmp;
 
