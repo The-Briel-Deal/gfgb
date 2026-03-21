@@ -425,8 +425,8 @@ typedef struct gb_state {
   char test_mode_pass_regex[16];
   char test_mode_fail_regex[16];
 
-  gb_imgui_state_t            imgui_state;
-  gb_internal_joy_pad_state_t joy_pad_state;
+  gb_imgui_state_t            imgui;
+  gb_internal_joy_pad_state_t joy_pad;
   gb_state_unsaved_t          unsaved;
 } gb_state_t;
 

@@ -610,7 +610,7 @@ void gb_display_render(gb_state_t *gb_state) {
 }
 
 void gb_imgui_render(struct gb_state *gb_state) {
-  gb_imgui_state_t *imgui_state = &gb_state->imgui_state;
+  gb_imgui_state_t *imgui_state = &gb_state->imgui;
   ImGuiIO          &io          = ImGui::GetIO();
   (void)io;
 
@@ -758,14 +758,14 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Joy-Pad State", ImGuiTreeNodeFlags_Framed)) {
-      ImGui::Value("Up", gb_state->joy_pad_state.dpad_up);
-      ImGui::Value("Down", gb_state->joy_pad_state.dpad_down);
-      ImGui::Value("Left", gb_state->joy_pad_state.dpad_left);
-      ImGui::Value("Right", gb_state->joy_pad_state.dpad_right);
-      ImGui::Value("A Button", gb_state->joy_pad_state.button_a);
-      ImGui::Value("B Button", gb_state->joy_pad_state.button_b);
-      ImGui::Value("Start Button", gb_state->joy_pad_state.button_start);
-      ImGui::Value("Select Button", gb_state->joy_pad_state.button_select);
+      ImGui::Value("Up", gb_state->joy_pad.dpad_up);
+      ImGui::Value("Down", gb_state->joy_pad.dpad_down);
+      ImGui::Value("Left", gb_state->joy_pad.dpad_left);
+      ImGui::Value("Right", gb_state->joy_pad.dpad_right);
+      ImGui::Value("A Button", gb_state->joy_pad.button_a);
+      ImGui::Value("B Button", gb_state->joy_pad.button_b);
+      ImGui::Value("Start Button", gb_state->joy_pad.button_start);
+      ImGui::Value("Select Button", gb_state->joy_pad.button_select);
       ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Reg Values", ImGuiTreeNodeFlags_Framed)) {

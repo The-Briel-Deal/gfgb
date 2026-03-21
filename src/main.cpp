@@ -281,15 +281,15 @@ void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event)
   case SDL_EVENT_KEY_DOWN: {
     // TODO: I should expose this as user-changable conf
     switch (event->key) {
-    case SDLK_W: gb_state->joy_pad_state.dpad_up = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_A: gb_state->joy_pad_state.dpad_left = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_S: gb_state->joy_pad_state.dpad_down = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_D: gb_state->joy_pad_state.dpad_right = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_W: gb_state->joy_pad.dpad_up = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_A: gb_state->joy_pad.dpad_left = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_S: gb_state->joy_pad.dpad_down = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_D: gb_state->joy_pad.dpad_right = (event->type == SDL_EVENT_KEY_DOWN); break;
 
-    case SDLK_U: gb_state->joy_pad_state.button_a = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_I: gb_state->joy_pad_state.button_b = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_O: gb_state->joy_pad_state.button_start = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_P: gb_state->joy_pad_state.button_select = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_U: gb_state->joy_pad.button_a = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_I: gb_state->joy_pad.button_b = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_O: gb_state->joy_pad.button_start = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDLK_P: gb_state->joy_pad.button_select = (event->type == SDL_EVENT_KEY_DOWN); break;
     }
     break;
   }
@@ -322,17 +322,17 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   uint8_t  new_lower_nibble = 0x0F;
   if (((*io_joyp) >> 4 & 0b11) == 0b10) {
     // D-Pad selected
-    if (gb_state->joy_pad_state.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
-    if (gb_state->joy_pad_state.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
-    if (gb_state->joy_pad_state.dpad_up) new_lower_nibble &= ~JOYP_D_PAD_UP;
-    if (gb_state->joy_pad_state.dpad_down) new_lower_nibble &= ~JOYP_D_PAD_DOWN;
+    if (gb_state->joy_pad.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
+    if (gb_state->joy_pad.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
+    if (gb_state->joy_pad.dpad_up) new_lower_nibble &= ~JOYP_D_PAD_UP;
+    if (gb_state->joy_pad.dpad_down) new_lower_nibble &= ~JOYP_D_PAD_DOWN;
   }
   if (((*io_joyp) >> 4 & 0b11) == 0b01) {
     // Buttons selected
-    if (gb_state->joy_pad_state.button_a) new_lower_nibble &= ~JOYP_BUTTON_A;
-    if (gb_state->joy_pad_state.button_b) new_lower_nibble &= ~JOYP_BUTTON_B;
-    if (gb_state->joy_pad_state.button_select) new_lower_nibble &= ~JOYP_BUTTON_SELECT;
-    if (gb_state->joy_pad_state.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
+    if (gb_state->joy_pad.button_a) new_lower_nibble &= ~JOYP_BUTTON_A;
+    if (gb_state->joy_pad.button_b) new_lower_nibble &= ~JOYP_BUTTON_B;
+    if (gb_state->joy_pad.button_select) new_lower_nibble &= ~JOYP_BUTTON_SELECT;
+    if (gb_state->joy_pad.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
   }
 
   // only keep bits 5 and 4 (select buttons and select d-pad)
