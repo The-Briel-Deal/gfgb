@@ -104,6 +104,11 @@ static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
         break;
       }
       case VBLANK: {
+        // The V-Blank interrupt handler seems to have the simplest rules out of all interrupts and I think just always
+        // setting this when the mode changes to v-blank should be sufficient unless i'm missing something.
+        // TODO: I vaguely recall that there is a small delay between when LY is set to 144 and when v-blank is
+        // triggered. I should double check this.
+        gb_state->saved.regs.io.if_ |= 0b00001;
         ZoneScopedN("V-Blank");
         gb_flip_frame(gb_state);
         break;
