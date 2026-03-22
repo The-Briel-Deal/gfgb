@@ -429,30 +429,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       }
 
       handle_interrupts(gb_state);
-      uint8_t curr_mode, last_mode;
-      curr_mode = gb_state->saved.regs.io.stat & 0b11;
-      last_mode = gb_state->saved.last_mode_handled;
-
-      // TODO: If I want perfect accuracy then I should be copying this incrementally on every iteration for 160
-      // m-cycles. I also need to make all memory except hram blocked during this period.
-
-      // TODO: There are some quirks when performing a dma transfer mid line (during OAM_SCAN or DRAWING_PIXELS), i'm
-      // currently not sure if this will matter with any real world games so I should look into this.
-      if ((curr_mode == OAM_SCAN || curr_mode == DRAWING_PIXELS || curr_mode == VBLANK) &&
-          gb_state->video.oam_dma_start) {
-        gb_state->video.oam_dma_start = false;
-        uint8_t oam_dma               = gb_state->saved.regs.io.dma;
-        if (oam_dma > 0xDF) {
-          oam_dma -= 0x20;
-        }
-        uint16_t start_src_addr = ((uint16_t)oam_dma) << 8;
-        for (uint8_t addr_offset = 0; addr_offset <= 0x9F; addr_offset++) {
-          uint16_t src_addr = start_src_addr | addr_offset;
-          uint16_t dst_addr = 0xFE00 | addr_offset;
-          uint8_t  src_byte = gb_read_mem8(gb_state, src_addr);
-          gb_write_mem8(gb_state, dst_addr, src_byte);
-        }
-      }
     }
   }
 

@@ -1,7 +1,6 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
-#include <cstdint>
 #include <tracy/TracyC.h>
 
 #include <assert.h>

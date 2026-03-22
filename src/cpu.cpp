@@ -44,11 +44,6 @@ typedef uint8_t gb_flag_reg_bits_t;
   inst_param_t { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
 #define VOID_PARAM inst_param_t{.type = VOID_PARAM_TYPE, .void_val = 0}
 
-static void gb_spend_mcycles(gb_state_t *gb_state, uint64_t n) {
-  gb_state->saved.m_cycles_elapsed += n;
-  gb_state->timing.sysclk += n * 4;
-}
-
 static inline uint8_t next8(struct gb_state *gb_state) {
   uint8_t val = gb_read_mem8(gb_state, gb_state->saved.regs.pc);
   gb_state->saved.regs.pc += 1;
