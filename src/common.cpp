@@ -73,7 +73,6 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->saved.m_cycles_elapsed            = 0;
   gb_state->saved.last_timer_sync_m_cycles    = 0;
   gb_state->timing.ns_elapsed_while_running   = 0;
-  gb_state->saved.lcd_x                       = 0;
 }
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
@@ -364,46 +363,6 @@ void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
 
 uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->saved.m_cycles_elapsed; }
 
-static uint64_t gb_dots(uint64_t m_cycles) {
-  // There are 4 dots per m cycle in dmg normal speed mode, but 2 in cgb double speed mode. If I implement cgb support
-  // i'll need to handle that when getting dots.
-  return m_cycles * 4;
-}
-
-static void update_tima(struct gb_state *gb_state, uint16_t prev_div) {
-  uint8_t tac = gb_state->saved.regs.io.tac;
-  // TODO: This is slow but accurate, since we increment multiple cycles at once in many places we need to make sure
-  // that we don't miss the falling edge. There's probably a better way to do this if I take a bit to think on this.
-  for (uint16_t curr_div = prev_div; curr_div != gb_state->saved.regs.io.div; curr_div++) {
-    bool this_bit = 0;
-    switch (tac & 0b0000'0011) {
-    case 0: // using bit 7
-      this_bit = (curr_div >> 9) & 1;
-      break;
-    case 3: // using bit 5
-      this_bit = (curr_div >> 7) & 1;
-      break;
-    case 2: // using bit 3
-      this_bit = (curr_div >> 5) & 1;
-      break;
-    case 1: // using bit 1
-      this_bit = (curr_div >> 3) & 1;
-      break;
-    }
-    this_bit &= ((tac & 0b0000'0100) >> 2);
-
-    // Only increment on falling edge (a.k.a. true -> false).
-    if (gb_state->saved.last_tima_bit && (!this_bit)) {
-      if (gb_state->saved.regs.io.tima == 0xFF) {
-        gb_state->saved.regs.io.if_ |= 0b00100;
-      }
-      gb_state->saved.regs.io.tima++;
-    }
-
-    gb_state->saved.last_tima_bit = this_bit;
-  }
-}
-
 #define DOTS_PER_LINE   456
 #define LINES_PER_FRAME 153
 
@@ -434,61 +393,6 @@ static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
   if (lyc_select && lyc_eq_ly) return true;
 
   return false;
-}
-
-static void update_lcd_status(struct gb_state *gb_state, uint64_t prev_m_cycles, uint64_t curr_m_cycles) {
-  // Don't update anything besides clearing ppu mode and resetting ly and lx when PPU is disabled.
-  if ((gb_state->saved.regs.io.lcdc & LCDC_ENABLE) == 0) {
-    // PPU mode reports 0 when PPU is disabled.
-    // https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
-    gb_state->saved.regs.io.stat &= ~0b0000'0011;
-    gb_state->saved.regs.io.ly                  = 0;
-    gb_state->saved.lcd_x                       = 0;
-    gb_state->video.first_oam_scan_after_enable = true;
-    return;
-  }
-  uint64_t prev_dots    = gb_dots(prev_m_cycles);
-  uint64_t curr_dots    = gb_dots(curr_m_cycles);
-  uint32_t dots_elapsed = curr_dots - prev_dots;
-  gb_state->saved.lcd_x += dots_elapsed;
-  gb_state->saved.regs.io.ly += (gb_state->saved.lcd_x / DOTS_PER_LINE);
-  gb_state->saved.lcd_x %= DOTS_PER_LINE;
-  gb_state->saved.regs.io.ly %= LINES_PER_FRAME;
-
-  // TODO: we need to see if the previous state already triggered an interupt, if there was already an interrupt being
-  // triggered then we don't trigger another one.
-  uint8_t mode;
-  if (gb_state->saved.regs.io.ly >= 144) {
-    mode = VBLANK;
-  } else if (gb_state->saved.lcd_x < 80) {
-    if (gb_state->video.first_oam_scan_after_enable)
-      mode = (gb_state->saved.regs.io.stat & 0b11);
-    else
-      mode = OAM_SCAN;
-  } else if (gb_state->saved.lcd_x < 369) {
-    gb_state->video.first_oam_scan_after_enable = false;
-    // We're assuming that mode 3 is always taking the longest possible amount of time.
-    // If we wanted to be really precise we would have to calculate the exact length with:
-    // https://gbdev.io/pandocs/Rendering.html#obj-penalty-algorithm
-    mode = DRAWING_PIXELS;
-  } else {
-    mode = HBLANK;
-  }
-  gb_state->saved.regs.io.stat &= ~0b0000'0011;
-  gb_state->saved.regs.io.stat |= mode;
-
-  if (gb_state->saved.regs.io.ly == gb_state->saved.regs.io.lyc) {
-    gb_state->saved.regs.io.stat |= 0b0000'0100;
-  } else {
-    gb_state->saved.regs.io.stat &= ~0b0000'0100;
-  }
-  bool prev_triggered                 = gb_state->saved.last_stat_interrupt;
-  bool curr_triggered                 = lcd_interrupt_triggered(gb_state);
-  gb_state->saved.last_stat_interrupt = curr_triggered;
-  if ((!prev_triggered) && curr_triggered) {
-    gb_state->saved.regs.io.if_ |= 0b00010;
-  }
-  if (mode == VBLANK) gb_state->saved.regs.io.if_ |= 0b00001;
 }
 
 bool gb_state_get_err(struct gb_state *gb_state) {

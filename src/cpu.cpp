@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "common.h"
+#include "timing.h"
 #include "tracy/TracyC.h"
 
 #include <stddef.h>

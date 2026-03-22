@@ -1,6 +1,7 @@
 #include "common.h"
 #include "ppu.h"
 #include "tracy/Tracy.hpp"
+#include <cstdint>
 
 #define PPU_DOTS_PER_FRAME  70224
 #define PPU_DOTS_PER_LINE   456
@@ -8,6 +9,39 @@
 
 #define VBLANK_Y_START 144
 
+static void sync_tima(struct gb_state *gb_state, uint16_t old_sysclk, uint16_t new_sysclk) {
+  uint8_t tac = gb_state->saved.regs.io.tac;
+  // TODO: This is slow but accurate, since we increment multiple cycles at once in many places we need to make sure
+  // that we don't miss the falling edge. There's probably a better way to do this if I take a bit to think on this.
+  for (uint16_t curr_sysclk = old_sysclk; curr_sysclk != new_sysclk; curr_sysclk++) {
+    bool this_bit = 0;
+    switch (tac & 0b0000'0011) {
+    case 0: // using bit 7
+      this_bit = (curr_sysclk >> 9) & 1;
+      break;
+    case 3: // using bit 5
+      this_bit = (curr_sysclk >> 7) & 1;
+      break;
+    case 2: // using bit 3
+      this_bit = (curr_sysclk >> 5) & 1;
+      break;
+    case 1: // using bit 1
+      this_bit = (curr_sysclk >> 3) & 1;
+      break;
+    }
+    this_bit &= ((tac & 0b0000'0100) >> 2);
+
+    // Only increment on falling edge (a.k.a. true -> false).
+    if (gb_state->saved.last_tima_bit && (!this_bit)) {
+      if (gb_state->saved.regs.io.tima == 0xFF) {
+        gb_state->saved.regs.io.if_ |= 0b00100;
+      }
+      gb_state->saved.regs.io.tima++;
+    }
+
+    gb_state->saved.last_tima_bit = this_bit;
+  }
+}
 static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
   gb_ppu_mode_t old_mode = gb_state->video.ppu_mode;
   if (old_mode != new_mode) {
@@ -92,7 +126,10 @@ void gb_spend_mcycles(gb_state_t *gb_state, uint16_t mcycles) {
   uint16_t tcycles = mcycles * 4;
   uint16_t dots    = mcycles * 4; // This will be different from tcycles once I impl GBC double speed mode.
   gb_state->saved.m_cycles_elapsed += mcycles;
-  gb_state->timing.sysclk += tcycles;
+  uint16_t old_sysclk     = gb_state->timing.sysclk;
+  uint16_t new_sysclk     = gb_state->timing.sysclk + tcycles;
+  gb_state->timing.sysclk = new_sysclk;
+  sync_tima(gb_state, old_sysclk, new_sysclk);
   gb_state->saved.regs.io.div = (gb_state->timing.sysclk & 0xFF00) >> 8;
   gb_ppu_spend_dots(gb_state, dots);
 }

@@ -68,6 +68,7 @@ sources = [
   'src/common.cpp',
   'src/cpu.cpp',
   'src/ppu.cpp',
+  'src/timing.cpp',
 ]
 include = include_directories(['src/', 'embed/'])
 
