@@ -6,19 +6,28 @@
 
 static void gb_ppu_spend_dots(gb_state_t *gb_state, uint16_t n) {
   uint32_t &dots = gb_state->timing.ppu_frame_dots;
-  gb_state->timing.ppu_frame_dots += n;
-  if (gb_state->timing.ppu_frame_dots >= PPU_DOTS_PER_FRAME) {
-    gb_state->timing.ppu_frame_dots %= PPU_DOTS_PER_FRAME;
+  dots += n;
+  if (dots >= PPU_DOTS_PER_FRAME) {
+    dots %= PPU_DOTS_PER_FRAME;
     gb_state->video.frame_num += 1;
   }
-  if (gb_state->timing.ppu_frame_dots >= (PPU_DOTS_PER_LINE * 144)) {
+  if (dots >= (PPU_DOTS_PER_LINE * 144)) {
     gb_state->video.ppu_mode = VBLANK;
+    goto mode_found;
   }
-  if () {
+  if ((dots % PPU_DOTS_PER_LINE) < 80) {
+    gb_state->video.ppu_mode = OAM_SCAN;
+    goto mode_found;
   }
-
-  ERR(gb_state, "Mode not found at ppu_frame_dots=%d", );
+  // Assuming longest possible drawing pixels duration, I would need to factor in drawing penalties to get an accurate
+  // length.
+  if ((dots % PPU_DOTS_PER_LINE) < 80 + 289) {
+    gb_state->video.ppu_mode = DRAWING_PIXELS;
+    goto mode_found;
+  }
+  gb_state->video.ppu_mode = HBLANK;
 mode_found:
+  return;
 }
 
 void gb_spend_mcycles(gb_state_t *gb_state, uint16_t n) {
