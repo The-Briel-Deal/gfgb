@@ -323,6 +323,7 @@ typedef struct gb_saved_state {
 
   uint64_t last_timer_sync_m_cycles;
   bool     last_tima_bit;
+  bool     last_stat_bit;
 
   bool    wy_cond;
   bool    wx_cond;
@@ -361,8 +362,7 @@ typedef struct gb_video_state {
   bool first_oam_scan_after_enable;
   bool oam_dma_start;
 
-  gb_ppu_mode_t ppu_mode;
-  uint64_t      frame_num;
+  uint64_t frame_num;
 } gb_video_state_t;
 
 typedef struct gb_timing_state {

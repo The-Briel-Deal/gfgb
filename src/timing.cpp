@@ -9,43 +9,81 @@
 
 #define VBLANK_Y_START 144
 
-static void sync_tima(struct gb_state *gb_state, uint16_t old_sysclk, uint16_t new_sysclk) {
+#define TAC_ENABLE_BIT 0b0000'0100
+
+#define rising_edge(was, is)  (!was && is)
+#define falling_edge(was, is) (was && !is)
+
+static void gb_sync_tima(struct gb_state *gb_state, uint16_t old_sysclk, uint16_t new_sysclk) {
   uint8_t tac = gb_state->saved.regs.io.tac;
   // TODO: This is slow but accurate, since we increment multiple cycles at once in many places we need to make sure
   // that we don't miss the falling edge. There's probably a better way to do this if I take a bit to think on this.
   for (uint16_t curr_sysclk = old_sysclk; curr_sysclk != new_sysclk; curr_sysclk++) {
     bool this_bit = 0;
     switch (tac & 0b0000'0011) {
-    case 0: // using bit 7
-      this_bit = (curr_sysclk >> 9) & 1;
-      break;
-    case 3: // using bit 5
-      this_bit = (curr_sysclk >> 7) & 1;
-      break;
-    case 2: // using bit 3
-      this_bit = (curr_sysclk >> 5) & 1;
-      break;
-    case 1: // using bit 1
-      this_bit = (curr_sysclk >> 3) & 1;
-      break;
+    case 0: this_bit = (curr_sysclk >> 9) & 1; break;
+    case 3: this_bit = (curr_sysclk >> 7) & 1; break;
+    case 2: this_bit = (curr_sysclk >> 5) & 1; break;
+    case 1: this_bit = (curr_sysclk >> 3) & 1; break;
     }
-    this_bit &= ((tac & 0b0000'0100) >> 2);
+    // Don't increment TIMA if the enable bit is clear.
+    this_bit &= ((tac & TAC_ENABLE_BIT) >> 2);
 
     // Only increment on falling edge (a.k.a. true -> false).
-    if (gb_state->saved.last_tima_bit && (!this_bit)) {
+    if (falling_edge(gb_state->saved.last_tima_bit, this_bit)) {
       if (gb_state->saved.regs.io.tima == 0xFF) {
         gb_state->saved.regs.io.if_ |= 0b00100;
+        // reset TIMA to TMA since TIMA is going to overflow
+        // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff06--tma-timer-modulo
+        gb_state->saved.regs.io.tima = gb_state->saved.regs.io.tma;
+      } else {
+        gb_state->saved.regs.io.tima++;
       }
-      gb_state->saved.regs.io.tima++;
     }
 
     gb_state->saved.last_tima_bit = this_bit;
   }
 }
+static void gb_sync_lcd_stat(gb_state_t *gb_state) {
+  uint8_t &stat      = gb_state->saved.regs.io.stat;
+  uint8_t  lyc_eq_ly = (gb_state->saved.regs.io.ly == gb_state->saved.regs.io.lyc);
+  stat &= 0b1111'1011;
+  stat |= (lyc_eq_ly << 2);
+
+  uint8_t mode       = (stat & (0b11 << 0)) >> 0;
+  uint8_t m0_select  = (stat & (0b1 << 3)) >> 3;
+  uint8_t m1_select  = (stat & (0b1 << 4)) >> 4;
+  uint8_t m2_select  = (stat & (0b1 << 5)) >> 5;
+  uint8_t lyc_select = (stat & (0b1 << 6)) >> 6;
+
+  bool stat_interrupt = false;
+  switch (mode) {
+  case HBLANK:
+    if (m0_select) stat_interrupt |= true;
+    break;
+  case VBLANK:
+    if (m1_select) stat_interrupt |= true;
+    if (m2_select && gb_state->saved.regs.io.ly == 144) stat_interrupt |= true;
+    break;
+  case OAM_SCAN:
+    if (m2_select) stat_interrupt |= true;
+    break;
+  case DRAWING_PIXELS: break;
+  }
+
+  if (lyc_select && lyc_eq_ly) stat_interrupt |= true;
+
+  if (rising_edge(gb_state->saved.last_stat_bit, stat_interrupt)) {
+    gb_state->saved.regs.io.if_ |= 0b00010;
+  }
+  gb_state->saved.last_stat_bit = stat_interrupt;
+}
+
 static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
-  gb_ppu_mode_t old_mode = gb_state->video.ppu_mode;
+  gb_ppu_mode_t old_mode = (gb_ppu_mode_t)(gb_state->saved.regs.io.stat & 0b11);
   if (old_mode != new_mode) {
-    gb_state->video.ppu_mode = new_mode;
+    gb_state->saved.regs.io.stat &= 0b1111'1100;
+    gb_state->saved.regs.io.stat |= new_mode;
 
     if (!gb_state->dbg.headless_mode) {
       ZoneScopedN("Rendering");
@@ -76,7 +114,7 @@ static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
 }
 static void gb_ppu_handle_oam_dma(gb_state_t *gb_state) {
   GB_assert(gb_state->video.oam_dma_start);
-  gb_ppu_mode_t curr_mode = gb_state->video.ppu_mode;
+  gb_ppu_mode_t curr_mode = (gb_ppu_mode_t)(gb_state->saved.regs.io.stat & 0b11);
   // TODO: If I want perfect accuracy then I should be copying this incrementally on every iteration for 160
   // m-cycles. I also need to make all memory except hram blocked during this period.
 
@@ -119,6 +157,7 @@ static void gb_ppu_spend_dots(gb_state_t *gb_state, uint16_t n) {
   } else {
     gb_ppu_mode_change(gb_state, HBLANK);
   }
+  gb_sync_lcd_stat(gb_state);
   if (gb_state->video.oam_dma_start) gb_ppu_handle_oam_dma(gb_state);
 }
 
@@ -129,7 +168,7 @@ void gb_spend_mcycles(gb_state_t *gb_state, uint16_t mcycles) {
   uint16_t old_sysclk     = gb_state->timing.sysclk;
   uint16_t new_sysclk     = gb_state->timing.sysclk + tcycles;
   gb_state->timing.sysclk = new_sysclk;
-  sync_tima(gb_state, old_sysclk, new_sysclk);
+  gb_sync_tima(gb_state, old_sysclk, new_sysclk);
   gb_state->saved.regs.io.div = (gb_state->timing.sysclk & 0xFF00) >> 8;
   gb_ppu_spend_dots(gb_state, dots);
 }

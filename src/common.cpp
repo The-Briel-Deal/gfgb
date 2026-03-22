@@ -366,35 +366,6 @@ uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->saved.m_cycle
 #define DOTS_PER_LINE   456
 #define LINES_PER_FRAME 153
 
-static bool lcd_interrupt_triggered(const struct gb_state *gb_state) {
-
-  uint8_t stat       = gb_state->saved.regs.io.stat;
-  uint8_t mode       = (stat & (0b11 << 0)) >> 0;
-  uint8_t lyc_eq_ly  = (stat & (0b1 << 2)) >> 2;
-  uint8_t m0_select  = (stat & (0b1 << 3)) >> 3;
-  uint8_t m1_select  = (stat & (0b1 << 4)) >> 4;
-  uint8_t m2_select  = (stat & (0b1 << 5)) >> 5;
-  uint8_t lyc_select = (stat & (0b1 << 6)) >> 6;
-
-  switch (mode) {
-  case HBLANK:
-    if (m0_select) return true;
-    break;
-  case VBLANK:
-    if (m1_select) return true;
-    if (m2_select && gb_state->saved.regs.io.ly == 144) return true;
-    break;
-  case OAM_SCAN:
-    if (m2_select) return true;
-    break;
-  case DRAWING_PIXELS: break;
-  }
-
-  if (lyc_select && lyc_eq_ly) return true;
-
-  return false;
-}
-
 bool gb_state_get_err(struct gb_state *gb_state) {
   bool err          = gb_state->dbg.err;
   gb_state->dbg.err = false;
