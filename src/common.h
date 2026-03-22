@@ -36,6 +36,7 @@ extern "C" {
 enum GB_LogCategory {
   GB_LOG_CATEGORY_DEFAULT = SDL_LOG_CATEGORY_APPLICATION,
   GB_LOG_CATEGORY_PPU     = SDL_LOG_CATEGORY_CUSTOM,
+  GB_LOG_CATEGORY_IO_REGS,
 };
 #ifdef NDEBUG
 #define GB_CheckSDLCall(call) call
@@ -51,20 +52,27 @@ enum GB_LogCategory {
 #endif
 
 #ifdef GFGB_ENABLE_LOGGING
-#define LogTrace(msg, ...)    SDL_LogTrace(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogInfo(msg, ...)     SDL_LogInfo(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogDebug(msg, ...)    SDL_LogDebug(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogWarn(msg, ...)     SDL_LogWarn(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogError(msg, ...)    SDL_LogError(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogCritical(msg, ...) SDL_LogCritical(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogTraceCat(cat, msg, ...)    SDL_LogTrace(cat, msg, ##__VA_ARGS__)
+#define LogInfoCat(cat, msg, ...)     SDL_LogInfo(cat, msg, ##__VA_ARGS__)
+#define LogDebugCat(cat, msg, ...)    SDL_LogDebug(cat, msg, ##__VA_ARGS__)
+#define LogWarnCat(cat, msg, ...)     SDL_LogWarn(cat, msg, ##__VA_ARGS__)
+#define LogErrorCat(cat, msg, ...)    SDL_LogError(cat, msg, ##__VA_ARGS__)
+#define LogCriticalCat(cat, msg, ...) SDL_LogCritical(cat, msg, ##__VA_ARGS__)
 #else
-#define LogTrace(msg, ...)
-#define LogInfo(msg, ...)
-#define LogDebug(msg, ...)
-#define LogWarn(msg, ...)
-#define LogError(msg, ...)
-#define LogCritical(msg, ...)
+#define LogTraceCat(cat, msg, ...)
+#define LogInfoCat(cat, msg, ...)
+#define LogDebugCat(cat, msg, ...)
+#define LogWarnCat(cat, msg, ...)
+#define LogErrorCat(cat, msg, ...)
+#define LogCriticalCat(cat, msg, ...)
 #endif
+
+#define LogTrace(msg, ...)    LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogInfo(msg, ...)     LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogDebug(msg, ...)    LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogWarn(msg, ...)     LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogError(msg, ...)    LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogCritical(msg, ...) LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 
 #define NOT_IMPLEMENTED(msg)                                                                                           \
   {                                                                                                                    \
