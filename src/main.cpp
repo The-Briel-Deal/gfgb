@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "disassemble.h"
 #include "ppu.h"
+#include "timing.h"
 
 #include <tracy/Tracy.hpp>
 /* enable file permission validators which are locked behind this ifdef for the time being */
@@ -423,8 +424,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           execute(gb_state, inst);
         } else {
           ZoneTextF("Halted");
-          // we don't want to stop iterating m cycles while halted or else the timer interrupt will never get called
-          gb_state->saved.m_cycles_elapsed++;
+          gb_spend_mcycles(gb_state, 1);
         }
       }
 
