@@ -26,7 +26,6 @@ static void gb_incr_tima(gb_state_t *gb_state) {
 }
 
 void gb_handle_div_write(gb_state_t *gb_state) {
-  // TODO: Resetting div will increment the TIMA reg if the
   gb_state->timing.sysclk     = 0;
   gb_state->saved.regs.io.div = 0;
   if (falling_edge(gb_state->saved.last_tima_bit, 0)) {
