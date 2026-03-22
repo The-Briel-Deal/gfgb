@@ -14,7 +14,28 @@
 #define rising_edge(was, is)  (!was && is)
 #define falling_edge(was, is) (was && !is)
 
-static void gb_sync_tima(struct gb_state *gb_state, uint16_t old_sysclk, uint16_t new_sysclk) {
+static void gb_incr_tima(gb_state_t *gb_state) {
+  if (gb_state->saved.regs.io.tima == 0xFF) {
+    gb_state->saved.regs.io.if_ |= 0b00100;
+    // reset TIMA to TMA since TIMA is going to overflow
+    // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff06--tma-timer-modulo
+    gb_state->saved.regs.io.tima = gb_state->saved.regs.io.tma;
+  } else {
+    gb_state->saved.regs.io.tima++;
+  }
+}
+
+void gb_handle_div_write(gb_state_t *gb_state) {
+  // TODO: Resetting div will increment the TIMA reg if the
+  gb_state->timing.sysclk     = 0;
+  gb_state->saved.regs.io.div = 0;
+  if (falling_edge(gb_state->saved.last_tima_bit, 0)) {
+    gb_incr_tima(gb_state);
+  }
+  gb_state->saved.last_tima_bit = 0;
+}
+
+static void gb_sync_tima(gb_state_t *gb_state, uint16_t old_sysclk, uint16_t new_sysclk) {
   uint8_t tac = gb_state->saved.regs.io.tac;
   // TODO: This is slow but accurate, since we increment multiple cycles at once in many places we need to make sure
   // that we don't miss the falling edge. There's probably a better way to do this if I take a bit to think on this.
@@ -31,14 +52,7 @@ static void gb_sync_tima(struct gb_state *gb_state, uint16_t old_sysclk, uint16_
 
     // Only increment on falling edge (a.k.a. true -> false).
     if (falling_edge(gb_state->saved.last_tima_bit, this_bit)) {
-      if (gb_state->saved.regs.io.tima == 0xFF) {
-        gb_state->saved.regs.io.if_ |= 0b00100;
-        // reset TIMA to TMA since TIMA is going to overflow
-        // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff06--tma-timer-modulo
-        gb_state->saved.regs.io.tima = gb_state->saved.regs.io.tma;
-      } else {
-        gb_state->saved.regs.io.tima++;
-      }
+      gb_incr_tima(gb_state);
     }
 
     gb_state->saved.last_tima_bit = this_bit;

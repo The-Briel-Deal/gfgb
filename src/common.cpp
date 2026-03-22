@@ -1,5 +1,6 @@
 #include "common.h"
 #include "ppu.h"
+#include "timing.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -290,7 +291,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     gb_state->saved.regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
     gb_state->saved.regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
     break;
-  case IO_DIV: gb_state->saved.regs.io.div = 0; break;
+  case IO_DIV: gb_handle_div_write(gb_state); break;
   case IO_BANK:
     // if bit 0 is set unmap bootrom. This can't be re-enabled without a restart.
     if (val & 1) {
