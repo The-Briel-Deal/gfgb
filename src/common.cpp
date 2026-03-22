@@ -234,7 +234,7 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
         val = *io_reg_ptr;
         break;
       }
-      LogDebug("Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", addr, val);
+      LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", addr, val);
       return val;
     }
 
@@ -281,7 +281,7 @@ void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
 static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
   // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
   // read-only.
-  LogDebug("Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
+  LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
   switch (reg) {
   case IO_SC:
     // TODO: CGB uses bit 1 for clock speed. I'll need to implement that if I add CGB support.
