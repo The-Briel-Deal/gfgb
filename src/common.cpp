@@ -172,7 +172,7 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   }
   case IO_DIV: {
     // Internally div is a 16 bit register but only the most significant 8 bits are mapped to mem.
-    return ((gb_state->saved.regs.io.div >> 8) & 0xFF);
+    return gb_state->saved.regs.io.div;
   }
   default: NOT_IMPLEMENTED("Read Only IO Reg Not Implemented");
   }

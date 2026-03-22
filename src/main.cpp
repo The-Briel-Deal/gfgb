@@ -453,33 +453,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
           gb_write_mem8(gb_state, dst_addr, src_byte);
         }
       }
-
-      if (!gb_state->dbg.headless_mode) {
-        ZoneScopedN("Rendering");
-        if (curr_mode != last_mode) switch (curr_mode) {
-          case OAM_SCAN: {
-            ZoneScopedN("OAM Read");
-            gb_read_oam_entries(gb_state);
-            break;
-          }
-          case DRAWING_PIXELS: {
-            ZoneScopedN("Drawing Pixels");
-            gb_draw(gb_state);
-            break;
-          }
-          case HBLANK: {
-            ZoneScopedN("H-Blank");
-            gb_composite_line(gb_state);
-            break;
-          }
-          case VBLANK: {
-            ZoneScopedN("V-Blank");
-            gb_flip_frame(gb_state);
-            break;
-          }
-          }
-        gb_state->saved.last_mode_handled = curr_mode;
-      }
     }
   }
 
