@@ -318,6 +318,11 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   } else {
     LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
     uint8_t *val_ptr;
+    if (addr < 0x4000) {
+      // TODO: Everything in the rom section is read only and writes here control the MBC which still needs to be
+      // implemented.
+      return;
+    }
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
       if (addr == IO_SB) {
         // TODO: This just logs out every character written to this port. If I
