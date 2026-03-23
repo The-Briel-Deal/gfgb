@@ -349,6 +349,8 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   }
 }
 
+// TODO: I should just call gb_write_mem8 twice here since there is some extra special handling for things like rom and
+// IO registers in that func
 void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
   if (gb_state->dbg.use_flat_ram) {
     uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
