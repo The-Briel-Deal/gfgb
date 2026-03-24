@@ -3,7 +3,6 @@
 #include "timing.h"
 #include "tracy/TracyC.h"
 
-#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>

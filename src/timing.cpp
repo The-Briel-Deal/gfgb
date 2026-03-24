@@ -1,7 +1,6 @@
 #include "common.h"
 #include "ppu.h"
 #include "tracy/Tracy.hpp"
-#include <cstdint>
 
 #define PPU_DOTS_PER_FRAME  70224
 #define PPU_DOTS_PER_LINE   456
