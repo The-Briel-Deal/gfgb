@@ -29,7 +29,9 @@ if not sdl3_dep.found()
   meson.override_dependency('sdl3', sdl3_dep)
 endif
 
-catch_dep = dependency('Catch2', required : false, fallback : 'catch')
+catch_subpro = subproject('catch')
+catch_dep = catch_subpro.get_variable('catch2_with_main_dep')
+
 
 imgui_dep = dependency('imgui-docking', default_options : {
     # For now i'm only using sdl3 and sdl3_renderer as backends. GLFW being enabled broke builds on my machine so I disabled everything i'm not using.
