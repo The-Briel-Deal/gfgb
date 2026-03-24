@@ -1,3 +1,6 @@
 [submodule "subprojects/sdl"]
 	path = subprojects/sdl
 	url = git@github.com:libsdl-org/SDL.git
+[submodule "subprojects/catch"]
+	path = subprojects/catch
+	url = git@github.com:catchorg/Catch2.git
