@@ -184,7 +184,7 @@ test(
   'mooneye_vblank_stat_intr',
   exe,
   args : [
-    'exec', current_src_dir / 'test/mooneye/build/acceptance/ppu/vblank_stat_intr-GS.gb',
+    'exec', current_src_dir / 'test/mooneye/acceptance/ppu/vblank_stat_intr-GS.gb',
     '--test_mode',
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
