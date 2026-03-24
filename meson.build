@@ -29,7 +29,7 @@ if not sdl3_dep.found()
   meson.override_dependency('sdl3', sdl3_dep)
 endif
 
-
+catch_dep = dependency('Catch2', required : false, fallback : 'catch')
 
 imgui_dep = dependency('imgui-docking', default_options : {
     # For now i'm only using sdl3 and sdl3_renderer as backends. GLFW being enabled broke builds on my machine so I disabled everything i'm not using.
@@ -109,28 +109,28 @@ cpu_test_exe = executable(
   'cpu_test_exe',
   [sources, 'test/unit/cpu_test.cpp'],
   include_directories : [include, 'test/unit/'],
-  dependencies : [gui_deps, global_deps],
+  dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 mbc_test_exe = executable(
   'mbc_test_exe',
   [sources, 'test/unit/mbc_test.cpp'],
   include_directories : [include, 'test/unit/'],
-  dependencies : [gui_deps, global_deps],
+  dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 ppu_test_exe = executable(
   'ppu_test_exe',
   [sources, 'test/unit/ppu_test.cpp'],
   include_directories : [include, 'test/unit/'],
-  dependencies : [gui_deps, global_deps],
+  dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 disasm_test_exe = executable(
   'disasm_test_exe',
   [sources, 'test/unit/disassemble_test.cpp'],
   include_directories : [include, 'test/unit/'],
-  dependencies : [gui_deps, global_deps],
+  dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 current_src_dir = meson.current_source_dir()
