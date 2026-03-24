@@ -11,6 +11,40 @@
 #include "incbin.h"
 INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
+#define GB_HEADER_CART_TYPE_ADDR 0x0147
+
+const GB_cartridge_t GB_cart_defs[256] = {
+    // From http://gbdev.gg8.se/wiki/articles/The_Cartridge_Header#0147_-_Cartridge_Type
+    /* MBC        RAM    BAT.   RTC    RUMB.   */
+    {GB_NO_MBC, false, false, false, false},        // 00h  ROM ONLY
+    {GB_MBC1, false, false, false, false},          // 01h  MBC1
+    {GB_MBC1, true, false, false, false},           // 02h  MBC1+RAM
+    {GB_MBC1, true, true, false, false},            // 03h  MBC1+RAM+BATTERY
+    [5] = {GB_MBC2, true, false, false, false},     // 05h  MBC2
+    {GB_MBC2, true, true, false, false},            // 06h  MBC2+BATTERY
+    [8] = {GB_NO_MBC, true, false, false, false},   // 08h  ROM+RAM
+    {GB_NO_MBC, true, true, false, false},          // 09h  ROM+RAM+BATTERY
+    [0xB] = {GB_MMM01, false, false, false, false}, // 0Bh  MMM01
+    {GB_MMM01, true, false, false, false},          // 0Ch  MMM01+RAM
+    {GB_MMM01, true, true, false, false},           // 0Dh  MMM01+RAM+BATTERY
+    [0xF] = {GB_MBC3, false, true, true, false},    // 0Fh  MBC3+TIMER+BATTERY
+    {GB_MBC3, true, true, true, false},             // 10h  MBC3+TIMER+RAM+BATTERY
+    {GB_MBC3, false, false, false, false},          // 11h  MBC3
+    {GB_MBC3, true, false, false, false},           // 12h  MBC3+RAM
+    {GB_MBC3, true, true, false, false},            // 13h  MBC3+RAM+BATTERY
+    [0x19] = {GB_MBC5, false, false, false, false}, // 19h  MBC5
+    {GB_MBC5, true, false, false, false},           // 1Ah  MBC5+RAM
+    {GB_MBC5, true, true, false, false},            // 1Bh  MBC5+RAM+BATTERY
+    {GB_MBC5, false, false, false, true},           // 1Ch  MBC5+RUMBLE
+    {GB_MBC5, true, false, false, true},            // 1Dh  MBC5+RUMBLE+RAM
+    {GB_MBC5, true, true, false, true},             // 1Eh  MBC5+RUMBLE+RAM+BATTERY
+    [0x22] = {GB_MBC7, true, true, false, false},   // 22h  MBC7+ACCEL+EEPROM
+    [0xFC] = {GB_CAMERA, true, true, false, false}, // FCh  POCKET CAMERA
+    {GB_NO_MBC, false, false, false, false},        // FDh  BANDAI TAMA5 (Todo: Not supported)
+    {GB_HUC3, true, true, true, false},             // FEh  HuC3
+    {GB_HUC1, true, true, false, false},            // FFh  HuC1+RAM+BATTERY
+};
+
 // initialize dynamic string with capacity `cap`
 void gb_dstr_init(gb_dstr_t *dstr, size_t cap) {
   dstr->cap = cap;
@@ -288,6 +322,15 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     }
     *reg_ptr = val;
     break;
+  }
+}
+static void gb_write_mbc1(struct gb_state *gb_state, uint16_t addr, uint8_t val) {}
+
+// Called whenever gb_write_mem is called on ROM.
+static void gb_write_mbc(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
+  uint8_t cart_type = gb_read_mem(gb_state, GB_HEADER_CART_TYPE_ADDR);
+  switch (cart_type) {
+  case 0x00: // ROM Only
   }
 }
 
