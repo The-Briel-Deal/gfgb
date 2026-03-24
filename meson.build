@@ -113,6 +113,13 @@ cpu_test_exe = executable(
   dependencies : [gui_deps, global_deps],
 )
 
+mbc_test_exe = executable(
+  'mbc_test_exe',
+  [sources, 'test/unit/mbc_test.cpp'],
+  include_directories : include,
+  dependencies : [gui_deps, global_deps],
+)
+
 ppu_test_exe = executable(
   'ppu_test_exe',
   sources,
@@ -132,6 +139,7 @@ disasm_test_exe = executable(
 current_src_dir = meson.current_source_dir()
 
 test('cpu_test', cpu_test_exe)
+test('mbc_test', mbc_test_exe)
 test('ppu_test', ppu_test_exe)
 test('disasm_test', disasm_test_exe)
 
