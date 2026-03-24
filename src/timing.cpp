@@ -149,8 +149,8 @@ static void gb_ppu_handle_oam_dma(gb_state_t *gb_state) {
     for (uint8_t addr_offset = 0; addr_offset <= 0x9F; addr_offset++) {
       uint16_t src_addr = start_src_addr | addr_offset;
       uint16_t dst_addr = 0xFE00 | addr_offset;
-      uint8_t  src_byte = gb_read_mem8(gb_state, src_addr);
-      gb_write_mem8(gb_state, dst_addr, src_byte);
+      uint8_t  src_byte = gb_read_mem(gb_state, src_addr);
+      gb_write_mem(gb_state, dst_addr, src_byte);
     }
   }
 }

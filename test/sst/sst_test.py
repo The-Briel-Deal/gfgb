@@ -57,7 +57,7 @@ def load_initial_state(gb_state: gfgb.GB_State, state: StateSnapshot):
   for entry in state.ram:
     addr = entry[0]
     val = entry[1]
-    gb_state.write_mem8(addr, val)
+    gb_state.write_mem(addr, val)
 
 
 def assert_state_equals(gb_state: gfgb.GB_State, state: StateSnapshot):
@@ -76,7 +76,7 @@ def assert_state_equals(gb_state: gfgb.GB_State, state: StateSnapshot):
   for entry in state.ram:
     addr = entry[0]
     expect_val = entry[1]
-    result_val = gb_state.read_mem8(addr)
+    result_val = gb_state.read_mem(addr)
     assert expect_val == result_val
 
 

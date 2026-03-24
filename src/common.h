@@ -525,8 +525,8 @@ uint64_t gb_m_cycles(gb_state_t *gb_state);
 
 void *gb_unmap_address(gb_state_t *gb_state, uint16_t addr);
 
-uint8_t gb_read_mem8(gb_state_t *gb_state, uint16_t addr);
-void    gb_write_mem8(gb_state_t *gb_state, uint16_t addr, uint8_t val);
+uint8_t gb_read_mem(gb_state_t *gb_state, uint16_t addr);
+void    gb_write_mem(gb_state_t *gb_state, uint16_t addr, uint8_t val);
 
 void        gb_state_init(gb_state_t *gb_state);
 void        gb_state_reset(gb_state_t *gb_state);

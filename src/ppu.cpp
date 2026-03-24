@@ -331,7 +331,7 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
   for (int i = 0; i < (32 * 32); i++) {
     const int      x               = i % 32;
     const int      y               = i / 32;
-    const uint8_t  tile_data_index = gb_read_mem8(gb_state, bg_tile_map_start + i);
+    const uint8_t  tile_data_index = gb_read_mem(gb_state, bg_tile_map_start + i);
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                      ((tile_data_index % 128) * 16);
     // Use signed integers when calculating the display position since we still display tiles where y = 0 to -7
@@ -383,7 +383,7 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
   for (int i = 0; i < 32; i++) {
     const int      x               = i;
     const int      y               = gb_state->saved.win_line_counter / 8;
-    const uint8_t  tile_data_index = gb_read_mem8(gb_state, win_tile_map_start + x + (y * 32));
+    const uint8_t  tile_data_index = gb_read_mem(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                      ((tile_data_index % 128) * 16);
     uint8_t        display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
@@ -570,7 +570,7 @@ static void gb_imgui_show_mem_val(struct gb_state *gb_state, const char *name, c
                                            "  Hex: {2:#04x}\n"
                                            "  Dec: {2:d}\n"
                                            "  Bin: {2:#010b}",
-                                           name, addr, gb_read_mem8(gb_state, addr));
+                                           name, addr, gb_read_mem(gb_state, addr));
   ImGui::TextUnformatted(formatted_text.c_str());
 }
 static void gb_imgui_show_val(const char *name, const uint8_t val) {
@@ -736,13 +736,13 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
       if (ImGui::Button("Read")) {
         imgui_state->mem_inspect_last_read_addr = imgui_state->mem_inspect_addr;
-        imgui_state->mem_inspect_last_read_val  = gb_read_mem8(gb_state, imgui_state->mem_inspect_addr);
+        imgui_state->mem_inspect_last_read_val  = gb_read_mem(gb_state, imgui_state->mem_inspect_addr);
       }
       ImGui::SameLine();
       if (ImGui::Button("Write")) {
         imgui_state->mem_inspect_last_write_addr = imgui_state->mem_inspect_addr;
         imgui_state->mem_inspect_last_write_val  = imgui_state->mem_inspect_val;
-        gb_write_mem8(gb_state, imgui_state->mem_inspect_last_write_addr, imgui_state->mem_inspect_last_write_val);
+        gb_write_mem(gb_state, imgui_state->mem_inspect_last_write_addr, imgui_state->mem_inspect_last_write_val);
       }
       std::string formatted_read_text =
           std::format("Value read from addr {0:#06x} is:\n"

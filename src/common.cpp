@@ -209,7 +209,7 @@ not_implemented:
   return NULL;
 }
 
-uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
+uint8_t gb_read_mem(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr;
   if (gb_state->dbg.use_flat_ram) {
     return gb_state->saved.flat_ram[addr];
@@ -245,7 +245,7 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
 
   not_implemented:
     // It isn't always a critical issue to read unused mem/io-regs, tetris seems to do it unintentionally.
-    LogWarn("`read_mem8()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
+    LogWarn("`read_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
     return 0xFF;
   }
 }
@@ -291,7 +291,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
   }
 }
 
-void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
+void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->dbg.use_flat_ram) {
     gb_state->saved.flat_ram[addr] = val;
   } else {
@@ -323,7 +323,7 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
       }
       *val_ptr = val;
     } else {
-      LogCritical("`write_mem8()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
+      LogCritical("`write_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
     }
   }
 }
