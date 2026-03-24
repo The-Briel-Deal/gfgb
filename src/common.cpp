@@ -349,26 +349,6 @@ void gb_write_mem8(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   }
 }
 
-// TODO: I should just call gb_write_mem8 twice here since there is some extra special handling for things like rom and
-// IO registers in that func
-void gb_write_mem16(struct gb_state *gb_state, uint16_t addr, uint16_t val) {
-  if (gb_state->dbg.use_flat_ram) {
-    uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
-    val_ptr[0]       = (val & 0x00FF) >> 0;
-    val_ptr[1]       = (val & 0xFF00) >> 8;
-  } else {
-    LogTrace("Writing val 0x%.4X to address 0x%.4X", val, addr);
-    // little endian
-    uint8_t *val_ptr = ((uint8_t *)gb_unmap_address(gb_state, addr));
-    if (val_ptr != NULL) {
-      val_ptr[0] = (val & 0x00FF) >> 0;
-      val_ptr[1] = (val & 0xFF00) >> 8;
-    } else {
-      LogCritical("`write_mem16()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
-    }
-  }
-}
-
 uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->saved.m_cycles_elapsed; }
 
 #define DOTS_PER_LINE   456

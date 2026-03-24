@@ -3,6 +3,7 @@
 #include "timing.h"
 #include "tracy/TracyC.h"
 
+#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -492,7 +493,9 @@ static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   }
   if (IS_IMM16_MEM(dest) && IS_R16(src)) {
     gb_spend_mcycles(gb_state, 5);
-    gb_write_mem16(gb_state, dest.imm16, get_r16(gb_state, src.r16));
+    uint16_t src_r16_val = get_r16(gb_state, src.r16);
+    gb_write_mem8(gb_state, dest.imm16, src_r16_val & 0x00FF);
+    gb_write_mem8(gb_state, dest.imm16 + 1, (src_r16_val & 0xFF00) >> 8);
     return;
   }
   if (IS_IMM16_MEM(dest) && IS_R8(src)) {
@@ -1447,7 +1450,7 @@ void test_fetch() {
   gb_state.saved.ram.rom0[0x105] = 0b00001000;
   gb_state.saved.ram.rom0[0x106] = 0x34;
   gb_state.saved.ram.rom0[0x107] = 0x12;
-  inst = fetch(&gb_state);
+  inst                           = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == IMM16_MEM);
   GB_assert(inst.p1.imm16 == 0x1234);
