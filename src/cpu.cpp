@@ -1418,37 +1418,39 @@ void test_fetch() {
   gb_state_init(&gb_state);
   gb_state.saved.regs.pc = 0x0100;
 
-  gb_write_mem8(&gb_state, 0x100, 0b00100001);
-  gb_write_mem16(&gb_state, 0x101, 452);
-  inst = fetch(&gb_state);
+  gb_state.saved.ram.rom0[0x100] = 0b00100001;
+  gb_state.saved.ram.rom0[0x101] = 0xCD;
+  gb_state.saved.ram.rom0[0x102] = 0xAB;
+  inst                           = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == R16);
   GB_assert(inst.p1.r16 == R16_HL);
   GB_assert(inst.p2.type == IMM16);
-  GB_assert(inst.p2.imm16 == 452);
+  GB_assert(inst.p2.imm16 == 0xABCD);
 
-  gb_write_mem8(&gb_state, 0x103, 0b00010010);
-  inst = fetch(&gb_state);
+  gb_state.saved.ram.rom0[0x103] = 0b00010010;
+  inst                           = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == R16_MEM);
   GB_assert(inst.p1.r16 == R16_DE);
   GB_assert(inst.p2.type == R8);
   GB_assert(inst.p2.r8 == R8_A);
 
-  gb_write_mem8(&gb_state, 0x104, 0b00011010);
-  inst = fetch(&gb_state);
+  gb_state.saved.ram.rom0[0x104] = 0b00011010;
+  inst                           = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == R8);
   GB_assert(inst.p1.r8 == R8_A);
   GB_assert(inst.p2.type == R16_MEM);
   GB_assert(inst.p2.r16 == R16_DE);
 
-  gb_write_mem8(&gb_state, 0x105, 0b00001000);
-  gb_write_mem16(&gb_state, 0x106, 10403);
+  gb_state.saved.ram.rom0[0x105] = 0b00001000;
+  gb_state.saved.ram.rom0[0x106] = 0x34;
+  gb_state.saved.ram.rom0[0x107] = 0x12;
   inst = fetch(&gb_state);
   GB_assert(inst.type == LD);
   GB_assert(inst.p1.type == IMM16_MEM);
-  GB_assert(inst.p1.imm16 == 10403);
+  GB_assert(inst.p1.imm16 == 0x1234);
   GB_assert(inst.p2.type == R16);
   GB_assert(inst.p2.r16 == R16_SP);
 }
