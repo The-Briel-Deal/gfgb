@@ -250,27 +250,6 @@ uint8_t gb_read_mem8(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-uint16_t gb_read_mem16(struct gb_state *gb_state, uint16_t addr) {
-  if (gb_state->dbg.use_flat_ram) {
-    uint8_t *val_ptr = &gb_state->saved.flat_ram[addr];
-    uint16_t val     = 0x0000;
-    val |= val_ptr[0] << 0;
-    val |= val_ptr[1] << 8;
-    return val;
-  } else {
-    LogTrace("Reading 16 bits from address 0x%.4X", addr);
-    uint8_t *val_ptr = (uint8_t *)gb_unmap_address(gb_state, addr);
-    if (val_ptr != NULL) {
-      uint16_t val = 0x0000;
-      val |= val_ptr[0] << 0;
-      val |= val_ptr[1] << 8;
-      return val;
-    } else {
-      LogCritical("`read_mem16()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
-      return 0;
-    }
-  }
-}
 void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   if (addr >= GB_TILEDATA_BLOCK0_START && addr < GB_TILEDATA_BLOCK2_END) {
     uint16_t tex_idx                        = gb_tile_addr_to_tex_idx(addr);

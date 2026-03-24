@@ -53,7 +53,9 @@ static inline uint8_t next8(struct gb_state *gb_state) {
 }
 
 static inline uint16_t next16(struct gb_state *gb_state) {
-  uint16_t val = gb_read_mem16(gb_state, gb_state->saved.regs.pc);
+  uint8_t  b1  = gb_read_mem8(gb_state, gb_state->saved.regs.pc);
+  uint8_t  b2  = gb_read_mem8(gb_state, gb_state->saved.regs.pc + 1);
+  uint16_t val = b1 | (b2 << 8);
   gb_state->saved.regs.pc += 2;
   return val;
 }
@@ -1524,7 +1526,7 @@ void test_execute_load() {
   set_r16(&gb_state, R16_SP, 0xD123);
   execute(&gb_state, inst);
   GB_assert(gb_state.saved.regs.sp == 0xD123);
-  GB_assert(gb_read_mem16(&gb_state, 0xC010) == 0xD123);
+  GB_assert((gb_read_mem8(&gb_state, 0xC010) | (gb_read_mem8(&gb_state, 0xC011) << 8)) == 0xD123);
 }
 
 void test_stack_ops() {
@@ -1537,7 +1539,6 @@ void test_stack_ops() {
   // like 16 bit values anywhere else in memory.
   assert_eq(gb_read_mem8(&gb_state, 0xDFFF), 0x12);
   assert_eq(gb_read_mem8(&gb_state, 0xDFFE), 0x34);
-  assert_eq(gb_read_mem16(&gb_state, 0xDFFE), 0x1234);
 
   assert_eq(pop16(&gb_state), 0x1234);
 }
@@ -1550,7 +1551,7 @@ void test_execute_call_ret() {
   execute(&gb_state, inst_t{.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
   assert_eq(gb_state.saved.regs.sp, 0xDFFE);
   assert_eq(gb_state.saved.regs.pc, 0x0210);
-  assert_eq(gb_read_mem16(&gb_state, 0xDFFE), 0x0190);
+  assert_eq((gb_read_mem8(&gb_state, 0xDFFE) | (gb_read_mem8(&gb_state, 0xDFFF) << 8)), 0x0190);
   execute(&gb_state, inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
   assert_eq(gb_state.saved.regs.sp, 0xE000);
   assert_eq(gb_state.saved.regs.pc, 0x0190);
