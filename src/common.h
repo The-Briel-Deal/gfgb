@@ -521,8 +521,7 @@ enum joy_pad_io_reg_bits : uint8_t {
   JOYP_BUTTON_START  = 1 << 3,
 };
 
-// Note: I took this lookup table from SameBoy because I didn't want to have to rewrite this myself. I'll need to make
-// sure I follow the license and give the author credit.
+// Note: I took and modified this from SameBoy's MBC lookup table.
 
 typedef enum gb_mbc_type {
   GB_NO_MBC,
@@ -536,16 +535,18 @@ typedef enum gb_mbc_type {
   GB_HUC3,
   GB_TPP1,
   GB_CAMERA,
+
+  GB_MBC_UNKNOWN,
 } gb_mbc_type_t;
-typedef struct {
+typedef struct gb_cart_header {
   gb_mbc_type_t mbc_type;
   bool          has_ram;
   bool          has_battery;
   bool          has_rtc;
   bool          has_rumble;
-} GB_cartridge_t;
+} gb_cart_header_t;
 
-extern const GB_cartridge_t GB_cart_defs[256];
+gb_cart_header_t gb_parse_cart_header(uint8_t *header[0x50]);
 
 uint64_t gb_m_cycles(gb_state_t *gb_state);
 

@@ -13,36 +13,44 @@ INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
 #define GB_HEADER_CART_TYPE_ADDR 0x0147
 
-const GB_cartridge_t GB_cart_defs[256] = {
-    // From http://gbdev.gg8.se/wiki/articles/The_Cartridge_Header#0147_-_Cartridge_Type
-    /* MBC        RAM    BAT.   RTC    RUMB.   */
-    {GB_NO_MBC, false, false, false, false},        // 00h  ROM ONLY
-    {GB_MBC1, false, false, false, false},          // 01h  MBC1
-    {GB_MBC1, true, false, false, false},           // 02h  MBC1+RAM
-    {GB_MBC1, true, true, false, false},            // 03h  MBC1+RAM+BATTERY
-    [5] = {GB_MBC2, true, false, false, false},     // 05h  MBC2
-    {GB_MBC2, true, true, false, false},            // 06h  MBC2+BATTERY
-    [8] = {GB_NO_MBC, true, false, false, false},   // 08h  ROM+RAM
-    {GB_NO_MBC, true, true, false, false},          // 09h  ROM+RAM+BATTERY
-    [0xB] = {GB_MMM01, false, false, false, false}, // 0Bh  MMM01
-    {GB_MMM01, true, false, false, false},          // 0Ch  MMM01+RAM
-    {GB_MMM01, true, true, false, false},           // 0Dh  MMM01+RAM+BATTERY
-    [0xF] = {GB_MBC3, false, true, true, false},    // 0Fh  MBC3+TIMER+BATTERY
-    {GB_MBC3, true, true, true, false},             // 10h  MBC3+TIMER+RAM+BATTERY
-    {GB_MBC3, false, false, false, false},          // 11h  MBC3
-    {GB_MBC3, true, false, false, false},           // 12h  MBC3+RAM
-    {GB_MBC3, true, true, false, false},            // 13h  MBC3+RAM+BATTERY
-    [0x19] = {GB_MBC5, false, false, false, false}, // 19h  MBC5
-    {GB_MBC5, true, false, false, false},           // 1Ah  MBC5+RAM
-    {GB_MBC5, true, true, false, false},            // 1Bh  MBC5+RAM+BATTERY
-    {GB_MBC5, false, false, false, true},           // 1Ch  MBC5+RUMBLE
-    {GB_MBC5, true, false, false, true},            // 1Dh  MBC5+RUMBLE+RAM
-    {GB_MBC5, true, true, false, true},             // 1Eh  MBC5+RUMBLE+RAM+BATTERY
-    [0x22] = {GB_MBC7, true, true, false, false},   // 22h  MBC7+ACCEL+EEPROM
-    [0xFC] = {GB_CAMERA, true, true, false, false}, // FCh  POCKET CAMERA
-    {GB_NO_MBC, false, false, false, false},        // FDh  BANDAI TAMA5 (Todo: Not supported)
-    {GB_HUC3, true, true, true, false},             // FEh  HuC3
-    {GB_HUC1, true, true, false, false},            // FFh  HuC1+RAM+BATTERY
+gb_cart_header_t gb_parse_cart_header(uint8_t *header[0x50]) {
+  gb_cart_header_t parsed_header;
+
+  uint8_t cart_type = (*header)[GB_HEADER_CART_TYPE_ADDR - 0x100];
+  switch (cart_type) {
+  case 0x00: parsed_header = {GB_NO_MBC, false, false, false, false}; break; // 00h  ROM ONLY
+  case 0x01: parsed_header = {GB_MBC1, false, false, false, false}; break;   // 01h  MBC1
+  case 0x02: parsed_header = {GB_MBC1, true, false, false, false}; break;    // 02h  MBC1+RAM
+  case 0x03: parsed_header = {GB_MBC1, true, true, false, false}; break;     // 03h  MBC1+RAM+BATTERY
+  case 0x05: parsed_header = {GB_MBC2, true, false, false, false}; break;    // 05h  MBC2
+  case 0x06: parsed_header = {GB_MBC2, true, true, false, false}; break;     // 06h  MBC2+BATTERY
+  case 0x08: parsed_header = {GB_NO_MBC, true, false, false, false}; break;  // 08h  ROM+RAM
+  case 0x09: parsed_header = {GB_NO_MBC, true, true, false, false}; break;   // 09h  ROM+RAM+BATTERY
+  case 0x0B: parsed_header = {GB_MMM01, false, false, false, false}; break;  // 0Bh  MMM01
+  case 0x0C: parsed_header = {GB_MMM01, true, false, false, false}; break;   // 0Ch  MMM01+RAM
+  case 0x0D: parsed_header = {GB_MMM01, true, true, false, false}; break;    // 0Dh  MMM01+RAM+BATTERY
+  case 0x0F: parsed_header = {GB_MBC3, false, true, true, false}; break;     // 0Fh  MBC3+TIMER+BATTERY
+  case 0x10: parsed_header = {GB_MBC3, true, true, true, false}; break;      // 10h  MBC3+TIMER+RAM+BATTERY
+  case 0x11: parsed_header = {GB_MBC3, false, false, false, false}; break;   // 11h  MBC3
+  case 0x12: parsed_header = {GB_MBC3, true, false, false, false}; break;    // 12h  MBC3+RAM
+  case 0x13: parsed_header = {GB_MBC3, true, true, false, false}; break;     // 13h  MBC3+RAM+BATTERY
+  case 0x19: parsed_header = {GB_MBC5, false, false, false, false}; break;   // 19h  MBC5
+  case 0x1A: parsed_header = {GB_MBC5, true, false, false, false}; break;    // 1Ah  MBC5+RAM
+  case 0x1B: parsed_header = {GB_MBC5, true, true, false, false}; break;     // 1Bh  MBC5+RAM+BATTERY
+  case 0x1C: parsed_header = {GB_MBC5, false, false, false, true}; break;    // 1Ch  MBC5+RUMBLE
+  case 0x1D: parsed_header = {GB_MBC5, true, false, false, true}; break;     // 1Dh  MBC5+RUMBLE+RAM
+  case 0x1E: parsed_header = {GB_MBC5, true, true, false, true}; break;      // 1Eh  MBC5+RUMBLE+RAM+BATTERY
+  case 0x22: parsed_header = {GB_MBC7, true, true, false, false}; break;     // 22h  MBC7+ACCEL+EEPROM
+  case 0xFC: parsed_header = {GB_CAMERA, true, true, false, false}; break;   // FCh  POCKET CAMERA
+  case 0xFD: parsed_header = {GB_NO_MBC, false, false, false, false}; break; // FDh  BANDAI TAMA5 (Todo: Not supported)
+  case 0xFE: parsed_header = {GB_HUC3, true, true, true, false}; break;      // FEh  HuC3
+  case 0xFF: parsed_header = {GB_HUC1, true, true, false, false}; break;     // FFh  HuC1+RAM+BATTERY
+  default:
+    LogWarn("`gb_parse_cart_header() called an unknown cart type [$0147]`");
+    parsed_header = {GB_MBC_UNKNOWN, false, false, false, false};
+    break;
+  }
+  return parsed_header;
 };
 
 // initialize dynamic string with capacity `cap`
