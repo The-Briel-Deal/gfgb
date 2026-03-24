@@ -64,6 +64,7 @@ typedef struct __attribute__((packed)) oam_entry {
   bool         priority : 1;
 } oam_entry_t;
 
+void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out);
 void gb_read_oam_entries(gb_state_t *gb_state); // on OAM-Scan
 void gb_draw(gb_state_t *gb_state);             // on Drawing-Pixels
 void gb_composite_line(gb_state_t *gb_state);   // on H-Blank

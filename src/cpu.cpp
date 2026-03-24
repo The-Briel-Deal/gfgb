@@ -8,44 +8,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-enum gb_flag_reg_bits {
-  FLAG_Z = (1 << 7),
-  FLAG_N = (1 << 6),
-  FLAG_H = (1 << 5),
-  FLAG_C = (1 << 4),
-};
-typedef uint8_t gb_flag_reg_bits_t;
-
-#define R8_PARAM(r)                                                                                                    \
-  inst_param_t { .type = R8, .r8 = (r8_t)(r) }
-#define R16_PARAM(r)                                                                                                   \
-  inst_param_t { .type = R16, .r16 = (r16_t)(r) }
-#define R16_MEM_PARAM(r)                                                                                               \
-  inst_param_t { .type = R16_MEM, .r16_mem = (r16_mem_t)(r) }
-#define R16_STK_PARAM(r)                                                                                               \
-  inst_param_t { .type = R16_STK, .r16_stk = (r16_stk_t)(r) }
-#define IMM16_PARAM(imm)                                                                                               \
-  inst_param_t { .type = IMM16, .imm16 = imm }
-#define SP_IMM8_PARAM(imm)                                                                                             \
-  inst_param_t { .type = SP_IMM8, .imm8 = imm }
-#define IMM8_PARAM(imm)                                                                                                \
-  inst_param_t { .type = IMM8, .imm8 = imm }
-#define E8_PARAM(imm)                                                                                                  \
-  inst_param_t { .type = E8, .imm8 = imm }
-#define IMM8_HMEM_PARAM(imm)                                                                                           \
-  inst_param_t { .type = IMM8_HMEM, .imm8 = imm }
-#define IMM16_MEM_PARAM(imm)                                                                                           \
-  inst_param_t { .type = IMM16_MEM, .imm16 = imm }
-#define B3_PARAM(b)                                                                                                    \
-  inst_param_t { .type = B3, .b3 = (uint8_t)(b) }
-#define TGT3_PARAM(b)                                                                                                  \
-  inst_param_t { .type = TGT3, .tgt3 = (uint8_t)(b) }
-#define COND_PARAM(cond_p)                                                                                             \
-  inst_param_t { .type = COND, .cond = (cond_t)(cond_p) }
-#define UNKNOWN_INST_BYTE_PARAM(b)                                                                                     \
-  inst_param_t { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
-#define VOID_PARAM inst_param_t{.type = VOID_PARAM_TYPE, .void_val = 0}
-
 static inline uint8_t next8(struct gb_state *gb_state) {
   uint8_t val = gb_read_mem(gb_state, gb_state->saved.regs.pc);
   gb_state->saved.regs.pc += 1;
@@ -578,11 +540,22 @@ static void ex_halt(struct gb_state *gb_state, struct inst inst) {
   // TODO: make sure halt bug is implemented
   gb_spend_mcycles(gb_state, 3);
 }
-static void push16(struct gb_state *gb_state, uint16_t val) {
+
+void push16(struct gb_state *gb_state, uint16_t val) {
   // little endian
   gb_write_mem(gb_state, --gb_state->saved.regs.sp, (val & 0xFF00) >> 8);
   gb_write_mem(gb_state, --gb_state->saved.regs.sp, (val & 0x00FF) >> 0);
 }
+
+uint16_t pop16(struct gb_state *gb_state) {
+  uint16_t val = 0;
+
+  // little endian
+  val |= gb_read_mem(gb_state, gb_state->saved.regs.sp++) << 0;
+  val |= gb_read_mem(gb_state, gb_state->saved.regs.sp++) << 8;
+  return val;
+}
+
 static void ex_push(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == PUSH);
   GB_assert(inst.p1.type == R16_STK);
@@ -591,14 +564,6 @@ static void ex_push(struct gb_state *gb_state, struct inst inst) {
   push16(gb_state, get_r16_stk(gb_state, inst.p1.r16_stk));
 }
 
-static uint16_t pop16(struct gb_state *gb_state) {
-  uint16_t val = 0;
-
-  // little endian
-  val |= gb_read_mem(gb_state, gb_state->saved.regs.sp++) << 0;
-  val |= gb_read_mem(gb_state, gb_state->saved.regs.sp++) << 8;
-  return val;
-}
 static void ex_pop(struct gb_state *gb_state, struct inst inst) {
   GB_assert(inst.type == POP);
   GB_assert(inst.p1.type == R16_STK);
@@ -1411,166 +1376,3 @@ static inline void _execute(struct gb_state *gb_state, struct inst inst) {
     gb_state->saved.regs.io.set_ime_after = false;
   }
 }
-
-#ifdef RUN_CPU_TESTS
-
-#include "test_asserts.h"
-
-void test_fetch() {
-  struct gb_state gb_state;
-  struct inst     inst;
-
-  gb_state_init(&gb_state);
-  gb_state.saved.regs.pc = 0x0100;
-
-  gb_state.saved.ram.rom0[0x100] = 0b00100001;
-  gb_state.saved.ram.rom0[0x101] = 0xCD;
-  gb_state.saved.ram.rom0[0x102] = 0xAB;
-  inst                           = fetch(&gb_state);
-  GB_assert(inst.type == LD);
-  GB_assert(inst.p1.type == R16);
-  GB_assert(inst.p1.r16 == R16_HL);
-  GB_assert(inst.p2.type == IMM16);
-  GB_assert(inst.p2.imm16 == 0xABCD);
-
-  gb_state.saved.ram.rom0[0x103] = 0b00010010;
-  inst                           = fetch(&gb_state);
-  GB_assert(inst.type == LD);
-  GB_assert(inst.p1.type == R16_MEM);
-  GB_assert(inst.p1.r16 == R16_DE);
-  GB_assert(inst.p2.type == R8);
-  GB_assert(inst.p2.r8 == R8_A);
-
-  gb_state.saved.ram.rom0[0x104] = 0b00011010;
-  inst                           = fetch(&gb_state);
-  GB_assert(inst.type == LD);
-  GB_assert(inst.p1.type == R8);
-  GB_assert(inst.p1.r8 == R8_A);
-  GB_assert(inst.p2.type == R16_MEM);
-  GB_assert(inst.p2.r16 == R16_DE);
-
-  gb_state.saved.ram.rom0[0x105] = 0b00001000;
-  gb_state.saved.ram.rom0[0x106] = 0x34;
-  gb_state.saved.ram.rom0[0x107] = 0x12;
-  inst                           = fetch(&gb_state);
-  GB_assert(inst.type == LD);
-  GB_assert(inst.p1.type == IMM16_MEM);
-  GB_assert(inst.p1.imm16 == 0x1234);
-  GB_assert(inst.p2.type == R16);
-  GB_assert(inst.p2.r16 == R16_SP);
-}
-
-void test_execute_load() {
-  gb_state_t gb_state;
-  gb_state_init(&gb_state);
-  inst_t inst;
-
-  // Load IMM16 into reg BC
-  inst = inst_t{
-      .type = LD,
-      .p1   = R16_PARAM(R16_BC),
-      .p2   = IMM16_PARAM(452),
-  };
-  execute(&gb_state, inst);
-  GB_assert(get_r16(&gb_state, R16_BC) == 452);
-
-  // Load reg A into addr in reg BC
-  inst = inst_t{
-      .type = LD,
-      .p1   = R16_MEM_PARAM(R16_MEM_BC),
-      .p2   = R8_PARAM(R8_A),
-  };
-  set_r16(&gb_state, R16_BC, 0xC000);
-  gb_state.saved.regs.a = 42;
-  execute(&gb_state, inst);
-  GB_assert(gb_read_mem(&gb_state, 0xC000) == 42);
-
-  // Load contents of addr in reg BC into reg A
-  inst = inst_t{
-      .type = LD,
-      .p1   = R8_PARAM(R8_A),
-      .p2   = R16_MEM_PARAM(R16_MEM_BC),
-  };
-  gb_write_mem(&gb_state, 0xC000, 134);
-  execute(&gb_state, inst);
-  GB_assert(gb_state.saved.regs.a == 134);
-
-  // Load contents of addr in reg HL into reg A and increment the pointer.
-  inst = inst_t{
-      .type = LD,
-      .p1   = R8_PARAM(R8_A),
-      .p2   = R16_MEM_PARAM(R16_MEM_HLI),
-  };
-  set_r16(&gb_state, R16_HL, 0xC000);
-  gb_write_mem(&gb_state, 0xC000, 134);
-  execute(&gb_state, inst);
-  GB_assert(get_r16(&gb_state, R16_HL) == 0xC001);
-  GB_assert(gb_state.saved.regs.a == 134);
-  // Then load contents of reg A into the addr in reg HL.
-  inst = inst_t{
-      .type = LD,
-      .p1   = R16_MEM_PARAM(R16_MEM_HLD),
-      .p2   = R8_PARAM(R8_A),
-  };
-  set_r8(&gb_state, R8_A, 21);
-  execute(&gb_state, inst);
-  GB_assert(gb_read_mem(&gb_state, 0xC001) == 21);
-  GB_assert(get_r16(&gb_state, R16_HL) == 0xC000);
-
-  // Load stack pointer into addr at IMM16
-  inst = inst_t{
-      .type = LD,
-      .p1   = IMM16_MEM_PARAM(0xC010),
-      .p2   = R16_PARAM(R16_SP),
-  };
-  set_r16(&gb_state, R16_SP, 0xD123);
-  execute(&gb_state, inst);
-  GB_assert(gb_state.saved.regs.sp == 0xD123);
-  GB_assert((gb_read_mem(&gb_state, 0xC010) | (gb_read_mem(&gb_state, 0xC011) << 8)) == 0xD123);
-}
-
-void test_stack_ops() {
-  gb_state_t gb_state;
-  gb_state_init(&gb_state);
-
-  push16(&gb_state, 0x1234);
-  assert_eq(gb_state.saved.regs.sp, 0xDFFE);
-  // 16 bit vals on the stack should be little endian so that they can be read
-  // like 16 bit values anywhere else in memory.
-  assert_eq(gb_read_mem(&gb_state, 0xDFFF), 0x12);
-  assert_eq(gb_read_mem(&gb_state, 0xDFFE), 0x34);
-
-  assert_eq(pop16(&gb_state), 0x1234);
-}
-
-void test_execute_call_ret() {
-  gb_state_t gb_state;
-  gb_state_init(&gb_state);
-  assert_eq(gb_state.saved.regs.sp, 0xE000);
-  gb_state.saved.regs.pc = 0x0190;
-  execute(&gb_state, inst_t{.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});
-  assert_eq(gb_state.saved.regs.sp, 0xDFFE);
-  assert_eq(gb_state.saved.regs.pc, 0x0210);
-  assert_eq((gb_read_mem(&gb_state, 0xDFFE) | (gb_read_mem(&gb_state, 0xDFFF) << 8)), 0x0190);
-  execute(&gb_state, inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM});
-  assert_eq(gb_state.saved.regs.sp, 0xE000);
-  assert_eq(gb_state.saved.regs.pc, 0x0190);
-}
-
-#define TEST_CASE(name)                                                                                                \
-  {                                                                                                                    \
-    LogInfo("running `test_%s()`", #name);                                                                             \
-    test_##name();                                                                                                     \
-  }
-
-int main() {
-  LogInfo("Starting CPU tests.");
-  TEST_CASE(fetch);
-  TEST_CASE(execute_load);
-  TEST_CASE(execute_call_ret);
-  TEST_CASE(stack_ops);
-  LogInfo("CPU tests succeeded.");
-  SDL_Quit();
-}
-
-#endif

@@ -107,32 +107,29 @@ exe = executable(
 
 cpu_test_exe = executable(
   'cpu_test_exe',
-  sources,
-  cpp_args : '-DRUN_CPU_TESTS=1',
-  include_directories : include,
+  [sources, 'test/unit/cpu_test.cpp'],
+  include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps],
 )
 
 mbc_test_exe = executable(
   'mbc_test_exe',
   [sources, 'test/unit/mbc_test.cpp'],
-  include_directories : include,
+  include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps],
 )
 
 ppu_test_exe = executable(
   'ppu_test_exe',
-  sources,
-  cpp_args : '-DRUN_PPU_TESTS=1',
-  include_directories : include,
+  [sources, 'test/unit/ppu_test.cpp'],
+  include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps],
 )
 
 disasm_test_exe = executable(
   'disasm_test_exe',
-  sources,
-  cpp_args : '-DRUN_DISASSEMBLE_TESTS=1',
-  include_directories : include,
+  [sources, 'test/unit/disassemble_test.cpp'],
+  include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps],
 )
 

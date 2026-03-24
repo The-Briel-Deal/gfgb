@@ -1,4 +1,5 @@
 #include "common.h"
+#include "test_common.h"
 
 // TODO: Write test for parsing header and switching banks
 int main() {

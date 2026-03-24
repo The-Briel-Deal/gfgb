@@ -1,5 +1,5 @@
-#ifndef TEST_ASSERTS_H
-#define TEST_ASSERTS_H
+#ifndef TEST_COMMON_H
+#define TEST_COMMON_H
 
 #include <stdint.h>
 #include <stdio.h>
