@@ -626,6 +626,8 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
   {
     ImGui::Begin("Display Viewport");
+
+    if (ImGui::IsWindowFocused()) io.WantCaptureKeyboard = false;
     // always keep the correct aspect ratio based off of the window width.
     ImVec2 win_size;
     win_size.x = ImGui::GetWindowWidth();
@@ -636,6 +638,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
   {
     ImGui::Begin("GB State");
 
+    if (ImGui::IsWindowFocused()) io.WantCaptureKeyboard = true;
     if (ImGui::TreeNodeEx("Execution", ImGuiTreeNodeFlags_Framed)) {
       // Framerate
       // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
