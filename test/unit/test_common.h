@@ -1,6 +1,7 @@
 #ifndef TEST_COMMON_H
 #define TEST_COMMON_H
 
+#define CATCH_CONFIG_NO_COUNTER 1
 #include "catch2/catch_test_macros.hpp"
 
 #include <stdint.h>
