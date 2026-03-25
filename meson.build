@@ -29,7 +29,11 @@ if not sdl3_dep.found()
   meson.override_dependency('sdl3', sdl3_dep)
 endif
 
-catch_subpro = subproject('catch')
+catch_subpro = subproject('catch', default_options : {
+    'install' : 'false',
+    'tests' : 'false', # We don't care about running the catch internal tests
+  },
+)
 catch_dep = catch_subpro.get_variable('catch2_with_main_dep')
 
 
