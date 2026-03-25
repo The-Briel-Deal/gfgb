@@ -271,4 +271,3 @@ int main() {
   LogInfo("Disassemble tests succeeded.");
   SDL_Quit();
 }
-
