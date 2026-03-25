@@ -1,7 +1,7 @@
 #include "common.h"
 #include "test_common.h"
 
-void test_gb_tile_to_8bit_indexed() {
+TEST_CASE("gb_tile_to_8bit_indexed()", "[ppu]") {
   uint8_t gb_tile_in[16]                  = {0};
   uint8_t indexed_8bit_tile_expect[8 * 8] = {0};
   uint8_t indexed_8bit_tile_result[8 * 8] = {0};
@@ -17,18 +17,5 @@ void test_gb_tile_to_8bit_indexed() {
   indexed_8bit_tile_expect[7]             = 0b10;
 
   gb_tile_to_8bit_indexed(gb_tile_in, indexed_8bit_tile_result);
-  for (int i = 0; i < 16; i++) {
-    if (indexed_8bit_tile_expect[i] != indexed_8bit_tile_result[i]) {
-      LogInfo("byte i=%d of indexed_8bit result (%.2x) is not equal to result (%.2x)\n", i, indexed_8bit_tile_result[i],
-              indexed_8bit_tile_expect[i]);
-      abort();
-    }
-  }
-}
-int main() {
-  LogInfo("Starting PPU tests.");
-  LogInfo("running `test_gb_tile_to_indexed_8bit()`");
-  test_gb_tile_to_8bit_indexed();
-  LogInfo("PPU tests succeeded.");
-  SDL_Quit();
+  REQUIRE(memcmp(indexed_8bit_tile_result, indexed_8bit_tile_expect, 8 * 8) == 0);
 }

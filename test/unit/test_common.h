@@ -1,6 +1,8 @@
 #ifndef TEST_COMMON_H
 #define TEST_COMMON_H
 
+#include "catch2/catch_test_macros.hpp"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
