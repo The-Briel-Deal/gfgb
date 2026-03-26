@@ -546,6 +546,7 @@ typedef struct gb_cart_header {
   bool          has_battery;
   bool          has_rtc;
   bool          has_rumble;
+  uint16_t      num_banks;
 } gb_cart_header_t;
 
 gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]);

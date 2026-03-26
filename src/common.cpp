@@ -13,41 +13,50 @@ INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
 #define GB_HEADER_CART_TYPE_ADDR 0x0147
 
+#define SET_CART_TYPE(parsed_header, _mbc_type, _has_ram, _has_battery, _has_rtc, _has_rumble)                         \
+  {                                                                                                                    \
+    parsed_header.mbc_type    = _mbc_type;                                                                             \
+    parsed_header.has_ram     = _has_ram;                                                                              \
+    parsed_header.has_battery = _has_battery;                                                                          \
+    parsed_header.has_rtc     = _has_rtc;                                                                              \
+    parsed_header.has_rumble  = _has_rumble;                                                                           \
+  }
+
 gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
   gb_cart_header_t parsed_header;
 
   uint8_t cart_type = header[GB_HEADER_CART_TYPE_ADDR - 0x100];
   switch (cart_type) {
-  case 0x00: parsed_header = {GB_NO_MBC, false, false, false, false}; break; // 00h  ROM ONLY
-  case 0x01: parsed_header = {GB_MBC1, false, false, false, false}; break;   // 01h  MBC1
-  case 0x02: parsed_header = {GB_MBC1, true, false, false, false}; break;    // 02h  MBC1+RAM
-  case 0x03: parsed_header = {GB_MBC1, true, true, false, false}; break;     // 03h  MBC1+RAM+BATTERY
-  case 0x05: parsed_header = {GB_MBC2, true, false, false, false}; break;    // 05h  MBC2
-  case 0x06: parsed_header = {GB_MBC2, true, true, false, false}; break;     // 06h  MBC2+BATTERY
-  case 0x08: parsed_header = {GB_NO_MBC, true, false, false, false}; break;  // 08h  ROM+RAM
-  case 0x09: parsed_header = {GB_NO_MBC, true, true, false, false}; break;   // 09h  ROM+RAM+BATTERY
-  case 0x0B: parsed_header = {GB_MMM01, false, false, false, false}; break;  // 0Bh  MMM01
-  case 0x0C: parsed_header = {GB_MMM01, true, false, false, false}; break;   // 0Ch  MMM01+RAM
-  case 0x0D: parsed_header = {GB_MMM01, true, true, false, false}; break;    // 0Dh  MMM01+RAM+BATTERY
-  case 0x0F: parsed_header = {GB_MBC3, false, true, true, false}; break;     // 0Fh  MBC3+TIMER+BATTERY
-  case 0x10: parsed_header = {GB_MBC3, true, true, true, false}; break;      // 10h  MBC3+TIMER+RAM+BATTERY
-  case 0x11: parsed_header = {GB_MBC3, false, false, false, false}; break;   // 11h  MBC3
-  case 0x12: parsed_header = {GB_MBC3, true, false, false, false}; break;    // 12h  MBC3+RAM
-  case 0x13: parsed_header = {GB_MBC3, true, true, false, false}; break;     // 13h  MBC3+RAM+BATTERY
-  case 0x19: parsed_header = {GB_MBC5, false, false, false, false}; break;   // 19h  MBC5
-  case 0x1A: parsed_header = {GB_MBC5, true, false, false, false}; break;    // 1Ah  MBC5+RAM
-  case 0x1B: parsed_header = {GB_MBC5, true, true, false, false}; break;     // 1Bh  MBC5+RAM+BATTERY
-  case 0x1C: parsed_header = {GB_MBC5, false, false, false, true}; break;    // 1Ch  MBC5+RUMBLE
-  case 0x1D: parsed_header = {GB_MBC5, true, false, false, true}; break;     // 1Dh  MBC5+RUMBLE+RAM
-  case 0x1E: parsed_header = {GB_MBC5, true, true, false, true}; break;      // 1Eh  MBC5+RUMBLE+RAM+BATTERY
-  case 0x22: parsed_header = {GB_MBC7, true, true, false, false}; break;     // 22h  MBC7+ACCEL+EEPROM
-  case 0xFC: parsed_header = {GB_CAMERA, true, true, false, false}; break;   // FCh  POCKET CAMERA
-  case 0xFD: parsed_header = {GB_NO_MBC, false, false, false, false}; break; // FDh  BANDAI TAMA5 (Todo: Not supported)
-  case 0xFE: parsed_header = {GB_HUC3, true, true, true, false}; break;      // FEh  HuC3
-  case 0xFF: parsed_header = {GB_HUC1, true, true, false, false}; break;     // FFh  HuC1+RAM+BATTERY
+  case 0x00: SET_CART_TYPE(parsed_header, GB_NO_MBC, false, false, false, false); break; // 00h  ROM ONLY
+  case 0x01: SET_CART_TYPE(parsed_header, GB_MBC1, false, false, false, false); break;   // 01h  MBC1
+  case 0x02: SET_CART_TYPE(parsed_header, GB_MBC1, true, false, false, false); break;    // 02h  MBC1+RAM
+  case 0x03: SET_CART_TYPE(parsed_header, GB_MBC1, true, true, false, false); break;     // 03h  MBC1+RAM+BATTERY
+  case 0x05: SET_CART_TYPE(parsed_header, GB_MBC2, true, false, false, false); break;    // 05h  MBC2
+  case 0x06: SET_CART_TYPE(parsed_header, GB_MBC2, true, true, false, false); break;     // 06h  MBC2+BATTERY
+  case 0x08: SET_CART_TYPE(parsed_header, GB_NO_MBC, true, false, false, false); break;  // 08h  ROM+RAM
+  case 0x09: SET_CART_TYPE(parsed_header, GB_NO_MBC, true, true, false, false); break;   // 09h  ROM+RAM+BATTERY
+  case 0x0B: SET_CART_TYPE(parsed_header, GB_MMM01, false, false, false, false); break;  // 0Bh  MMM01
+  case 0x0C: SET_CART_TYPE(parsed_header, GB_MMM01, true, false, false, false); break;   // 0Ch  MMM01+RAM
+  case 0x0D: SET_CART_TYPE(parsed_header, GB_MMM01, true, true, false, false); break;    // 0Dh  MMM01+RAM+BATTERY
+  case 0x0F: SET_CART_TYPE(parsed_header, GB_MBC3, false, true, true, false); break;     // 0Fh  MBC3+TIMER+BATTERY
+  case 0x10: SET_CART_TYPE(parsed_header, GB_MBC3, true, true, true, false); break;      // 10h  MBC3+TIMER+RAM+BATTERY
+  case 0x11: SET_CART_TYPE(parsed_header, GB_MBC3, false, false, false, false); break;   // 11h  MBC3
+  case 0x12: SET_CART_TYPE(parsed_header, GB_MBC3, true, false, false, false); break;    // 12h  MBC3+RAM
+  case 0x13: SET_CART_TYPE(parsed_header, GB_MBC3, true, true, false, false); break;     // 13h  MBC3+RAM+BATTERY
+  case 0x19: SET_CART_TYPE(parsed_header, GB_MBC5, false, false, false, false); break;   // 19h  MBC5
+  case 0x1A: SET_CART_TYPE(parsed_header, GB_MBC5, true, false, false, false); break;    // 1Ah  MBC5+RAM
+  case 0x1B: SET_CART_TYPE(parsed_header, GB_MBC5, true, true, false, false); break;     // 1Bh  MBC5+RAM+BATTERY
+  case 0x1C: SET_CART_TYPE(parsed_header, GB_MBC5, false, false, false, true); break;    // 1Ch  MBC5+RUMBLE
+  case 0x1D: SET_CART_TYPE(parsed_header, GB_MBC5, true, false, false, true); break;     // 1Dh  MBC5+RUMBLE+RAM
+  case 0x1E: SET_CART_TYPE(parsed_header, GB_MBC5, true, true, false, true); break;      // 1Eh  MBC5+RUMBLE+RAM+BATTERY
+  case 0x22: SET_CART_TYPE(parsed_header, GB_MBC7, true, true, false, false); break;     // 22h  MBC7+ACCEL+EEPROM
+  case 0xFC: SET_CART_TYPE(parsed_header, GB_CAMERA, true, true, false, false); break;   // FCh  POCKET CAMERA
+  case 0xFD: SET_CART_TYPE(parsed_header, GB_NO_MBC, false, false, false, false); break; // FDh  BANDAI TAMA5
+  case 0xFE: SET_CART_TYPE(parsed_header, GB_HUC3, true, true, true, false); break;      // FEh  HuC3
+  case 0xFF: SET_CART_TYPE(parsed_header, GB_HUC1, true, true, false, false); break;     // FFh  HuC1+RAM+BATTERY
   default:
     LogWarn("`gb_parse_cart_header() called an unknown cart type [$0147]`");
-    parsed_header = {GB_MBC_UNKNOWN, false, false, false, false};
+    SET_CART_TYPE(parsed_header, GB_MBC_UNKNOWN, false, false, false, false);
     break;
   }
   return parsed_header;
