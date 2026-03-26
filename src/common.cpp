@@ -333,7 +333,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
   }
 }
 // static void gb_write_mbc1(struct gb_state *gb_state, uint16_t addr, uint8_t val) {}
-// 
+//
 // // Called whenever gb_write_mem is called on ROM.
 // static void gb_write_mbc(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
 //   uint8_t cart_type = gb_read_mem(gb_state, GB_HEADER_CART_TYPE_ADDR);
