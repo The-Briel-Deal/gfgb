@@ -12,6 +12,8 @@
 INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
 #define GB_HEADER_CART_TYPE_ADDR 0x0147
+#define GB_HEADER_ROM_SIZE_ADDR  0x0148
+#define GB_HEADER_RAM_SIZE_ADDR  0x0149
 
 #define SET_CART_TYPE(parsed_header, _mbc_type, _has_ram, _has_battery, _has_rtc, _has_rumble)                         \
   {                                                                                                                    \
@@ -59,6 +61,12 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
     SET_CART_TYPE(parsed_header, GB_MBC_UNKNOWN, false, false, false, false);
     break;
   }
+  uint8_t rom_size = header[GB_HEADER_ROM_SIZE_ADDR - 0x100];
+  // https://gbdev.io/pandocs/The_Cartridge_Header.html#weird_rom_sizes
+  // Apparently there are a few other valid rom sizes that no real world rom uses. I don't think I need to implement
+  // these so I'm just going to add an assert here in case we somehow run into one of these.
+  GB_assert(rom_size <= 8);
+  parsed_header.num_banks = (1 << rom_size);
   return parsed_header;
 };
 
