@@ -546,7 +546,7 @@ typedef struct gb_cart_header {
   bool          has_rumble;
 } gb_cart_header_t;
 
-gb_cart_header_t gb_parse_cart_header(uint8_t *header[0x50]);
+gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]);
 
 uint64_t gb_m_cycles(gb_state_t *gb_state);
 

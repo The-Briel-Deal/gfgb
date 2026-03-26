@@ -141,10 +141,10 @@ disasm_test_exe = executable(
 
 current_src_dir = meson.current_source_dir()
 
-test('cpu_test', cpu_test_exe)
-test('mbc_test', mbc_test_exe)
-test('ppu_test', ppu_test_exe)
-test('disasm_test', disasm_test_exe)
+test('cpu_test', cpu_test_exe, workdir : current_src_dir)
+test('mbc_test', mbc_test_exe, workdir : current_src_dir)
+test('ppu_test', ppu_test_exe, workdir : current_src_dir)
+test('disasm_test', disasm_test_exe, workdir : current_src_dir)
 
 blargg_cpu_tests = [
   '01-special.gb',

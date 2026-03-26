@@ -13,10 +13,10 @@ INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
 #define GB_HEADER_CART_TYPE_ADDR 0x0147
 
-gb_cart_header_t gb_parse_cart_header(uint8_t *header[0x50]) {
+gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
   gb_cart_header_t parsed_header;
 
-  uint8_t cart_type = (*header)[GB_HEADER_CART_TYPE_ADDR - 0x100];
+  uint8_t cart_type = header[GB_HEADER_CART_TYPE_ADDR - 0x100];
   switch (cart_type) {
   case 0x00: parsed_header = {GB_NO_MBC, false, false, false, false}; break; // 00h  ROM ONLY
   case 0x01: parsed_header = {GB_MBC1, false, false, false, false}; break;   // 01h  MBC1
