@@ -21,4 +21,5 @@ TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
   CHECK(parsed_header.has_ram == false);
   CHECK(parsed_header.has_rumble == false);
   CHECK(parsed_header.has_rtc == false);
+  CHECK(parsed_header.num_banks == (512 / (32 * 8)));
 }
