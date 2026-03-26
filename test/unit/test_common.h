@@ -2,6 +2,7 @@
 #define TEST_COMMON_H
 
 #define CATCH_CONFIG_NO_COUNTER 1
+// IWYU pragma: begin_exports
 #include "catch2/catch_test_macros.hpp"
 
 #include <stdint.h>
@@ -9,6 +10,7 @@
 #include <string.h>
 
 #include <type_traits>
+// IWYU pragma: end_exports
 
 static inline void assert_int_eq(int v1, int v2) {
   CHECKED_IF(v1 != v2) { FAIL(); }

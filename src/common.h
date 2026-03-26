@@ -1,6 +1,7 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
+// IWYU pragma: begin_exports
 #include <tracy/TracyC.h>
 
 #include <assert.h>
@@ -26,6 +27,7 @@ using std::unreachable;
 #ifdef __cplusplus
 extern "C" {
 #endif
+// IWYU pragma: end_exports
 
 #define GB_malloc(size)           SDL_malloc(size)
 #define GB_realloc(mem, size)     SDL_realloc(mem, size)
