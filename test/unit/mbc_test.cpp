@@ -60,14 +60,17 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
   gb_state.saved.ram.rom0[0x3FFF] = 0x4D;
 
   {
+    // If the ROM Bank Num reg is more than the number of banks then this reg is masked to the max number of bits.
+    REQUIRE_BYTES_EQ(gb_state.saved.header.num_rom_banks, 4);
+
     gb_write_mem(&gb_state, 0x2000, 0b1111'1111);
-    CHECK(mbc1_regs.rom_bank == 0b0001'1111);
+    CHECK_BYTES_EQ(mbc1_regs.rom_bank, 0b0000'0011);
     gb_write_mem(&gb_state, 0x3120, 0b1111'0101);
-    CHECK(mbc1_regs.rom_bank == 0b0001'0101);
+    CHECK_BYTES_EQ(mbc1_regs.rom_bank, 0b0000'0001);
     // If masked val is 0 it will be changed to 1.
     // See: https://gbdev.io/pandocs/MBC1.html#20003fff--rom-bank-number-write-only
     gb_write_mem(&gb_state, 0x3FFF, 0b0010'0000);
-    CHECK(mbc1_regs.rom_bank == 0b0000'0001);
+    CHECK_BYTES_EQ(mbc1_regs.rom_bank, 0b0000'0001);
   }
 
   CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x2000], 0x4B);

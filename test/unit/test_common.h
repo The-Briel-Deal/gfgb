@@ -15,6 +15,7 @@
 // Catch2 prints uint8_t comparisons as ascii chars. If I cast them to std::byte first then it will print them as a 8
 // bit num.
 #define CHECK_BYTES_EQ(byte1, byte2) CHECK(std::byte(byte1) == std::byte(byte2));
+#define REQUIRE_BYTES_EQ(byte1, byte2) REQUIRE(std::byte(byte1) == std::byte(byte2));
 
 static inline void assert_int_eq(int v1, int v2) {
   CHECKED_IF(v1 != v2) { FAIL(); }

@@ -83,8 +83,8 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
 
     if (ram_size == 2) parsed_header.num_ram_banks = 1;
     if (ram_size == 3) parsed_header.num_ram_banks = 4;
-    if (ram_size == 4) parsed_header.num_ram_banks = 16; // WTF is this choice of code num to bank count? Why didn't they
-    if (ram_size == 5) parsed_header.num_ram_banks = 8;  // just do the same thing they did with rom banks?
+    if (ram_size == 4) parsed_header.num_ram_banks = 16; // WTF is this choice of code num to bank count? Why didn't
+    if (ram_size == 5) parsed_header.num_ram_banks = 8;  // they just do the same thing they did with rom banks?
   }
   return parsed_header;
 };
@@ -427,6 +427,9 @@ static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
     break;
   case 1: // 0x2000-0x3FFF
     mbc1_regs.rom_bank = (val & 0b0001'1111);
+    if (mbc1_regs.rom_bank >= gb_state->saved.header.num_rom_banks) {
+      mbc1_regs.rom_bank &= gb_state->saved.header.num_rom_banks - 1;
+    }
     // 0 reads as if it is 1 to prevent mapping bank 0 to both areas.
     if (mbc1_regs.rom_bank == 0) mbc1_regs.rom_bank = 1;
     break;
