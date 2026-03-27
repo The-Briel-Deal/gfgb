@@ -25,8 +25,52 @@ TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
   CHECK(parsed_header.ram_banks == 0);
 }
 
-TEST_CASE("Load MBC1 512kb ROM", "[mbc]") {
+TEST_CASE("Write to MBC1 regs", "[mbc]") {
   gb_state_t gb_state;
   gb_state_init(&gb_state);
   gb_load_rom(&gb_state, MBC1_ROM_512KB_PATH, NULL, NULL);
+  mbc1_regs_t &mbc1_regs = gb_state.saved.regs.mbc1_regs;
+  REQUIRE(gb_state.saved.header.mbc_type == GB_MBC1);
+
+  /// RAM Enable
+  // Reg should only be true if lower 4 are 0xA.
+
+  // I'm also just validating that the rom is not being modified by making sure the value doesn't change from
+  // gb_write_mem().
+  gb_state.saved.ram.rom0[0x12A1] = 0x4B;
+  gb_state.saved.ram.rom0[0x0000] = 0x4C;
+  gb_state.saved.ram.rom0[0x1FFF] = 0x4D;
+
+  {
+    gb_write_mem(&gb_state, 0x12A1, 0xFF);
+    CHECK_FALSE(mbc1_regs.ram_enable);
+    gb_write_mem(&gb_state, 0x0000, 0xFA);
+    CHECK(mbc1_regs.ram_enable);
+    gb_write_mem(&gb_state, 0x1FFF, 0xAF);
+    CHECK_FALSE(mbc1_regs.ram_enable);
+  }
+
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x12A1], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x0000], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x1FFF], 0x4D);
+
+  /// ROM Bank Num
+  gb_state.saved.ram.rom0[0x2000] = 0x4B;
+  gb_state.saved.ram.rom0[0x3120] = 0x4C;
+  gb_state.saved.ram.rom0[0x3FFF] = 0x4D;
+
+  {
+    gb_write_mem(&gb_state, 0x2000, 0b1111'1111);
+    CHECK(mbc1_regs.rom_bank == 0b0001'1111);
+    gb_write_mem(&gb_state, 0x3120, 0b1111'0101);
+    CHECK(mbc1_regs.rom_bank == 0b0001'0101);
+    // If masked val is 0 it will be changed to 1.
+    // See: https://gbdev.io/pandocs/MBC1.html#20003fff--rom-bank-number-write-only
+    gb_write_mem(&gb_state, 0x3FFF, 0b0010'0000);
+    CHECK(mbc1_regs.rom_bank == 0b0000'0001);
+  }
+
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x2000], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x3120], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x3FFF], 0x4D);
 }
