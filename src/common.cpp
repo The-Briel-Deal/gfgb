@@ -2,6 +2,7 @@
 #include "ppu.h"
 #include "timing.h"
 
+#include <cassert>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -417,17 +418,27 @@ static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
   GB_assert(addr < 0x8000);
   // There are 4 unique places in memory that mbc1 receives writes to. Which of these is written to is determined by
   // bits 14 and 13.
-  uint8_t bank_reg = addr >> 13;
+  uint8_t      bank_reg  = addr >> 13;
+  mbc1_regs_t &mbc1_regs = gb_state->saved.regs.mbc1_regs;
   switch (bank_reg) {
   case 0: // 0x0000-0x1FFF
+    // It seems like it's unknown why they just check if the lower 4 bits are 0xA.
+    mbc1_regs.ram_enable = ((val & 0x0F) == 0x0A);
     break;
   case 1: // 0x2000-0x3FFF
+    mbc1_regs.rom_bank = (val & 0b0001'1111);
+    // 0 reads as if it is 1 to prevent mapping bank 0 to both areas.
+    if (mbc1_regs.rom_bank == 0) mbc1_regs.rom_bank = 1;
     break;
   case 2: // 0x4000-0x5FFF
+    mbc1_regs.rom_bank_upper = (val & 0b11);
+    // These should be the same value since they are in an anonymous union. I just gave them two names for clarity.
+    assert(mbc1_regs.rom_bank_upper == mbc1_regs.ram_bank);
     break;
   case 3: // 0x6000-0x7FFF
+    mbc1_regs.banking_mode_select = (mbc1_bank_mode_t)(val & 0b1);
     break;
-  default: unreachable();
+  default: unreachable(); break;
   }
 }
 
