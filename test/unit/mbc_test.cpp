@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#define MBC1_ROM_512KB_PATH "test/mooneye/emulator-only/mbc1/rom_512kb.gb"
 TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
-  const char *fpath = "test/mooneye/emulator-only/mbc1/rom_512kb.gb";
-  FILE       *f     = fopen(fpath, "r");
+  FILE *f = fopen(MBC1_ROM_512KB_PATH, "r");
   CHECKED_IF(f == NULL) {
-    INFO("Could not open '" << fpath << "': " << strerror(errno) << ". Are you in the repository root?");
+    INFO("Could not open '" << MBC1_ROM_512KB_PATH << "': " << strerror(errno) << ". Are you in the repository root?");
     FAIL();
   }
   REQUIRE(ferror(f) == 0);
@@ -23,4 +23,10 @@ TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
   CHECK(parsed_header.has_rtc == false);
   CHECK(parsed_header.num_banks == 4);
   CHECK(parsed_header.ram_banks == 0);
+}
+
+TEST_CASE("Load MBC1 512kb ROM", "[mbc]") {
+  gb_state_t gb_state;
+  gb_state_init(&gb_state);
+  gb_load_rom(&gb_state, MBC1_ROM_512KB_PATH, NULL, NULL);
 }

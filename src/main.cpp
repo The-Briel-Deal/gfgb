@@ -28,52 +28,6 @@ enum run_mode {
   DISASSEMBLE,
 };
 
-static bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name,
-                        const char *sym_name) {
-  FILE   *f;
-  int     err;
-  uint8_t bytes[KB(16)];
-  int     bytes_len;
-
-  // Load ROM into gb_state->rom0 (rom is optional since the disassembler can
-  // also assemble only the boot rom).
-  if (rom_name != NULL) {
-    // TODO: Load into multiple banks once bank switching is added.
-    f         = fopen(rom_name, "r");
-    bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
-    if ((err = ferror(f))) {
-      LogCritical("Error when reading rom file: %d", err);
-      return false;
-    }
-    memcpy(gb_state->saved.ram.rom0, bytes, bytes_len);
-    if (!feof(f)) {
-      bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
-      if ((err = ferror(f))) {
-        LogCritical("Error when reading rom file: %d", err);
-        return false;
-      }
-      memcpy(gb_state->saved.ram.rom1, bytes, bytes_len);
-    }
-    fclose(f);
-    gb_state->dbg.rom_loaded = true;
-  }
-
-  // Load debug symbols into gb_state->syms (symbols are optional)
-  if (sym_name != NULL) {
-    alloc_symbol_list(&gb_state->dbg.syms);
-    f = fopen(sym_name, "r");
-    parse_syms(&gb_state->dbg.syms, f);
-    if ((err = ferror(f))) {
-      LogCritical("Error when reading symbol file: %d", err);
-      return false;
-    }
-    fclose(f);
-  }
-  gb_state_load_bootrom(gb_state, bootrom_name);
-
-  return true;
-}
-
 // Returns true on success, if error occured when opening the file return false.
 bool gb_setup_serial_out(gb_state_t *gb_state, const char *serial_output_filename) {
   if (serial_output_filename != NULL) {

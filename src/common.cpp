@@ -153,6 +153,52 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->timing.ns_elapsed_while_running   = 0;
 }
 
+bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name, const char *sym_name) {
+  FILE   *f;
+  int     err;
+  uint8_t bytes[KB(16)];
+  int     bytes_len;
+
+  // Load ROM into gb_state->rom0 (rom is optional since the disassembler can
+  // also assemble only the boot rom).
+  if (rom_name != NULL) {
+    // TODO: Load into multiple banks once bank switching is added.
+    f         = fopen(rom_name, "r");
+    bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+    if ((err = ferror(f))) {
+      LogCritical("Error when reading rom file: %d", err);
+      return false;
+    }
+    memcpy(gb_state->saved.ram.rom0, bytes, bytes_len);
+    gb_state->saved.header = gb_parse_cart_header(&gb_state->saved.ram.rom0[0x100]);
+    if (!feof(f)) {
+      bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+      if ((err = ferror(f))) {
+        LogCritical("Error when reading rom file: %d", err);
+        return false;
+      }
+      memcpy(gb_state->saved.ram.rom1, bytes, bytes_len);
+    }
+    fclose(f);
+    gb_state->dbg.rom_loaded = true;
+  }
+
+  // Load debug symbols into gb_state->syms (symbols are optional)
+  if (sym_name != NULL) {
+    alloc_symbol_list(&gb_state->dbg.syms);
+    f = fopen(sym_name, "r");
+    parse_syms(&gb_state->dbg.syms, f);
+    if ((err = ferror(f))) {
+      LogCritical("Error when reading symbol file: %d", err);
+      return false;
+    }
+    fclose(f);
+  }
+  gb_state_load_bootrom(gb_state, bootrom_name);
+
+  return true;
+}
+
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
   // Load bootrom into gb_state->bootrom (bootrom is optional)
   if (bootrom_name != NULL) {
@@ -367,51 +413,58 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     break;
   }
 }
-// static void gb_write_mbc1(struct gb_state *gb_state, uint16_t addr, uint8_t val) {}
-//
-// // Called whenever gb_write_mem is called on ROM.
-// static void gb_write_mbc(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
-//   uint8_t cart_type = gb_read_mem(gb_state, GB_HEADER_CART_TYPE_ADDR);
-//   switch (cart_type) {
-//   case 0x00: // ROM Only
-//   }
-// }
+static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {}
+
+// Called whenever gb_write_mem is called on ROM.
+static void gb_write_mbc(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
+  switch (gb_state->saved.header.mbc_type) {
+  case GB_NO_MBC: break;
+  case GB_MBC1: gb_write_mbc1(gb_state, addr, val); break;
+  case GB_MBC2:
+  case GB_MBC3:
+  case GB_MBC5:
+  case GB_MBC7:
+  case GB_MMM01:
+  case GB_HUC1:
+  case GB_HUC3:
+  case GB_TPP1:
+  case GB_CAMERA:
+  case GB_MBC_UNKNOWN: NOT_IMPLEMENTED("Write attempted on MBC that is not yet implemented."); break;
+  }
+}
 
 void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->dbg.use_flat_ram) {
     gb_state->saved.flat_ram[addr] = val;
-  } else {
-    LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
-    uint8_t *val_ptr;
-    if (addr < 0x4000) {
-      // TODO: Everything in the rom section is read only and writes here control the MBC which still needs to be
-      // implemented.
-      return;
-    }
-    if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
-      if (addr == IO_SB) {
-        // TODO: This just logs out every character written to this port. If I
-        // actually want to implement gamelink support there is more to do.
-        if (gb_state->dbg.serial_port_output_file != NULL) fputc(val, gb_state->dbg.serial_port_output_file);
-        gb_state->serial_port_output_string->push_back(val);
-        return;
-      }
-      write_io_reg(gb_state, addr, val);
-      return;
-    } else {
-      val_ptr = ((uint8_t *)gb_unmap_address(gb_state, addr));
-    }
-    if (val_ptr != NULL) {
-      // VRAM is the only place where stuff needs to be uploaded to the GPU (which is expensive). So we mark modified
-      // items in vram as dirty where necessary.
-      if (addr >= VRAM_START && addr <= VRAM_END) {
-        mark_dirty(gb_state, addr);
-      }
-      *val_ptr = val;
-    } else {
-      LogCritical("`write_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
-    }
+    return;
   }
+  if (addr < 0x8000) {
+    gb_write_mbc(gb_state, addr, val);
+    return;
+  }
+
+  LogTrace("Writing val 0x%.2X to address 0x%.4X", val, addr);
+  if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
+    if (addr == IO_SB) {
+      // TODO: This just logs out every character written to this port. If I
+      // actually want to implement gamelink support there is more to do.
+      if (gb_state->dbg.serial_port_output_file != NULL) fputc(val, gb_state->dbg.serial_port_output_file);
+      gb_state->serial_port_output_string->push_back(val);
+      return;
+    }
+    write_io_reg(gb_state, addr, val);
+    return;
+  }
+
+  uint8_t *val_ptr = ((uint8_t *)gb_unmap_address(gb_state, addr));
+  if (val_ptr == NULL) {
+    LogCritical("`write_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
+    return;
+  }
+  // VRAM is the only place where stuff needs to be uploaded to the GPU (which is expensive). So we mark modified
+  // items in vram as dirty where necessary.
+  if (addr >= VRAM_START && addr <= VRAM_END) mark_dirty(gb_state, addr);
+  *val_ptr = val;
 }
 
 uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->saved.m_cycles_elapsed; }

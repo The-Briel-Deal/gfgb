@@ -315,8 +315,35 @@ typedef struct stack_entry {
   };
 } stack_entry_t;
 
+typedef enum gb_mbc_type {
+  GB_NO_MBC,
+  GB_MBC1,
+  GB_MBC2,
+  GB_MBC3,
+  GB_MBC5,
+  GB_MBC7,
+  GB_MMM01,
+  GB_HUC1,
+  GB_HUC3,
+  GB_TPP1,
+  GB_CAMERA,
+
+  GB_MBC_UNKNOWN,
+} gb_mbc_type_t;
+
+typedef struct gb_cart_header {
+  gb_mbc_type_t mbc_type;
+  bool          has_ram;
+  bool          has_battery;
+  bool          has_rtc;
+  bool          has_rumble;
+  uint16_t      num_banks;
+  uint16_t      ram_banks;
+} gb_cart_header_t;
+
 typedef struct gb_saved_state {
-  regs_t regs;
+  gb_cart_header_t header;
+  regs_t           regs;
   union {
     gb_ram_banks_t ram;
     uint8_t        flat_ram[KB(64)];
@@ -431,6 +458,7 @@ typedef struct gb_state {
 #endif
 } gb_state_t;
 
+bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name, const char *sym_name);
 // Call with bootrom_name = NULL to use dmg0 as the default.
 void gb_state_load_bootrom(gb_state_t *gb_state, const char *bootrom_name);
 
@@ -524,31 +552,6 @@ enum joy_pad_io_reg_bits : uint8_t {
 };
 
 // Note: I took and modified this from SameBoy's MBC lookup table.
-
-typedef enum gb_mbc_type {
-  GB_NO_MBC,
-  GB_MBC1,
-  GB_MBC2,
-  GB_MBC3,
-  GB_MBC5,
-  GB_MBC7,
-  GB_MMM01,
-  GB_HUC1,
-  GB_HUC3,
-  GB_TPP1,
-  GB_CAMERA,
-
-  GB_MBC_UNKNOWN,
-} gb_mbc_type_t;
-typedef struct gb_cart_header {
-  gb_mbc_type_t mbc_type;
-  bool          has_ram;
-  bool          has_battery;
-  bool          has_rtc;
-  bool          has_rumble;
-  uint16_t      num_banks;
-  uint16_t      ram_banks;
-} gb_cart_header_t;
 
 gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]);
 
