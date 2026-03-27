@@ -76,4 +76,34 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
   CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x2000], 0x4B);
   CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x3120], 0x4C);
   CHECK_BYTES_EQ(gb_state.saved.ram.rom0[0x3FFF], 0x4D);
+
+  gb_state.saved.ram.rom1[0x0000] = 0x4B;
+  gb_state.saved.ram.rom1[0x1000] = 0x4C;
+  gb_state.saved.ram.rom1[0x1FFF] = 0x4D;
+  {
+    gb_write_mem(&gb_state, 0x5000, 0xFF);
+    CHECK_BYTES_EQ(mbc1_regs.ram_bank, 3);
+    gb_write_mem(&gb_state, 0x4000, 0xFE);
+    CHECK_BYTES_EQ(mbc1_regs.ram_bank, 2);
+    gb_write_mem(&gb_state, 0x5FFF, 0xF1);
+    CHECK_BYTES_EQ(mbc1_regs.ram_bank, 1);
+  }
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom1[0x0000], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom1[0x1000], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom1[0x1FFF], 0x4D);
+
+  gb_state.saved.ram.rom1[0x2000] = 0x4B;
+  gb_state.saved.ram.rom1[0x3000] = 0x4C;
+  gb_state.saved.ram.rom1[0x3FFF] = 0x4D;
+  {
+    gb_write_mem(&gb_state, 0x6000, 0xFF);
+    CHECK_BYTES_EQ(mbc1_regs.banking_mode_select, 1);
+    gb_write_mem(&gb_state, 0x7000, 0xFE);
+    CHECK_BYTES_EQ(mbc1_regs.banking_mode_select, 0);
+    gb_write_mem(&gb_state, 0x7FFF, 0xF1);
+    CHECK_BYTES_EQ(mbc1_regs.banking_mode_select, 1);
+  }
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom1[0x2000], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom1[0x3000], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.ram.rom1[0x3FFF], 0x4D);
 }
