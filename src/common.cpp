@@ -69,9 +69,9 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
   // TODO: Apparently once you get past 32 banks (representable in 5 bits), things get a little wonky. I need to read
   // into that behavior a bit more before implementing.
   GB_assert(rom_size < 5);
-  parsed_header.num_banks = (1 << rom_size);
+  parsed_header.num_banks = (2 << rom_size);
 
-  uint8_t ram_size = header[GB_HEADER_ROM_SIZE_ADDR - 0x100];
+  uint8_t ram_size = header[GB_HEADER_RAM_SIZE_ADDR - 0x100];
   if (ram_size == 0) {
     parsed_header.ram_banks = 0;
   } else {
