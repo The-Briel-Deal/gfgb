@@ -356,8 +356,8 @@ typedef struct gb_cart_header {
   bool          has_battery;
   bool          has_rtc;
   bool          has_rumble;
-  uint16_t      num_banks;
-  uint16_t      ram_banks;
+  uint16_t      num_rom_banks;
+  uint16_t      num_ram_banks;
 } gb_cart_header_t;
 
 typedef struct gb_saved_state {

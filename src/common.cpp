@@ -70,21 +70,21 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
   // TODO: Apparently once you get past 32 banks (representable in 5 bits), things get a little wonky. I need to read
   // into that behavior a bit more before implementing.
   GB_assert(rom_size < 5);
-  parsed_header.num_banks = (2 << rom_size);
+  parsed_header.num_rom_banks = (2 << rom_size);
 
   uint8_t ram_size = header[GB_HEADER_RAM_SIZE_ADDR - 0x100];
   if (ram_size == 0) {
-    parsed_header.ram_banks = 0;
+    parsed_header.num_ram_banks = 0;
   } else {
     GB_assert(parsed_header.has_ram);
     // Apparently they had a lil' bank that was 2KiB planned but they never made the chip so this was never
     // actually used in a cartridge. RIP lil' bank, you were gone too soon.
     GB_assert(ram_size != 1);
 
-    if (ram_size == 2) parsed_header.ram_banks = 1;
-    if (ram_size == 3) parsed_header.ram_banks = 4;
-    if (ram_size == 4) parsed_header.ram_banks = 16; // WTF is this choice of code num to bank count? Why didn't they
-    if (ram_size == 5) parsed_header.ram_banks = 8;  // just do the same thing they did with rom banks?
+    if (ram_size == 2) parsed_header.num_ram_banks = 1;
+    if (ram_size == 3) parsed_header.num_ram_banks = 4;
+    if (ram_size == 4) parsed_header.num_ram_banks = 16; // WTF is this choice of code num to bank count? Why didn't they
+    if (ram_size == 5) parsed_header.num_ram_banks = 8;  // just do the same thing they did with rom banks?
   }
   return parsed_header;
 };

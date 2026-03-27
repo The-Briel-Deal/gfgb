@@ -21,8 +21,8 @@ TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
   CHECK(parsed_header.has_ram == false);
   CHECK(parsed_header.has_rumble == false);
   CHECK(parsed_header.has_rtc == false);
-  CHECK(parsed_header.num_banks == 4);
-  CHECK(parsed_header.ram_banks == 0);
+  CHECK(parsed_header.num_rom_banks == 4);
+  CHECK(parsed_header.num_ram_banks == 0);
 }
 
 TEST_CASE("Write to MBC1 regs", "[mbc]") {
