@@ -272,6 +272,22 @@ typedef struct io_regs {
   bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
 } io_regs_t;
 
+// See: https://gbdev.io/pandocs/MBC1.html#60007fff--banking-mode-select-write-only
+typedef enum mbc1_bank_mode {
+  MBC1_BANK_MODE_SIMPLE   = 0,
+  MBC1_BANK_MODE_ADVANCED = 1,
+} mbc1_bank_mode_t;
+
+typedef struct mbc1_regs {
+  bool    ram_enable;
+  uint8_t rom_bank;
+  union {
+    uint8_t ram_bank;
+    uint8_t rom_bank_upper;
+  };
+  mbc1_bank_mode_t banking_mode_select;
+} mbc1_regs_t;
+
 typedef struct regs {
   uint8_t   a;
   uint8_t   b;
@@ -284,6 +300,9 @@ typedef struct regs {
   uint16_t  sp;
   uint16_t  pc;
   io_regs_t io;
+  union {
+    mbc1_regs_t mbc1_regs;
+  };
 } regs_t;
 
 typedef struct gb_breakpoint {

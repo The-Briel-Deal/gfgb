@@ -413,7 +413,23 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     break;
   }
 }
-static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {}
+static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
+  GB_assert(addr < 0x8000);
+  // There are 4 unique places in memory that mbc1 receives writes to. Which of these is written to is determined by
+  // bits 14 and 13.
+  uint8_t bank_reg = addr >> 13;
+  switch (bank_reg) {
+  case 0: // 0x0000-0x1FFF
+    break;
+  case 1: // 0x2000-0x3FFF
+    break;
+  case 2: // 0x4000-0x5FFF
+    break;
+  case 3: // 0x6000-0x7FFF
+    break;
+  default: unreachable();
+  }
+}
 
 // Called whenever gb_write_mem is called on ROM.
 static void gb_write_mbc(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
