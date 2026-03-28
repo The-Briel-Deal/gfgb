@@ -189,7 +189,7 @@ void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n);
 // append text[len] to gb_dstr
 void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 
-typedef struct gb_ram_banks {
+typedef struct gb_mem {
   uint8_t bootrom[DMG_BOOTROM_SIZE];
   uint8_t rom0[KB(16)];
   uint8_t rom1[KB(16)];
@@ -198,7 +198,7 @@ typedef struct gb_ram_banks {
   uint8_t eram[KB(8)];
   uint8_t hram[0x80];
   uint8_t oam[4 * 40];
-} gb_ram_banks_t;
+} gb_mem_t;
 
 // true if pressed down
 typedef struct gb_internal_joy_pad_state {
@@ -364,8 +364,8 @@ typedef struct gb_saved_state {
   gb_cart_header_t header;
   regs_t           regs;
   union {
-    gb_ram_banks_t ram;
-    uint8_t        flat_ram[KB(64)];
+    gb_mem_t mem;
+    uint8_t  flat_ram[KB(64)];
   };
   bool halted;
 

@@ -254,7 +254,7 @@ static void update_palettes(struct gb_state *gb_state) {
 
 const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) {
   GB_assert(index < 40);
-  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->saved.ram.oam)[index];
+  const struct oam_entry *oam_entry = &((struct oam_entry *)gb_state->saved.mem.oam)[index];
 
 #ifdef DEBUG_PRINT_OAM_ENTRIES
   printf("OAM Entry %d\n", index);

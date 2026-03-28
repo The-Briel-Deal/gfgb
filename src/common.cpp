@@ -170,15 +170,15 @@ bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bo
       LogCritical("Error when reading rom file: %d", err);
       return false;
     }
-    memcpy(gb_state->saved.ram.rom0, bytes, bytes_len);
-    gb_state->saved.header = gb_parse_cart_header(&gb_state->saved.ram.rom0[0x100]);
+    memcpy(gb_state->saved.mem.rom0, bytes, bytes_len);
+    gb_state->saved.header = gb_parse_cart_header(&gb_state->saved.mem.rom0[0x100]);
     if (!feof(f)) {
       bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
       if ((err = ferror(f))) {
         LogCritical("Error when reading rom file: %d", err);
         return false;
       }
-      memcpy(gb_state->saved.ram.rom1, bytes, bytes_len);
+      memcpy(gb_state->saved.mem.rom1, bytes, bytes_len);
     }
     fclose(f);
     gb_state->dbg.rom_loaded = true;
@@ -207,7 +207,7 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) 
     int   bytes_len;
     int   err;
     f         = fopen(bootrom_name, "r");
-    bytes_len = fread(gb_state->saved.ram.bootrom, sizeof(uint8_t), 0x0100, f);
+    bytes_len = fread(gb_state->saved.mem.bootrom, sizeof(uint8_t), 0x0100, f);
     if ((err = ferror(f))) {
       LogError("Error when reading bootrom file: %d", err);
       goto load_default;
@@ -219,7 +219,7 @@ void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) 
   }
 load_default:
   GB_assert(dmg0_boot_rom_size == 0x0100);
-  memcpy(gb_state->saved.ram.bootrom, dmg0_boot_rom_data, 0x0100);
+  memcpy(gb_state->saved.mem.bootrom, dmg0_boot_rom_data, 0x0100);
   gb_state->saved.regs.pc      = 0x0000;
   gb_state->saved.regs.io.bank = true;
 }
@@ -304,29 +304,29 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
 void *gb_unmap_address(struct gb_state *gb_state, uint16_t addr) {
   if (gb_state->saved.regs.io.bank && (addr < 0x0100)) {
-    return &gb_state->saved.ram.bootrom[addr];
+    return &gb_state->saved.mem.bootrom[addr];
   }
   if (addr <= ROM0_END) {
-    return &gb_state->saved.ram.rom0[addr - ROM0_START];
+    return &gb_state->saved.mem.rom0[addr - ROM0_START];
   } else if (addr <= ROMN_END) {
     // TODO: Implement bank switching for this region. For now we'll just assume that it's always 01.
-    return &gb_state->saved.ram.rom1[addr - ROMN_START];
+    return &gb_state->saved.mem.rom1[addr - ROMN_START];
   } else if (addr <= VRAM_END) {
-    return &gb_state->saved.ram.vram[addr - VRAM_START];
+    return &gb_state->saved.mem.vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
     // TODO: implement eram bank switching
-    return &gb_state->saved.ram.eram[addr - ERAM_START];
+    return &gb_state->saved.mem.eram[addr - ERAM_START];
   } else if (addr <= WRAM_END) {
-    return &gb_state->saved.ram.wram[addr - WRAM_START];
+    return &gb_state->saved.mem.wram[addr - WRAM_START];
   } else if (addr <= ECHO_RAM_END) {
     // Mirrors wram, probably should never be accessed.
-    return &gb_state->saved.ram.wram[addr - ECHO_RAM_START];
+    return &gb_state->saved.mem.wram[addr - ECHO_RAM_START];
   } else if (addr <= OAM_END) {
-    return &gb_state->saved.ram.oam[addr - OAM_START];
+    return &gb_state->saved.mem.oam[addr - OAM_START];
   } else if (addr <= IO_REG_END) {
     goto not_implemented;
   } else if (addr <= HRAM_END) {
-    return &gb_state->saved.ram.hram[addr - HRAM_START];
+    return &gb_state->saved.mem.hram[addr - HRAM_START];
   }
 not_implemented:
   LogError("`gb_unmap_address()` was called on an address that is not implemented: 0x%.4X", addr);
@@ -414,6 +414,9 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     break;
   }
 }
+void gb_init_mbc1(gb_state_t *gb_state);
+
+
 static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
   GB_assert(addr < 0x8000);
   // There are 4 unique places in memory that mbc1 receives writes to. Which of these is written to is determined by

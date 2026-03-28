@@ -7,7 +7,7 @@ static void disassemble_section(FILE *stream, const uint8_t *section_bytes, cons
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   gb_state.saved.regs.pc = 0;
-  memcpy(gb_state.saved.ram.rom0, section_bytes, section_bytes_len);
+  memcpy(gb_state.saved.mem.rom0, section_bytes, section_bytes_len);
 
   while (gb_state.saved.regs.pc < section_bytes_len) {
     uint16_t    inst_addr = gb_state.saved.regs.pc;

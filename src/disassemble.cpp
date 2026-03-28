@@ -285,7 +285,7 @@ void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
 // copies rom to the start of memory and start disassembly at 0x100 since the
 // boot rom goes before that.
 static void disassemble_rom(struct gb_state *gb_state, FILE *stream) {
-  while (gb_state->saved.regs.pc < sizeof(gb_state->saved.ram.rom0)) {
+  while (gb_state->saved.regs.pc < sizeof(gb_state->saved.mem.rom0)) {
     uint16_t    inst_addr = gb_state->saved.regs.pc;
     struct inst inst      = fetch(gb_state);
     fprintf(stream, "  ");
