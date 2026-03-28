@@ -2,7 +2,6 @@
 #include "ppu.h"
 #include "timing.h"
 
-#include <cassert>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +11,8 @@
 #include "incbin.h"
 INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 
+#define GB_HEADER_START          0x0100
+#define GB_HEADER_SIZE           0x0050
 #define GB_HEADER_CART_TYPE_ADDR 0x0147
 #define GB_HEADER_ROM_SIZE_ADDR  0x0148
 #define GB_HEADER_RAM_SIZE_ADDR  0x0149
@@ -154,31 +155,102 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->timing.ns_elapsed_while_running   = 0;
 }
 
-bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name, const char *sym_name) {
-  FILE   *f;
-  int     err;
-  uint8_t bytes[KB(16)];
-  int     bytes_len;
+void gb_alloc_mbc1(gb_state_t *gb_state) {
+  const gb_cart_header_t &header = gb_state->saved.header;
 
-  // Load ROM into gb_state->rom0 (rom is optional since the disassembler can
-  // also assemble only the boot rom).
+  uint32_t mbc_bytes_required = 0;
+
+  uint32_t rom_banks_size = (header.num_rom_banks * (KB(16)));
+  mbc_bytes_required += rom_banks_size;
+  uint32_t eram_banks_size = (header.num_ram_banks * (KB(8)));
+  mbc_bytes_required += eram_banks_size;
+  // These are both allocated in one call to malloc, the eram block comes directly after the rom block.
+  gb_state->saved.mem.rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
+  gb_state->saved.mem.rom_size  = rom_banks_size;
+  GB_assert(gb_state->saved.mem.rom_start != NULL);
+  gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
+  gb_state->saved.mem.eram_size  = eram_banks_size;
+}
+
+void gb_alloc_no_mbc(gb_state_t *gb_state) {
+  uint32_t mbc_bytes_required = 0;
+
+  uint32_t rom_banks_size = (2 * (KB(16)));
+  mbc_bytes_required += rom_banks_size;
+  uint32_t eram_banks_size = (1 * (KB(8)));
+  mbc_bytes_required += eram_banks_size;
+  // These are both allocated in one call to malloc, the eram block comes directly after the rom block.
+  gb_state->saved.mem.rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
+  gb_state->saved.mem.rom_size  = rom_banks_size;
+  GB_assert(gb_state->saved.mem.rom_start != NULL);
+  gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
+  gb_state->saved.mem.eram_size  = eram_banks_size;
+}
+
+// TODO: Create dispatch function for freeing whatever mbc is being used and
+// make sure this is called when gb_state has been freed.
+void gb_free_mbc1(gb_state_t *gb_state) {
+  GB_free(gb_state->saved.mem.rom_start);
+  gb_state->saved.mem.rom_start  = NULL;
+  gb_state->saved.mem.eram_start = NULL;
+}
+
+void gb_alloc_mbc(gb_state_t *gb_state) {
+  switch (gb_state->saved.header.mbc_type) {
+  case GB_NO_MBC: gb_alloc_no_mbc(gb_state); break;
+  case GB_MBC1: gb_alloc_mbc1(gb_state); break;
+  case GB_MBC2:
+  case GB_MBC3:
+  case GB_MBC5:
+  case GB_MBC7:
+  case GB_MMM01:
+  case GB_HUC1:
+  case GB_HUC3:
+  case GB_TPP1:
+  case GB_CAMERA:
+  case GB_MBC_UNKNOWN: NOT_IMPLEMENTED("Write attempted on MBC that is not yet implemented."); break;
+  }
+}
+#define FSET_POS(f, pos)                                                                                               \
+  {                                                                                                                    \
+    err = fseek(f, pos, SEEK_SET);                                                                                     \
+    GB_assert(err == 0);                                                                                               \
+  }
+#define FLEN(f, len)                                                                                                   \
+  {                                                                                                                    \
+    err = fseek(f, 0, SEEK_END);                                                                                       \
+    GB_assert(err == 0);                                                                                               \
+    len = ftell(f);                                                                                                    \
+  }
+
+bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name, const char *sym_name) {
+  FILE *f;
+  int   err;
+
   if (rom_name != NULL) {
-    // TODO: Load into multiple banks once bank switching is added.
-    f         = fopen(rom_name, "r");
-    bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
-    if ((err = ferror(f))) {
-      LogCritical("Error when reading rom file: %d", err);
-      return false;
-    }
-    memcpy(gb_state->saved.mem.rom0, bytes, bytes_len);
-    gb_state->saved.header = gb_parse_cart_header(&gb_state->saved.mem.rom0[0x100]);
-    if (!feof(f)) {
-      bytes_len = fread(bytes, sizeof(uint8_t), KB(16), f);
+    f = fopen(rom_name, "r");
+    GB_assert(f != NULL);
+    { // Read Cartridge Header
+      FSET_POS(f, GB_HEADER_START);
+      uint8_t header_bytes[GB_HEADER_SIZE];
+      size_t  header_len;
+      header_len = fread(header_bytes, sizeof(uint8_t), GB_HEADER_SIZE, f);
+      GB_assert(header_len == GB_HEADER_SIZE);
       if ((err = ferror(f))) {
         LogCritical("Error when reading rom file: %d", err);
         return false;
       }
-      memcpy(gb_state->saved.mem.rom1, bytes, bytes_len);
+      gb_state->saved.header = gb_parse_cart_header(header_bytes);
+    }
+    { // Initialize MBC and Copy ROM
+      gb_alloc_mbc(gb_state);
+      size_t len;
+      FLEN(f, len);
+      FSET_POS(f, 0x00);
+      size_t bytes_read = fread(gb_state->saved.mem.rom_start, 1, gb_state->saved.mem.rom_size, f);
+
+      GB_assert(len == gb_state->saved.mem.rom_size);
+      GB_assert(bytes_read == len);
     }
     fclose(f);
     gb_state->dbg.rom_loaded = true;
@@ -199,6 +271,9 @@ bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bo
 
   return true;
 }
+
+#undef FSET_POS
+#undef FLEN
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
   // Load bootrom into gb_state->bootrom (bootrom is optional)
@@ -302,20 +377,63 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-void *gb_unmap_address(struct gb_state *gb_state, uint16_t addr) {
+static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
+  if (addr <= ROM0_END) {
+    return &gb_state->saved.mem.rom_start[(KB(16) * 0) + (addr - ROM0_START)];
+  } else if (addr <= ROMN_END) {
+    // Quote from https://gbdev.io/pandocs/MBC1.html#20003fff--rom-bank-number-write-only:
+    // 'If this register is set to $00, it behaves as if it is set to $01.'
+    if (gb_state->saved.regs.mbc1_regs.rom_bank == 0) {
+      gb_state->saved.regs.mbc1_regs.rom_bank = 1;
+    }
+    GB_assert(gb_state->saved.regs.mbc1_regs.rom_bank < gb_state->saved.header.num_rom_banks);
+    return &gb_state->saved.mem.rom_start[(KB(16) * gb_state->saved.regs.mbc1_regs.rom_bank) + (addr - ROMN_START)];
+  }
+  // TODO: Handle ERAM Banking
+  NOT_IMPLEMENTED("Only ROM mapping is currently implemented in MBC1.");
+  return NULL;
+}
+static void *gb_unmap_no_mbc_address(gb_state_t *gb_state, uint16_t addr) {
+  if (addr <= ROM0_END) {
+    return &gb_state->saved.mem.rom_start[(KB(16) * 0) + (addr - ROM0_START)];
+  } else if (addr <= ROMN_END) {
+    return &gb_state->saved.mem.rom_start[(KB(16) * 1) + (addr - ROMN_START)];
+  }
+  // TODO: Handle ERAM Banking
+  NOT_IMPLEMENTED("Only ROM mapping is currently implemented in NO_MBC.");
+  return NULL;
+}
+static void *gb_unmap_mbc_address(gb_state_t *gb_state, uint16_t addr) {
+  switch (gb_state->saved.header.mbc_type) {
+  case GB_NO_MBC: return gb_unmap_no_mbc_address(gb_state, addr);
+  case GB_MBC1: return gb_unmap_mbc1_address(gb_state, addr);
+  case GB_MBC2:
+  case GB_MBC3:
+  case GB_MBC5:
+  case GB_MBC7:
+  case GB_MMM01:
+  case GB_HUC1:
+  case GB_HUC3:
+  case GB_TPP1:
+  case GB_CAMERA:
+  case GB_MBC_UNKNOWN: NOT_IMPLEMENTED("Unmap attempted on MBC that is not yet implemented."); return NULL;
+  default: unreachable();
+  }
+}
+
+void *gb_unmap_address(gb_state_t *gb_state, uint16_t addr) {
   if (gb_state->saved.regs.io.bank && (addr < 0x0100)) {
     return &gb_state->saved.mem.bootrom[addr];
   }
   if (addr <= ROM0_END) {
-    return &gb_state->saved.mem.rom0[addr - ROM0_START];
+    return gb_unmap_mbc_address(gb_state, addr);
   } else if (addr <= ROMN_END) {
-    // TODO: Implement bank switching for this region. For now we'll just assume that it's always 01.
-    return &gb_state->saved.mem.rom1[addr - ROMN_START];
+    return gb_unmap_mbc_address(gb_state, addr);
   } else if (addr <= VRAM_END) {
     return &gb_state->saved.mem.vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
     // TODO: implement eram bank switching
-    return &gb_state->saved.mem.eram[addr - ERAM_START];
+    return gb_unmap_mbc_address(gb_state, addr);
   } else if (addr <= WRAM_END) {
     return &gb_state->saved.mem.wram[addr - WRAM_START];
   } else if (addr <= ECHO_RAM_END) {
@@ -414,8 +532,6 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     break;
   }
 }
-void gb_init_mbc1(gb_state_t *gb_state);
-
 
 static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
   GB_assert(addr < 0x8000);

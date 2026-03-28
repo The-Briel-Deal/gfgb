@@ -37,9 +37,9 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
 
   // I'm also just validating that the rom is not being modified by making sure the value doesn't change from
   // gb_write_mem().
-  gb_state.saved.mem.rom0[0x12A1] = 0x4B;
-  gb_state.saved.mem.rom0[0x0000] = 0x4C;
-  gb_state.saved.mem.rom0[0x1FFF] = 0x4D;
+  gb_state.saved.mem.rom_start[0x12A1] = 0x4B;
+  gb_state.saved.mem.rom_start[0x0000] = 0x4C;
+  gb_state.saved.mem.rom_start[0x1FFF] = 0x4D;
 
   {
     gb_write_mem(&gb_state, 0x12A1, 0xFF);
@@ -50,14 +50,14 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
     CHECK_FALSE(mbc1_regs.ram_enable);
   }
 
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom0[0x12A1], 0x4B);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom0[0x0000], 0x4C);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom0[0x1FFF], 0x4D);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x12A1], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x0000], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x1FFF], 0x4D);
 
   /// ROM Bank Num
-  gb_state.saved.mem.rom0[0x2000] = 0x4B;
-  gb_state.saved.mem.rom0[0x3120] = 0x4C;
-  gb_state.saved.mem.rom0[0x3FFF] = 0x4D;
+  gb_state.saved.mem.rom_start[0x2000] = 0x4B;
+  gb_state.saved.mem.rom_start[0x3120] = 0x4C;
+  gb_state.saved.mem.rom_start[0x3FFF] = 0x4D;
 
   {
     // If the ROM Bank Num reg is more than the number of banks then this reg is masked to the max number of bits.
@@ -73,13 +73,13 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
     CHECK_BYTES_EQ(mbc1_regs.rom_bank, 0b0000'0001);
   }
 
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom0[0x2000], 0x4B);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom0[0x3120], 0x4C);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom0[0x3FFF], 0x4D);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x2000], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x3120], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x3FFF], 0x4D);
 
-  gb_state.saved.mem.rom1[0x0000] = 0x4B;
-  gb_state.saved.mem.rom1[0x1000] = 0x4C;
-  gb_state.saved.mem.rom1[0x1FFF] = 0x4D;
+  gb_state.saved.mem.rom_start[0x4000 + 0x0000] = 0x4B;
+  gb_state.saved.mem.rom_start[0x4000 + 0x1000] = 0x4C;
+  gb_state.saved.mem.rom_start[0x4000 + 0x1FFF] = 0x4D;
   {
     gb_write_mem(&gb_state, 0x5000, 0xFF);
     CHECK_BYTES_EQ(mbc1_regs.ram_bank, 3);
@@ -88,13 +88,13 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
     gb_write_mem(&gb_state, 0x5FFF, 0xF1);
     CHECK_BYTES_EQ(mbc1_regs.ram_bank, 1);
   }
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom1[0x0000], 0x4B);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom1[0x1000], 0x4C);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom1[0x1FFF], 0x4D);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x0000], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x1000], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x1FFF], 0x4D);
 
-  gb_state.saved.mem.rom1[0x2000] = 0x4B;
-  gb_state.saved.mem.rom1[0x3000] = 0x4C;
-  gb_state.saved.mem.rom1[0x3FFF] = 0x4D;
+  gb_state.saved.mem.rom_start[0x4000 + 0x2000] = 0x4B;
+  gb_state.saved.mem.rom_start[0x4000 + 0x3000] = 0x4C;
+  gb_state.saved.mem.rom_start[0x4000 + 0x3FFF] = 0x4D;
   {
     gb_write_mem(&gb_state, 0x6000, 0xFF);
     CHECK_BYTES_EQ(mbc1_regs.banking_mode_select, 1);
@@ -103,7 +103,7 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
     gb_write_mem(&gb_state, 0x7FFF, 0xF1);
     CHECK_BYTES_EQ(mbc1_regs.banking_mode_select, 1);
   }
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom1[0x2000], 0x4B);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom1[0x3000], 0x4C);
-  CHECK_BYTES_EQ(gb_state.saved.mem.rom1[0x3FFF], 0x4D);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x2000], 0x4B);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x3000], 0x4C);
+  CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x3FFF], 0x4D);
 }

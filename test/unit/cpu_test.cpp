@@ -6,38 +6,40 @@ TEST_CASE("Fetch CPU Instruction", "[CPU]") {
   struct inst     inst;
 
   gb_state_init(&gb_state);
+  gb_state.saved.header.mbc_type = GB_NO_MBC;
+  gb_alloc_mbc(&gb_state);
   gb_state.saved.regs.pc = 0x0100;
 
-  gb_state.saved.mem.rom0[0x100] = 0b00100001;
-  gb_state.saved.mem.rom0[0x101] = 0xCD;
-  gb_state.saved.mem.rom0[0x102] = 0xAB;
-  inst                           = fetch(&gb_state);
+  gb_state.saved.mem.rom_start[0x100] = 0b00100001;
+  gb_state.saved.mem.rom_start[0x101] = 0xCD;
+  gb_state.saved.mem.rom_start[0x102] = 0xAB;
+  inst                                = fetch(&gb_state);
   CHECK(inst.type == LD);
   CHECK(inst.p1.type == R16);
   CHECK(inst.p1.r16 == R16_HL);
   CHECK(inst.p2.type == IMM16);
   CHECK(inst.p2.imm16 == 0xABCD);
 
-  gb_state.saved.mem.rom0[0x103] = 0b00010010;
-  inst                           = fetch(&gb_state);
+  gb_state.saved.mem.rom_start[0x103] = 0b00010010;
+  inst                                = fetch(&gb_state);
   CHECK(inst.type == LD);
   CHECK(inst.p1.type == R16_MEM);
   CHECK(inst.p1.r16 == R16_DE);
   CHECK(inst.p2.type == R8);
   CHECK(inst.p2.r8 == R8_A);
 
-  gb_state.saved.mem.rom0[0x104] = 0b00011010;
-  inst                           = fetch(&gb_state);
+  gb_state.saved.mem.rom_start[0x104] = 0b00011010;
+  inst                                = fetch(&gb_state);
   CHECK(inst.type == LD);
   CHECK(inst.p1.type == R8);
   CHECK(inst.p1.r8 == R8_A);
   CHECK(inst.p2.type == R16_MEM);
   CHECK(inst.p2.r16 == R16_DE);
 
-  gb_state.saved.mem.rom0[0x105] = 0b00001000;
-  gb_state.saved.mem.rom0[0x106] = 0x34;
-  gb_state.saved.mem.rom0[0x107] = 0x12;
-  inst                           = fetch(&gb_state);
+  gb_state.saved.mem.rom_start[0x105] = 0b00001000;
+  gb_state.saved.mem.rom_start[0x106] = 0x34;
+  gb_state.saved.mem.rom_start[0x107] = 0x12;
+  inst                                = fetch(&gb_state);
   CHECK(inst.type == LD);
   CHECK(inst.p1.type == IMM16_MEM);
   CHECK(inst.p1.imm16 == 0x1234);

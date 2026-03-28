@@ -191,13 +191,17 @@ void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 
 typedef struct gb_mem {
   uint8_t bootrom[DMG_BOOTROM_SIZE];
-  uint8_t rom0[KB(16)];
-  uint8_t rom1[KB(16)];
   uint8_t wram[KB(8)];
   uint8_t vram[KB(8)];
-  uint8_t eram[KB(8)];
   uint8_t hram[0x80];
   uint8_t oam[4 * 40];
+  // This is a dyn allocated block of memory which is the same length as (num_rom_banks x 16KB), num_rom_banks is the
+  // number of rom banks in the rom's header.
+  uint32_t rom_size;
+  uint8_t *rom_start;
+  // Works the same as rom_start except with 8KB banks.
+  uint32_t eram_size;
+  uint8_t *eram_start;
 } gb_mem_t;
 
 // true if pressed down
@@ -573,6 +577,8 @@ enum joy_pad_io_reg_bits : uint8_t {
 // Note: I took and modified this from SameBoy's MBC lookup table.
 
 gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]);
+
+void gb_alloc_mbc(gb_state_t *gb_state);
 
 uint64_t gb_m_cycles(gb_state_t *gb_state);
 
