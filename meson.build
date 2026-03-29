@@ -257,6 +257,32 @@ test(
 )
 
 test(
+  'mooneye_mbc1_rom_8mbit',
+  exe,
+  args : [
+    'exec', current_src_dir / 'test/mooneye/emulator-only/mbc1/rom_8Mb.gb',
+    '--test_mode',
+    '--exec_speed=100',
+    '--test_fail_regex=BBBBBB',
+    '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+  ],
+  env : ['SDL_VIDEODRIVER=dummy'],
+)
+
+test(
+  'mooneye_mbc1_rom_16mbit',
+  exe,
+  args : [
+    'exec', current_src_dir / 'test/mooneye/emulator-only/mbc1/rom_16Mb.gb',
+    '--test_mode',
+    '--exec_speed=100',
+    '--test_fail_regex=BBBBBB',
+    '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+  ],
+  env : ['SDL_VIDEODRIVER=dummy'],
+)
+
+test(
   'single_step_tests',
   py,
   args : ['-mpytest', '--tap', current_src_dir / 'test/sst/'],

@@ -70,11 +70,11 @@ enum GB_LogCategory {
 #endif
 
 #define LogTrace(msg, ...)    LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogInfo(msg, ...)     LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogDebug(msg, ...)    LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogWarn(msg, ...)     LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogError(msg, ...)    LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
-#define LogCritical(msg, ...) LogTraceCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogInfo(msg, ...)     LogInfoCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogDebug(msg, ...)    LogDebugCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogWarn(msg, ...)     LogWarnCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogError(msg, ...)    LogErrorCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
+#define LogCritical(msg, ...) LogCriticalCat(GB_LOG_CATEGORY, msg, ##__VA_ARGS__)
 
 #define NOT_IMPLEMENTED(msg)                                                                                           \
   {                                                                                                                    \

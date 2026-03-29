@@ -67,10 +67,6 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
   // https://gbdev.io/pandocs/The_Cartridge_Header.html#weird_rom_sizes
   // Apparently there are a few other valid rom sizes that no real world rom uses. I don't think I need to implement
   // these so I'm just going to add an assert here in case we somehow run into one of these.
-  //
-  // TODO: Apparently once you get past 32 banks (representable in 5 bits), things get a little wonky. I need to read
-  // into that behavior a bit more before implementing.
-  GB_assert(rom_size < 5);
   parsed_header.num_rom_banks = (2 << rom_size);
 
   uint8_t ram_size = header[GB_HEADER_RAM_SIZE_ADDR - 0x100];
@@ -383,10 +379,19 @@ uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
 static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
   if (addr <= ROM0_END) {
-    return &gb_state->saved.mem.rom_start[(KB(16) * 0) + (addr - ROM0_START)];
+
+    uint8_t bank = 0;
+    if (gb_state->saved.regs.mbc1_regs.banking_mode_select == MBC1_BANK_MODE_ADVANCED) {
+      bank = gb_state->saved.regs.mbc1_regs.rom_bank_upper * 0x20;
+      bank &= (gb_state->saved.header.num_rom_banks - 1);
+    }
+    return &gb_state->saved.mem.rom_start[(KB(16) * bank) + (addr - ROM0_START)];
   } else if (addr <= ROMN_END) {
     GB_assert(gb_state->saved.regs.mbc1_regs.rom_bank < gb_state->saved.header.num_rom_banks);
-    return &gb_state->saved.mem.rom_start[(KB(16) * gb_state->saved.regs.mbc1_regs.rom_bank) + (addr - ROMN_START)];
+    uint8_t bank = gb_state->saved.regs.mbc1_regs.rom_bank;
+    bank |= (((gb_state->saved.regs.mbc1_regs.rom_bank_upper & 0b11) << 5));
+    bank &= (gb_state->saved.header.num_rom_banks - 1);
+    return &gb_state->saved.mem.rom_start[(KB(16) * bank) + (addr - ROMN_START)];
   }
   // TODO: Handle ERAM Banking
   NOT_IMPLEMENTED("Only ROM mapping is currently implemented in MBC1.");

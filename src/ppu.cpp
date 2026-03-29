@@ -771,6 +771,17 @@ void gb_imgui_render(struct gb_state *gb_state) {
       ImGui::Value("Select Button", gb_state->joy_pad.button_select);
       ImGui::TreePop();
     }
+    if (ImGui::TreeNodeEx("MBC State", ImGuiTreeNodeFlags_Framed)) {
+      switch (gb_state->saved.header.mbc_type) {
+      case GB_NO_MBC: ImGui::TextUnformatted("No MBC"); break;
+      case GB_MBC1:
+        ImGui::TextUnformatted("MBC1");
+        ImGui::Value("Rom Bank", gb_state->saved.regs.mbc1_regs.rom_bank);
+        break;
+      default: ImGui::TextUnformatted("Debug viewer is not setup for the current MBC type."); break;
+      }
+      ImGui::TreePop();
+    }
     if (ImGui::TreeNodeEx("Reg Values", ImGuiTreeNodeFlags_Framed)) {
       gb_imgui_show_val("A", gb_state->saved.regs.a);
       gb_imgui_show_val("B", gb_state->saved.regs.b);
