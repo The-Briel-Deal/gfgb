@@ -79,7 +79,7 @@ sources = [
 include = include_directories(['src/', 'embed/'])
 
 shared_library(
-  'gfgb', 
+  'gfgb',
   [sources],
   include_directories : include,
   dependencies : [gui_deps, global_deps],
@@ -196,6 +196,19 @@ test(
   exe,
   args : [
     'exec', current_src_dir / 'test/mooneye/acceptance/ppu/vblank_stat_intr-GS.gb',
+    '--test_mode',
+    '--exec_speed=100',
+    '--test_fail_regex=BBBBBB',
+    '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+  ],
+  env : ['SDL_VIDEODRIVER=dummy'],
+)
+
+test(
+  'mooneye_mbc1_rom_512kbit',
+  exe,
+  args : [
+    'exec', current_src_dir / 'test/mooneye/emulator-only/mbc1/rom_512kb.gb',
     '--test_mode',
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
