@@ -170,6 +170,10 @@ void gb_alloc_mbc1(gb_state_t *gb_state) {
   GB_assert(gb_state->saved.mem.rom_start != NULL);
   gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
   gb_state->saved.mem.eram_size  = eram_banks_size;
+
+  // The rom_bank is the one field that should default to 1,
+  // everything else was initialized to zero in gb_state_init().
+  gb_state->saved.regs.mbc1_regs.rom_bank = 1;
 }
 
 void gb_alloc_no_mbc(gb_state_t *gb_state) {
@@ -381,11 +385,6 @@ static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
   if (addr <= ROM0_END) {
     return &gb_state->saved.mem.rom_start[(KB(16) * 0) + (addr - ROM0_START)];
   } else if (addr <= ROMN_END) {
-    // Quote from https://gbdev.io/pandocs/MBC1.html#20003fff--rom-bank-number-write-only:
-    // 'If this register is set to $00, it behaves as if it is set to $01.'
-    if (gb_state->saved.regs.mbc1_regs.rom_bank == 0) {
-      gb_state->saved.regs.mbc1_regs.rom_bank = 1;
-    }
     GB_assert(gb_state->saved.regs.mbc1_regs.rom_bank < gb_state->saved.header.num_rom_banks);
     return &gb_state->saved.mem.rom_start[(KB(16) * gb_state->saved.regs.mbc1_regs.rom_bank) + (addr - ROMN_START)];
   }
@@ -546,11 +545,13 @@ static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
     break;
   case 1: // 0x2000-0x3FFF
     mbc1_regs.rom_bank = (val & 0b0001'1111);
+    // 0 reads as if it is 1 to prevent mapping bank 0 to both areas. This needs to happen before the not needed bits
+    // are masked out.
+    if (mbc1_regs.rom_bank == 0) mbc1_regs.rom_bank = 1;
+
     if (mbc1_regs.rom_bank >= gb_state->saved.header.num_rom_banks) {
       mbc1_regs.rom_bank &= gb_state->saved.header.num_rom_banks - 1;
     }
-    // 0 reads as if it is 1 to prevent mapping bank 0 to both areas.
-    if (mbc1_regs.rom_bank == 0) mbc1_regs.rom_bank = 1;
     break;
   case 2: // 0x4000-0x5FFF
     mbc1_regs.rom_bank_upper = (val & 0b11);
