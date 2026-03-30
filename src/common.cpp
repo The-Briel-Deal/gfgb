@@ -386,25 +386,38 @@ static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
       bank &= (gb_state->saved.header.num_rom_banks - 1);
     }
     return &gb_state->saved.mem.rom_start[(KB(16) * bank) + (addr - ROM0_START)];
-  } else if (addr <= ROMN_END) {
-    GB_assert(gb_state->saved.regs.mbc1_regs.rom_bank < gb_state->saved.header.num_rom_banks);
+  }
+  if (addr <= ROMN_END) {
     uint8_t bank = gb_state->saved.regs.mbc1_regs.rom_bank;
     bank |= (((gb_state->saved.regs.mbc1_regs.rom_bank_upper & 0b11) << 5));
     bank &= (gb_state->saved.header.num_rom_banks - 1);
     return &gb_state->saved.mem.rom_start[(KB(16) * bank) + (addr - ROMN_START)];
   }
-  // TODO: Handle ERAM Banking
-  NOT_IMPLEMENTED("Only ROM mapping is currently implemented in MBC1.");
+  if (addr >= ERAM_START && addr <= ERAM_END) {
+    if (gb_state->saved.regs.mbc1_regs.ram_enable) {
+      GB_assert(gb_state->saved.header.num_ram_banks <= 4);
+      uint8_t bank = gb_state->saved.regs.mbc1_regs.ram_bank;
+      bank &= (gb_state->saved.header.num_ram_banks - 1);
+
+      return &gb_state->saved.mem.eram_start[(KB(8) * bank) + (addr - ERAM_START)];
+    }
+    LogDebug("MBC1 ERAM Read without ram_enabled set.");
+    return NULL;
+  }
+  ERR(gb_state, "Invalid MBC1 address unmapped $%.4X.", addr);
   return NULL;
 }
 static void *gb_unmap_no_mbc_address(gb_state_t *gb_state, uint16_t addr) {
   if (addr <= ROM0_END) {
     return &gb_state->saved.mem.rom_start[(KB(16) * 0) + (addr - ROM0_START)];
-  } else if (addr <= ROMN_END) {
+  }
+  if (addr <= ROMN_END) {
     return &gb_state->saved.mem.rom_start[(KB(16) * 1) + (addr - ROMN_START)];
   }
-  // TODO: Handle ERAM Banking
-  NOT_IMPLEMENTED("Only ROM mapping is currently implemented in NO_MBC.");
+  if (addr >= ERAM_START && addr <= ERAM_END) {
+    return &gb_state->saved.mem.eram_start[(KB(8) * 0) + (addr - ERAM_START)];
+  }
+  ERR(gb_state, "Invalid NO_MBC address unmapped $%.4X.", addr);
   return NULL;
 }
 static void *gb_unmap_mbc_address(gb_state_t *gb_state, uint16_t addr) {
