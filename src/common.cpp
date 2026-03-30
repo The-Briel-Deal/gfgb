@@ -396,9 +396,11 @@ static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
   if (addr >= ERAM_START && addr <= ERAM_END) {
     if (gb_state->saved.regs.mbc1_regs.ram_enable) {
       GB_assert(gb_state->saved.header.num_ram_banks <= 4);
-      uint8_t bank = gb_state->saved.regs.mbc1_regs.ram_bank;
-      bank &= (gb_state->saved.header.num_ram_banks - 1);
-
+      uint8_t bank = 0;
+      if (gb_state->saved.regs.mbc1_regs.banking_mode_select == MBC1_BANK_MODE_ADVANCED) {
+        bank = gb_state->saved.regs.mbc1_regs.ram_bank;
+        bank &= (gb_state->saved.header.num_ram_banks - 1);
+      }
       return &gb_state->saved.mem.eram_start[(KB(8) * bank) + (addr - ERAM_START)];
     }
     LogDebug("MBC1 ERAM Read without ram_enabled set.");
