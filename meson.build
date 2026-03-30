@@ -294,6 +294,18 @@ test(
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
+test(
+  'mooneye_mbc1_ram_256kbit',
+  exe,
+  args : [
+    'exec', current_src_dir / 'test/mooneye/emulator-only/mbc1/ram_256kb.gb',
+    '--test_mode',
+    '--exec_speed=100',
+    '--test_fail_regex=BBBBBB',
+    '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+  ],
+  env : ['SDL_VIDEODRIVER=dummy'],
+)
 
 test(
   'single_step_tests',
