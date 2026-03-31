@@ -1,27 +1,26 @@
 #include "common.h"
 
-void gb_alloc_mbc1(gb_state_t *gb_state) {
-  const gb_cart_header_t &header = gb_state->saved.header;
+void gb_alloc_mbc1(gb_mbc_t *mbc) {
 
   uint32_t mbc_bytes_required = 0;
 
-  uint32_t rom_banks_size = (header.num_rom_banks * (KB(16)));
+  uint32_t rom_banks_size = (mbc->num_rom_banks * (KB(16)));
   mbc_bytes_required += rom_banks_size;
-  uint32_t eram_banks_size = (header.num_ram_banks * (KB(8)));
+  uint32_t eram_banks_size = (mbc->num_ram_banks * (KB(8)));
   mbc_bytes_required += eram_banks_size;
   // These are both allocated in one call to malloc, the eram block comes directly after the rom block.
-  gb_state->saved.mem.rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
-  gb_state->saved.mem.rom_size  = rom_banks_size;
-  GB_assert(gb_state->saved.mem.rom_start != NULL);
-  gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
-  gb_state->saved.mem.eram_size  = eram_banks_size;
+  mbc->rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
+  mbc->rom_size  = rom_banks_size;
+  GB_assert(mbc->rom_start != NULL);
+  mbc->eram_start = &mbc->rom_start[rom_banks_size];
+  mbc->eram_size  = eram_banks_size;
 
   // The rom_bank is the one field that should default to 1,
   // everything else was initialized to zero in gb_state_init().
-  gb_state->saved.regs.mbc1_regs.rom_bank = 1;
+  mbc->mbc1_regs.rom_bank = 1;
 }
 
-void gb_alloc_no_mbc(gb_state_t *gb_state) {
+void gb_alloc_no_mbc(gb_mbc_t *mbc) {
   uint32_t mbc_bytes_required = 0;
 
   uint32_t rom_banks_size = (2 * (KB(16)));
@@ -29,25 +28,28 @@ void gb_alloc_no_mbc(gb_state_t *gb_state) {
   uint32_t eram_banks_size = (1 * (KB(8)));
   mbc_bytes_required += eram_banks_size;
   // These are both allocated in one call to malloc, the eram block comes directly after the rom block.
-  gb_state->saved.mem.rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
-  gb_state->saved.mem.rom_size  = rom_banks_size;
-  GB_assert(gb_state->saved.mem.rom_start != NULL);
-  gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
-  gb_state->saved.mem.eram_size  = eram_banks_size;
+  mbc->rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
+  mbc->rom_size  = rom_banks_size;
+  GB_assert(mbc->rom_start != NULL);
+  mbc->eram_start = &mbc->rom_start[rom_banks_size];
+  mbc->eram_size  = eram_banks_size;
 }
 
 // TODO: Create dispatch function for freeing whatever mbc is being used and
 // make sure this is called when gb_state has been freed.
-void gb_free_mbc1(gb_state_t *gb_state) {
-  GB_free(gb_state->saved.mem.rom_start);
-  gb_state->saved.mem.rom_start  = NULL;
-  gb_state->saved.mem.eram_start = NULL;
+void gb_free_mbc1(gb_mbc_t *mbc) {
+  GB_free(mbc->rom_start);
+  mbc->rom_start  = NULL;
+  mbc->eram_start = NULL;
 }
 
-void gb_alloc_mbc(gb_state_t *gb_state) {
-  switch (gb_state->saved.header.mbc_type) {
-  case GB_NO_MBC: gb_alloc_no_mbc(gb_state); break;
-  case GB_MBC1: gb_alloc_mbc1(gb_state); break;
+void gb_alloc_mbc(gb_mbc_t *mbc, gb_cart_header_t header) {
+  mbc->type          = header.mbc_type;
+  mbc->num_rom_banks = header.num_rom_banks;
+  mbc->num_ram_banks = header.num_ram_banks;
+  switch (header.mbc_type) {
+  case GB_NO_MBC: gb_alloc_no_mbc(mbc); break;
+  case GB_MBC1: gb_alloc_mbc1(mbc); break;
   case GB_MBC2:
   case GB_MBC3:
   case GB_MBC5:
@@ -60,12 +62,12 @@ void gb_alloc_mbc(gb_state_t *gb_state) {
   case GB_MBC_UNKNOWN: NOT_IMPLEMENTED("Write attempted on MBC that is not yet implemented."); break;
   }
 }
-static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
+static void gb_write_mbc1(gb_mbc_t *mbc, uint16_t addr, uint8_t val) {
   GB_assert(addr < 0x8000);
   // There are 4 unique places in memory that mbc1 receives writes to. Which of these is written to is determined by
   // bits 14 and 13.
   uint8_t      bank_reg  = addr >> 13;
-  mbc1_regs_t &mbc1_regs = gb_state->saved.regs.mbc1_regs;
+  mbc1_regs_t &mbc1_regs = mbc->mbc1_regs;
   switch (bank_reg) {
   case 0: // 0x0000-0x1FFF
     // It seems like it's unknown why they just check if the lower 4 bits are 0xA.
@@ -77,8 +79,8 @@ static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
     // are masked out.
     if (mbc1_regs.rom_bank == 0) mbc1_regs.rom_bank = 1;
 
-    if (mbc1_regs.rom_bank >= gb_state->saved.header.num_rom_banks) {
-      mbc1_regs.rom_bank &= gb_state->saved.header.num_rom_banks - 1;
+    if (mbc1_regs.rom_bank >= mbc->num_rom_banks) {
+      mbc1_regs.rom_bank &= mbc->num_rom_banks - 1;
     }
     break;
   case 2: // 0x4000-0x5FFF
@@ -93,10 +95,10 @@ static void gb_write_mbc1(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
   }
 }
 // Called whenever gb_write_mem is called on ROM.
-void gb_write_mbc(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
-  switch (gb_state->saved.header.mbc_type) {
+void gb_write_mbc(gb_mbc_t *mbc, uint16_t addr, uint8_t val) {
+  switch (mbc->type) {
   case GB_NO_MBC: break; // TODO: I need to make a write handler for NO_MBC since eram can still be written to.
-  case GB_MBC1: gb_write_mbc1(gb_state, addr, val); break;
+  case GB_MBC1: gb_write_mbc1(mbc, addr, val); break;
   case GB_MBC2:
   case GB_MBC3:
   case GB_MBC5:

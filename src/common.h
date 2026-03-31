@@ -196,13 +196,7 @@ typedef struct gb_mem {
   uint8_t vram[KB(8)];
   uint8_t hram[0x80];
   uint8_t oam[4 * 40];
-  // This is a dyn allocated block of memory which is the same length as (num_rom_banks x 16KB), num_rom_banks is the
-  // number of rom banks in the rom's header.
-  uint32_t rom_size;
-  uint8_t *rom_start;
-  // Works the same as rom_start except with 8KB banks.
-  uint32_t eram_size;
-  uint8_t *eram_start;
+  gb_mbc_t mbc;
 } gb_mem_t;
 
 // true if pressed down
@@ -289,9 +283,6 @@ typedef struct regs {
   uint16_t  sp;
   uint16_t  pc;
   io_regs_t io;
-  union {
-    mbc1_regs_t mbc1_regs;
-  };
 } regs_t;
 
 typedef struct gb_breakpoint {
@@ -322,22 +313,6 @@ typedef struct stack_entry {
     push_val_metadata_t push_val;
   };
 } stack_entry_t;
-
-typedef enum gb_mbc_type {
-  GB_NO_MBC,
-  GB_MBC1,
-  GB_MBC2,
-  GB_MBC3,
-  GB_MBC5,
-  GB_MBC7,
-  GB_MMM01,
-  GB_HUC1,
-  GB_HUC3,
-  GB_TPP1,
-  GB_CAMERA,
-
-  GB_MBC_UNKNOWN,
-} gb_mbc_type_t;
 
 typedef struct gb_cart_header {
   gb_mbc_type_t mbc_type;
