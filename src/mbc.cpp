@@ -1,6 +1,6 @@
 #include "common.h"
 
-void gb_alloc_mbc1(gb_mbc_t *mbc) {
+void gb_alloc_mbc1(gb_mbc_t *mbc, gb_cart_header_t *header) {
 
   uint32_t mbc_bytes_required = 0;
 
@@ -12,12 +12,19 @@ void gb_alloc_mbc1(gb_mbc_t *mbc) {
   mbc->rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
   mbc->rom_size  = rom_banks_size;
   GB_assert(mbc->rom_start != NULL);
-  mbc->eram_start = &mbc->rom_start[rom_banks_size];
-  mbc->eram_size  = eram_banks_size;
+  mbc->eram_size = eram_banks_size;
+  if (header->has_ram) {
+    GB_assert(mbc->eram_size != 0);
+    mbc->eram_start = &mbc->rom_start[rom_banks_size];
+  }
 
   // The rom_bank is the one field that should default to 1,
   // everything else was initialized to zero in gb_state_init().
-  mbc->mbc1_regs.rom_bank = 1;
+  mbc->mbc1_regs.ram_enable          = 0;
+  mbc->mbc1_regs.ram_bank            = 0;
+  mbc->mbc1_regs.rom_bank            = 1;
+  mbc->mbc1_regs.rom_bank_upper      = 0;
+  mbc->mbc1_regs.banking_mode_select = MBC1_BANK_MODE_SIMPLE;
 }
 
 void gb_alloc_no_mbc(gb_mbc_t *mbc) {
@@ -43,13 +50,14 @@ void gb_free_mbc1(gb_mbc_t *mbc) {
   mbc->eram_start = NULL;
 }
 
-void gb_mbc::alloc(gb_cart_header_t *header) {
+gb_mbc::gb_mbc(gb_cart_header_t *header) {
   this->type          = header->mbc_type;
   this->num_rom_banks = header->num_rom_banks;
   this->num_ram_banks = header->num_ram_banks;
+  this->eram_start    = NULL;
   switch (header->mbc_type) {
   case GB_NO_MBC: gb_alloc_no_mbc(this); break;
-  case GB_MBC1: gb_alloc_mbc1(this); break;
+  case GB_MBC1: gb_alloc_mbc1(this, header); break;
   case GB_MBC2:
   case GB_MBC3:
   case GB_MBC5:

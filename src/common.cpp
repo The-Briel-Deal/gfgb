@@ -1,4 +1,5 @@
 #include "common.h"
+#include "mbc.h"
 #include "ppu.h"
 #include "timing.h"
 
@@ -183,7 +184,7 @@ bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bo
       gb_state->saved.header = gb_parse_cart_header(header_bytes);
     }
     { // Initialize MBC and Copy ROM
-      gb_state->saved.mem.mbc.alloc(&gb_state->saved.header);
+      gb_state->saved.mem.mbc = gb_mbc_t(&gb_state->saved.header);
       size_t len;
       FLEN(f, len);
       FSET_POS(f, 0x00);
@@ -435,7 +436,7 @@ void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     return;
   }
   if (addr < 0x8000) {
-    gb_state->saved.mem.mbc.write( addr, val);
+    gb_state->saved.mem.mbc.write(addr, val);
     return;
   }
 

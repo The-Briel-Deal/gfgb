@@ -54,7 +54,8 @@ typedef struct gb_mbc {
     mbc1_regs_t mbc1_regs;
   };
 #ifdef __cplusplus
-  void  alloc(gb_cart_header_t *header);
+  gb_mbc() = default;
+  gb_mbc(gb_cart_header_t *header);
   void  write(uint16_t addr, uint8_t val);
   void *unmap(uint16_t addr);
 #endif

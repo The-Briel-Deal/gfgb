@@ -1,4 +1,5 @@
 #include "common.h"
+#include "mbc.h"
 #include "test_common.h"
 
 TEST_CASE("Fetch CPU Instruction", "[CPU]") {
@@ -7,7 +8,7 @@ TEST_CASE("Fetch CPU Instruction", "[CPU]") {
 
   gb_state_init(&gb_state);
   gb_state.saved.header.mbc_type = GB_NO_MBC;
-  gb_state.saved.mem.mbc.alloc(&gb_state.saved.header);
+  gb_state.saved.mem.mbc = gb_mbc_t(&gb_state.saved.header);
   gb_state.saved.regs.pc = 0x0100;
 
   gb_state.saved.mem.mbc.rom_start[0x100] = 0b00100001;
