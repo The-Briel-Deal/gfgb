@@ -10,6 +10,7 @@
 
 #include "cpu.h"
 #include "disassemble.h"
+#include "mbc.h"
 #include "ppu.h"
 
 #ifdef __cplusplus
@@ -275,22 +276,6 @@ typedef struct io_regs {
   bool    set_ime_after; // IME is only set after the following instruction.
   bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
 } io_regs_t;
-
-// See: https://gbdev.io/pandocs/MBC1.html#60007fff--banking-mode-select-write-only
-typedef enum mbc1_bank_mode {
-  MBC1_BANK_MODE_SIMPLE   = 0,
-  MBC1_BANK_MODE_ADVANCED = 1,
-} mbc1_bank_mode_t;
-
-typedef struct mbc1_regs {
-  bool    ram_enable;
-  uint8_t rom_bank;
-  union {
-    uint8_t ram_bank;
-    uint8_t rom_bank_upper;
-  };
-  mbc1_bank_mode_t banking_mode_select;
-} mbc1_regs_t;
 
 typedef struct regs {
   uint8_t   a;
@@ -577,8 +562,6 @@ enum joy_pad_io_reg_bits : uint8_t {
 // Note: I took and modified this from SameBoy's MBC lookup table.
 
 gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]);
-
-void gb_alloc_mbc(gb_state_t *gb_state);
 
 uint64_t gb_m_cycles(gb_state_t *gb_state);
 
