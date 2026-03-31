@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+typedef struct gb_cart_header gb_cart_header_t;
+
 typedef enum gb_mbc_type {
   GB_NO_MBC,
   GB_MBC1,
@@ -51,12 +53,11 @@ typedef struct gb_mbc {
     // TODO: break this off into the mbc1 struct once I create it
     mbc1_regs_t mbc1_regs;
   };
+#ifdef __cplusplus
+  void  gb_alloc_mbc(gb_cart_header_t *header);
+  void  gb_write_mbc(uint16_t addr, uint8_t val);
+  void *gb_unmap_mbc_address(uint16_t addr);
+#endif
 } gb_mbc_t;
-
-typedef struct gb_cart_header gb_cart_header_t;
-
-void  gb_alloc_mbc(gb_mbc_t *mbc, gb_cart_header_t *header);
-void  gb_write_mbc(gb_mbc_t *mbc, uint16_t addr, uint8_t val);
-void *gb_unmap_mbc_address(gb_mbc_t *mbc, uint16_t addr);
 
 #endif // GB_MBC_H

@@ -7,7 +7,7 @@ static void disassemble_section(FILE *stream, const uint8_t *section_bytes, cons
   struct gb_state gb_state;
   gb_state_init(&gb_state);
   gb_state.saved.header.mbc_type = GB_NO_MBC;
-  gb_alloc_mbc(&gb_state.saved.mem.mbc, &gb_state.saved.header);
+  gb_state.saved.mem.mbc.gb_alloc_mbc(&gb_state.saved.header);
   gb_state.saved.regs.pc = 0;
   memcpy(gb_state.saved.mem.mbc.rom_start, section_bytes, section_bytes_len);
 
