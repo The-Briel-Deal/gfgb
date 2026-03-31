@@ -43,7 +43,7 @@ void gb_free_mbc1(gb_mbc_t *mbc) {
   mbc->eram_start = NULL;
 }
 
-void gb_mbc::gb_alloc_mbc(gb_cart_header_t *header) {
+void gb_mbc::alloc(gb_cart_header_t *header) {
   this->type          = header->mbc_type;
   this->num_rom_banks = header->num_rom_banks;
   this->num_ram_banks = header->num_ram_banks;
@@ -95,7 +95,7 @@ static void gb_write_mbc1(gb_mbc_t *mbc, uint16_t addr, uint8_t val) {
   }
 }
 // Called whenever gb_write_mem is called on ROM.
-void gb_mbc::gb_write_mbc(uint16_t addr, uint8_t val) {
+void gb_mbc::write(uint16_t addr, uint8_t val) {
   switch (this->type) {
   case GB_NO_MBC: break; // TODO: I need to make a write handler for NO_MBC since eram can still be written to.
   case GB_MBC1: gb_write_mbc1(this, addr, val); break;
@@ -157,7 +157,7 @@ static void *gb_unmap_no_mbc_address(gb_mbc_t *mbc, uint16_t addr) {
   LogError("Invalid NO_MBC address unmapped $%.4X.", addr);
   return NULL;
 }
-void *gb_mbc::gb_unmap_mbc_address(uint16_t addr) {
+void *gb_mbc::unmap(uint16_t addr) {
   switch (this->type) {
   case GB_NO_MBC: return gb_unmap_no_mbc_address(this, addr);
   case GB_MBC1: return gb_unmap_mbc1_address(this, addr);

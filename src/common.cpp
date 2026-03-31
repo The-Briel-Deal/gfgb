@@ -183,7 +183,7 @@ bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bo
       gb_state->saved.header = gb_parse_cart_header(header_bytes);
     }
     { // Initialize MBC and Copy ROM
-      gb_state->saved.mem.mbc.gb_alloc_mbc(&gb_state->saved.header);
+      gb_state->saved.mem.mbc.alloc(&gb_state->saved.header);
       size_t len;
       FLEN(f, len);
       FSET_POS(f, 0x00);
@@ -322,14 +322,14 @@ void *gb_unmap_address(gb_state_t *gb_state, uint16_t addr) {
     return &gb_state->saved.mem.bootrom[addr];
   }
   if (addr <= ROM0_END) {
-    return gb_state->saved.mem.mbc.gb_unmap_mbc_address(addr);
+    return gb_state->saved.mem.mbc.unmap(addr);
   } else if (addr <= ROMN_END) {
-    return gb_state->saved.mem.mbc.gb_unmap_mbc_address(addr);
+    return gb_state->saved.mem.mbc.unmap(addr);
   } else if (addr <= VRAM_END) {
     return &gb_state->saved.mem.vram[addr - VRAM_START];
   } else if (addr <= ERAM_END) {
     // TODO: implement eram bank switching
-    return gb_state->saved.mem.mbc.gb_unmap_mbc_address(addr);
+    return gb_state->saved.mem.mbc.unmap(addr);
   } else if (addr <= WRAM_END) {
     return &gb_state->saved.mem.wram[addr - WRAM_START];
   } else if (addr <= ECHO_RAM_END) {
@@ -435,7 +435,7 @@ void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
     return;
   }
   if (addr < 0x8000) {
-    gb_state->saved.mem.mbc.gb_write_mbc( addr, val);
+    gb_state->saved.mem.mbc.write( addr, val);
     return;
   }
 
