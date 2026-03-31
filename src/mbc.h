@@ -53,7 +53,9 @@ typedef struct gb_mbc {
   };
 } gb_mbc_t;
 
-void  gb_alloc_mbc(gb_mbc_t *mbc);
+typedef struct gb_cart_header gb_cart_header_t;
+
+void  gb_alloc_mbc(gb_mbc_t *mbc, gb_cart_header_t *header);
 void  gb_write_mbc(gb_mbc_t *mbc, uint16_t addr, uint8_t val);
 void *gb_unmap_mbc_address(gb_mbc_t *mbc, uint16_t addr);
 

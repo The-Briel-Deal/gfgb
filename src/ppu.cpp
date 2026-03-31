@@ -776,7 +776,7 @@ void gb_imgui_render(struct gb_state *gb_state) {
       case GB_NO_MBC: ImGui::TextUnformatted("No MBC"); break;
       case GB_MBC1:
         ImGui::TextUnformatted("MBC1");
-        ImGui::Value("Rom Bank", gb_state->saved.regs.mbc1_regs.rom_bank);
+        ImGui::Value("Rom Bank", gb_state->saved.mem.mbc.mbc1_regs.rom_bank);
         break;
       default: ImGui::TextUnformatted("Debug viewer is not setup for the current MBC type."); break;
       }

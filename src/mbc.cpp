@@ -43,11 +43,11 @@ void gb_free_mbc1(gb_mbc_t *mbc) {
   mbc->eram_start = NULL;
 }
 
-void gb_alloc_mbc(gb_mbc_t *mbc, gb_cart_header_t header) {
-  mbc->type          = header.mbc_type;
-  mbc->num_rom_banks = header.num_rom_banks;
-  mbc->num_ram_banks = header.num_ram_banks;
-  switch (header.mbc_type) {
+void gb_alloc_mbc(gb_mbc_t *mbc, gb_cart_header_t *header) {
+  mbc->type          = header->mbc_type;
+  mbc->num_rom_banks = header->num_rom_banks;
+  mbc->num_ram_banks = header->num_ram_banks;
+  switch (header->mbc_type) {
   case GB_NO_MBC: gb_alloc_no_mbc(mbc); break;
   case GB_MBC1: gb_alloc_mbc1(mbc); break;
   case GB_MBC2:
@@ -112,55 +112,55 @@ void gb_write_mbc(gb_mbc_t *mbc, uint16_t addr, uint8_t val) {
   }
 }
 
-static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
+static void *gb_unmap_mbc1_address(gb_mbc_t *mbc, uint16_t addr) {
   if (addr <= ROM0_END) {
 
     uint8_t bank = 0;
-    if (gb_state->saved.regs.mbc1_regs.banking_mode_select == MBC1_BANK_MODE_ADVANCED) {
-      bank = gb_state->saved.regs.mbc1_regs.rom_bank_upper * 0x20;
-      bank &= (gb_state->saved.header.num_rom_banks - 1);
+    if (mbc->mbc1_regs.banking_mode_select == MBC1_BANK_MODE_ADVANCED) {
+      bank = mbc->mbc1_regs.rom_bank_upper * 0x20;
+      bank &= (mbc->num_rom_banks - 1);
     }
-    return &gb_state->saved.mem.rom_start[(KB(16) * bank) + (addr - ROM0_START)];
+    return &mbc->rom_start[(KB(16) * bank) + (addr - ROM0_START)];
   }
   if (addr <= ROMN_END) {
-    uint8_t bank = gb_state->saved.regs.mbc1_regs.rom_bank;
-    bank |= (((gb_state->saved.regs.mbc1_regs.rom_bank_upper & 0b11) << 5));
-    bank &= (gb_state->saved.header.num_rom_banks - 1);
-    return &gb_state->saved.mem.rom_start[(KB(16) * bank) + (addr - ROMN_START)];
+    uint8_t bank = mbc->mbc1_regs.rom_bank;
+    bank |= (((mbc->mbc1_regs.rom_bank_upper & 0b11) << 5));
+    bank &= (mbc->num_rom_banks - 1);
+    return &mbc->rom_start[(KB(16) * bank) + (addr - ROMN_START)];
   }
   if (addr >= ERAM_START && addr <= ERAM_END) {
-    if (gb_state->saved.regs.mbc1_regs.ram_enable) {
-      GB_assert(gb_state->saved.header.num_ram_banks <= 4);
+    if (mbc->mbc1_regs.ram_enable) {
+      GB_assert(mbc->num_ram_banks <= 4);
       uint8_t bank = 0;
-      if (gb_state->saved.regs.mbc1_regs.banking_mode_select == MBC1_BANK_MODE_ADVANCED) {
-        bank = gb_state->saved.regs.mbc1_regs.ram_bank;
-        bank &= (gb_state->saved.header.num_ram_banks - 1);
+      if (mbc->mbc1_regs.banking_mode_select == MBC1_BANK_MODE_ADVANCED) {
+        bank = mbc->mbc1_regs.ram_bank;
+        bank &= (mbc->num_ram_banks - 1);
       }
-      return &gb_state->saved.mem.eram_start[(KB(8) * bank) + (addr - ERAM_START)];
+      return &mbc->eram_start[(KB(8) * bank) + (addr - ERAM_START)];
     }
     LogDebug("MBC1 ERAM Read without ram_enabled set.");
     return NULL;
   }
-  ERR(gb_state, "Invalid MBC1 address unmapped $%.4X.", addr);
+  LogError("Invalid MBC1 address unmapped $%.4X.", addr);
   return NULL;
 }
-static void *gb_unmap_no_mbc_address(gb_state_t *gb_state, uint16_t addr) {
+static void *gb_unmap_no_mbc_address(gb_mbc_t *mbc, uint16_t addr) {
   if (addr <= ROM0_END) {
-    return &gb_state->saved.mem.rom_start[(KB(16) * 0) + (addr - ROM0_START)];
+    return &mbc->rom_start[(KB(16) * 0) + (addr - ROM0_START)];
   }
   if (addr <= ROMN_END) {
-    return &gb_state->saved.mem.rom_start[(KB(16) * 1) + (addr - ROMN_START)];
+    return &mbc->rom_start[(KB(16) * 1) + (addr - ROMN_START)];
   }
   if (addr >= ERAM_START && addr <= ERAM_END) {
-    return &gb_state->saved.mem.eram_start[(KB(8) * 0) + (addr - ERAM_START)];
+    return &mbc->eram_start[(KB(8) * 0) + (addr - ERAM_START)];
   }
-  ERR(gb_state, "Invalid NO_MBC address unmapped $%.4X.", addr);
+  LogError("Invalid NO_MBC address unmapped $%.4X.", addr);
   return NULL;
 }
-void *gb_unmap_mbc_address(gb_state_t *gb_state, uint16_t addr) {
-  switch (gb_state->saved.header.mbc_type) {
-  case GB_NO_MBC: return gb_unmap_no_mbc_address(gb_state, addr);
-  case GB_MBC1: return gb_unmap_mbc1_address(gb_state, addr);
+void *gb_unmap_mbc_address(gb_mbc_t *mbc, uint16_t addr) {
+  switch (mbc->type) {
+  case GB_NO_MBC: return gb_unmap_no_mbc_address(mbc, addr);
+  case GB_MBC1: return gb_unmap_mbc1_address(mbc, addr);
   case GB_MBC2:
   case GB_MBC3:
   case GB_MBC5:
