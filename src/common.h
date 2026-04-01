@@ -18,6 +18,7 @@
 #include <regex>
 #include <stack>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -191,11 +192,11 @@ void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n);
 void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len);
 
 typedef struct gb_mem {
-  uint8_t bootrom[DMG_BOOTROM_SIZE];
-  uint8_t wram[KB(8)];
-  uint8_t vram[KB(8)];
-  uint8_t hram[0x80];
-  uint8_t oam[4 * 40];
+  uint8_t  bootrom[DMG_BOOTROM_SIZE];
+  uint8_t  wram[KB(8)];
+  uint8_t  vram[KB(8)];
+  uint8_t  hram[0x80];
+  uint8_t  oam[4 * 40];
   gb_mbc_t mbc;
 } gb_mem_t;
 
@@ -440,6 +441,10 @@ typedef struct gb_state {
   std::vector<gb_breakpoint_t> *breakpoints;
 #endif
 } gb_state_t;
+
+#ifdef __cplusplus
+static_assert(std::is_standard_layout<gb_state>());
+#endif
 
 bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name, const char *sym_name);
 // Call with bootrom_name = NULL to use dmg0 as the default.
