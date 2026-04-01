@@ -1,6 +1,6 @@
 #include "common.h"
 
-void gb_alloc_mbc1(gb_mbc_t *mbc, gb_cart_header_t *header) {
+void gb_alloc_mbc1(gb_mbc_t *mbc, gb_cart_header_t &header) {
 
   uint32_t mbc_bytes_required = 0;
 
@@ -13,7 +13,7 @@ void gb_alloc_mbc1(gb_mbc_t *mbc, gb_cart_header_t *header) {
   mbc->rom_size  = rom_banks_size;
   GB_assert(mbc->rom_start != NULL);
   mbc->eram_size = eram_banks_size;
-  if (header->has_ram) {
+  if (header.has_ram) {
     GB_assert(mbc->eram_size != 0);
     mbc->eram_start = &mbc->rom_start[rom_banks_size];
   }
@@ -42,20 +42,12 @@ void gb_alloc_no_mbc(gb_mbc_t *mbc) {
   mbc->eram_size  = eram_banks_size;
 }
 
-// TODO: Create dispatch function for freeing whatever mbc is being used and
-// make sure this is called when gb_state has been freed.
-void gb_free_mbc1(gb_mbc_t *mbc) {
-  GB_free(mbc->rom_start);
-  mbc->rom_start  = NULL;
-  mbc->eram_start = NULL;
-}
-
-gb_mbc::gb_mbc(gb_cart_header_t *header) {
-  this->type          = header->mbc_type;
-  this->num_rom_banks = header->num_rom_banks;
-  this->num_ram_banks = header->num_ram_banks;
+gb_mbc::gb_mbc(gb_cart_header_t &header) {
+  this->type          = header.mbc_type;
+  this->num_rom_banks = header.num_rom_banks;
+  this->num_ram_banks = header.num_ram_banks;
   this->eram_start    = NULL;
-  switch (header->mbc_type) {
+  switch (this->type) {
   case GB_NO_MBC: gb_alloc_no_mbc(this); break;
   case GB_MBC1: gb_alloc_mbc1(this, header); break;
   case GB_MBC2:
@@ -69,6 +61,12 @@ gb_mbc::gb_mbc(gb_cart_header_t *header) {
   case GB_CAMERA:
   case GB_MBC_UNKNOWN: NOT_IMPLEMENTED("Write attempted on MBC that is not yet implemented."); break;
   }
+}
+gb_mbc::~gb_mbc() {
+
+  GB_free(this->rom_start);
+  this->rom_start  = NULL;
+  this->eram_start = NULL;
 }
 static void gb_write_mbc1(gb_mbc_t *mbc, uint16_t addr, uint8_t val) {
   GB_assert(addr < 0x8000);

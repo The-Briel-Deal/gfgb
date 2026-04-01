@@ -326,12 +326,23 @@ typedef struct gb_cart_header {
 } gb_cart_header_t;
 
 typedef struct gb_saved_state {
+#ifdef __cplusplus
+  gb_saved_state();
+  gb_saved_state(gb_cart_header_t &header, bool flat_mem = false);
+  ~gb_saved_state();
+
+#endif
   gb_cart_header_t header;
   regs_t           regs;
+
+  // TODO: Just use a flat_ram memory bank controller instead of this, dealing with anonymous unions in cpp ended up
+  // being way more of a headache than I expected.
+  bool use_flat_ram;
   union {
     gb_mem_t mem;
     uint8_t  flat_ram[KB(64)];
   };
+
   bool halted;
 
   // total m_cycles_elapsed on the cpu
@@ -399,7 +410,6 @@ typedef struct gb_dbg_state {
   bool                clear_composite;
   bool                rom_loaded;
   bool                bootrom_has_syms;
-  bool                use_flat_ram;
   bool                hide_bg;
   bool                hide_win;
   bool                hide_objs;
@@ -422,6 +432,11 @@ typedef struct gb_dbg_state {
 
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
+#ifdef __cplusplus
+  gb_state();
+  gb_state(const char *rom_name, const char *bootrom_name = NULL, const char *sym_name = NULL, bool flat_mem = false);
+  ~gb_state();
+#endif
   gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;

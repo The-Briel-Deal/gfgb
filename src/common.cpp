@@ -3,6 +3,7 @@
 #include "ppu.h"
 #include "timing.h"
 
+#include <SDL3/SDL_init.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,7 +185,7 @@ bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bo
       gb_state->saved.header = gb_parse_cart_header(header_bytes);
     }
     { // Initialize MBC and Copy ROM
-      gb_state->saved.mem.mbc = gb_mbc_t(&gb_state->saved.header);
+      gb_state->saved.mem.mbc = gb_mbc_t(gb_state->saved.header);
       size_t len;
       FLEN(f, len);
       FSET_POS(f, 0x00);
@@ -350,7 +351,7 @@ not_implemented:
 
 uint8_t gb_read_mem(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr;
-  if (gb_state->dbg.use_flat_ram) {
+  if (gb_state->saved.use_flat_ram) {
     return gb_state->saved.flat_ram[addr];
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
@@ -431,7 +432,7 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
 }
 
 void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
-  if (gb_state->dbg.use_flat_ram) {
+  if (gb_state->saved.use_flat_ram) {
     gb_state->saved.flat_ram[addr] = val;
     return;
   }
@@ -475,4 +476,28 @@ bool gb_state_get_err(struct gb_state *gb_state) {
   return err;
 }
 
-void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->dbg.use_flat_ram = enabled; }
+void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->saved.use_flat_ram = enabled; }
+
+gb_saved_state::gb_saved_state() {
+  this->use_flat_ram = false;
+  this->mem.mbc      = {};
+}
+gb_saved_state::~gb_saved_state() {}
+gb_saved_state::gb_saved_state(gb_cart_header_t &header, bool flat_mem) {
+  this->use_flat_ram = flat_mem;
+  if (!this->use_flat_ram) {
+
+    this->mem.mbc = {header};
+  }
+}
+gb_state::gb_state() { gb_state_init(this); }
+gb_state::~gb_state() {}
+
+gb_state::gb_state(const char *rom_name, const char *bootrom_name, const char *sym_name, bool flat_mem) {
+
+  if (!gb_load_rom(this, rom_name, bootrom_name, sym_name)) {
+    LogCritical("Failed to load ROM");
+    SDL_Quit();
+  }
+  this->saved = {this->saved.header, flat_mem};
+}

@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+#include <type_traits>
+#endif
+
 typedef struct gb_cart_header gb_cart_header_t;
 
 typedef enum gb_mbc_type {
@@ -54,11 +58,16 @@ typedef struct gb_mbc {
     mbc1_regs_t mbc1_regs;
   };
 #ifdef __cplusplus
-  gb_mbc() = default;
-  gb_mbc(gb_cart_header_t *header);
+  gb_mbc(gb_cart_header_t &header);
+  ~gb_mbc();
   void  write(uint16_t addr, uint8_t val);
   void *unmap(uint16_t addr);
 #endif
 } gb_mbc_t;
+
+#ifdef __cplusplus
+static_assert(std::is_standard_layout<gb_mbc_t>());
+
+#endif
 
 #endif // GB_MBC_H
