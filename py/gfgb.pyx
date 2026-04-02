@@ -28,7 +28,6 @@ class GB_State:
 
   def __cinit__(self):
     self._gb_state = gfgb.gb_state_alloc()
-    gfgb.gb_state_init(self._gb_state)
 
   def __dealloc__(self):
     gfgb.gb_state_free(self._gb_state)

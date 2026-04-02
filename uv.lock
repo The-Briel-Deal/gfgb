@@ -70,6 +70,7 @@ source = { editable = "." }
 dev = [
     { name = "cython" },
     { name = "pytest" },
+    { name = "pytest-tap" },
 ]
 
 [package.metadata]
@@ -78,6 +79,7 @@ dev = [
 dev = [
     { name = "cython" },
     { name = "pytest" },
+    { name = "pytest-tap" },
 ]
 
 [[package]]
@@ -132,6 +134,28 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d1/db/7ef3487e0fb0049ddb5ce41d3a49c235bf9ad299b6a25d5780a89f19230f/pytest-9.0.2.tar.gz", hash = "sha256:75186651a92bd89611d1d9fc20f0b4345fd827c41ccd5c299a868a05d70edf11", size = 1568901, upload-time = "2025-12-06T21:30:51.014Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/ab/b3226f0bd7cdcf710fbede2b3548584366da3b19b5021e74f5bde2a8fa3f/pytest-9.0.2-py3-none-any.whl", hash = "sha256:711ffd45bf766d5264d487b917733b453d917afd2b0ad65223959f59089f875b", size = 374801, upload-time = "2025-12-06T21:30:49.154Z" },
+]
+
+[[package]]
+name = "pytest-tap"
+version = "3.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+    { name = "tap-py" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/85/7c9004fc12ab0ac4ab4fd133f711b5278a24d0a6a5c02e746e6a712b0f64/pytest_tap-3.5.tar.gz", hash = "sha256:11b3b475b919e9d5c0e995b441fab0b92c57a46cec818132b71264fdfbd56a32", size = 7870, upload-time = "2025-01-30T05:01:49.922Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/e6/1cc18228e46996b57a10350c0aad0fa5ce2de2ba8810f80d3a786764d832/pytest_tap-3.5-py3-none-any.whl", hash = "sha256:bce47102465db4fa09c0948bbf8867543143a9b9d16af77a2efbaffb4ec1072a", size = 6543, upload-time = "2025-01-30T05:01:48.187Z" },
+]
+
+[[package]]
+name = "tap-py"
+version = "3.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/d0/28b0c6c7fe464f70664f123e9f64f36acaf92767af98c1a82df6e2b49f41/tap_py-3.2.1.tar.gz", hash = "sha256:d03c9e6af0a56fad994f1c69f14041e676811d73eeeef20bf4077c43d621d608", size = 125390, upload-time = "2025-01-26T18:35:07.88Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6c/9e/6445a273190f69ae06989e1675f081206dd6b20dff19e570304b94e8350a/tap_py-3.2.1-py3-none-any.whl", hash = "sha256:ae2a8a7999529ec568d03462e75968289cee5927dfd52fcc3a6381c8892d10ef", size = 19264, upload-time = "2025-01-26T18:35:04.759Z" },
 ]
 
 [[package]]

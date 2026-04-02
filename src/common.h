@@ -196,6 +196,9 @@ typedef struct gb_mem {
   uint8_t vram[KB(8)];
   uint8_t hram[0x80];
   uint8_t oam[4 * 40];
+
+  // All memory the mbc needs is allocated in one call and stored here so it can be freed or resized later.
+  void *mbc_mem;
   // This is a dyn allocated block of memory which is the same length as (num_rom_banks x 16KB), num_rom_banks is the
   // number of rom banks in the rom's header.
   uint32_t rom_size;
@@ -446,6 +449,11 @@ typedef struct gb_dbg_state {
 
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
+#ifdef __cplusplus
+  gb_state();
+  gb_state(const char *rom_name, const char *bootrom_name = NULL, const char *sym_name = NULL);
+  ~gb_state();
+#endif
   gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;
@@ -570,7 +578,6 @@ void *gb_unmap_address(gb_state_t *gb_state, uint16_t addr);
 uint8_t gb_read_mem(gb_state_t *gb_state, uint16_t addr);
 void    gb_write_mem(gb_state_t *gb_state, uint16_t addr, uint8_t val);
 
-void        gb_state_init(gb_state_t *gb_state);
 void        gb_state_reset(gb_state_t *gb_state);
 gb_state_t *gb_state_alloc();
 void        gb_state_free(gb_state_t *gb_state);

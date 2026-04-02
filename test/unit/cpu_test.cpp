@@ -3,9 +3,9 @@
 
 TEST_CASE("Fetch CPU Instruction", "[CPU]") {
   struct gb_state gb_state;
+  gb_state.dbg.headless_mode = true;
   struct inst     inst;
 
-  gb_state_init(&gb_state);
   gb_state.saved.header.mbc_type = GB_NO_MBC;
   gb_alloc_mbc(&gb_state);
   gb_state.saved.regs.pc = 0x0100;
@@ -49,7 +49,7 @@ TEST_CASE("Fetch CPU Instruction", "[CPU]") {
 
 TEST_CASE("Fetch CPU Execute LD", "[CPU]") {
   gb_state_t gb_state;
-  gb_state_init(&gb_state);
+  gb_state.dbg.headless_mode = true;
   inst_t inst;
 
   // Load IMM16 into reg BC
@@ -118,7 +118,7 @@ TEST_CASE("Fetch CPU Execute LD", "[CPU]") {
 
 TEST_CASE("Stack Operations", "[CPU]") {
   gb_state_t gb_state;
-  gb_state_init(&gb_state);
+  gb_state.dbg.headless_mode = true;
 
   push16(&gb_state, 0x1234);
   assert_eq(gb_state.saved.regs.sp, 0xDFFE);
@@ -132,7 +132,8 @@ TEST_CASE("Stack Operations", "[CPU]") {
 
 TEST_CASE("Call and Return", "[CPU]") {
   gb_state_t gb_state;
-  gb_state_init(&gb_state);
+  gb_state.dbg.headless_mode = true;
+
   assert_eq(gb_state.saved.regs.sp, 0xE000);
   gb_state.saved.regs.pc = 0x0190;
   execute(&gb_state, inst_t{.type = CALL, .p1 = IMM16_PARAM(0x0210), .p2 = VOID_PARAM});

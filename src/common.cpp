@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <regex>
+
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX
 #include "incbin.h"
@@ -117,31 +119,8 @@ void gb_dstr_append(gb_dstr_t *dstr, char *text, size_t len) {
   dstr->len += len;
 }
 
-void gb_state_init(struct gb_state *gb_state) {
-  // We only manually initialize non-zero vals since we zero gb_state first.
-  GB_memset(gb_state, 0, sizeof(*gb_state));
-  /// Registers
-  // It looks like this was originally at the top of HRAM, but some emulators
-  // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
-  // going with the latter approach for now.
-  gb_state->saved.regs.sp      = WRAM_END + 1;
-  gb_state->saved.regs.io.lcdc = 0b1001'0001;
-  gb_state->saved.regs.io.sc   = 0b0111'1110;
-
-  /// Internal State
-  gb_state->video.first_oam_scan_after_enable = true;
-
-  // Debug State
-  gb_state->dbg.speed_factor          = 1.0;
-  gb_state->breakpoints               = new std::vector<gb_breakpoint_t>;
-  gb_state->serial_port_output_string = new std::string;
-  gb_state->dbg.execution_paused      = false;
-  gb_state->video.initialized         = false;
-}
-
 // TODO: This doesn't seem to always work, I need to figure out what other state I need set.
 void gb_state_reset(struct gb_state *gb_state) {
-  GB_memset(&gb_state->saved.regs, 0, sizeof(gb_state->saved.regs));
   gb_state->saved.regs.sp                     = WRAM_END + 1;
   gb_state->saved.regs.pc                     = 0;
   gb_state->saved.regs.io.bank                = true;
@@ -239,20 +218,9 @@ load_default:
   gb_state->saved.regs.io.bank = true;
 }
 
-struct gb_state *gb_state_alloc() { return (gb_state *)GB_malloc(sizeof(struct gb_state)); }
+struct gb_state *gb_state_alloc() { return new gb_state_t; }
 
-void gb_state_free(struct gb_state *gb_state) {
-  if (gb_state->dbg.serial_port_output_file != NULL) fclose(gb_state->dbg.serial_port_output_file);
-
-  if (gb_state->dbg.syms.capacity > 0) {
-    free_symbol_list(&gb_state->dbg.syms);
-  }
-  delete gb_state->breakpoints;
-  delete gb_state->serial_port_output_string;
-  delete gb_state->compiled_pass_regex;
-  delete gb_state->compiled_fail_regex;
-  GB_free(gb_state);
-}
+void gb_state_free(struct gb_state *gb_state) { delete gb_state; }
 
 uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
@@ -383,7 +351,7 @@ uint8_t gb_read_mem(struct gb_state *gb_state, uint16_t addr) {
 
   not_implemented:
     // It isn't always a critical issue to read unused mem/io-regs, tetris seems to do it unintentionally.
-    LogWarn("`read_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
+    LogDebug("`read_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", addr);
     return 0xFF;
   }
 }
@@ -429,8 +397,6 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
   }
 }
 
-
-
 void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   if (gb_state->dbg.use_flat_ram) {
     gb_state->saved.flat_ram[addr] = val;
@@ -456,7 +422,8 @@ void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
 
   uint8_t *val_ptr = ((uint8_t *)gb_unmap_address(gb_state, addr));
   if (val_ptr == NULL) {
-    LogCritical("`write_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
+    // This isn't normally concerning, unmapping ERAM when the eram register is disabled will do this.
+    LogDebug("`write_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%04x", addr);
     return;
   }
   // VRAM is the only place where stuff needs to be uploaded to the GPU (which is expensive). So we mark modified
@@ -477,3 +444,77 @@ bool gb_state_get_err(struct gb_state *gb_state) {
 }
 
 void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->dbg.use_flat_ram = enabled; }
+
+gb_state::gb_state() {
+  /// Registers
+  // It looks like this was originally at the top of HRAM, but some emulators
+  // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
+  // going with the latter approach for now.
+  this->saved.regs         = {};
+  this->saved.regs.sp      = WRAM_END + 1;
+  this->saved.regs.io.lcdc = 0b1001'0001;
+  this->saved.regs.io.sc   = 0b0111'1110;
+
+  this->saved.mem            = {};
+  this->saved.mem.mbc_mem    = NULL;
+  this->saved.mem.rom_start  = NULL;
+  this->saved.mem.eram_start = NULL;
+
+  this->saved.halted                   = false;
+  this->saved.last_tima_bit            = false;
+  this->saved.last_stat_bit            = false;
+  this->saved.wy_cond                  = false;
+  this->saved.wx_cond                  = false;
+  this->saved.win_line_blank           = false;
+  this->saved.m_cycles_elapsed         = 0;
+  this->saved.last_timer_sync_m_cycles = 0;
+  this->saved.win_line_counter         = 0;
+  this->saved.oam_entries[0]           = NULL; // This is a null terminated list of pointers.
+
+  this->timing = {};
+
+  /// Video State
+  this->video                             = {};
+  this->video.initialized                 = false;
+  this->video.first_oam_scan_after_enable = true;
+  this->video.oam_dma_start               = false;
+
+  /// Debug State
+  this->dbg                         = {};
+  this->dbg.step_inst_count         = 0;
+  this->dbg.speed_factor            = 1.0;
+  this->dbg.execution_paused        = false;
+  this->dbg.err                     = false;
+  this->dbg.pause_on_err            = false;
+  this->dbg.use_flat_ram            = false;
+  this->dbg.headless_mode           = false;
+  this->dbg.serial_port_output_file = NULL;
+  this->dbg.trace_exec_fout         = NULL;
+  this->dbg.syms                    = {.syms = NULL, .len = 0, .capacity = 0};
+
+  this->breakpoints               = new std::vector<gb_breakpoint_t>;
+  this->serial_port_output_string = new std::string;
+  this->compiled_pass_regex       = new std::basic_regex<char>;
+  this->compiled_fail_regex       = new std::basic_regex<char>;
+}
+
+gb_state::gb_state(const char *rom_name, const char *bootrom_name, const char *sym_name) : gb_state() {
+  bool success = gb_load_rom(this, rom_name, bootrom_name, sym_name);
+  GB_assert(success);
+}
+
+gb_state::~gb_state() {
+
+  if (this->dbg.serial_port_output_file != NULL) fclose(this->dbg.serial_port_output_file);
+
+  if (this->dbg.syms.capacity > 0) {
+    free_symbol_list(&this->dbg.syms);
+  }
+  delete this->breakpoints;
+  delete this->serial_port_output_string;
+  delete this->compiled_pass_regex;
+  delete this->compiled_fail_regex;
+  if (!this->dbg.use_flat_ram) {
+    gb_free_mbc(this);
+  }
+}

@@ -79,9 +79,6 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  gb_state_t *gb_state = gb_state_alloc();
-  *appstate            = gb_state;
-  gb_state_init(gb_state);
 
   enum run_mode run_mode = UNSET;
 
@@ -124,10 +121,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       ->check(CLI::ExistingFile)
       ->check(CLI::ReadPermissions);
 
-  gb_cli_exec->add_option("--exec_speed", gb_state->dbg.speed_factor);
+  float speed_factor = 1.0;
+  gb_cli_exec->add_option("--exec_speed", speed_factor);
 
+  bool trace_exec = false;
   gb_cli_exec->add_flag(
-      "--trace_exec", gb_state->dbg.trace_exec,
+      "--trace_exec", trace_exec,
       "Print instructions to file/stdout as the rom is executing. This can be toggled at runtime in Debug UI as well.");
   std::string trace_exec_filename;
   gb_cli_exec->add_option("--trace_out", trace_exec_filename,
@@ -141,8 +140,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
           "A breakpoint identifier, can be a GB 16 bit addr in hex if prefixed with `$`, or a debug symbol name.")
       ->expected(0, -1);
 
-  gb_cli_exec->add_flag("-p,--paused", gb_state->dbg.execution_paused, "Start emulator execution paused.");
-  gb_cli_exec->add_flag("-t,--test_mode", gb_state->dbg.test_mode,
+  bool paused = false;
+  gb_cli_exec->add_flag("-p,--paused", paused, "Start emulator execution paused.");
+  bool test_mode = false;
+  gb_cli_exec->add_flag("-t,--test_mode", test_mode,
                         "Run emulator in automated test mode, this is mostly just used to automatically detect if a "
                         "test rom passed or failed.");
   std::string test_mode_pass_regex;
@@ -169,9 +170,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
   }
+  // TODO: I need to add and test symbol and bootrom filenames as well.
+  gb_state_t *gb_state           = new gb_state_t(rom_filename.c_str());
+  *appstate                      = gb_state;
+  gb_state->dbg.test_mode        = test_mode;
+  gb_state->dbg.execution_paused = paused;
+  gb_state->dbg.trace_exec       = trace_exec;
+  gb_state->dbg.speed_factor     = speed_factor;
   if (gb_state->dbg.test_mode) {
-    gb_state->compiled_pass_regex = new std::basic_regex(test_mode_pass_regex);
-    gb_state->compiled_fail_regex = new std::basic_regex(test_mode_fail_regex);
+    gb_state->compiled_pass_regex->assign(test_mode_pass_regex);
+    gb_state->compiled_fail_regex->assign(test_mode_fail_regex);
   }
 
   const char *rom_filename_cstr    = rom_filename.c_str();
@@ -198,8 +206,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   if (gb_cli_disasm->parsed()) {
     run_mode = DISASSEMBLE;
   }
-
-  if (!gb_load_rom(gb_state, rom_filename_cstr, bootrom_filename_cstr, symbol_filename_cstr)) return SDL_APP_FAILURE;
 
   for (std::string bp : breakpoints) {
     if (!gb_set_breakpoint(gb_state, bp.c_str(), bp.length())) {

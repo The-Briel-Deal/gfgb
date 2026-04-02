@@ -17,5 +17,6 @@ typedef struct mbc1_regs {
 } mbc1_regs_t;
 
 void  gb_alloc_mbc(struct gb_state *gb_state);
+void  gb_free_mbc(struct gb_state *gb_state);
 void  gb_write_mbc(struct gb_state *gb_state, uint16_t addr, uint8_t val);
 void *gb_unmap_mbc_address(struct gb_state *gb_state, uint16_t addr);

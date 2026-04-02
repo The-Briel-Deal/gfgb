@@ -6,7 +6,6 @@ cdef extern from "common.h":
   uint8_t gb_read_mem(gb_state *gb_state, uint16_t addr)
   void gb_write_mem(gb_state *gb_state, uint16_t addr, uint8_t val)
 
-  void gb_state_init(gb_state *gb_state)
   gb_state *gb_state_alloc()
   void gb_state_free(gb_state *gb_state)
 

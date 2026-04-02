@@ -10,14 +10,15 @@ void gb_alloc_mbc1(gb_state_t *gb_state) {
   uint32_t eram_banks_size = (header.num_ram_banks * (KB(8)));
   mbc_bytes_required += eram_banks_size;
   // These are both allocated in one call to malloc, the eram block comes directly after the rom block.
-  gb_state->saved.mem.rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
-  gb_state->saved.mem.rom_size  = rom_banks_size;
-  GB_assert(gb_state->saved.mem.rom_start != NULL);
+  gb_state->saved.mem.mbc_mem = GB_malloc(mbc_bytes_required);
+  GB_assert(gb_state->saved.mem.mbc_mem != NULL);
+  gb_state->saved.mem.rom_start  = (uint8_t *)gb_state->saved.mem.mbc_mem;
+  gb_state->saved.mem.rom_size   = rom_banks_size;
   gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
   gb_state->saved.mem.eram_size  = eram_banks_size;
 
   // The rom_bank is the one field that should default to 1,
-  // everything else was initialized to zero in gb_state_init().
+  // everything should be zeroed in constructor.
   gb_state->saved.regs.mbc1_regs.rom_bank = 1;
 }
 
@@ -29,19 +30,19 @@ void gb_alloc_no_mbc(gb_state_t *gb_state) {
   uint32_t eram_banks_size = (1 * (KB(8)));
   mbc_bytes_required += eram_banks_size;
   // These are both allocated in one call to malloc, the eram block comes directly after the rom block.
-  gb_state->saved.mem.rom_start = (uint8_t *)GB_malloc(mbc_bytes_required);
-  gb_state->saved.mem.rom_size  = rom_banks_size;
-  GB_assert(gb_state->saved.mem.rom_start != NULL);
+  gb_state->saved.mem.mbc_mem = GB_malloc(mbc_bytes_required);
+  GB_assert(gb_state->saved.mem.mbc_mem != NULL);
+  gb_state->saved.mem.rom_start  = (uint8_t *)gb_state->saved.mem.mbc_mem;
+  gb_state->saved.mem.rom_size   = rom_banks_size;
   gb_state->saved.mem.eram_start = &gb_state->saved.mem.rom_start[rom_banks_size];
   gb_state->saved.mem.eram_size  = eram_banks_size;
 }
 
-// TODO: Create dispatch function for freeing whatever mbc is being used and
-// make sure this is called when gb_state has been freed.
-void gb_free_mbc1(gb_state_t *gb_state) {
-  GB_free(gb_state->saved.mem.rom_start);
+void gb_free_mbc(gb_state_t *gb_state) {
+  GB_free(gb_state->saved.mem.mbc_mem);
   gb_state->saved.mem.rom_start  = NULL;
   gb_state->saved.mem.eram_start = NULL;
+  gb_state->saved.mem.mbc_mem    = NULL;
 }
 
 void gb_alloc_mbc(gb_state_t *gb_state) {

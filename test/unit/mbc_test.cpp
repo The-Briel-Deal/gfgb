@@ -27,7 +27,6 @@ TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
 
 TEST_CASE("Write to MBC1 regs", "[mbc]") {
   gb_state_t gb_state;
-  gb_state_init(&gb_state);
   gb_load_rom(&gb_state, MBC1_ROM_512KB_PATH, NULL, NULL);
   mbc1_regs_t &mbc1_regs = gb_state.saved.regs.mbc1_regs;
   REQUIRE(gb_state.saved.header.mbc_type == GB_MBC1);
