@@ -4,7 +4,7 @@
 TEST_CASE("Fetch CPU Instruction", "[CPU]") {
   struct gb_state gb_state;
   gb_state.dbg.headless_mode = true;
-  struct inst     inst;
+  struct inst inst;
 
   gb_state.saved.header.mbc_type = GB_NO_MBC;
   gb_alloc_mbc(&gb_state);
