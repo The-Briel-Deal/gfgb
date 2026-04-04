@@ -15,6 +15,7 @@
 
 #ifdef __cplusplus
 
+#include <optional>
 #include <regex>
 #include <stack>
 #include <string>
@@ -22,6 +23,9 @@
 #include <vector>
 
 using std::unreachable;
+using str                       = std::string;
+template <typename T> using opt = std::optional<T>;
+using std::nullopt;
 
 #endif // #ifdef __cplusplus
 
@@ -451,7 +455,7 @@ typedef struct gb_dbg_state {
 typedef struct gb_state {
 #ifdef __cplusplus
   gb_state();
-  gb_state(const char *rom_name, const char *bootrom_name = NULL, const char *sym_name = NULL);
+  bool load_rom(const str rom_name, const opt<str> bootrom_name = nullopt, const opt<str> sym_name = nullopt);
   ~gb_state();
 #endif
   gb_saved_state_t            saved;

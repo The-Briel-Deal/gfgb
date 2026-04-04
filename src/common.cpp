@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <fstream>
 #include <regex>
 
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
@@ -129,70 +130,6 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->saved.last_timer_sync_m_cycles    = 0;
   gb_state->timing.ns_elapsed_while_running   = 0;
 }
-
-#define FSET_POS(f, pos)                                                                                               \
-  {                                                                                                                    \
-    err = fseek(f, pos, SEEK_SET);                                                                                     \
-    GB_assert(err == 0);                                                                                               \
-  }
-#define FLEN(f, len)                                                                                                   \
-  {                                                                                                                    \
-    err = fseek(f, 0, SEEK_END);                                                                                       \
-    GB_assert(err == 0);                                                                                               \
-    len = ftell(f);                                                                                                    \
-  }
-
-bool gb_load_rom(struct gb_state *gb_state, const char *rom_name, const char *bootrom_name, const char *sym_name) {
-  FILE *f;
-  int   err;
-
-  if (rom_name != NULL) {
-    f = fopen(rom_name, "r");
-    GB_assert(f != NULL);
-    { // Read Cartridge Header
-      FSET_POS(f, GB_HEADER_START);
-      uint8_t header_bytes[GB_HEADER_SIZE];
-      size_t  header_len;
-      header_len = fread(header_bytes, sizeof(uint8_t), GB_HEADER_SIZE, f);
-      GB_assert(header_len == GB_HEADER_SIZE);
-      if ((err = ferror(f))) {
-        LogCritical("Error when reading rom file: %d", err);
-        return false;
-      }
-      gb_state->saved.header = gb_parse_cart_header(header_bytes);
-    }
-    { // Initialize MBC and Copy ROM
-      gb_alloc_mbc(gb_state);
-      size_t len;
-      FLEN(f, len);
-      FSET_POS(f, 0x00);
-      size_t bytes_read = fread(gb_state->saved.mem.rom_start, 1, gb_state->saved.mem.rom_size, f);
-
-      GB_assert(len == gb_state->saved.mem.rom_size);
-      GB_assert(bytes_read == len);
-    }
-    fclose(f);
-    gb_state->dbg.rom_loaded = true;
-  }
-
-  // Load debug symbols into gb_state->syms (symbols are optional)
-  if (sym_name != NULL) {
-    alloc_symbol_list(&gb_state->dbg.syms);
-    f = fopen(sym_name, "r");
-    parse_syms(&gb_state->dbg.syms, f);
-    if ((err = ferror(f))) {
-      LogCritical("Error when reading symbol file: %d", err);
-      return false;
-    }
-    fclose(f);
-  }
-  gb_state_load_bootrom(gb_state, bootrom_name);
-
-  return true;
-}
-
-#undef FSET_POS
-#undef FLEN
 
 void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
   // Load bootrom into gb_state->bootrom (bootrom is optional)
@@ -476,20 +413,22 @@ gb_state::gb_state() {
   /// Video State
   this->video                             = {};
   this->video.initialized                 = false;
-  this->video.first_oam_scan_after_enable = true;
   this->video.oam_dma_start               = false;
+  this->video.first_oam_scan_after_enable = true;
 
   /// Debug State
   this->dbg                         = {};
   this->dbg.step_inst_count         = 0;
   this->dbg.speed_factor            = 1.0;
+  this->dbg.test_mode               = false;
   this->dbg.execution_paused        = false;
   this->dbg.err                     = false;
   this->dbg.pause_on_err            = false;
   this->dbg.use_flat_ram            = false;
   this->dbg.headless_mode           = false;
-  this->dbg.serial_port_output_file = NULL;
+  this->dbg.trace_exec              = false;
   this->dbg.trace_exec_fout         = NULL;
+  this->dbg.serial_port_output_file = NULL;
   this->dbg.syms                    = {.syms = NULL, .len = 0, .capacity = 0};
 
   this->breakpoints               = new std::vector<gb_breakpoint_t>;
@@ -498,9 +437,54 @@ gb_state::gb_state() {
   this->compiled_fail_regex       = new std::basic_regex<char>;
 }
 
-gb_state::gb_state(const char *rom_name, const char *bootrom_name, const char *sym_name) : gb_state() {
-  bool success = gb_load_rom(this, rom_name, bootrom_name, sym_name);
-  GB_assert(success);
+bool gb_state::load_rom(const str rom_name, const opt<str> bootrom_name, const opt<str> sym_name) {
+  std::ifstream f;
+
+  { // Read Cartridge Header
+    f.open(rom_name);
+    GB_assert(f.good());
+    exit(0);
+    f.seekg(GB_HEADER_START, std::ifstream::beg);
+
+    GB_assert(f.good());
+    uint8_t header_bytes[GB_HEADER_SIZE];
+    f.read((char *)header_bytes, GB_HEADER_SIZE);
+    GB_assert(f.good());
+    if (f.fail()) {
+      LogCritical("Error when reading rom file: %s", strerror(errno));
+      return false;
+    }
+    GB_assert(f.gcount() == GB_HEADER_SIZE);
+    this->saved.header = gb_parse_cart_header(header_bytes);
+    { // Initialize MBC and Copy ROM
+      gb_alloc_mbc(this);
+
+      f.seekg(0, std::ifstream::end);
+      size_t len = f.tellg();
+      f.seekg(0, std::ifstream::beg);
+      f.read((char *)this->saved.mem.rom_start, this->saved.mem.rom_size);
+      size_t bytes_read = f.gcount();
+      GB_assert(len == this->saved.mem.rom_size);
+      GB_assert(bytes_read == len);
+    }
+    f.close();
+    this->dbg.rom_loaded = true;
+  }
+
+  // Load debug symbols into gb_state->syms (symbols are optional)
+  if (sym_name) {
+    alloc_symbol_list(&this->dbg.syms);
+    f.open(*sym_name);
+    parse_syms(&this->dbg.syms, fdopen(f.native_handle(), "r"));
+    if (f.fail()) {
+      LogCritical("Error when reading rom file: %s", strerror(errno));
+      return false;
+    }
+    f.close();
+  }
+  if (bootrom_name) gb_state_load_bootrom(this, bootrom_name->c_str());
+
+  return true;
 }
 
 gb_state::~gb_state() {
