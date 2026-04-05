@@ -131,30 +131,6 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->timing.ns_elapsed_while_running   = 0;
 }
 
-void gb_state_load_bootrom(struct gb_state *gb_state, const char *bootrom_name) {
-  // Load bootrom into gb_state->bootrom (bootrom is optional)
-  if (bootrom_name != NULL) {
-    FILE *f;
-    int   bytes_len;
-    int   err;
-    f         = fopen(bootrom_name, "r");
-    bytes_len = fread(gb_state->saved.mem.bootrom, sizeof(uint8_t), 0x0100, f);
-    if ((err = ferror(f))) {
-      LogError("Error when reading bootrom file: %d", err);
-      goto load_default;
-    }
-    fclose(f);
-    GB_assert(bytes_len == 0x0100);
-    gb_state->saved.regs.pc      = 0x0000;
-    gb_state->saved.regs.io.bank = true;
-  }
-load_default:
-  GB_assert(dmg0_boot_rom_size == 0x0100);
-  memcpy(gb_state->saved.mem.bootrom, dmg0_boot_rom_data, 0x0100);
-  gb_state->saved.regs.pc      = 0x0000;
-  gb_state->saved.regs.io.bank = true;
-}
-
 struct gb_state *gb_state_alloc() { return new gb_state_t; }
 
 void gb_state_free(struct gb_state *gb_state) { delete gb_state; }
@@ -461,14 +437,31 @@ bool gb_state::load_rom(const str rom_filename) {
   this->dbg.rom_loaded = true;
   return true;
 }
+
 bool gb_state::load_bootrom(const str bootrom_filename) {
-  gb_state_load_bootrom(this, bootrom_filename.c_str());
+  FILE *f;
+  int   bytes_len;
+  int   err;
+  f         = fopen(bootrom_filename.c_str(), "r");
+  bytes_len = fread(this->saved.mem.bootrom, sizeof(uint8_t), 0x0100, f);
+  if ((err = ferror(f))) {
+    LogError("Error when reading bootrom file: %d", err);
+    return false;
+  }
+  fclose(f);
+  GB_assert(bytes_len == 0x0100);
+  this->saved.regs.pc      = 0x0000;
+  this->saved.regs.io.bank = true;
   return true;
 }
+
 bool gb_state::load_bootrom() {
-  gb_state_load_bootrom(this, NULL);
+  memcpy(this->saved.mem.bootrom, dmg0_boot_rom_data, 0x0100);
+  this->saved.regs.pc      = 0x0000;
+  this->saved.regs.io.bank = true;
   return true;
 }
+
 bool gb_state::load_syms(const str sym_filename) {
   // Load debug symbols into gb_state->syms (symbols are optional)
   alloc_symbol_list(&this->dbg.syms);
