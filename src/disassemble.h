@@ -30,6 +30,7 @@ typedef struct debug_symbol_list {
   uint16_t        capacity;
 } debug_symbol_list_t;
 void alloc_symbol_list(debug_symbol_list_t *syms);
+void realloc_symbol_list(debug_symbol_list_t *syms);
 void free_symbol_list(debug_symbol_list_t *syms);
 
 // returns NULL if there is no symbol with provided name, otherwise returns a pointer to the corresponding debug_symbol.
@@ -40,6 +41,8 @@ const debug_symbol_t *symbol_from_name(const debug_symbol_list_t *syms, const ch
 const debug_symbol_t *symbol_from_addr(const debug_symbol_list_t *syms, uint16_t addr);
 
 void parse_syms(debug_symbol_list_t *syms, FILE *sym_file);
+void sort_syms(debug_symbol_list_t *syms);
+void set_sym_lens(debug_symbol_list_t *syms);
 void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool show_inst_addr, uint16_t inst_addr);
 
 #ifdef __cplusplus

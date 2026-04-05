@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <fstream>
+#include <istream>
 #include <regex>
 
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
@@ -431,7 +432,6 @@ bool gb_state::load_rom(const str rom_filename) {
 
   f.seekg(0, std::ifstream::beg);
   f.read((char *)this->saved.mem.rom_start, this->saved.mem.rom_size);
-  GB_assert(f.gcount() == this->saved.mem.rom_size);
 
   f.close();
   this->dbg.rom_loaded = true;
@@ -439,17 +439,14 @@ bool gb_state::load_rom(const str rom_filename) {
 }
 
 bool gb_state::load_bootrom(const str bootrom_filename) {
-  FILE *f;
-  int   bytes_len;
-  int   err;
-  f         = fopen(bootrom_filename.c_str(), "r");
-  bytes_len = fread(this->saved.mem.bootrom, sizeof(uint8_t), 0x0100, f);
-  if ((err = ferror(f))) {
-    LogError("Error when reading bootrom file: %d", err);
+
+  std::ifstream f(bootrom_filename);
+  f.read((char *)this->saved.mem.bootrom, 0x0100);
+  if (!f.good()) {
+    LogError("Error when reading bootrom file: %s", strerror(errno));
     return false;
   }
-  fclose(f);
-  GB_assert(bytes_len == 0x0100);
+  f.close();
   this->saved.regs.pc      = 0x0000;
   this->saved.regs.io.bank = true;
   return true;
@@ -462,18 +459,54 @@ bool gb_state::load_bootrom() {
   return true;
 }
 
-bool gb_state::load_syms(const str sym_filename) {
-  // Load debug symbols into gb_state->syms (symbols are optional)
-  alloc_symbol_list(&this->dbg.syms);
-  // TODO: I should have a helper method that just takes the sym file path
-  FILE *sym_f = fopen(sym_filename.c_str(), "r");
-  if (sym_f == NULL) {
+bool gb_state::load_syms(std::istream &sym_stream) {
+  if (this->dbg.syms.syms == NULL) {
+    alloc_symbol_list(&this->dbg.syms);
+  }
+
+  str                  line;
+  debug_symbol_list_t *syms = &this->dbg.syms;
+  while (std::getline(sym_stream, line)) {
+    realloc_symbol_list(syms);
+    struct debug_symbol &curr_sym = syms->syms[syms->len];
+
+    // Check if this is a comment line.
+    static const std::regex comment_line_pattern("^\\s*;.*");
+    if (std::regex_match(line, comment_line_pattern)) {
+      continue;
+    }
+
+    static const std::regex symbol_line_pattern(
+        "([0-9|A-F|a-f]{0,8}|BOOT):([0-9|A-F|a-f]{0,4}) ([A-Za-z_]{1,1}[A-Za-z0-9_@#$.]*)$");
+    std::smatch matches;
+    if (std::regex_match(line, matches, symbol_line_pattern)) {
+      if (matches[1] == "BOOT") {
+        curr_sym.bank = -1;
+      } else {
+        curr_sym.bank = std::stoi(matches[1], 0, 16);
+      }
+      curr_sym.start_offset   = std::stoi(matches[2], 0, 16);
+      str      sym_name       = matches[3];
+      uint32_t n_copied       = sym_name.copy(curr_sym.name, sizeof(curr_sym.name) - 1);
+      curr_sym.name[n_copied] = '\0';
+      syms->len++;
+      GB_assert(syms->len < syms->capacity);
+      continue;
+    }
+    LogError("Line did not match expected pattern: '%s'", line.c_str());
+  }
+  if (sym_stream.fail() && !sym_stream.eof()) {
     LogCritical("Error when reading sym file: %s", strerror(errno));
     return false;
   }
-  parse_syms(&this->dbg.syms, sym_f);
-  fclose(sym_f);
+  sort_syms(syms);
+  set_sym_lens(syms);
   return true;
+}
+
+bool gb_state::load_syms(const str sym_filename) {
+  std::ifstream f(sym_filename);
+  return this->load_syms(f);
 }
 bool gb_state::load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename) {
   bool success = true;

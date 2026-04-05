@@ -165,21 +165,21 @@ void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool
 
 #undef PRINT_INST_NAME
 
-void alloc_symbol_list(struct debug_symbol_list *syms) {
+void alloc_symbol_list(debug_symbol_list_t *syms) {
   syms->len      = 0;
   syms->capacity = 12;
   syms->syms     = (debug_symbol_t *)GB_malloc(syms->capacity * sizeof(*syms->syms));
 }
 
 // TODO: Shrink array if len is half of capacity.
-void realloc_symbol_list(struct debug_symbol_list *syms) {
+void realloc_symbol_list(debug_symbol_list_t *syms) {
   if (syms->len + 1 >= syms->capacity) {
     syms->capacity *= 2;
     syms->syms = (debug_symbol_t *)GB_realloc(syms->syms, sizeof(*syms->syms) * syms->capacity);
   }
 }
 
-void free_symbol_list(struct debug_symbol_list *syms) {
+void free_symbol_list(debug_symbol_list_t *syms) {
   GB_assert(syms->capacity != 0);
   free(syms->syms);
   syms->capacity = 0;
@@ -193,7 +193,7 @@ const debug_symbol_t *symbol_from_name(const debug_symbol_list_t *syms, const ch
   return NULL;
 }
 
-void sort_syms(struct debug_symbol_list *syms) {
+void sort_syms(debug_symbol_list_t *syms) {
   // This is just bubble sort, since this is just for debugging it should be
   // fine. If it becomes an issue I could use something faster.
   struct debug_symbol tmp_sym;
@@ -230,56 +230,6 @@ void set_sym_lens(struct debug_symbol_list *syms) {
       curr_sym->len = next_sym->start_offset - curr_sym->start_offset;
     }
   }
-}
-
-void parse_syms(struct debug_symbol_list *syms, FILE *sym_file) {
-  char  line[KB(1)];
-  char *ret;
-  while (!feof(sym_file)) {
-    realloc_symbol_list(syms);
-    ret = fgets(line, sizeof(line), sym_file);
-    if (ret == NULL) {
-      if (ferror(sym_file) != 0) {
-        return;
-      }
-      continue;
-    }
-    if (line[0] == ';') continue;
-    char                *endptr;
-    struct debug_symbol *curr_sym = &syms->syms[syms->len];
-
-    if (line[0] == 'B') {
-      GB_assert(line[1] == 'O' && line[2] == 'O' && line[3] == 'T' && line[4] == ':');
-      endptr         = &line[4];
-      curr_sym->bank = DBG_SYM_BOOTROM_BANK;
-    } else {
-      curr_sym->bank = strtol(&line[0], &endptr, 16);
-      GB_assert(endptr == &line[2]);
-    }
-    char *bank_endptr = endptr;
-
-    curr_sym->start_offset = strtol(bank_endptr + 1, &endptr, 16);
-    GB_assert(endptr == bank_endptr + 5);
-
-    strncpy(syms->syms[syms->len].name, endptr + 1, sizeof(syms->syms[syms->len].name) - 1);
-    // In case the string is longer than the sym.name arr
-    syms->syms[syms->len].name[sizeof(syms->syms[syms->len].name) - 1] = '\0';
-    // Probably not the best way to do this but, I need this to be null
-    // terminated instead of newline terminated.
-    for (uint32_t i = 0; i < sizeof(syms->syms[syms->len].name); i++) {
-      if (syms->syms[syms->len].name[i] == '\n') {
-        syms->syms[syms->len].name[i] = '\0';
-      }
-      if (syms->syms[syms->len].name[i] == '\0') {
-        break;
-      }
-    }
-
-    syms->len++;
-    GB_assert(syms->len < syms->capacity);
-  }
-  sort_syms(syms);
-  set_sym_lens(syms);
 }
 
 // copies rom to the start of memory and start disassembly at 0x100 since the

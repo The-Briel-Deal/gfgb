@@ -461,6 +461,8 @@ typedef struct gb_state {
   bool load_bootrom(const str bootrom_filename);
   bool load_bootrom(); // loads default embedded bootrom (DMG0)
   bool load_syms(const str sym_filename);
+  bool load_syms(std::istream &sym_stream); // This is called from the above overload after opening file. I expose this
+                                           // so that tests don't have to write the symbol text to a file.
   ~gb_state();
 #endif
   gb_saved_state_t            saved;
