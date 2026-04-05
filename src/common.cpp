@@ -437,55 +437,64 @@ gb_state::gb_state() {
   this->compiled_fail_regex       = new std::basic_regex<char>;
 }
 
-bool gb_state::load_rom(const str rom_name, const opt<str> bootrom_name, const opt<str> sym_name) {
-  std::ifstream f;
+bool gb_state::load_rom(const str rom_filename) {
+  uint8_t       header_bytes[GB_HEADER_SIZE];
+  std::ifstream f(rom_filename);
 
-  { // Read Cartridge Header
-    f.open(rom_name);
-    GB_assert(f.good());
-    f.seekg(GB_HEADER_START, std::ifstream::beg);
-
-    GB_assert(f.good());
-    uint8_t header_bytes[GB_HEADER_SIZE];
-    f.read((char *)header_bytes, GB_HEADER_SIZE);
-    GB_assert(f.good());
-    if (f.fail()) {
-      LogCritical("Error when reading rom file: %s", strerror(errno));
-      return false;
-    }
-    GB_assert(f.gcount() == GB_HEADER_SIZE);
-    this->saved.header = gb_parse_cart_header(header_bytes);
-    { // Initialize MBC and Copy ROM
-      gb_alloc_mbc(this);
-
-      f.seekg(0, std::ifstream::end);
-      size_t len = f.tellg();
-      f.seekg(0, std::ifstream::beg);
-      f.read((char *)this->saved.mem.rom_start, this->saved.mem.rom_size);
-      size_t bytes_read = f.gcount();
-      GB_assert(len == this->saved.mem.rom_size);
-      GB_assert(bytes_read == len);
-    }
-    f.close();
-    this->dbg.rom_loaded = true;
+  // Read Cartridge Header
+  f.seekg(GB_HEADER_START, std::ifstream::beg);
+  f.read((char *)header_bytes, GB_HEADER_SIZE);
+  if (!f.good()) {
+    LogCritical("Error when reading rom file: %s", strerror(errno));
+    return false;
   }
+  this->saved.header = gb_parse_cart_header(header_bytes);
 
-  // Load debug symbols into gb_state->syms (symbols are optional)
-  if (sym_name) {
-    alloc_symbol_list(&this->dbg.syms);
-    // TODO: I should have a helper method that just takes the sym file path
-    FILE *sym_f = fopen(sym_name->c_str(), "r");
-    GB_assert(sym_f != NULL);
-    parse_syms(&this->dbg.syms, sym_f);
-    fclose(sym_f);
-  }
-  if (bootrom_name) {
-    gb_state_load_bootrom(this, bootrom_name->c_str());
-  } else {
-    gb_state_load_bootrom(this, NULL);
-  }
+  // Initialize MBC and Copy ROM
+  gb_alloc_mbc(this);
 
+  f.seekg(0, std::ifstream::beg);
+  f.read((char *)this->saved.mem.rom_start, this->saved.mem.rom_size);
+  GB_assert(f.gcount() == this->saved.mem.rom_size);
+
+  f.close();
+  this->dbg.rom_loaded = true;
   return true;
+}
+bool gb_state::load_bootrom(const str bootrom_filename) {
+  gb_state_load_bootrom(this, bootrom_filename.c_str());
+  return true;
+}
+bool gb_state::load_bootrom() {
+  gb_state_load_bootrom(this, NULL);
+  return true;
+}
+bool gb_state::load_syms(const str sym_filename) {
+  // Load debug symbols into gb_state->syms (symbols are optional)
+  alloc_symbol_list(&this->dbg.syms);
+  // TODO: I should have a helper method that just takes the sym file path
+  FILE *sym_f = fopen(sym_filename.c_str(), "r");
+  if (sym_f == NULL) {
+    LogCritical("Error when reading sym file: %s", strerror(errno));
+    return false;
+  }
+  parse_syms(&this->dbg.syms, sym_f);
+  fclose(sym_f);
+  return true;
+}
+bool gb_state::load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename) {
+  bool success = true;
+  success &= this->load_rom(rom_filename);
+  if (sym_filename) {
+    success &= this->load_syms(*sym_filename);
+  }
+  if (bootrom_filename) {
+    success &= this->load_bootrom(*bootrom_filename);
+  } else {
+    success &= this->load_bootrom();
+  }
+
+  return success;
 }
 
 gb_state::~gb_state() {

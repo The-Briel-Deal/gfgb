@@ -455,7 +455,12 @@ typedef struct gb_dbg_state {
 typedef struct gb_state {
 #ifdef __cplusplus
   gb_state();
-  bool load_rom(const str rom_name, const opt<str> bootrom_name = nullopt, const opt<str> sym_name = nullopt);
+  bool load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename);
+
+  bool load_rom(const str rom_filename);
+  bool load_bootrom(const str bootrom_filename);
+  bool load_bootrom(); // loads default embedded bootrom (DMG0)
+  bool load_syms(const str sym_filename);
   ~gb_state();
 #endif
   gb_saved_state_t            saved;
