@@ -16,6 +16,19 @@ typedef struct mbc1_regs {
   mbc1_bank_mode_t banking_mode_select;
 } mbc1_regs_t;
 
+typedef struct mbc3_regs {
+  uint8_t rtc_sec;
+  uint8_t rtc_min;
+  uint8_t rtc_hrs;
+  uint8_t rtc_day_lower;
+  uint8_t rtc_day_upper;
+
+  uint8_t ram_and_rtc_enable;
+  uint8_t rom_bank;
+  uint8_t ram_or_rtc_bank;
+  uint8_t latch_clock_data;
+} mbc3_regs_t;
+
 void  gb_alloc_mbc(struct gb_state *gb_state);
 void  gb_free_mbc(struct gb_state *gb_state);
 void  gb_write_mbc(struct gb_state *gb_state, uint16_t addr, uint8_t val);

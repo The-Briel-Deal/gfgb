@@ -87,6 +87,7 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
     if (ram_size == 4) parsed_header.num_ram_banks = 16; // WTF is this choice of code num to bank count? Why didn't
     if (ram_size == 5) parsed_header.num_ram_banks = 8;  // they just do the same thing they did with rom banks?
   }
+  if (parsed_header.has_rtc) NOT_IMPLEMENTED("RTC (Real Time Clock) not implemented.");
   return parsed_header;
 };
 

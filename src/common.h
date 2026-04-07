@@ -298,6 +298,7 @@ typedef struct regs {
   io_regs_t io;
   union {
     mbc1_regs_t mbc1_regs;
+    mbc3_regs_t mbc3_regs;
   };
 } regs_t;
 

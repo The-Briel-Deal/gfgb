@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <ranges>
+
 #define MBC1_ROM_512KB_PATH "test/mooneye/emulator-only/mbc1/rom_512kb.gb"
 TEST_CASE("Parse MBC1 512kb ROM Header", "[mbc]") {
   FILE *f = fopen(MBC1_ROM_512KB_PATH, "r");
@@ -105,4 +107,27 @@ TEST_CASE("Write to MBC1 regs", "[mbc]") {
   CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x2000], 0x4B);
   CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x3000], 0x4C);
   CHECK_BYTES_EQ(gb_state.saved.mem.rom_start[0x4000 + 0x3FFF], 0x4D);
+}
+
+TEST_CASE("MBC3 2MB", "[mbc]") {
+  gb_state_t gb_state;
+  gb_state.saved.header = {
+      .mbc_type      = GB_MBC3,
+      .has_ram       = false,
+      .has_battery   = false,
+      .has_rtc       = false,
+      .has_rumble    = false,
+      .num_rom_banks = 128,
+      .num_ram_banks = 0,
+  };
+  gb_alloc_mbc(&gb_state);
+  REQUIRE(gb_state.saved.mem.rom_size == 0x0020'0000);
+
+  for (int i : std::views::iota(0, 128)) {
+    gb_state.saved.mem.rom_start[i * KB(16)] = i;
+  }
+  for (int i : std::views::iota(1, 128)) {
+    gb_write_mem(&gb_state, 0x2000, i);           // switch bank
+    REQUIRE(gb_read_mem(&gb_state, 0x4000) == i); // assert has correct val
+  }
 }
