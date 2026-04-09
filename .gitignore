@@ -14,3 +14,4 @@
 /imgui.ini
 !/subprojects/sdl/
 !/embed/bootroms/*.bin
+!/test/mooneye/*/*.png
