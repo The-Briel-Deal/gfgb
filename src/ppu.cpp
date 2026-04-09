@@ -273,7 +273,7 @@ const struct oam_entry *get_oam_entry(struct gb_state *gb_state, uint8_t index) 
 
 static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height) {
   uint8_t ly = gb_state->saved.regs.io.ly;
-  return ((ly >= y) && (ly <= y + height));
+  return ((ly >= y) && (ly < y + height));
 }
 
 // TODO: check if tile should be double height (8x16)
