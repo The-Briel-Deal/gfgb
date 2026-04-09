@@ -289,6 +289,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
   gb_tile_to_8bit_indexed(gb_tile, pixels);
   SDL_Surface *tile_surface = SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_INDEX8, &pixels, 8);
   SDL_SetSurfacePalette(tile_surface, palette);
+  SDL_SetSurfaceBlendMode(tile_surface, SDL_BLENDMODE_BLEND);
 
   SDL_Rect dstrect = {
       .x = x,
