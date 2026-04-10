@@ -124,6 +124,9 @@ static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
       case VBLANK: {
         ZoneScopedN("V-Blank");
         gb_flip_frame(gb_state);
+        if (gb_state->dbg.pause_next_vblank) {
+          gb_state->dbg.next_frame_hit();
+        }
         break;
       }
       }

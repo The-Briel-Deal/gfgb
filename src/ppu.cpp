@@ -2,6 +2,7 @@
 #include "common.h"
 
 #include "disassemble.h"
+#include "icons.h"
 #include "ppu.h"
 
 #include <imgui.h>
@@ -15,6 +16,11 @@
 #include <string.h>
 
 #include <format>
+
+#define INCBIN_STYLE INCBIN_STYLE_SNAKE
+#define INCBIN_PREFIX
+#include "incbin.h"
+INCBIN(lucide_ttf, "fonts/lucide.ttf");
 
 bool gb_video_init(struct gb_state *gb_state) {
   SDL_Environment *env                  = SDL_GetEnvironment();
@@ -107,6 +113,19 @@ bool gb_video_init(struct gb_state *gb_state) {
   // Setup Platform/Renderer backends
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->video.sdl_window, gb_state->video.sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer);
+
+  io.Fonts->AddFontDefault();
+
+  float base_font_size = 13.0f; // 13.0f is the size of the default font. Change to the font size you use.
+  float icon_font_size = base_font_size * 2.0f / 3.0f; // sizes reduced by a third in order to align correctly
+
+  static const ImWchar icons_ranges[] = {ICON_MIN_LC, ICON_MAX_16_LC, 0};
+  ImFontConfig         icons_config;
+  icons_config.MergeMode            = true;
+  icons_config.PixelSnapH           = true;
+  icons_config.GlyphMinAdvanceX     = icon_font_size;
+  icons_config.FontDataOwnedByAtlas = false; // I don't want ImGui to free this static memory.
+  io.Fonts->AddFontFromMemoryTTF((void *)lucide_ttf_data, lucide_ttf_size, icon_font_size, &icons_config, icons_ranges);
 
   gb_state->dbg.fs_dockspace  = true;
   gb_state->video.initialized = true;
@@ -625,6 +644,29 @@ void gb_imgui_render(struct gb_state *gb_state) {
     ImGui::DockSpaceOverViewport();
   }
 
+  ImGui::PushFont(NULL, 24.0);
+  if (ImGui::BeginMainMenuBar()) {
+    bool pressed;
+    pressed = ImGui::MenuItem(ICON_LC_PLAY, NULL, false, gb_state->dbg.execution_paused);
+    ImGui::SetItemTooltip("Resume Execution");
+    if (pressed) gb_state->dbg.cont();
+
+    pressed = ImGui::MenuItem(ICON_LC_PAUSE, NULL, false, !gb_state->dbg.execution_paused);
+    ImGui::SetItemTooltip("Immediately Pause Execution");
+    if (pressed) gb_state->dbg.pause();
+
+    pressed = ImGui::MenuItem(ICON_LC_MONITOR, NULL, false, gb_state->dbg.execution_paused);
+    ImGui::SetItemTooltip("Run Until Next VBlank");
+    if (pressed) gb_state->dbg.next_frame();
+
+    pressed = ImGui::MenuItem(ICON_LC_STEP_FORWARD, NULL, false, gb_state->dbg.execution_paused);
+    ImGui::SetItemTooltip("Step Instruction");
+    if (pressed) gb_state->dbg.step_inst();
+
+    ImGui::EndMainMenuBar();
+  }
+  ImGui::PopFont();
+
   {
     ImGui::Begin("Display Viewport");
 
@@ -641,19 +683,12 @@ void gb_imgui_render(struct gb_state *gb_state) {
 
     if (ImGui::IsWindowFocused()) io.WantCaptureKeyboard = true;
     if (ImGui::TreeNodeEx("Execution", ImGuiTreeNodeFlags_Framed)) {
-      // Framerate
-      // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
-      // issue.
       if (ImGui::Button("Reset")) {
         gb_state_reset(gb_state);
       }
-      {
-        ImGui::BeginDisabled(!gb_state->dbg.execution_paused);
-        if (ImGui::Button("Step Instruction")) {
-          gb_state->dbg.step_inst_count++;
-        }
-        ImGui::EndDisabled();
-      }
+      // Framerate
+      // TODO: I might want to track average framerate as well as 1% lows to identify stuttering if that becomes an
+      // issue.
       float last_frametime = (float)gb_state->dbg.ns_last_frametime / NS_PER_SEC;
       float last_frame_fps = 0.0f;
       if (last_frametime != 0.0f) {

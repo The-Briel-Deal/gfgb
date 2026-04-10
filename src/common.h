@@ -427,6 +427,13 @@ typedef struct gb_timing_state {
 
 // runtime debug toggles
 typedef struct gb_dbg_state {
+#ifdef __cplusplus
+  void pause();
+  void cont();
+  void next_frame();
+  void next_frame_hit();
+  void step_inst();
+#endif // __cplusplus
   bool                err;
   bool                clear_composite;
   bool                rom_loaded;
@@ -436,6 +443,7 @@ typedef struct gb_dbg_state {
   bool                hide_win;
   bool                hide_objs;
   bool                pause_on_err;
+  bool                pause_next_vblank;
   bool                execution_paused;
   bool                fs_dockspace;
   bool                headless_mode; // Whether or not there is an actual window to present to.
@@ -456,15 +464,17 @@ typedef struct gb_dbg_state {
 typedef struct gb_state {
 #ifdef __cplusplus
   gb_state();
-  bool load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename);
+  ~gb_state();
 
+  bool load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename);
   bool load_rom(const str rom_filename);
+
   bool load_bootrom(const str bootrom_filename);
   bool load_bootrom(); // loads default embedded bootrom (DMG0)
+
   bool load_syms(const str sym_filename);
   bool load_syms(std::istream &sym_stream); // This is called from the above overload after opening file. I expose this
-                                           // so that tests don't have to write the symbol text to a file.
-  ~gb_state();
+                                            // so that tests don't have to write the symbol text to a file.
 #endif
   gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;

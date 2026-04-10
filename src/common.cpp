@@ -524,6 +524,34 @@ bool gb_state::load_rom(const str rom_filename, const opt<str> bootrom_filename,
   return success;
 }
 
+void gb_dbg_state::pause() {
+  GB_assert(!this->execution_paused);
+  this->execution_paused = true;
+}
+
+void gb_dbg_state::cont() {
+  GB_assert(this->execution_paused);
+  this->execution_paused = false;
+}
+
+void gb_dbg_state::next_frame() {
+  GB_assert(this->execution_paused);
+  this->cont();
+  this->pause_next_vblank = true;
+}
+
+void gb_dbg_state::next_frame_hit() {
+  GB_assert(!this->execution_paused);
+  GB_assert(this->pause_next_vblank);
+  this->pause();
+  this->pause_next_vblank = false;
+}
+
+void gb_dbg_state::step_inst() {
+  GB_assert(this->execution_paused);
+  this->step_inst_count++;
+}
+
 gb_state::~gb_state() {
 
   if (this->dbg.serial_port_output_file != NULL) fclose(this->dbg.serial_port_output_file);
