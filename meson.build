@@ -70,12 +70,13 @@ tracy_dep = dependency(
 global_deps = [tracy_dep]
 
 sources = [
-  'src/disassemble.cpp',
   'src/common.cpp',
   'src/cpu.cpp',
+  'src/disassemble.cpp',
+  'src/gui.cpp',
+  'src/mbc.cpp',
   'src/ppu.cpp',
   'src/timing.cpp',
-  'src/mbc.cpp',
 ]
 include = include_directories(['src/', 'embed/'])
 

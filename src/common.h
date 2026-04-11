@@ -1,6 +1,7 @@
 #ifndef GB_COMMON_H
 #define GB_COMMON_H
 
+// TODO: Move everything to tracy cpp header
 // IWYU pragma: begin_exports
 #include <tracy/TracyC.h>
 
@@ -10,6 +11,7 @@
 
 #include "cpu.h"
 #include "disassemble.h"
+#include "gui.h"
 #include "mbc.h"
 #include "ppu.h"
 
