@@ -629,6 +629,7 @@ void gb_display_render(gb_state_t *gb_state) {
       SDL_RenderTexture(gb_state->video.sdl_renderer, gb_state->video.sdl_composite_target_front, NULL, NULL));
 }
 
+// TODO: All the imgui related code should probably broken off into a seperate module.
 void gb_imgui_render(struct gb_state *gb_state) {
   gb_imgui_state_t *imgui_state = &gb_state->imgui;
   ImGuiIO          &io          = ImGui::GetIO();
