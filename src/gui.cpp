@@ -12,6 +12,7 @@
 #define INCBIN_PREFIX
 #include "incbin.h"
 INCBIN(lucide_ttf, "fonts/lucide.ttf");
+INCBIN(monocraft_ttf, "fonts/Monocraft-ttf/Monocraft.ttf");
 
 void gb_imgui_init(gb_state_t *gb_state) {
   // Initialize ImGui
@@ -36,7 +37,10 @@ void gb_imgui_init(gb_state_t *gb_state) {
   ImGui_ImplSDL3_InitForSDLRenderer(gb_state->video.sdl_window, gb_state->video.sdl_renderer);
   ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer);
 
-  io.Fonts->AddFontDefault();
+  ImFontConfig default_font_config;
+  default_font_config.PixelSnapH           = true;
+  default_font_config.FontDataOwnedByAtlas = false; // I don't want ImGui to free this static memory.
+  io.Fonts->AddFontFromMemoryTTF((void *)monocraft_ttf_data, monocraft_ttf_size, 0.0, &default_font_config);
 
   float base_font_size = 13.0f; // 13.0f is the size of the default font. Change to the font size you use.
   float icon_font_size = base_font_size * 2.0f / 3.0f; // sizes reduced by a third in order to align correctly
@@ -94,21 +98,7 @@ static void gb_imgui_show_val(const char *name, const uint16_t val) {
   ImGui::TextUnformatted(formatted_text.c_str());
 }
 
-void gb_imgui_render(struct gb_state *gb_state) {
-  gb_imgui_state_t *imgui_state = &gb_state->imgui;
-  ImGuiIO          &io          = ImGui::GetIO();
-  (void)io;
-
-  GB_CheckSDLCall(
-      SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
-  // Start ImGui frame
-  ImGui_ImplSDLRenderer3_NewFrame();
-  ImGui_ImplSDL3_NewFrame();
-  ImGui::NewFrame();
-  if (gb_state->dbg.fs_dockspace) {
-    ImGui::DockSpaceOverViewport();
-  }
-
+static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
   ImGui::PushFont(NULL, 24.0);
   if (ImGui::BeginMainMenuBar()) {
     bool pressed;
@@ -131,6 +121,23 @@ void gb_imgui_render(struct gb_state *gb_state) {
     ImGui::EndMainMenuBar();
   }
   ImGui::PopFont();
+}
+
+void gb_imgui_render(gb_state_t *gb_state) {
+  gb_imgui_state_t *imgui_state = &gb_state->imgui;
+  ImGuiIO          &io          = ImGui::GetIO();
+  (void)io;
+
+  GB_CheckSDLCall(
+      SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
+  // Start ImGui frame
+  ImGui_ImplSDLRenderer3_NewFrame();
+  ImGui_ImplSDL3_NewFrame();
+  ImGui::NewFrame();
+  if (gb_state->dbg.fs_dockspace) {
+    ImGui::DockSpaceOverViewport();
+  }
+  gb_imgui_main_menu_bar(gb_state);
 
   {
     ImGui::Begin("Display Viewport");
