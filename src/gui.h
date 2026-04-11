@@ -29,7 +29,7 @@ typedef struct gb_imgui_state gb_imgui_state_t;
 
 void gb_imgui_init(gb_state_t *gb_state);
 void gb_imgui_free(gb_state_t *gb_state);
-bool gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
+bool gb_gui_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
 void gb_imgui_render(gb_state_t *gb_state);
 
 #ifdef __cplusplus

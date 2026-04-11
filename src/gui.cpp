@@ -59,7 +59,7 @@ void gb_imgui_free(gb_state_t *gb_state) {
   ImGui::DestroyContext();
 }
 
-bool gb_video_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event) {
+bool gb_gui_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event) {
   (void)gb_state;
   auto io = ImGui::GetIO();
   ImGui_ImplSDL3_ProcessEvent(event);

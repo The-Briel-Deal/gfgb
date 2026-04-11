@@ -250,7 +250,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   // don't let ImGui swallow quit events
   if (event->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
 
-  if (gb_video_handle_sdl_event(gb_state, event)) return SDL_APP_CONTINUE;
+  if (gb_gui_handle_sdl_event(gb_state, event)) return SDL_APP_CONTINUE;
 
   switch (event->type) {
   case SDL_EVENT_KEY_UP:
