@@ -199,7 +199,7 @@ static void *gb_unmap_mbc1_address(gb_state_t *gb_state, uint16_t addr) {
     LogDebug("MBC1 ERAM Read without ram_enabled set.");
     return NULL;
   }
-  ERR(gb_state, "Invalid MBC1 address unmapped $%.4X.", addr);
+  Err(gb_state, "Invalid MBC1 address unmapped $%.4X.", addr);
   return NULL;
 }
 
@@ -223,7 +223,7 @@ static void *gb_unmap_mbc3_address(gb_state_t *gb_state, uint16_t addr) {
     LogDebug("MBC1 ERAM Read without ram_enabled set.");
     return NULL;
   }
-  ERR(gb_state, "Invalid MBC1 address unmapped $%.4X.", addr);
+  Err(gb_state, "Invalid MBC1 address unmapped $%.4X.", addr);
   return NULL;
 }
 static void *gb_unmap_no_mbc_address(gb_state_t *gb_state, uint16_t addr) {
@@ -236,7 +236,7 @@ static void *gb_unmap_no_mbc_address(gb_state_t *gb_state, uint16_t addr) {
   if (addr >= ERAM_START && addr <= ERAM_END) {
     return &gb_state->saved.mem.eram_start[(KB(8) * 0) + (addr - ERAM_START)];
   }
-  ERR(gb_state, "Invalid NO_MBC address unmapped $%.4X.", addr);
+  Err(gb_state, "Invalid NO_MBC address unmapped $%.4X.", addr);
   return NULL;
 }
 void *gb_unmap_mbc_address(gb_state_t *gb_state, uint16_t addr) {

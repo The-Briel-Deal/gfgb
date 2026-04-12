@@ -175,7 +175,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
   };
   if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_palette, bgp_colors, 0, DMG_PALETTE_N_COLORS)) {
-    ERR(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
+    Err(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
   }
 
   SDL_Color bgp_colors_trans[4] = {
@@ -185,7 +185,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
   };
   if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_trans0_palette, bgp_colors_trans, 0, DMG_PALETTE_N_COLORS)) {
-    ERR(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
+    Err(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
   }
 
   uint8_t   obp0_id_1      = (gb_state->saved.regs.io.obp0 >> 2) & 0b11;
@@ -198,7 +198,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)obp0_id_3) / 3.0f),
   };
   if (!SDL_SetPaletteColors(gb_state->video.sdl_obj_palette_0, obp0_colors, 0, DMG_PALETTE_N_COLORS)) {
-    ERR(gb_state, "Couldn't set obj palette 0 colors: %s", SDL_GetError());
+    Err(gb_state, "Couldn't set obj palette 0 colors: %s", SDL_GetError());
   }
   uint8_t   obp1_id_1      = (gb_state->saved.regs.io.obp1 >> 2) & 0b11;
   uint8_t   obp1_id_2      = (gb_state->saved.regs.io.obp1 >> 4) & 0b11;
@@ -210,7 +210,7 @@ static void update_palettes(struct gb_state *gb_state) {
       GREYSCALE_COLOR((3.0f - (float)obp1_id_3) / 3.0f),
   };
   if (!SDL_SetPaletteColors(gb_state->video.sdl_obj_palette_1, obp1_colors, 0, DMG_PALETTE_N_COLORS)) {
-    ERR(gb_state, "Couldn't set obj palette 1 colors: %s", SDL_GetError());
+    Err(gb_state, "Couldn't set obj palette 1 colors: %s", SDL_GetError());
   }
 }
 
@@ -238,13 +238,17 @@ static bool gb_is_tile_in_scanline(struct gb_state *gb_state, int y, int height)
   return ((ly >= y) && (ly < y + height));
 }
 
-// TODO: check if tile should be double height (8x16)
-static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
-                                    uint16_t tile_addr, SDL_FlipMode flip_mode) {
+static void gb_draw_tile_to_line(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
+                                 uint16_t tile_addr, SDL_FlipMode flip_mode) {
   GB_assert(x < GB_DISPLAY_WIDTH);
   GB_assert(y < GB_DISPLAY_HEIGHT);
-  // TODO: this 8 will need to change to 16 if tile is double height
   if (!gb_is_tile_in_scanline(gb_state, y, 8)) return;
+
+  gb_draw_tile_to_surface(gb_state, target, palette, x, y - gb_state->saved.regs.io.ly, tile_addr, flip_mode);
+}
+
+void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
+                             uint16_t tile_addr, SDL_FlipMode flip_mode) {
 
   uint8_t *gb_tile = (uint8_t *)gb_unmap_address(gb_state, tile_addr);
   uint8_t  pixels[8 * 8];
@@ -255,7 +259,7 @@ static void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *targ
 
   SDL_Rect dstrect = {
       .x = x,
-      .y = y - gb_state->saved.regs.io.ly,
+      .y = y,
       .w = 8,
       .h = 8,
   };
@@ -305,8 +309,8 @@ static void gb_render_bg(struct gb_state *gb_state, SDL_Surface *target) {
     GB_assert(display_x > -8 && display_x < 256);
     GB_assert(display_y > -8 && display_y < 256);
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
-                              SDL_FLIP_NONE);
+      gb_draw_tile_to_line(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
+                           SDL_FLIP_NONE);
   }
 }
 static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
@@ -352,8 +356,8 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     uint8_t        display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
     uint8_t        display_y       = (gb_state->saved.regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
-      gb_draw_tile_to_surface(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
-                              SDL_FLIP_NONE);
+      gb_draw_tile_to_line(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
+                           SDL_FLIP_NONE);
   }
   gb_state->saved.win_line_counter++;
 }
@@ -391,9 +395,9 @@ static void gb_render_objs(struct gb_state *gb_state, SDL_Surface *target, SDL_S
     if (x >= GB_DISPLAY_WIDTH) continue;
   draw_obj:
     if (oam_entry->priority) {
-      gb_draw_tile_to_surface(gb_state, priority_target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
+      gb_draw_tile_to_line(gb_state, priority_target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
     } else {
-      gb_draw_tile_to_surface(gb_state, target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
+      gb_draw_tile_to_line(gb_state, target, palette, x, y, 0x8000 + (tile_idx * 16), SDL_FlipMode(flags));
     }
     if (draw_double_height) {
       draw_double_height = false;

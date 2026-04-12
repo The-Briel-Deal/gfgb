@@ -2,6 +2,7 @@
 #define GB_GUI_H
 
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_render.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -12,6 +13,15 @@ struct gb_state;
 typedef struct gb_state gb_state_t;
 
 struct gb_imgui_state {
+
+  SDL_Texture *viewport_target;
+
+  bool fs_dockspace;
+  bool oam_viewer;
+  bool state_inspector;
+  bool show_scanline;
+  bool settings;
+
   uint16_t mem_inspect_addr;
   uint16_t mem_inspect_val;
 

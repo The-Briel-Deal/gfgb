@@ -182,7 +182,12 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_BGP: return &gb_state->saved.regs.io.bgp;
   case IO_OBP0: return &gb_state->saved.regs.io.obp0;
   case IO_OBP1: return &gb_state->saved.regs.io.obp1;
-  default: ERR(gb_state, "IO Reg Not Implemented at addr 0x%04X", addr); return NULL;
+  default:
+    // Since I don't have all IO regs implemented yet, this log was getting really noisy in the error severity. Maybe
+    // once I have all IO regs impl'd I can move this back to the error sev.
+    LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", addr);
+    ErrQuiet(gb_state);
+    return NULL;
   }
 }
 uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
@@ -304,7 +309,10 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     }
     uint8_t *reg_ptr = get_io_reg(gb_state, reg);
     if (reg_ptr == NULL) {
-      LogError("Unknown IO Register at addr = 0x%.4X", reg);
+      // Since I don't have all IO regs implemented yet, this log was getting really noisy in the error severity. Maybe
+      // once I have all IO regs impl'd I can move this back to the error sev.
+      LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", reg);
+      ErrQuiet(gb_state);
       break;
     }
     *reg_ptr = val;
@@ -545,6 +553,19 @@ void gb_dbg_state::next_frame_hit() {
   GB_assert(this->pause_next_vblank);
   this->pause();
   this->pause_next_vblank = false;
+}
+
+void gb_dbg_state::next_line() {
+  GB_assert(this->execution_paused);
+  this->cont();
+  this->pause_next_hblank = true;
+}
+
+void gb_dbg_state::next_line_hit() {
+  GB_assert(!this->execution_paused);
+  GB_assert(this->pause_next_hblank);
+  this->pause();
+  this->pause_next_hblank = false;
 }
 
 void gb_dbg_state::step_inst() {

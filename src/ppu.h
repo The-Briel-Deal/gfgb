@@ -47,6 +47,9 @@ typedef struct __attribute__((packed)) oam_entry {
   bool         priority : 1;
 } oam_entry_t;
 
+void gb_draw_tile_to_surface(struct gb_state *gb_state, SDL_Surface *target, SDL_Palette *palette, int x, int y,
+                             uint16_t tile_addr, SDL_FlipMode flip_mode);
+
 void gb_tile_to_8bit_indexed(uint8_t *tile_in, uint8_t *tile_out);
 void gb_read_oam_entries(gb_state_t *gb_state); // on OAM-Scan
 void gb_draw(gb_state_t *gb_state);             // on Drawing-Pixels

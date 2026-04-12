@@ -161,6 +161,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_cli_exec->add_option( // Exclusively used for the exec subcommand since nothing is executed in disasm
       "-P,--serial_port", serial_output_filename,
       "Filepath to output all data written to SB IO Reg (0xFF01). Used for logging in some test roms.");
+  gb_cli_exec->add_flag("-f,--fullscreen_debug", gb_state->imgui.fs_dockspace,
+                        "Start emulator in Fullscreen Debugger mode where the viewport and debug panels can be tiled.");
 
   try {
     gb_cli.parse(argc, argv);
@@ -385,7 +387,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
     // If we have fullscreen dockspace enabled then rendering the display to window won't do anything since ImGui will
     // cover it with the dockspace.
-    if (!gb_state->dbg.fs_dockspace) gb_display_render(gb_state);
+    if (!gb_state->imgui.fs_dockspace) gb_display_render(gb_state);
     gb_imgui_render(gb_state);
     GB_CheckSDLCall(SDL_RenderPresent(gb_state->video.sdl_renderer));
   }

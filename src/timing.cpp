@@ -119,6 +119,9 @@ static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
       case HBLANK: {
         ZoneScopedN("H-Blank");
         gb_composite_line(gb_state);
+        if (gb_state->dbg.pause_next_hblank) {
+          gb_state->dbg.next_line_hit();
+        }
         break;
       }
       case VBLANK: {

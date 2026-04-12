@@ -89,9 +89,27 @@ enum GB_LogCategory {
     abort();                                                                                                           \
   }
 
-#define ERR(gb_state, msg, ...)                                                                                        \
+#define Err(gb_state, msg, ...)                                                                                        \
   {                                                                                                                    \
     LogError(msg, ##__VA_ARGS__);                                                                                      \
+    if (gb_state->dbg.pause_on_err) {                                                                                  \
+      gb_state->dbg.execution_paused = true;                                                                           \
+    }                                                                                                                  \
+    gb_state->dbg.err = true;                                                                                          \
+  }
+
+#define ErrCat(gb_state, cat, msg, ...)                                                                                \
+  {                                                                                                                    \
+    LogErrorCat(cat, #cat ": " msg, ##__VA_ARGS__);                                                                    \
+    if (gb_state->dbg.pause_on_err) {                                                                                  \
+      gb_state->dbg.execution_paused = true;                                                                           \
+    }                                                                                                                  \
+    gb_state->dbg.err = true;                                                                                          \
+  }
+
+// Set dbg.err without logging. Used if you want to log seperately to prevent noise in the ERROR severity.
+#define ErrQuiet(gb_state)                                                                                             \
+  {                                                                                                                    \
     if (gb_state->dbg.pause_on_err) {                                                                                  \
       gb_state->dbg.execution_paused = true;                                                                           \
     }                                                                                                                  \
@@ -434,6 +452,8 @@ typedef struct gb_dbg_state {
   void cont();
   void next_frame();
   void next_frame_hit();
+  void next_line();
+  void next_line_hit();
   void step_inst();
 #endif // __cplusplus
   bool                err;
@@ -446,8 +466,8 @@ typedef struct gb_dbg_state {
   bool                hide_objs;
   bool                pause_on_err;
   bool                pause_next_vblank;
+  bool                pause_next_hblank;
   bool                execution_paused;
-  bool                fs_dockspace;
   bool                headless_mode; // Whether or not there is an actual window to present to.
   bool                test_mode;     // If enabled then use serial_port output to look for a pass/fail string
   bool                trace_exec;

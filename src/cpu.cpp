@@ -1224,7 +1224,7 @@ static void ex_jp(struct gb_state *gb_state, struct inst inst) {
     gb_spend_mcycles(gb_state, 1);
     gb_state->saved.regs.pc = get_r16(gb_state, R16_HL);
     return;
-  default: ERR(gb_state, "Unknown JP inst params"); return;
+  default: Err(gb_state, "Unknown JP inst params"); return;
   }
 }
 
@@ -1368,7 +1368,7 @@ static inline void _execute(struct gb_state *gb_state, struct inst inst) {
   case XOR: ex_xor(gb_state, inst); break;
 
   case UNKNOWN_INST:
-  default: ERR(gb_state, "`execute()` called with `inst.type` that isn't implemented."); break;
+  default: Err(gb_state, "`execute()` called with `inst.type` that isn't implemented."); break;
   }
   if (set_ime_after_this_inst) {
     gb_state->saved.regs.io.ime           = true;
