@@ -536,18 +536,17 @@ void gb_display_clear(gb_state_t *gb_state) {
   SDL_Surface *locked_texture;
   // We just clear the entire front buffer in one call here. There's no need to flip textures since this all happens at
   // once (meaning there is no risk of displaying partial frames).
-  GB_CheckSDLCall(SDL_LockTextureToSurface(gb_state->video.sdl_composite_target_front, NULL, &locked_texture));
+  CheckedSDL(LockTextureToSurface(gb_state->video.sdl_composite_target_front, NULL, &locked_texture));
   SDL_ClearSurface(locked_texture, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
   SDL_UnlockTexture(gb_state->video.sdl_composite_target_front);
 }
 
 void gb_display_render(gb_state_t *gb_state) {
   // We render the front buffer then the imgui UI to make sure we don't display partial frames.
-  GB_CheckSDLCall(SDL_SetRenderTarget(gb_state->video.sdl_renderer, NULL));
-  GB_CheckSDLCall(SDL_SetRenderDrawColorFloat(gb_state->video.sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT));
-  GB_CheckSDLCall(SDL_RenderClear(gb_state->video.sdl_renderer));
-  GB_CheckSDLCall(
-      SDL_RenderTexture(gb_state->video.sdl_renderer, gb_state->video.sdl_composite_target_front, NULL, NULL));
+  CheckedSDL(SetRenderTarget(gb_state->video.sdl_renderer, NULL));
+  CheckedSDL(SetRenderDrawColorFloat(gb_state->video.sdl_renderer, 0.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT));
+  CheckedSDL(RenderClear(gb_state->video.sdl_renderer));
+  CheckedSDL(RenderTexture(gb_state->video.sdl_renderer, gb_state->video.sdl_composite_target_front, NULL, NULL));
 }
 
 // called on vblank

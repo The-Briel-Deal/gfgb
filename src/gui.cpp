@@ -403,8 +403,7 @@ void gb_imgui_render(gb_state_t *gb_state) {
   ImGuiIO          &io          = ImGui::GetIO();
   (void)io;
 
-  GB_CheckSDLCall(
-      SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
+  CheckedSDL(SetRenderLogicalPresentation(gb_state->video.sdl_renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED));
   // Start ImGui frame
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
@@ -433,6 +432,6 @@ void gb_imgui_render(gb_state_t *gb_state) {
 
   ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gb_state->video.sdl_renderer);
 
-  GB_CheckSDLCall(SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
-                                                   SDL_LOGICAL_PRESENTATION_LETTERBOX));
+  CheckedSDL(SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
+                                          SDL_LOGICAL_PRESENTATION_LETTERBOX));
 }

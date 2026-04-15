@@ -56,6 +56,8 @@ enum GB_LogCategory {
   }
 #endif
 
+#define CheckedSDL(fn) GB_CheckSDLCall(SDL_##fn)
+
 #ifndef GB_LOG_CATEGORY
 #define GB_LOG_CATEGORY GB_LOG_CATEGORY_DEFAULT
 #endif
