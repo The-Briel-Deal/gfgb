@@ -39,8 +39,8 @@ typedef struct __attribute__((packed)) oam_entry {
   uint8_t      y_pos : 8;
   uint8_t      x_pos : 8;
   uint8_t      index : 8;
-  unsigned int cgb_palette : 3;
-  bool         bank : 1;
+  unsigned int cgb_palette : 3; // CGB Only (as you can assume from the name lol)
+  bool         bank : 1;        // CGB Only
   bool         dmg_palette : 1;
   bool         x_flip : 1;
   bool         y_flip : 1;
