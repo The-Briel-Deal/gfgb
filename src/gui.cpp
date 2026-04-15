@@ -221,6 +221,7 @@ static void gb_imgui_display_viewport_win(gb_state_t *gb_state) {
   SDL_SetRenderTarget(ren, gb_state->imgui.viewport_target);
   SDL_RenderTexture(ren, gb_state->video.sdl_composite_target_front, NULL, NULL);
   if (gb_state->imgui.show_scanline) {
+    CheckedSDL(SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND));
     SDL_SetRenderDrawColor(ren, 255, 64, 64, 128);
     SDL_RenderLine(ren, 0, ly, GB_DISPLAY_WIDTH, ly);
   }
