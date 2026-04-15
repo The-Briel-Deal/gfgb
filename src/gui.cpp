@@ -160,12 +160,13 @@ static void gb_imgui_oam_viewer(gb_state_t *gb_state) {
   for (const oam_entry_t &entry : oam_entries) {
     const int i = index++;
     ImGui::TextUnformatted(std::format("Entry {:d}:\n"
-                                       "  Sprite Index:   VRAM{:d}:{:d}\n"
-                                       "  Position (X,Y): {:d},{:d}\n"
-                                       "  Palette:        {:d}\n"
-                                       "  X Flipped:      {:s}\n"
-                                       "  Y Flipped:      {:s}\n"
-                                       "  Priority:       {:s}\n",
+                                       "  Bank (CGB Only): {:d}\n"
+                                       "  Sprite Index:    {:d}\n"
+                                       "  Position (X,Y):  {:d},{:d}\n"
+                                       "  Palette:         {:d}\n"
+                                       "  X Flipped:       {:s}\n"
+                                       "  Y Flipped:       {:s}\n"
+                                       "  Priority:        {:s}\n",
                                        i, entry.bank, entry.index, entry.x_pos, entry.y_pos, entry.dmg_palette,
                                        entry.x_flip, entry.y_flip, entry.priority)
                                .c_str());
