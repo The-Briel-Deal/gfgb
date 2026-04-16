@@ -3,7 +3,6 @@
 #include "icons.h"
 #include "ppu.h"
 
-#include <SDL3/SDL_render.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
@@ -17,11 +16,23 @@
 INCBIN(lucide_ttf, "fonts/lucide.ttf");
 INCBIN(monocraft_ttf, "fonts/Monocraft-ttf/Monocraft.ttf");
 
+#define TILE_PIXEL_WIDTH  8
+#define TILE_PIXEL_HEIGHT 8
+
+#define TILEDATA_BLOCKS_COUNT 3
+#define TILEDATA_ATLAS_WIDTH  TILE_PIXEL_WIDTH * 16
+#define TILEDATA_ATLAS_HEIGHT TILE_PIXEL_HEIGHT * 8 * TILEDATA_BLOCKS_COUNT
+
 void gb_imgui_init(gb_state_t *gb_state) {
   // This is what is drawn to when using fullscreen dockspace, I use this so that I can do things like draw where the
   // current line is at.
   gb_state->imgui.viewport_target = SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32,
                                                       SDL_TEXTUREACCESS_TARGET, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
+
+  // Tile atlas is 8 tiles wide and 16 tiles high for each block, there are 3 blocks on DMG
+  gb_state->imgui.tile_atlas =
+      SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+                        TILEDATA_ATLAS_WIDTH, TILEDATA_ATLAS_HEIGHT);
   // Initialize ImGui
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -63,6 +74,7 @@ void gb_imgui_init(gb_state_t *gb_state) {
 
 void gb_imgui_free(gb_state_t *gb_state) {
   SDL_DestroyTexture(gb_state->imgui.viewport_target);
+  SDL_DestroyTexture(gb_state->imgui.tile_atlas);
   ImGui_ImplSDLRenderer3_Shutdown();
   ImGui_ImplSDL3_Shutdown();
   ImGui::DestroyContext();
@@ -110,6 +122,7 @@ static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
     if (ImGui::BeginMenu("Windows")) {
       ImGui::MenuItem("Fullscreen Debug UI", NULL, &imgui_state.fs_dockspace);
       ImGui::MenuItem("OAM Viewer", NULL, &imgui_state.oam_viewer);
+      ImGui::MenuItem("Tiledata Viewer", NULL, &imgui_state.tiledata_viewer);
       // TODO: This should probably be broken up into multiple windows.
       ImGui::MenuItem("State Inspector", NULL, &imgui_state.state_inspector);
       ImGui::MenuItem("Settings", NULL, &imgui_state.settings);
@@ -147,63 +160,107 @@ static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
 }
 
 static void gb_imgui_oam_viewer(gb_state_t *gb_state) {
-  ImGui::Begin("OAM Viewer");
+  if (ImGui::Begin("OAM Viewer")) {
 
-  std::span oam_entries((const oam_entry_t *)gb_state->saved.mem.oam, 40);
-  // This should not copy the data itself, this is just supposed to be a view.
-  GB_assert(oam_entries.data() == (void *)gb_state->saved.mem.oam);
+    std::span oam_entries((const oam_entry_t *)gb_state->saved.mem.oam, 40);
+    // This should not copy the data itself, this is just supposed to be a view.
+    GB_assert(oam_entries.data() == (void *)gb_state->saved.mem.oam);
 
-  bool draw_double_height = (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
-  ImGui::Value("Height", draw_double_height ? 16 : 8);
+    bool draw_double_height = (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) >> 2;
+    ImGui::Value("Height", draw_double_height ? 16 : 8);
 
-  int index = 0;
-  for (const oam_entry_t &entry : oam_entries) {
-    const int i = index++;
-    ImGui::TextUnformatted(std::format("Entry {:d}:\n"
-                                       "  Bank (CGB Only): {:d}\n"
-                                       "  Sprite Index:    {:d}\n"
-                                       "  Position (X,Y):  {:d},{:d}\n"
-                                       "  Palette:         {:d}\n"
-                                       "  X Flipped:       {:s}\n"
-                                       "  Y Flipped:       {:s}\n"
-                                       "  Priority:        {:s}\n",
-                                       i, entry.bank, entry.index, entry.x_pos, entry.y_pos, entry.dmg_palette,
-                                       entry.x_flip, entry.y_flip, entry.priority)
-                               .c_str());
-    // TODO: Account for double height once I get single height working.
-    uint8_t tile_idx = entry.index;
-    if (draw_double_height) {
-      tile_idx &= 0b1111'1110;
-    }
+    int index = 0;
+    for (const oam_entry_t &entry : oam_entries) {
+      const int i = index++;
+      ImGui::TextUnformatted(std::format("Entry {:d}:\n"
+                                         "  Bank (CGB Only): {:d}\n"
+                                         "  Sprite Index:    {:d}\n"
+                                         "  Position (X,Y):  {:d},{:d}\n"
+                                         "  Palette:         {:d}\n"
+                                         "  X Flipped:       {:s}\n"
+                                         "  Y Flipped:       {:s}\n"
+                                         "  Priority:        {:s}\n",
+                                         i, entry.bank, entry.index, entry.x_pos, entry.y_pos, entry.dmg_palette,
+                                         entry.x_flip, entry.y_flip, entry.priority)
+                                 .c_str());
+      // TODO: Account for double height once I get single height working.
+      uint8_t tile_idx = entry.index;
+      if (draw_double_height) {
+        tile_idx &= 0b1111'1110;
+      }
 
-  draw_obj:
-    SDL_Texture *&tile_tex = gb_state->video.textures[tile_idx];
-    if (tile_tex == NULL) {
-      tile_tex =
-          SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 8, 8);
-    }
-    SDL_Surface *locked;
-    SDL_LockTextureToSurface(tile_tex, NULL, &locked);
-    SDL_Palette *palette;
-    if (entry.dmg_palette)
-      palette = gb_state->video.sdl_obj_palette_1;
-    else
-      palette = gb_state->video.sdl_obj_palette_0;
+    draw_obj:
+      SDL_Texture *&tile_tex = gb_state->video.textures[tile_idx];
+      if (tile_tex == NULL) {
+        tile_tex =
+            SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 8, 8);
+      }
+      SDL_Surface *locked;
+      SDL_LockTextureToSurface(tile_tex, NULL, &locked);
+      SDL_Palette *palette;
+      if (entry.dmg_palette)
+        palette = gb_state->video.sdl_obj_palette_1;
+      else
+        palette = gb_state->video.sdl_obj_palette_0;
 
-    uint32_t flip_mode = 0;
+      uint32_t flip_mode = 0;
 
-    if (entry.x_flip) flip_mode |= SDL_FLIP_HORIZONTAL;
-    if (entry.y_flip) flip_mode |= SDL_FLIP_VERTICAL;
-    gb_draw_tile_to_surface(gb_state, locked, palette, 0, 0, 0x8000 + (tile_idx * 16), SDL_FlipMode(flip_mode));
-    SDL_UnlockTexture(tile_tex);
-    ImVec2 size = {64, 64};
-    ImGui::Image((ImTextureID)(intptr_t)tile_tex, size);
-    if (draw_double_height && ((tile_idx & 1) == 0)) {
-      tile_idx++;
-      goto draw_obj;
+      if (entry.x_flip) flip_mode |= SDL_FLIP_HORIZONTAL;
+      if (entry.y_flip) flip_mode |= SDL_FLIP_VERTICAL;
+      gb_draw_tile_to_surface(gb_state, locked, palette, 0, 0, 0x8000 + (tile_idx * 16), SDL_FlipMode(flip_mode));
+      SDL_UnlockTexture(tile_tex);
+      ImVec2 size = {64, 64};
+      ImGui::Image((ImTextureID)(intptr_t)tile_tex, size);
+      if (draw_double_height && ((tile_idx & 1) == 0)) {
+        tile_idx++;
+        goto draw_obj;
+      }
     }
   }
 
+  ImGui::End();
+}
+static const char BGP_LABEL[]  = "BGP";
+static const char OBP0_LABEL[] = "OBP0";
+static const char OBP1_LABEL[] = "OBP1";
+static void       gb_imgui_tiledata_viewer(gb_state_t *gb_state) {
+  if (ImGui::Begin("Tiledata Viewer")) {
+    gb_tiledata_viewer_palette_t &selected = gb_state->imgui.tile_atlas_palette;
+    const char                   *preview;
+    switch (selected) {
+    case GB_TILEDATA_VIEWER_PALETTE_BGP: preview = BGP_LABEL; break;
+    case GB_TILEDATA_VIEWER_PALETTE_OBP_0: preview = OBP0_LABEL; break;
+    case GB_TILEDATA_VIEWER_PALETTE_OBP_1: preview = OBP1_LABEL; break;
+    }
+    if (ImGui::BeginCombo("Palette", preview)) {
+      if (ImGui::Selectable(BGP_LABEL, selected == GB_TILEDATA_VIEWER_PALETTE_BGP))
+        selected = GB_TILEDATA_VIEWER_PALETTE_BGP;
+      if (ImGui::Selectable(OBP0_LABEL, selected == GB_TILEDATA_VIEWER_PALETTE_OBP_0))
+        selected = GB_TILEDATA_VIEWER_PALETTE_OBP_0;
+      if (ImGui::Selectable(OBP1_LABEL, selected == GB_TILEDATA_VIEWER_PALETTE_OBP_1))
+        selected = GB_TILEDATA_VIEWER_PALETTE_OBP_1;
+      ImGui::EndCombo();
+    }
+    SDL_Palette *palette;
+    switch (selected) {
+    case GB_TILEDATA_VIEWER_PALETTE_BGP: palette = gb_state->video.sdl_bg_palette; break;
+    case GB_TILEDATA_VIEWER_PALETTE_OBP_0: palette = gb_state->video.sdl_obj_palette_0; break;
+    case GB_TILEDATA_VIEWER_PALETTE_OBP_1: palette = gb_state->video.sdl_obj_palette_1; break;
+    }
+    SDL_Surface *locked;
+    SDL_LockTextureToSurface(gb_state->imgui.tile_atlas, NULL, &locked);
+    // TODO: Allow user to change the palette
+
+    SDL_ClearSurface(locked, 0, 0, 0, 0);
+    for (int i = 0; i < 128 * 3; i++) {
+      gb_draw_tile_to_surface(gb_state, locked, palette, (i % 16) * 8, (i / 16) * 8, 0x8000 + (i * 16),
+                              SDL_FlipMode::SDL_FLIP_NONE);
+    }
+
+    SDL_UnlockTexture(gb_state->imgui.tile_atlas);
+    ImVec2 size = {TILEDATA_ATLAS_WIDTH * 4, TILEDATA_ATLAS_HEIGHT * 4};
+    ImGui::Image((ImTextureID)(intptr_t)gb_state->imgui.tile_atlas, size);
+  }
   ImGui::End();
 }
 
@@ -419,6 +476,10 @@ void gb_imgui_render(gb_state_t *gb_state) {
 
   if (imgui_state.oam_viewer) {
     gb_imgui_oam_viewer(gb_state);
+  }
+
+  if (imgui_state.tiledata_viewer) {
+    gb_imgui_tiledata_viewer(gb_state);
   }
 
   if (imgui_state.state_inspector) {

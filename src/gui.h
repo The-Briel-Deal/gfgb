@@ -12,12 +12,21 @@ extern "C" {
 struct gb_state;
 typedef struct gb_state gb_state_t;
 
+typedef enum gb_tiledata_viewer_palette {
+  GB_TILEDATA_VIEWER_PALETTE_BGP,
+  GB_TILEDATA_VIEWER_PALETTE_OBP_0,
+  GB_TILEDATA_VIEWER_PALETTE_OBP_1,
+} gb_tiledata_viewer_palette_t;
+
 struct gb_imgui_state {
 
-  SDL_Texture *viewport_target;
+  SDL_Texture                 *viewport_target;
+  SDL_Texture                 *tile_atlas;
+  gb_tiledata_viewer_palette_t tile_atlas_palette;
 
   bool fs_dockspace;
   bool oam_viewer;
+  bool tiledata_viewer;
   bool state_inspector;
   bool show_scanline;
   bool settings;
