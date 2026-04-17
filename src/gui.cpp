@@ -355,7 +355,7 @@ static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
     ImGui::Value("LCDC[5] - Window Enabled", (gb_state->saved.regs.io.lcdc & LCDC_WIN_ENABLE) != 0);
     ImGui::Value("LCDC[4] - Background/Window Tile Data",
                  (gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_TILE_DATA_AREA) != 0);
-    ImGui::Value("LCDC[3] - Screen Enabled", (gb_state->saved.regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) != 0);
+    ImGui::Value("LCDC[3] - Background Tilemap Area", (gb_state->saved.regs.io.lcdc & LCDC_BG_TILE_MAP_AREA) != 0);
     ImGui::Value("LCDC[2] - Obj Double Height", (gb_state->saved.regs.io.lcdc & LCDC_OBJ_SIZE) != 0);
     ImGui::Value("LCDC[1] - Obj Enabled", (gb_state->saved.regs.io.lcdc & LCDC_OBJ_ENABLE) != 0);
     ImGui::Value("LCDC[0] - Background/Window Enabled", (gb_state->saved.regs.io.lcdc & LCDC_BG_WIN_ENABLE) != 0);
