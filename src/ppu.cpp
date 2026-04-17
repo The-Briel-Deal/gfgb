@@ -438,45 +438,54 @@ void gb_composite_line(struct gb_state *gb_state) {
   GB_assert(locked_texture->h == gb_state->video.sdl_obj_target->h);
   GB_assert(locked_texture->w == gb_state->video.sdl_obj_target->w);
 
-  if (!gb_state->dbg.hide_bg) {
-    // bg and win use the same palette
-    SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_palette);
-    SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
+  for (int i = 0; i < 160; i++) {
+    // RULES: 
+    //   1. Window always covers Background.
+    //   2. Prio Obj's always get covered by BG/Win if the pixel is index 1-3.
+
+    // UNKNOWN:
+    //   1. If BG is index 1, and Win covers with index 0, and prio obj is drawn over, does the prio obj show, or not show?
   }
 
-  // TODO: Adjust width properly
-  SDL_Rect win_rect = {
-      .x = gb_state->saved.regs.io.wx - 7,
-      .y = 0,
-      .w = GB_DISPLAY_WIDTH,
-      .h = 1,
-  };
-  if (!gb_state->dbg.hide_win) {
-    if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_palette);
-      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
-    }
-  }
+  // if (!gb_state->dbg.hide_bg) {
+  //   // bg and win use the same palette
+  //   SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_palette);
+  //   SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
+  // }
 
-  if (!gb_state->dbg.hide_objs) {
-    SDL_BlitSurface(gb_state->video.sdl_obj_priority_target, NULL, locked_texture, NULL);
-  }
+  // // TODO: Adjust width properly
+  // SDL_Rect win_rect = {
+  //     .x = gb_state->saved.regs.io.wx - 7,
+  //     .y = 0,
+  //     .w = GB_DISPLAY_WIDTH,
+  //     .h = 1,
+  // };
+  // if (!gb_state->dbg.hide_win) {
+  //   if (!gb_state->saved.win_line_blank) {
+  //     SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_palette);
+  //     SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
+  //   }
+  // }
 
-  if (!gb_state->dbg.hide_bg) {
-    SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_trans0_palette);
-    SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
-  }
+  // if (!gb_state->dbg.hide_objs) {
+  //   SDL_BlitSurface(gb_state->video.sdl_obj_priority_target, NULL, locked_texture, NULL);
+  // }
 
-  if (!gb_state->dbg.hide_win) {
-    if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_trans0_palette);
-      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
-    }
-  }
+  // if (!gb_state->dbg.hide_bg) {
+  //   SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_trans0_palette);
+  //   SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
+  // }
 
-  if (!gb_state->dbg.hide_objs) {
-    SDL_BlitSurface(gb_state->video.sdl_obj_target, NULL, locked_texture, NULL);
-  }
+  // if (!gb_state->dbg.hide_win) {
+  //   if (!gb_state->saved.win_line_blank) {
+  //     SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_trans0_palette);
+  //     SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
+  //   }
+  // }
+
+  // if (!gb_state->dbg.hide_objs) {
+  //   SDL_BlitSurface(gb_state->video.sdl_obj_target, NULL, locked_texture, NULL);
+  // }
 
   SDL_UnlockTexture(gb_state->video.sdl_composite_target_back);
 }
