@@ -4,8 +4,12 @@ INCLUDE "defines.inc"
 SECTION "Intro", ROMX
 
 Intro::
-; Remove this line
-	rst Crash
+  ld hl, rLCDC
+  set 4, [hl]
 
-; Put your code here!
-	jr @
+  ld hl, $8000
+  ld bc, $10
+  ld a, $FF
+  call LCDMemset
+
+  jr @
