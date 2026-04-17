@@ -25,11 +25,13 @@ struct gb_imgui_state {
   gb_tiledata_viewer_palette_t tile_atlas_palette;
 
   bool fs_dockspace;
+
+  bool layer_viewer;
   bool oam_viewer;
-  bool tiledata_viewer;
-  bool state_inspector;
-  bool show_scanline;
   bool settings;
+  bool show_scanline;
+  bool state_inspector;
+  bool tiledata_viewer;
 
   uint16_t mem_inspect_addr;
   uint16_t mem_inspect_val;

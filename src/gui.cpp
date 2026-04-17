@@ -123,6 +123,7 @@ static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
       ImGui::MenuItem("Fullscreen Debug UI", NULL, &imgui_state.fs_dockspace);
       ImGui::MenuItem("OAM Viewer", NULL, &imgui_state.oam_viewer);
       ImGui::MenuItem("Tiledata Viewer", NULL, &imgui_state.tiledata_viewer);
+      ImGui::MenuItem("Layer Viewer", NULL, &imgui_state.layer_viewer);
       // TODO: This should probably be broken up into multiple windows.
       ImGui::MenuItem("State Inspector", NULL, &imgui_state.state_inspector);
       ImGui::MenuItem("Settings", NULL, &imgui_state.settings);
@@ -287,6 +288,15 @@ static void gb_imgui_display_viewport_win(gb_state_t *gb_state) {
   ImGui::Image((ImTextureID)(intptr_t)gb_state->imgui.viewport_target, win_size);
   ImGui::End();
 }
+static void gb_imgui_layer_viewer(gb_state_t *gb_state) {
+  if (ImGui::Begin("Layers")) {
+    ImGui::Checkbox("Clear Before Render", &gb_state->dbg.clear_composite);
+    ImGui::Checkbox("Background Hidden", &gb_state->dbg.hide_bg);
+    ImGui::Checkbox("Window Hidden", &gb_state->dbg.hide_win);
+    ImGui::Checkbox("Objs Hidden", &gb_state->dbg.hide_objs);
+  }
+  ImGui::End();
+}
 
 static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
   ImGuiIO          &io          = ImGui::GetIO();
@@ -353,14 +363,6 @@ static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
   }
   if (ImGui::TreeNodeEx("Serial Port Output", ImGuiTreeNodeFlags_Framed)) {
     ImGui::TextUnformatted(gb_state->serial_port_output_string->c_str());
-    ImGui::TreePop();
-  }
-
-  if (ImGui::TreeNodeEx("Layers", ImGuiTreeNodeFlags_Framed)) {
-    ImGui::Checkbox("Clear Before Render", &gb_state->dbg.clear_composite);
-    ImGui::Checkbox("Background Hidden", &gb_state->dbg.hide_bg);
-    ImGui::Checkbox("Window Hidden", &gb_state->dbg.hide_win);
-    ImGui::Checkbox("Objs Hidden", &gb_state->dbg.hide_objs);
     ImGui::TreePop();
   }
 
@@ -484,6 +486,10 @@ void gb_imgui_render(gb_state_t *gb_state) {
 
   if (imgui_state.state_inspector) {
     gb_imgui_state_inspector_win(gb_state);
+  }
+
+  if (imgui_state.layer_viewer) {
+    gb_imgui_layer_viewer(gb_state);
   }
 
   if (imgui_state.settings) {
