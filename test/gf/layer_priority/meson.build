@@ -62,8 +62,8 @@ mkdir -p "$B/assets" "$B/obj/lib"
 # 1. Asset pipeline: crash_font.png -> .1bpp -> .pb8 + .pb8.size
 "$RGBGFX" -d 1 -o "$B/assets/crash_font.1bpp" "$S/src/assets/crash_font.png"
 "$PY" "$S/src/tools/pb8.py" "$B/assets/crash_font.1bpp" "$B/assets/crash_font.1bpp.pb8"
-printf 'def NB_PB8_BLOCKS equ ((%u) + 7) / 8\n' \
-  "$(wc -c < "$B/assets/crash_font.1bpp")" > "$B/assets/crash_font.1bpp.pb8.size"
+FONT_SIZE=$(wc -c < "$B/assets/crash_font.1bpp")
+echo "def NB_PB8_BLOCKS equ (($FONT_SIZE) + 7) / 8" > "$B/assets/crash_font.1bpp.pb8.size"
 
 # 2. Assemble regular sources (crash_handler needs the generated assets above)
 for f in intro lib/crash_handler lib/header lib/memcpy_memset lib/misc lib/sgb lib/unpb16 lib/vblank; do
