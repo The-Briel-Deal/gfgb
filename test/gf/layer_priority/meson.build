@@ -1,11 +1,21 @@
+sources = [
+  'src/lib/bank_numbers.asm',
+  'src/lib/build_date.asm',
+  'src/lib/crash_handler.asm',
+  'src/lib/header.asm',
+  'src/lib/memcpy_memset.asm',
+  'src/lib/misc.asm',
+  'src/lib/sgb.asm',
+  'src/lib/unpb16.asm',
+  'src/lib/vblank.asm',
+]
+
 rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
 rgbfix = find_program('rgbfix')
 
-intro = custom_target('intro',
-  input:['src/intro.asm'],
-  command: [
-    rgbasm,
+gb_obj_generator = generator(rgbasm, 
+  arguments: [
     '-p', '0xFF',
     '-I', '@CURRENT_SOURCE_DIR@' / 'src/',
     '-I', '@CURRENT_SOURCE_DIR@' / 'include/',
@@ -14,25 +24,12 @@ intro = custom_target('intro',
     '@INPUT@',
     '-o', '@OUTPUT@',
   ],
-  output: ['intro.o'],
-)
-memcpy_memset = custom_target('memcpy_memset',
-  input:['src/lib/memcpy_memset.asm'],
-  command: [
-    rgbasm,
-    '-p', '0xFF',
-    '-I', '@CURRENT_SOURCE_DIR@' / 'src/',
-    '-I', '@CURRENT_SOURCE_DIR@' / 'include/',
-    '-Wall',
-    '-Wextra',
-    '@INPUT@',
-    '-o', '@OUTPUT@',
-  ],
-  output: ['memcpy_memset.o'],
+  output: '@BASENAME@.o',
 )
 
 layer_prio_test_unfixed = custom_target('layer_prio_test_unfixed',
-  command: [rgblink, '-p', '0xFF', intro, memcpy_memset, '-o', '@OUTPUT@'],
+  input: gb_obj_generator.process(sources),
+  command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT@'],
   output: 'layer_prio_test_unfixed.gb',
 )
 
