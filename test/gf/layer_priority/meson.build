@@ -1,4 +1,5 @@
 sources = [
+  'src/intro.asm',
   'src/lib/bank_numbers.asm',
   'src/lib/build_date.asm',
   'src/lib/crash_handler.asm',
@@ -35,9 +36,18 @@ gb_fonts_1bpp_size = custom_target(
   output: 'crash_font.1bpp.pb8.size',
   build_subdir: 'assets/',
 )
+gb_fonts_1bpp_pb8 = custom_target(
+  'gb_fonts_1bpp_pb8',
+  command: [
+    'python', '@CURRENT_SOURCE_DIR@' / 'src/tools/pb8.py', '@INPUT@', '@OUTPUT@',
+  ],
+  input: gb_fonts_1bpp,
+  output: 'crash_font.1bpp.pb8',
+  build_subdir: 'assets/',
+)
 current_build_dir = meson.current_build_dir()
 gb_obj_generator = generator(rgbasm, 
-  depends: [gb_fonts_1bpp, gb_fonts_1bpp_size],
+  depends: [gb_fonts_1bpp_pb8, gb_fonts_1bpp_size],
   arguments: [
     '-p', '0xFF',
     '-I', '@CURRENT_SOURCE_DIR@' / 'src/',
