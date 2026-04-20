@@ -143,6 +143,8 @@ disasm_test_exe = executable(
 
 current_src_dir = meson.current_source_dir()
 
+subdir('test/gf/layer_priority/')
+
 test('cpu_test', cpu_test_exe, workdir : current_src_dir)
 test('mbc_test', mbc_test_exe, workdir : current_src_dir)
 test('ppu_test', ppu_test_exe, workdir : current_src_dir)

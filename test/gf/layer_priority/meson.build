@@ -1,5 +1,3 @@
-project('gb_layer_priority_test')
-
 rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
 rgbfix = find_program('rgbfix')
@@ -56,6 +54,3 @@ custom_target('layer_prio_test',
   output: 'layer_prio_test.gb',
   build_by_default: true,
 )
-
-
-
