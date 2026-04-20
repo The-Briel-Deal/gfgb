@@ -13,12 +13,36 @@ sources = [
 rgbasm = find_program('rgbasm')
 rgblink = find_program('rgblink')
 rgbfix = find_program('rgbfix')
+rgbgfx = find_program('rgbgfx')
 
+gb_fonts_1bpp = custom_target(
+  'gb_fonts_1bpp',
+  command: [rgbgfx, '-d', '1', '@INPUT@', '-o', '@OUTPUT@'],
+  input: 'src/assets/crash_font.png',
+  output: 'crash_font.1bpp',
+  build_subdir: 'assets/',
+)
+
+gb_fonts_1bpp_size = custom_target(
+  'gb_fonts_1bpp_size',
+  command: [
+    'printf',
+    'def NB_PB8_BLOCKS equ ((%u) + 7) / 8\n', 
+    '"$(wc -c <@INPUT@)"'
+  ],
+  capture: true,
+  input: gb_fonts_1bpp,
+  output: 'crash_font.1bpp.pb8.size',
+  build_subdir: 'assets/',
+)
+current_build_dir = meson.current_build_dir()
 gb_obj_generator = generator(rgbasm, 
+  depends: [gb_fonts_1bpp, gb_fonts_1bpp_size],
   arguments: [
     '-p', '0xFF',
     '-I', '@CURRENT_SOURCE_DIR@' / 'src/',
     '-I', '@CURRENT_SOURCE_DIR@' / 'include/',
+    '-I', current_build_dir,
     '-Wall',
     '-Wextra',
     '@INPUT@',
