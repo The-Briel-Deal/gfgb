@@ -43,6 +43,17 @@ REPT 8
   db 0b0000_0000, 0b0000_0000
 ENDR
 
+; Args:
+;   Src
+;   Dst
+MACRO set_tiledata
+  ld de, \1                  ; Src
+  ld hl, TILEDATA_BLK0 + ($10 * \2) ; Dst
+  ld bc, $10                 ; Len
+  call LCDMemcpy
+
+ENDM
+
 SECTION "Intro", ROMX
 
 
@@ -68,25 +79,13 @@ Intro::
 
 
   ; Make tile index 0 black
-  ld de, black_tile          ; Src
-  ld hl, TILEDATA_BLK0 + $00 ; Dst
-  ld bc, $10                 ; Len
-  call LCDMemcpy
+  set_tiledata black_tile, 0
   ; Make tile index 1 dark grey
-  ld de, dark_grey_tile      ; Src
-  ld hl, TILEDATA_BLK0 + $10 ; Dst
-  ld bc, $10                 ; Len
-  call LCDMemcpy
+  set_tiledata dark_grey_tile, 1
   ; Make tile index 2 light grey
-  ld de, light_grey_tile     ; Src
-  ld hl, TILEDATA_BLK0 + $20 ; Dst
-  ld bc, $10                 ; Len
-  call LCDMemcpy
+  set_tiledata light_grey_tile, 2
   ; Make tile index 3 white
-  ld de, white_tile          ; Src
-  ld hl, TILEDATA_BLK0 + $30 ; Dst
-  ld bc, $10                 ; Len
-  call LCDMemcpy
+  set_tiledata white_tile, 3
 
 
   ld hl, TILEMAP1 + 0 ; Start
