@@ -64,8 +64,8 @@ gb_obj_generator = generator(rgbasm,
 
 layer_prio_test_unfixed = custom_target('layer_prio_test_unfixed',
   input: gb_obj_generator.process(sources),
-  command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT@'],
-  output: 'layer_prio_test_unfixed.gb',
+  command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
+  output: ['layer_prio_test_unfixed.gb', 'layer_prio_test.sym'],
 )
 
 custom_target('layer_prio_test',
