@@ -1,3 +1,20 @@
+; If an OAM entry has it's priority bit set then it should be displayed behind
+; Window and BG pixels that have an index of 1, 2, or 3. However it is unclear
+; to me at the time of writing what happens in this case.
+;
+; (Assume these are at the same display location)
+; 1. Obj (Priority = true)
+; 2. BG Tile (All pixels are palette index 1)
+; 3. Win Tile (All pixels are palette index 0)
+;
+; Which tile would show up on top? Since the Win tile covers the BG with all
+; index 0, does that mean that the obj gets shown? Or is the object hidden
+; because it's covered by the BG tile?
+;
+; Thats the purpose of this test. I'de like to make sure my emulator has the
+; same behavior as original hardware.
+
+
 INCLUDE "defines.inc"
 
 def TILEDATA_BLK0 equ $8000
