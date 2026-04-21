@@ -60,36 +60,34 @@ Intro::
   ld bc, $0400    ; Len
   ld a, 0         ; Fill Byte
   call LCDMemset
-
   ; Zero Tiledata
   ld hl, TILEDATA_BLK0 ; Start
   ld bc, $10           ; Len
   ld a, $00            ; Fill Byte
   call LCDMemset
 
+
   ; Make tile index 0 black
   ld de, black_tile          ; Src
   ld hl, TILEDATA_BLK0 + $00 ; Dst
   ld bc, $10                 ; Len
   call LCDMemcpy
-
   ; Make tile index 1 dark grey
   ld de, dark_grey_tile      ; Src
   ld hl, TILEDATA_BLK0 + $10 ; Dst
   ld bc, $10                 ; Len
   call LCDMemcpy
-
   ; Make tile index 2 light grey
   ld de, light_grey_tile     ; Src
   ld hl, TILEDATA_BLK0 + $20 ; Dst
   ld bc, $10                 ; Len
   call LCDMemcpy
-
   ; Make tile index 3 white
-  ld de, white_tile     ; Src
+  ld de, white_tile          ; Src
   ld hl, TILEDATA_BLK0 + $30 ; Dst
   ld bc, $10                 ; Len
   call LCDMemcpy
+
 
   ld hl, TILEMAP1 + 0 ; Start
   ld bc, 1            ; Len
