@@ -44,14 +44,23 @@ REPT 8
 ENDR
 
 ; Args:
-;   Src
-;   Dst
-MACRO set_tiledata
-  ld de, \1                  ; Src
+;   1: Src
+;   2: Dst
+MACRO set_tiledata0
+  ld de, \1                         ; Src
   ld hl, TILEDATA_BLK0 + ($10 * \2) ; Dst
-  ld bc, $10                 ; Len
+  ld bc, $10                        ; Len
   call LCDMemcpy
+ENDM
 
+; Args:
+;   1: TilemapIndex
+;   2: TiledataIndex
+MACRO set_tilemap1
+  ld hl, TILEMAP1 + \1 ; Start
+  ld bc, 1             ; Len
+  ld a, \2             ; Fill Byte
+  call LCDMemset
 ENDM
 
 SECTION "Intro", ROMX
@@ -79,33 +88,18 @@ Intro::
 
 
   ; Make tile index 0 black
-  set_tiledata black_tile, 0
+  set_tiledata0 black_tile, 0
   ; Make tile index 1 dark grey
-  set_tiledata dark_grey_tile, 1
+  set_tiledata0 dark_grey_tile, 1
   ; Make tile index 2 light grey
-  set_tiledata light_grey_tile, 2
+  set_tiledata0 light_grey_tile, 2
   ; Make tile index 3 white
-  set_tiledata white_tile, 3
+  set_tiledata0 white_tile, 3
 
 
-  ld hl, TILEMAP1 + 0 ; Start
-  ld bc, 1            ; Len
-  ld a, 0             ; Fill Byte
-  call LCDMemset
-
-  ld hl, TILEMAP1 + 1 ; Start
-  ld bc, 1            ; Len
-  ld a, 1             ; Fill Byte
-  call LCDMemset
-
-  ld hl, TILEMAP1 + 2 ; Start
-  ld bc, 1            ; Len
-  ld a, 2             ; Fill Byte
-  call LCDMemset
-
-  ld hl, TILEMAP1 + 3 ; Start
-  ld bc, 1            ; Len
-  ld a, 3             ; Fill Byte
-  call LCDMemset
+  set_tilemap1 0, 0
+  set_tilemap1 1, 1
+  set_tilemap1 2, 2
+  set_tilemap1 3, 3
 
   jr @
