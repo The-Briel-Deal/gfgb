@@ -497,6 +497,7 @@ void gb_draw(struct gb_state *gb_state) {
   gb_render_bg(gb_state, gb_state->video.sdl_bg_target);
   TracyCZoneEnd(render_bg_ctx);
   TracyCZoneN(render_win_ctx, "Window Render", true);
+  // TODO: I need to do the same thing with the background since I currently do this check when compositing for bg.
   if (!gb_state->dbg.hide_win) {
     gb_render_win(gb_state, gb_state->video.sdl_bg_target);
   }
