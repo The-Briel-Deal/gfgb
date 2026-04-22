@@ -66,7 +66,7 @@ ENDR
 
 white_black_tile: 
 REPT 8
-  db 0b0000_1111, 0b0000_1111
+  db 0b1111_1111, 0b0000_1111
 ENDR
 
 SECTION "OAM", ROMX, ALIGN[8]
@@ -81,9 +81,38 @@ oam_data:
   db 16          ; X Position
   db 4           ; Tile Index (White and Black tile)
   db 0b0000_0000 ; Flags, no prio (bit 7)
+  ; OAM 2
+  db 16          ; Y Position
+  db 24           ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b0000_0000 ; Flags, no prio (bit 7)
+  ; OAM 3
+  db 16          ; Y Position
+  db 32          ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b0000_0000 ; Flags, no prio (bit 7)
+  ; OAM 4
+  db 24          ; Y Position
+  db 8           ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b1000_0000 ; Flags, has prio (bit 7)
+  ; OAM 5
+  db 24          ; Y Position
+  db 16          ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b1000_0000 ; Flags, has prio (bit 7)
+  ; OAM 6
+  db 24          ; Y Position
+  db 24           ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b1000_0000 ; Flags, has prio (bit 7)
+  ; OAM 7
+  db 24          ; Y Position
+  db 32          ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b1000_0000 ; Flags, has prio (bit 7)
   ; Just pad the rest of OAM with 0
-  ; Just pad the rest of OAM with 0
-  REPT 39
+  REPT 32
    db $00, $00, $00, $00
   ENDR
 
@@ -105,7 +134,9 @@ Intro::
   ld hl, hBGP
   ld [hl], 0b11_10_01_00
   ld hl, hOBP0
-  ld [hl], 0b11_10_01_00
+  ld [hl], 0b11_10_00_00 ; Lower 2 bits are ignored since they are transparent
+  ld hl, hOBP1
+  ld [hl], 0b11_10_00_00 ; Lower 2 bits are ignored since they are transparent
 
   ; Zero Tilemap
   ld hl, TILEMAP1 ; Start
