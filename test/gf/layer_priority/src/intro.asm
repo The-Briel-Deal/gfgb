@@ -141,7 +141,7 @@ Intro::
   ; Zero Tilemap
   ld hl, TILEMAP1 ; Start
   ld bc, $0400    ; Len
-  ld a, 0         ; Fill Byte
+  ld a, 1         ; Fill Byte
   call LCDMemset
   ; Zero Tiledata
   ld hl, TILEDATA_BLK0 ; Start
@@ -162,9 +162,16 @@ Intro::
   set_tiledata0 white_black_tile, 4
 
 
+  ; This line has overlapping no-prio objs
   set_tilemap1 0, 0
   set_tilemap1 1, 1
   set_tilemap1 2, 2
   set_tilemap1 3, 3
+
+  ; This line has overlapping prio objs
+  set_tilemap1 32 + 0, 0
+  set_tilemap1 32 + 1, 1
+  set_tilemap1 32 + 2, 2
+  set_tilemap1 32 + 3, 3
 
   jr @
