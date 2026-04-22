@@ -21,6 +21,27 @@ def TILEDATA_BLK0 equ $8000
 def TILEDATA_BLK1 equ $8800
 def TILEDATA_BLK2 equ $9000
 
+; Args:
+;   1: Src
+;   2: Dst
+MACRO set_tiledata0
+  ld de, \1                         ; Src
+  ld hl, TILEDATA_BLK0 + ($10 * \2) ; Dst
+  ld bc, $10                        ; Len
+  call LCDMemcpy
+ENDM
+
+; Args:
+;   1: TilemapIndex
+;   2: TiledataIndex
+MACRO set_tilemap1
+  ld hl, TILEMAP1 + \1 ; Start
+  ld bc, 1             ; Len
+  ld a, \2             ; Fill Byte
+  call LCDMemset
+ENDM
+
+
 SECTION "Tile Data", ROMX
 
 black_tile: 
@@ -43,25 +64,28 @@ REPT 8
   db 0b0000_0000, 0b0000_0000
 ENDR
 
-; Args:
-;   1: Src
-;   2: Dst
-MACRO set_tiledata0
-  ld de, \1                         ; Src
-  ld hl, TILEDATA_BLK0 + ($10 * \2) ; Dst
-  ld bc, $10                        ; Len
-  call LCDMemcpy
-ENDM
+white_black_tile: 
+REPT 8
+  db 0b0000_1111, 0b0000_1111
+ENDR
 
-; Args:
-;   1: TilemapIndex
-;   2: TiledataIndex
-MACRO set_tilemap1
-  ld hl, TILEMAP1 + \1 ; Start
-  ld bc, 1             ; Len
-  ld a, \2             ; Fill Byte
-  call LCDMemset
-ENDM
+SECTION "OAM", ROMX, ALIGN[8]
+oam_data:
+  ; OAM 0
+  db 16          ; Y Position
+  db 8           ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b0000_0000 ; Flags, no prio (bit 7)
+  ; OAM 1
+  db 16          ; Y Position
+  db 16          ; X Position
+  db 4           ; Tile Index (White and Black tile)
+  db 0b0000_0000 ; Flags, no prio (bit 7)
+  ; Just pad the rest of OAM with 0
+  ; Just pad the rest of OAM with 0
+  REPT 39
+   db $00, $00, $00, $00
+  ENDR
 
 SECTION "Intro", ROMX
 
@@ -71,8 +95,16 @@ Intro::
   ld hl, hLCDC
   set 4, [hl]
   set 3, [hl]
+  set 1, [hl]
+
+  ld bc, oam_data
+  ld a, b
+
+	ldh [hOAMHigh], a
 
   ld hl, hBGP
+  ld [hl], 0b11_10_01_00
+  ld hl, hOBP0
   ld [hl], 0b11_10_01_00
 
   ; Zero Tilemap
@@ -95,6 +127,8 @@ Intro::
   set_tiledata0 light_grey_tile, 2
   ; Make tile index 3 white
   set_tiledata0 white_tile, 3
+  ; Make tile index 4 half black half white
+  set_tiledata0 white_black_tile, 4
 
 
   set_tilemap1 0, 0
