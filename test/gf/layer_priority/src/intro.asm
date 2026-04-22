@@ -13,6 +13,13 @@
 ;
 ; Thats the purpose of this test. I'de like to make sure my emulator has the
 ; same behavior as original hardware.
+;
+; Findings/Answer to previous question:
+;   When window is enabled with all palette index 0 all of the priority objs
+;   are fully shown. So when bg is covered by win, the bg doesn't influence
+;   whether or not obj's are shown.
+;
+;   These findings are from me testing this rom on an authentic DMG-01 gameboy.
 
 
 INCLUDE "defines.inc"
