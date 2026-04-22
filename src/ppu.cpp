@@ -60,10 +60,6 @@ bool gb_video_init(struct gb_state *gb_state) {
   GB_assert(gb_state->video.sdl_bg_target != NULL);
   SDL_SetSurfaceBlendMode(gb_state->video.sdl_bg_target, SDL_BLENDMODE_BLEND);
 
-  gb_state->video.sdl_win_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
-  GB_assert(gb_state->video.sdl_win_target != NULL);
-  SDL_SetSurfaceBlendMode(gb_state->video.sdl_win_target, SDL_BLENDMODE_BLEND);
-
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
   gb_state->video.sdl_obj_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_RGBA32);
@@ -109,8 +105,6 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->video.sdl_obj_palette_1 = NULL;
   SDL_DestroySurface(gb_state->video.sdl_bg_target);
   gb_state->video.sdl_bg_target = NULL;
-  SDL_DestroySurface(gb_state->video.sdl_win_target);
-  gb_state->video.sdl_win_target = NULL;
   SDL_DestroySurface(gb_state->video.sdl_obj_target);
   gb_state->video.sdl_obj_target = NULL;
   SDL_DestroySurface(gb_state->video.sdl_obj_priority_target);
@@ -439,23 +433,8 @@ void gb_composite_line(struct gb_state *gb_state) {
   GB_assert(locked_texture->w == gb_state->video.sdl_obj_target->w);
 
   if (!gb_state->dbg.hide_bg) {
-    // bg and win use the same palette
     SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_palette);
     SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
-  }
-
-  // TODO: Adjust width properly
-  SDL_Rect win_rect = {
-      .x = gb_state->saved.regs.io.wx - 7,
-      .y = 0,
-      .w = GB_DISPLAY_WIDTH,
-      .h = 1,
-  };
-  if (!gb_state->dbg.hide_win) {
-    if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_palette);
-      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
-    }
   }
 
   if (!gb_state->dbg.hide_objs) {
@@ -465,13 +444,6 @@ void gb_composite_line(struct gb_state *gb_state) {
   if (!gb_state->dbg.hide_bg) {
     SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_trans0_palette);
     SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
-  }
-
-  if (!gb_state->dbg.hide_win) {
-    if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_trans0_palette);
-      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
-    }
   }
 
   if (!gb_state->dbg.hide_objs) {
@@ -525,7 +497,9 @@ void gb_draw(struct gb_state *gb_state) {
   gb_render_bg(gb_state, gb_state->video.sdl_bg_target);
   TracyCZoneEnd(render_bg_ctx);
   TracyCZoneN(render_win_ctx, "Window Render", true);
-  gb_render_win(gb_state, gb_state->video.sdl_win_target);
+  if (!gb_state->dbg.hide_win) {
+    gb_render_win(gb_state, gb_state->video.sdl_bg_target);
+  }
   TracyCZoneEnd(render_win_ctx);
   TracyCZoneN(render_objs_ctx, "Object Render", true);
   gb_render_objs(gb_state, gb_state->video.sdl_obj_target, gb_state->video.sdl_obj_priority_target);
