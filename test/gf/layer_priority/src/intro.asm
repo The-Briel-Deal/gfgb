@@ -122,9 +122,7 @@ SECTION "Intro", ROMX
 Intro::
   ; Set BG Tile Data block to $8000 and tile map to $9C00
   ld hl, hLCDC
-  set 4, [hl]
-  set 3, [hl]
-  set 1, [hl]
+  ld [hl], 0b1011_1011
 
   ld bc, oam_data
   ld a, b
@@ -138,7 +136,17 @@ Intro::
   ld hl, hOBP1
   ld [hl], 0b11_10_00_00 ; Lower 2 bits are ignored since they are transparent
 
-  ; Zero Tilemap
+  ld hl, rWY
+  ld [hl], 0
+  ld hl, rWX
+  ld [hl], 0
+
+  ; Fill Tilemap0 with all white (palette index 0) tiles (tile index 3) (Win uses this tilemap)
+  ld hl, TILEMAP0 ; Start
+  ld bc, $0400    ; Len
+  ld a, 3         ; Fill Byte
+  call LCDMemset
+  ; Fill Tilemap1 with all dark grey (palette index 1) tiles (tile index 1) (BG uses this tilemap)
   ld hl, TILEMAP1 ; Start
   ld bc, $0400    ; Len
   ld a, 1         ; Fill Byte
