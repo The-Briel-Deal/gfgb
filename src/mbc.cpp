@@ -142,11 +142,11 @@ static void gb_write_mbc3(gb_state_t *gb_state, uint16_t addr, uint8_t val) {
     if (val < 8) {
       mbc3_regs.ram_or_rtc_bank = val;
     } else {
-      NOT_IMPLEMENTED("MBC3 RTC not yet implemented.");
+      if (gb_state->saved.header.has_rtc) NOT_IMPLEMENTED("MBC3 RTC not yet implemented.");
     }
     break;
   case 3: // 0x6000-0x7FFF
-    NOT_IMPLEMENTED("MBC3 RTC not yet implemented.");
+    if (gb_state->saved.header.has_rtc) NOT_IMPLEMENTED("MBC3 RTC not yet implemented.");
     break;
   default: unreachable(); break;
   }
