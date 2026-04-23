@@ -304,6 +304,12 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
       io_regs.bank = false;
     }
     break;
+
+  case IO_NR52:
+    // Audio on/off (bit 7) is the only writable bit
+    io_regs.nr52 &= 0b0111'1111;
+    io_regs.nr52 |= (val & 0b1000'0000);
+    break;
   default:
     if (reg == IO_DMA) {
       gb_state->video.oam_dma_start = true;
