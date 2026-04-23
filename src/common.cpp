@@ -284,6 +284,7 @@ void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
 }
 
 static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
+  io_regs_t &io_regs = gb_state->saved.regs.io;
   // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
   // read-only.
   LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
@@ -293,14 +294,14 @@ static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t v
     *get_io_reg(gb_state, IO_SC) = val | 0b0111'1110;
     break;
   case IO_JOYP:
-    gb_state->saved.regs.io.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
-    gb_state->saved.regs.io.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
+    io_regs.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
+    io_regs.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
     break;
   case IO_DIV: gb_handle_div_write(gb_state); break;
   case IO_BANK:
     // if bit 0 is set unmap bootrom. This can't be re-enabled without a restart.
     if (val & 1) {
-      gb_state->saved.regs.io.bank = false;
+      io_regs.bank = false;
     }
     break;
   default:
