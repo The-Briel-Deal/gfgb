@@ -1,7 +1,7 @@
 project(
   'gb_emu',
   'c', 'cpp', 'cython',
-  meson_version : '>= 1.3.0',
+  meson_version : '>= 1.10.0',
   version : '0.1',
   default_options : ['warning_level=3', 'c_std=c23', 'cpp_std=gnu++23', 'python.install_env=auto'],
 )
@@ -142,6 +142,8 @@ disasm_test_exe = executable(
 )
 
 current_src_dir = meson.current_source_dir()
+
+subdir('test/gf/layer_priority/')
 
 test('cpu_test', cpu_test_exe, workdir : current_src_dir)
 test('mbc_test', mbc_test_exe, workdir : current_src_dir)

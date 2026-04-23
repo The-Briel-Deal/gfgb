@@ -36,11 +36,12 @@ bool gb_video_init(struct gb_state *gb_state) {
   }
   SDL_SetRenderLogicalPresentation(gb_state->video.sdl_renderer, GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
-  if (!(gb_state->video.sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+  // I add 1 transparent color to the end at index 4 for hiding layers when debugging.
+  if (!(gb_state->video.sdl_bg_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS + 1))) {
     LogCritical("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
-  if (!(gb_state->video.sdl_bg_trans0_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS))) {
+  if (!(gb_state->video.sdl_bg_trans0_palette = SDL_CreatePalette(DMG_PALETTE_N_COLORS + 1))) {
     LogCritical("Couldn't create bg palette: %s", SDL_GetError());
     return false;
   }
@@ -59,10 +60,6 @@ bool gb_video_init(struct gb_state *gb_state) {
   gb_state->video.sdl_bg_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
   GB_assert(gb_state->video.sdl_bg_target != NULL);
   SDL_SetSurfaceBlendMode(gb_state->video.sdl_bg_target, SDL_BLENDMODE_BLEND);
-
-  gb_state->video.sdl_win_target = SDL_CreateSurface(GB_DISPLAY_WIDTH, 1, SDL_PIXELFORMAT_INDEX8);
-  GB_assert(gb_state->video.sdl_win_target != NULL);
-  SDL_SetSurfaceBlendMode(gb_state->video.sdl_win_target, SDL_BLENDMODE_BLEND);
 
   // since there are multiple possible palettes objects can use i'm just going to make this surface rgba32. it probably
   // makes it easier when compositing as well since it doesn't need a format change.
@@ -109,8 +106,6 @@ void gb_video_free(struct gb_state *gb_state) {
   gb_state->video.sdl_obj_palette_1 = NULL;
   SDL_DestroySurface(gb_state->video.sdl_bg_target);
   gb_state->video.sdl_bg_target = NULL;
-  SDL_DestroySurface(gb_state->video.sdl_win_target);
-  gb_state->video.sdl_win_target = NULL;
   SDL_DestroySurface(gb_state->video.sdl_obj_target);
   gb_state->video.sdl_obj_target = NULL;
   SDL_DestroySurface(gb_state->video.sdl_obj_priority_target);
@@ -168,23 +163,25 @@ static void update_palettes(struct gb_state *gb_state) {
   uint8_t   bgp_id_1      = (gb_state->saved.regs.io.bgp >> 2) & 0b11;
   uint8_t   bgp_id_2      = (gb_state->saved.regs.io.bgp >> 4) & 0b11;
   uint8_t   bgp_id_3      = (gb_state->saved.regs.io.bgp >> 6) & 0b11;
-  SDL_Color bgp_colors[4] = {
+  SDL_Color bgp_colors[5] = {
       GREYSCALE_COLOR((3.0f - (float)bgp_id_0) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
+      TRANSPARENT_COLOR, // index 4 is always transparent in case I need to hide the bg when debugging.
   };
-  if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_palette, bgp_colors, 0, DMG_PALETTE_N_COLORS)) {
+  if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_palette, bgp_colors, 0, DMG_PALETTE_N_COLORS + 1)) {
     Err(gb_state, "Couldn't set bg palette colors: %s", SDL_GetError());
   }
 
-  SDL_Color bgp_colors_trans[4] = {
+  SDL_Color bgp_colors_trans[5] = {
       TRANSPARENT_COLOR,
       GREYSCALE_COLOR((3.0f - (float)bgp_id_1) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_2) / 3.0f),
       GREYSCALE_COLOR((3.0f - (float)bgp_id_3) / 3.0f),
+      TRANSPARENT_COLOR, // index 4 is always transparent in case I need to hide the bg when debugging.
   };
-  if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_trans0_palette, bgp_colors_trans, 0, DMG_PALETTE_N_COLORS)) {
+  if (!SDL_SetPaletteColors(gb_state->video.sdl_bg_trans0_palette, bgp_colors_trans, 0, DMG_PALETTE_N_COLORS + 1)) {
     Err(gb_state, "Couldn't set bg_trans0 palette colors: %s", SDL_GetError());
   }
 
@@ -353,8 +350,9 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     const uint8_t  tile_data_index = gb_read_mem(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                      ((tile_data_index % 128) * 16);
-    uint8_t        display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
-    uint8_t        display_y       = (gb_state->saved.regs.io.ly / 8) * 8;
+    // I make display x an int because I really don't want it to wrap around in either dir
+    int     display_x = (x * 8) + gb_state->saved.regs.io.wx - 7;
+    uint8_t display_y = (gb_state->saved.regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_line(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
                            SDL_FLIP_NONE);
@@ -438,41 +436,15 @@ void gb_composite_line(struct gb_state *gb_state) {
   GB_assert(locked_texture->h == gb_state->video.sdl_obj_target->h);
   GB_assert(locked_texture->w == gb_state->video.sdl_obj_target->w);
 
-  if (!gb_state->dbg.hide_bg) {
-    // bg and win use the same palette
-    SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_palette);
-    SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
-  }
-
-  // TODO: Adjust width properly
-  SDL_Rect win_rect = {
-      .x = gb_state->saved.regs.io.wx - 7,
-      .y = 0,
-      .w = GB_DISPLAY_WIDTH,
-      .h = 1,
-  };
-  if (!gb_state->dbg.hide_win) {
-    if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_palette);
-      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
-    }
-  }
+  SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_palette);
+  SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
 
   if (!gb_state->dbg.hide_objs) {
     SDL_BlitSurface(gb_state->video.sdl_obj_priority_target, NULL, locked_texture, NULL);
   }
 
-  if (!gb_state->dbg.hide_bg) {
-    SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_trans0_palette);
-    SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
-  }
-
-  if (!gb_state->dbg.hide_win) {
-    if (!gb_state->saved.win_line_blank) {
-      SDL_SetSurfacePalette(gb_state->video.sdl_win_target, gb_state->video.sdl_bg_trans0_palette);
-      SDL_BlitSurface(gb_state->video.sdl_win_target, &win_rect, locked_texture, &win_rect);
-    }
-  }
+  SDL_SetSurfacePalette(gb_state->video.sdl_bg_target, gb_state->video.sdl_bg_trans0_palette);
+  SDL_BlitSurface(gb_state->video.sdl_bg_target, NULL, locked_texture, NULL);
 
   if (!gb_state->dbg.hide_objs) {
     SDL_BlitSurface(gb_state->video.sdl_obj_target, NULL, locked_texture, NULL);
@@ -521,11 +493,17 @@ void gb_draw(struct gb_state *gb_state) {
   TracyCZoneN(update_palettes_ctx, "Palette Update", true);
   update_palettes(gb_state);
   TracyCZoneEnd(update_palettes_ctx);
+
+  SDL_FillSurfaceRect(gb_state->video.sdl_bg_target, NULL, 4);
   TracyCZoneN(render_bg_ctx, "Background Render", true);
-  gb_render_bg(gb_state, gb_state->video.sdl_bg_target);
+  if (!gb_state->dbg.hide_bg) {
+    gb_render_bg(gb_state, gb_state->video.sdl_bg_target);
+  }
   TracyCZoneEnd(render_bg_ctx);
   TracyCZoneN(render_win_ctx, "Window Render", true);
-  gb_render_win(gb_state, gb_state->video.sdl_win_target);
+  if (!gb_state->dbg.hide_win) {
+    gb_render_win(gb_state, gb_state->video.sdl_bg_target);
+  }
   TracyCZoneEnd(render_win_ctx);
   TracyCZoneN(render_objs_ctx, "Object Render", true);
   gb_render_objs(gb_state, gb_state->video.sdl_obj_target, gb_state->video.sdl_obj_priority_target);
