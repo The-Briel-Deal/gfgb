@@ -347,7 +347,8 @@ static void gb_render_win(struct gb_state *gb_state, SDL_Surface *target) {
     const uint8_t  tile_data_index = gb_read_mem(gb_state, win_tile_map_start + x + (y * 32));
     const uint16_t tile_data_addr  = (tile_data_index < 128 ? bg_win_tile_data_start_p1 : bg_win_tile_data_start_p2) +
                                      ((tile_data_index % 128) * 16);
-    uint8_t        display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
+    // I make display x an int because I really don't want it to wrap around in either dir
+    int            display_x       = (x * 8) + gb_state->saved.regs.io.wx - 7;
     uint8_t        display_y       = (gb_state->saved.regs.io.ly / 8) * 8;
     if (display_x < GB_DISPLAY_WIDTH && display_y < GB_DISPLAY_HEIGHT)
       gb_draw_tile_to_line(gb_state, target, gb_state->video.sdl_bg_palette, display_x, display_y, tile_data_addr,
