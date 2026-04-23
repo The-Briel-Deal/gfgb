@@ -168,10 +168,10 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_NR44: return &gb_state->saved.regs.io.nr44;
   case IO_NR50: return &gb_state->saved.regs.io.nr50;
   case IO_NR51: return &gb_state->saved.regs.io.nr51;
+  case IO_NR52: return &gb_state->saved.regs.io.nr52;
   case IO_IF: return &gb_state->saved.regs.io.if_;
   case IO_IE: return &gb_state->saved.regs.io.ie;
   case IO_DMA: return &gb_state->saved.regs.io.dma;
-  case IO_SND_ON: return &gb_state->saved.regs.io.nr52;
   case IO_LCDC: return &gb_state->saved.regs.io.lcdc;
   case IO_SCY: return &gb_state->saved.regs.io.scy;
   case IO_SCX: return &gb_state->saved.regs.io.scx;

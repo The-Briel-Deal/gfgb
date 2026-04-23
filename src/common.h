@@ -585,9 +585,9 @@ void gb_state_load_bootrom(gb_state_t *gb_state, const char *bootrom_name);
   X(IO_NR44, 0xFF23)                                                                                                   \
   X(IO_NR50, 0xFF24)                                                                                                   \
   X(IO_NR51, 0xFF25)                                                                                                   \
+  X(IO_NR52, 0xFF26)                                                                                                 \
   X(IO_IF, 0xFF0F)                                                                                                     \
   X(IO_IE, 0xFFFF)                                                                                                     \
-  X(IO_SND_ON, 0xFF26)                                                                                                 \
   X(IO_LCDC, 0xFF40)                                                                                                   \
   X(IO_SCY, 0xFF42)                                                                                                    \
   X(IO_SCX, 0xFF43)                                                                                                    \
