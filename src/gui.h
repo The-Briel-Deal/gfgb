@@ -26,6 +26,7 @@ struct gb_imgui_state {
 
   bool fs_dockspace;
 
+  bool cart_info;
   bool layer_viewer;
   bool oam_viewer;
   bool settings;

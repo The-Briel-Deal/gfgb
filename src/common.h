@@ -353,21 +353,50 @@ typedef struct stack_entry {
   };
 } stack_entry_t;
 
-typedef enum gb_mbc_type {
-  GB_NO_MBC,
-  GB_MBC1,
-  GB_MBC2,
-  GB_MBC3,
-  GB_MBC5,
-  GB_MBC7,
-  GB_MMM01,
-  GB_HUC1,
-  GB_HUC3,
-  GB_TPP1,
-  GB_CAMERA,
+#define MBC_TYPES                                                                                                      \
+  X(GB_NO_MBC)                                                                                                         \
+  X(GB_MBC1)                                                                                                           \
+  X(GB_MBC2)                                                                                                           \
+  X(GB_MBC3)                                                                                                           \
+  X(GB_MBC5)                                                                                                           \
+  X(GB_MBC7)                                                                                                           \
+  X(GB_MMM01)                                                                                                          \
+  X(GB_HUC1)                                                                                                           \
+  X(GB_HUC3)                                                                                                           \
+  X(GB_TPP1)                                                                                                           \
+  X(GB_CAMERA)                                                                                                         \
+                                                                                                                       \
+  X(GB_MBC_UNKNOWN)
 
-  GB_MBC_UNKNOWN,
+typedef enum gb_mbc_type {
+#define X(name) name,
+  MBC_TYPES
+#undef X
 } gb_mbc_type_t;
+
+inline static const char *gb_get_mbc_name(gb_mbc_type_t type) {
+  switch (type) {
+#define X(name)                                                                                                        \
+  case name: return #name;
+    MBC_TYPES
+#undef X
+  default: unreachable();
+  }
+}
+
+#undef MBC_TYPES
+
+#ifdef __cplusplus
+extern "C++" {
+// super simple formatter specialization for the MBC type enum, this just makes it easier print/format the cart type
+template <> struct std::formatter<gb_mbc_type_t> : formatter<std::string> {
+  constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+  auto           format(gb_mbc_type_t type, format_context &ctx) const {
+    return std::format_to(ctx.out(), "{}", gb_get_mbc_name(type));
+  }
+};
+}
+#endif
 
 typedef struct gb_cart_header {
   gb_mbc_type_t mbc_type;
@@ -595,6 +624,7 @@ inline static const char *gb_io_reg_name(io_reg_addr_t io_reg) {
   default: unreachable();
   }
 }
+#undef LIST_OF_IO_REGS
 
 enum joy_pad_io_reg_bits : uint8_t {
   JOYP_SELECT_D_PAD = 1 << 4,

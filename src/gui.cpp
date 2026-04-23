@@ -126,6 +126,7 @@ static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
       ImGui::MenuItem("Layer Viewer", NULL, &imgui_state.layer_viewer);
       // TODO: This should probably be broken up into multiple windows.
       ImGui::MenuItem("State Inspector", NULL, &imgui_state.state_inspector);
+      ImGui::MenuItem("Cart Info", NULL, &imgui_state.cart_info);
       ImGui::MenuItem("Settings", NULL, &imgui_state.settings);
       ImGui::EndMenu();
     }
@@ -288,12 +289,32 @@ static void gb_imgui_display_viewport_win(gb_state_t *gb_state) {
   ImGui::Image((ImTextureID)(intptr_t)gb_state->imgui.viewport_target, win_size);
   ImGui::End();
 }
+
 static void gb_imgui_layer_viewer(gb_state_t *gb_state) {
   if (ImGui::Begin("Layers")) {
     ImGui::Checkbox("Clear Before Render", &gb_state->dbg.clear_composite);
     ImGui::Checkbox("Background Hidden", &gb_state->dbg.hide_bg);
     ImGui::Checkbox("Window Hidden", &gb_state->dbg.hide_win);
     ImGui::Checkbox("Objs Hidden", &gb_state->dbg.hide_objs);
+  }
+  ImGui::End();
+}
+
+static void gb_imgui_cart_info(gb_state_t *gb_state) {
+  if (ImGui::Begin("Cart Info")) {
+
+    ImGui::TextUnformatted(std::format("mbc_type: {}\n"
+                                       "has_ram: {}\n"
+                                       "has_battery: {}\n"
+                                       "has_rtc: {}\n"
+                                       "has_rumble: {}\n"
+                                       "num_rom_banks: {}\n"
+                                       "num_ram_banks: {}",
+                                       gb_state->saved.header.mbc_type, gb_state->saved.header.has_ram,
+                                       gb_state->saved.header.has_battery, gb_state->saved.header.has_rtc,
+                                       gb_state->saved.header.has_rumble, gb_state->saved.header.num_rom_banks,
+                                       gb_state->saved.header.num_ram_banks)
+                               .c_str());
   }
   ImGui::End();
 }
@@ -490,6 +511,10 @@ void gb_imgui_render(gb_state_t *gb_state) {
 
   if (imgui_state.layer_viewer) {
     gb_imgui_layer_viewer(gb_state);
+  }
+
+  if (imgui_state.cart_info) {
+    gb_imgui_cart_info(gb_state);
   }
 
   if (imgui_state.settings) {
