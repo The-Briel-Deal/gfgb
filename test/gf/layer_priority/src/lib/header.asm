@@ -54,7 +54,6 @@ Reset:: ; This is where the VBlank handler jumps to if Start+Select+B+A are all 
 	dec b
 	jr nz, .copyOAMDMA
 
-	WARN "Edit to set palettes here"
 	; CGB palettes maybe, DMG ones always
 
 	; You will also need to reset your handlers' variables below.
