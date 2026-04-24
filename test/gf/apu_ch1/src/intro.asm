@@ -9,14 +9,15 @@ Intro::
   ldh [rNR52], a        ; Turn on sound.
 
   ld a, $ff
-  ldh [rNR50], a            ; Full volume, both channels on.
-  ldh [rNR51], a            ; All sounds to all terminals.
+  ldh [rNR50], a  ; Full volume, both channels on.
+  ldh [rNR51], a  ; All sounds to all terminals.
   ld a, 0b1000_0000
   ldh [rNR11], a
   ld a, 0b1111_1010
   ldh [rNR12], a
-  ld a, 0b1111_1010
+
+  ld a, 255 ; Period lower 8
   ldh [rNR13], a
-  ld a, 0b1_0_000_001 ; [trigger]_[len enable]_[unused]_[period upper]
+  ld a, 0b1_0_000_011 ; [trigger]_[len enable]_[unused]_[period upper]
   ldh [rNR14], a
   jr @
