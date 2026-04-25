@@ -12,7 +12,7 @@ typedef struct gb_apu {
 #ifdef __cplusplus
   // I want methods to still be able touch other parts gameboy state like the audio registers.
   gb_apu(gb_state_t &gb_state) : parent(gb_state) {}
-  void gb_apu_update();
+  void update();
 
   gb_state_t &parent;
 #endif
