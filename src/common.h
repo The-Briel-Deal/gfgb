@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "apu.h"
 #include "cpu.h"
 #include "disassemble.h"
 #include "gui.h"
@@ -536,6 +537,7 @@ typedef struct gb_state {
                                             // so that tests don't have to write the symbol text to a file.
   void init_no_bootrom();
 #endif
+  gb_apu_t                    apu;
   gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;
@@ -593,7 +595,7 @@ void gb_state_load_bootrom(gb_state_t *gb_state, const char *bootrom_name);
   X(IO_NR44, 0xFF23)                                                                                                   \
   X(IO_NR50, 0xFF24)                                                                                                   \
   X(IO_NR51, 0xFF25)                                                                                                   \
-  X(IO_NR52, 0xFF26)                                                                                                 \
+  X(IO_NR52, 0xFF26)                                                                                                   \
   X(IO_IF, 0xFF0F)                                                                                                     \
   X(IO_IE, 0xFFFF)                                                                                                     \
   X(IO_LCDC, 0xFF40)                                                                                                   \
