@@ -33,6 +33,14 @@ Intro::
   ld a, 0b1111_1010
   ldh [rNR12], a
 
+.loop:
   ch1_set_period_and_trigger 512
+  REPT 60
+  call WaitVBlank
+  ENDR
+  ch1_set_period_and_trigger 1023
+  REPT 60
+  call WaitVBlank
+  ENDR
 
-  jr @
+  jp .loop
