@@ -1,4 +1,6 @@
-; TODO: Write about motivations and expected results of this test.
+; This is just a simple first test to make sure that the pulse width channels
+; work, it just plays two tones in a loop.
+; Verified on real DMG-01 hardware.
 
 
 INCLUDE "defines.inc"
