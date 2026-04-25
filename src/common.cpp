@@ -375,7 +375,7 @@ bool gb_state_get_err(struct gb_state *gb_state) {
 
 void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->dbg.use_flat_ram = enabled; }
 
-gb_state::gb_state() {
+gb_state::gb_state() : apu(*this) {
   /// Registers
   // It looks like this was originally at the top of HRAM, but some emulators
   // set SP to the top of WRAM, since I don't have HRAM implemented yet I'm
