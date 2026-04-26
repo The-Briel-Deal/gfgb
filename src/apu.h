@@ -1,6 +1,7 @@
 #ifndef GB_APU_H
 #define GB_APU_H
 
+#include <SDL3/SDL_audio.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,6 +17,7 @@ typedef struct gb_apu {
 
   gb_state_t &parent;
 #endif
+  SDL_AudioStream *output_stream;
 } gb_apu_t;
 
 #ifdef __cplusplus
