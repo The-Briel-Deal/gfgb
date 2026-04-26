@@ -1,6 +1,5 @@
 #include "apu.h"
 #include "common.h"
-#include <SDL3/SDL_audio.h>
 
 gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
@@ -26,6 +25,8 @@ void gb_apu_t::update() {
     bool ch4_on = ((io_regs.nr52 >> 3) & 1);
     if (ch1_on) {
       // TODO: Impl
+      // TODO: Sweep functionality (NR10)
+      // TODO: Length Timer and Duty Cycle (NR11)
     }
     if (ch2_on) {
       // TODO: Impl
