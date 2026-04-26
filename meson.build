@@ -80,7 +80,7 @@ sources = [
 ]
 include = include_directories(['src/', 'embed/'])
 
-shared_library(
+gfgb_so = shared_library(
   'gfgb',
   [sources],
   include_directories : include,
@@ -115,28 +115,32 @@ exe = executable(
 
 cpu_test_exe = executable(
   'cpu_test_exe',
-  [sources, 'test/unit/cpu_test.cpp'],
+  ['test/unit/cpu_test.cpp'],
+  link_with: gfgb_so,
   include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 mbc_test_exe = executable(
   'mbc_test_exe',
-  [sources, 'test/unit/mbc_test.cpp'],
+  ['test/unit/mbc_test.cpp'],
+  link_with: gfgb_so,
   include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 ppu_test_exe = executable(
   'ppu_test_exe',
-  [sources, 'test/unit/ppu_test.cpp'],
+  ['test/unit/ppu_test.cpp'],
+  link_with: gfgb_so,
   include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps, catch_dep],
 )
 
 disasm_test_exe = executable(
   'disasm_test_exe',
-  [sources, 'test/unit/disassemble_test.cpp'],
+  ['test/unit/disassemble_test.cpp'],
+  link_with: gfgb_so,
   include_directories : [include, 'test/unit/'],
   dependencies : [gui_deps, global_deps, catch_dep],
 )
