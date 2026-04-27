@@ -27,7 +27,11 @@ static float gb_period_to_tone_freq(uint16_t period) {
   return tone_freq;
 }
 
-void gb_apu_t::update() {
+void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
+  for (uint16_t i = 0; i < m_cycles; i++)
+    this->tick();
+}
+void gb_apu_t::tick() {
   io_regs_t &io_regs       = this->parent.saved.regs.io;
   bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
   if (ch1_triggered) {
@@ -47,36 +51,6 @@ void gb_apu_t::update() {
       // TODO: Impl Channel 1
       // TODO: Sweep functionality (NR10)
       // TODO: Length Timer and Duty Cycle (NR11)
-
-      uint16_t period = io_regs.nr13;
-      period |= io_regs.nr14;
-      period &= MAX_PERIOD;
-      uint16_t tone_freq = gb_period_to_tone_freq(period);
-
-      const int minimum_audio = (8000 * sizeof(float)) / 2; /* 8000 float samples per second. Half of that. */
-      if (SDL_GetAudioStreamQueued(this->output_stream) < minimum_audio) {
-        static float samples[2048]; /* this will feed 512 samples each frame until we get to our maximum. */
-        size_t       i;
-
-        for (i = 0; i < SDL_arraysize(samples); i++) {
-          const float phase  = this->current_sine_sample * tone_freq / 8000.0f;
-          float       sample = SDL_sinf(phase * 2 * SDL_PI_F);
-          if (sample >= 0)
-            samples[i] = 0.1;
-          else
-            samples[i] = -0.1;
-          this->current_sine_sample++;
-        }
-
-        /* wrapping around to avoid floating-point errors */
-        this->current_sine_sample %= 8000;
-
-        /* feed the new data to the stream. It will queue at the end, and trickle out as the hardware needs more data.
-         */
-        SDL_PutAudioStreamData(this->output_stream, samples, sizeof(samples));
-
-        SDL_ResumeAudioStreamDevice(this->output_stream);
-      }
     }
     if (ch2_on) {
       // TODO: Impl Channel 2
