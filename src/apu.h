@@ -9,6 +9,12 @@ extern "C" {
 struct gb_state;
 typedef struct gb_state gb_state_t;
 
+typedef struct gb_pulsewave_channel {
+  uint8_t  phase;
+  uint16_t counter;
+  uint16_t frequency;
+} gb_pulsewave_channel_t;
+
 typedef struct gb_apu {
 #ifdef __cplusplus
   // I want methods to still be able touch other parts gameboy state like the audio registers.
@@ -22,7 +28,9 @@ typedef struct gb_apu {
 private:
   void enable_triggered_channels();
 #endif
-  SDL_AudioStream *output_stream;
+
+  gb_pulsewave_channel ch1;
+  SDL_AudioStream     *output_stream;
 
 #ifdef __cplusplus
   gb_state_t &parent;
