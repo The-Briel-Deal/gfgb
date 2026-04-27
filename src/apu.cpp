@@ -19,18 +19,11 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   }
 }
 
-static float gb_period_to_tone_freq(uint16_t period) {
-  // Period can only be up to 11 bits (aka having a decimal max of 2047)
-  GB_assert(period <= MAX_PERIOD);
-  // Formula from https://gbdev.io/pandocs/Audio_Registers.html#ff13--nr13-channel-1-period-low-write-only
-  float tone_freq = ((float)APU_CLOCK / SAMPLES_PER_WAVEFORM) / (2048 - period);
-  return tone_freq;
-}
-
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
   for (uint16_t i = 0; i < m_cycles; i++)
     this->tick();
 }
+
 void gb_apu_t::tick() {
   io_regs_t &io_regs       = this->parent.saved.regs.io;
   bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
