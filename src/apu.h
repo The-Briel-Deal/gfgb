@@ -18,6 +18,7 @@ typedef struct gb_apu {
   gb_state_t &parent;
 #endif
   SDL_AudioStream *output_stream;
+  int current_sine_sample;
 } gb_apu_t;
 
 #ifdef __cplusplus
