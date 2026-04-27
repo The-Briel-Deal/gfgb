@@ -58,14 +58,13 @@ void gb_apu_t::update() {
         static float samples[2048]; /* this will feed 512 samples each frame until we get to our maximum. */
         size_t       i;
 
-        /* generate a 440Hz pure tone */
         for (i = 0; i < SDL_arraysize(samples); i++) {
           const float phase  = this->current_sine_sample * tone_freq / 8000.0f;
           float       sample = SDL_sinf(phase * 2 * SDL_PI_F);
           if (sample >= 0)
-            samples[i] = 1;
+            samples[i] = 0.1;
           else
-            samples[i] = -1;
+            samples[i] = -0.1;
           this->current_sine_sample++;
         }
 
