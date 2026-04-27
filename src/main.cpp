@@ -359,7 +359,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         break;
       }
       gb_update_io_joyp(gb_state);
-      gb_state->apu.update();
       {
         ZoneScopedN("Fetch and Execute");
         if (!gb_state->saved.halted) {

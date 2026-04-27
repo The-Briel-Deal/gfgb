@@ -13,12 +13,17 @@ typedef struct gb_apu {
 #ifdef __cplusplus
   // I want methods to still be able touch other parts gameboy state like the audio registers.
   gb_apu(gb_state_t &gb_state);
-  void update();
 
-  gb_state_t &parent;
+  // Essentially just calls tick m_cycle times (m_cycle/2 times in cgb double speed once that is implemented).
+  void spend_mcycles(uint16_t m_cycles);
+  // Call once per cycle (1,048,576 Hz regardless of cgb double speed).
+  void tick();
 #endif
   SDL_AudioStream *output_stream;
-  int current_sine_sample;
+
+#ifdef __cplusplus
+  gb_state_t &parent;
+#endif
 } gb_apu_t;
 
 #ifdef __cplusplus
