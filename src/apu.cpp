@@ -18,6 +18,29 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
     Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
   }
 }
+void gb_apu_t::enable_triggered_channels() {
+  io_regs_t &io_regs       = this->parent.saved.regs.io;
+  bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
+  bool       ch2_triggered = (io_regs.nr24 >> 7) & 1;
+  bool       ch3_triggered = (io_regs.nr34 >> 7) & 1;
+  bool       ch4_triggered = (io_regs.nr44 >> 7) & 1;
+  if (ch1_triggered) {
+    io_regs.nr52 |= (1 << 0);
+    io_regs.nr14 &= ~(1 << 7);
+  }
+  if (ch2_triggered) {
+    io_regs.nr52 |= (1 << 1);
+    io_regs.nr24 &= ~(1 << 7);
+  }
+  if (ch3_triggered) {
+    io_regs.nr52 |= (1 << 2);
+    io_regs.nr34 &= ~(1 << 7);
+  }
+  if (ch4_triggered) {
+    io_regs.nr52 |= (1 << 3);
+    io_regs.nr44 &= ~(1 << 7);
+  }
+}
 
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
   for (uint16_t i = 0; i < m_cycles; i++)
@@ -25,17 +48,13 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 }
 
 void gb_apu_t::tick() {
-  io_regs_t &io_regs       = this->parent.saved.regs.io;
-  bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
-  if (ch1_triggered) {
-    io_regs.nr52 |= (1 << 0);
-    io_regs.nr14 &= ~(1 << 7);
-  }
+  io_regs_t &io_regs = this->parent.saved.regs.io;
+  // TODO: This doesn't need to be called every tick, I could also just do this on write for each NRx4.
+  this->enable_triggered_channels();
 
   // TODO: Go through the rest of the audio registers and play sound accordingly.
   bool apu_powered_on = ((io_regs.nr52 >> 7) & 1);
   if (apu_powered_on) {
-    // TODO: These will need to actually be set by me somewhere since these are read only.
     bool ch1_on = ((io_regs.nr52 >> 0) & 1);
     bool ch2_on = ((io_regs.nr52 >> 1) & 1);
     bool ch3_on = ((io_regs.nr52 >> 2) & 1);

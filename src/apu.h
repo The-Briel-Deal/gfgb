@@ -18,6 +18,9 @@ typedef struct gb_apu {
   void spend_mcycles(uint16_t m_cycles);
   // Call once per cycle (1,048,576 Hz regardless of cgb double speed).
   void tick();
+
+private:
+  void enable_triggered_channels();
 #endif
   SDL_AudioStream *output_stream;
 
