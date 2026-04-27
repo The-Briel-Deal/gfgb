@@ -5,7 +5,7 @@
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
 #define SAMPLES_PER_WAVEFORM 8
 
-gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
+gb_apu_t::gb_apu(gb_state_t &gb_state) : ch1(0, 2048, 0), parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 
   SDL_AudioSpec spec = {
@@ -13,6 +13,7 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
       .channels = 1,
       .freq     = 8000,
   };
+
   this->output_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
   if (!this->output_stream) {
     Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
