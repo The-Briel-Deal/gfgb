@@ -29,8 +29,8 @@ private:
   void enable_triggered_channels();
 #endif
 
-  gb_pulsewave_channel ch1;
-  SDL_AudioStream     *output_stream;
+  gb_pulsewave_channel_t ch1;
+  SDL_AudioStream       *output_stream;
 
 #ifdef __cplusplus
   gb_state_t &parent;
