@@ -4,8 +4,11 @@
 #define MAX_PERIOD           ((1 << 11) - 1)
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
 #define SAMPLES_PER_WAVEFORM 8
+#define CH_IS_ON(chan_nr)    ((io_regs.nr52 >> (chan_nr - 1)) & 1)
 
-gb_apu_t::gb_apu(gb_state_t &gb_state) : ch1(0, 2048, 0), parent(gb_state) {
+gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(2048), period(0) {}
+
+gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 
   SDL_AudioSpec spec = {
@@ -19,7 +22,7 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : ch1(0, 2048, 0), parent(gb_state) {
     Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
   }
 }
-void gb_apu_t::enable_triggered_channels() {
+void gb_apu_t::sync_regs() {
   io_regs_t &io_regs       = this->parent.saved.regs.io;
   bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
   bool       ch2_triggered = (io_regs.nr24 >> 7) & 1;
@@ -51,27 +54,23 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 void gb_apu_t::tick() {
   io_regs_t &io_regs = this->parent.saved.regs.io;
   // TODO: This doesn't need to be called every tick, I could also just do this on write for each NRx4.
-  this->enable_triggered_channels();
+  this->sync_regs();
 
   // TODO: Go through the rest of the audio registers and play sound accordingly.
   bool apu_powered_on = ((io_regs.nr52 >> 7) & 1);
   if (apu_powered_on) {
-    bool ch1_on = ((io_regs.nr52 >> 0) & 1);
-    bool ch2_on = ((io_regs.nr52 >> 1) & 1);
-    bool ch3_on = ((io_regs.nr52 >> 2) & 1);
-    bool ch4_on = ((io_regs.nr52 >> 3) & 1);
-    if (ch1_on) {
+    if (CH_IS_ON(1)) {
       // TODO: Impl Channel 1
       // TODO: Sweep functionality (NR10)
       // TODO: Length Timer and Duty Cycle (NR11)
     }
-    if (ch2_on) {
+    if (CH_IS_ON(2)) {
       // TODO: Impl Channel 2
     }
-    if (ch3_on) {
+    if (CH_IS_ON(3)) {
       // TODO: Impl Channel 3
     }
-    if (ch4_on) {
+    if (CH_IS_ON(4)) {
       // TODO: Impl Channel 4
     }
   }

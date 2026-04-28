@@ -10,9 +10,12 @@ struct gb_state;
 typedef struct gb_state gb_state_t;
 
 typedef struct gb_pulsewave_channel {
+#ifdef __cplusplus
+  gb_pulsewave_channel();
+#endif
   uint8_t  phase;
   uint16_t counter;
-  uint16_t frequency;
+  uint16_t period;
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
@@ -26,7 +29,7 @@ typedef struct gb_apu {
   void tick();
 
 private:
-  void enable_triggered_channels();
+  void sync_regs();
 #endif
 
   gb_pulsewave_channel_t ch1;
