@@ -187,7 +187,7 @@ static void gb_ppu_spend_dots(gb_state_t *gb_state, uint16_t n) {
 
 void gb_spend_mcycles(gb_state_t *gb_state, uint16_t mcycles) {
   uint16_t tcycles = mcycles * 4;
-  uint16_t dots    = mcycles * 4; // This will be different from tcycles once I impl GBC double speed mode.
+  uint16_t dots    = mcycles * 4; // TODO: This will be different from tcycles once I impl GBC double speed mode.
   gb_state->saved.m_cycles_elapsed += mcycles;
   uint16_t old_sysclk     = gb_state->timing.sysclk;
   uint16_t new_sysclk     = gb_state->timing.sysclk + tcycles;
@@ -195,4 +195,5 @@ void gb_spend_mcycles(gb_state_t *gb_state, uint16_t mcycles) {
   gb_sync_tima(gb_state, old_sysclk, new_sysclk);
   gb_state->saved.regs.io.div = (gb_state->timing.sysclk & 0xFF00) >> 8;
   gb_ppu_spend_dots(gb_state, dots);
+  gb_state->apu.spend_mcycles(mcycles); // TODO: This will be different from tcycles once I impl GBC double speed mode.
 }
