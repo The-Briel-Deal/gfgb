@@ -22,6 +22,7 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
     Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
   }
 }
+
 void gb_apu_t::sync_regs() {
   io_regs_t &io_regs       = this->parent.saved.regs.io;
   bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
