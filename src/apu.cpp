@@ -44,6 +44,8 @@ void gb_apu_t::sync_regs() {
     io_regs.nr52 |= (1 << 3);
     io_regs.nr44 &= ~(1 << 7);
   }
+
+  this->ch1.period = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
 }
 
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
@@ -60,9 +62,15 @@ void gb_apu_t::tick() {
   bool apu_powered_on = ((io_regs.nr52 >> 7) & 1);
   if (apu_powered_on) {
     if (CH_IS_ON(1)) {
-      // TODO: Impl Channel 1
+      gb_pulsewave_channel_t &ch = this->ch1;
       // TODO: Sweep functionality (NR10)
       // TODO: Length Timer and Duty Cycle (NR11)
+      ch.counter--;
+      if (ch.counter == 0) {
+        ch.counter = 2048 - ch.period;
+        ch.phase++;
+        ch.phase &= 0b0000'0111; // Equal to `ch.phase %= 8` except without the expensive mod.
+      }
     }
     if (CH_IS_ON(2)) {
       // TODO: Impl Channel 2
