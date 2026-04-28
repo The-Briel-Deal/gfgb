@@ -1,12 +1,12 @@
 #include "apu.h"
 #include "common.h"
 
-#define MAX_PERIOD           ((1 << 11) - 1)
+#define MAX_PERIOD           (1 << 11)
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
 #define SAMPLES_PER_WAVEFORM 8
 #define CH_IS_ON(chan_nr)    ((io_regs.nr52 >> (chan_nr - 1)) & 1)
 
-gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(2048), period(0) {}
+gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(MAX_PERIOD), period(0) {}
 
 gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
@@ -32,6 +32,7 @@ void gb_apu_t::sync_regs() {
   if (ch1_triggered) {
     io_regs.nr52 |= (1 << 0);
     io_regs.nr14 &= ~(1 << 7);
+    this->ch1.counter = MAX_PERIOD - this->ch1.period;
   }
   if (ch2_triggered) {
     io_regs.nr52 |= (1 << 1);
@@ -68,7 +69,7 @@ void gb_apu_t::tick() {
       // TODO: Length Timer and Duty Cycle (NR11)
       ch.counter--;
       if (ch.counter == 0) {
-        ch.counter = 2048 - ch.period;
+        ch.counter = MAX_PERIOD - ch.period;
         ch.phase++;
         ch.phase &= 0b0000'0111; // Equal to `ch.phase %= 8` except without the expensive mod.
       }
