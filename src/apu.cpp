@@ -47,7 +47,15 @@ void gb_apu_t::sync_regs() {
     io_regs.nr44 &= ~(1 << 7);
   }
 
-  this->ch1.period = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
+  this->ch1.period    = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
+  uint8_t cycle_index = ((io_regs.nr11 >> 6) & 0b11);
+  switch (cycle_index) {
+  case 0b00: this->ch1.duty_cycle = GB_DUTY_CYCLE_EIGHTH;
+  case 0b01: this->ch1.duty_cycle = GB_DUTY_CYCLE_FOURTH;
+  case 0b10: this->ch1.duty_cycle = GB_DUTY_CYCLE_HALF;
+  case 0b11: this->ch1.duty_cycle = GB_DUTY_CYCLE_THREE_FOURTHS;
+  default: unreachable();
+  }
 }
 
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
