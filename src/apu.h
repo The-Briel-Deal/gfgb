@@ -9,6 +9,13 @@ extern "C" {
 struct gb_state;
 typedef struct gb_state gb_state_t;
 
+typedef enum gb_duty_cycle : uint8_t {
+  GB_DUTY_CYCLE_EIGHTH        = 0b0000'0001,
+  GB_DUTY_CYCLE_FOURTH        = 0b1000'0001,
+  GB_DUTY_CYCLE_HALF          = 0b1000'0111,
+  GB_DUTY_CYCLE_THREE_FOURTHS = 0b0111'1110,
+} gb_duty_cycle_t;
+
 typedef struct gb_pulsewave_channel {
 #ifdef __cplusplus
   gb_pulsewave_channel();
@@ -16,6 +23,7 @@ typedef struct gb_pulsewave_channel {
   uint8_t  phase;
   uint16_t counter;
   uint16_t period;
+  gb_duty_cycle duty_cycle;
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
