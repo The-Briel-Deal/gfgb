@@ -45,6 +45,7 @@ void gb_apu_t::sync_regs() {
     io_regs.nr52 |= (1 << 0);
     io_regs.nr14 &= ~(1 << 7);
     this->ch1.counter = MAX_PERIOD - this->ch1.period;
+    CheckedSDL(ResumeAudioStreamDevice(this->output_stream));
   }
   if (ch2_triggered) {
     io_regs.nr52 |= (1 << 1);
@@ -80,9 +81,9 @@ void gb_apu_t::tick() {
   io_regs_t &io_regs = this->parent.saved.regs.io;
   // TODO: This doesn't need to be called every tick, I could also just do this on write for each NRx4.
   this->sync_regs();
-
-  if (SDL_GetAudioStreamQueued(this->output_stream) < (int)MIN_AUDIO_QUEUED) {
-    /* SDL_PutAudioStreamData(SDL_AudioStream * stream, const void *buf, int len); */
+  if (SDL_GetAudioStreamQueued(this->output_stream) < (int)(10 * sizeof(float))) {
+    float curr_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
+    SDL_PutAudioStreamData(this->output_stream, &curr_sample, sizeof(float));
   }
 
   // TODO: Go through the rest of the audio registers and play sound accordingly.
