@@ -23,11 +23,12 @@ typedef struct gb_pulsewave_channel {
   double samp_freq(); // How many times a sec the apu changes phase
   double tone_freq(); // this->samp_freq() / 8
 #endif
-  uint8_t         phase;
-  uint16_t        counter;
-  uint16_t        period;
-  gb_duty_cycle_t duty_cycle;
-  SDL_AudioSpec   spec;
+  uint8_t          phase;
+  uint16_t         counter;
+  uint16_t         period;
+  gb_duty_cycle_t  duty_cycle;
+  SDL_AudioSpec    spec;
+  SDL_AudioStream *stream;
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
@@ -45,8 +46,7 @@ private:
 #endif
 
   gb_pulsewave_channel_t ch1;
-  // TODO: I'm probably going to want to have multiple audio streams on each channel, and just 1 audio device in gb_apu
-  SDL_AudioStream *output_stream;
+  SDL_AudioDeviceID      output_device;
 
 #ifdef __cplusplus
   gb_state_t &parent;

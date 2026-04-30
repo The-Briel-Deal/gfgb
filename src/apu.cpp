@@ -48,10 +48,12 @@ double gb_pulsewave_channel_t::tone_freq() {
 gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 
-  this->output_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &this->ch1.spec, NULL, NULL);
-  if (!this->output_stream) {
+  this->output_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+  if (this->output_device == 0) {
     Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
   }
+
+  this->ch1.stream = SDL_OpenAudioDeviceStream(this->output_device, &this->ch1.spec, NULL, NULL);
 }
 
 void gb_apu_t::sync_regs() {
@@ -64,7 +66,7 @@ void gb_apu_t::sync_regs() {
     io_regs.nr52 |= (1 << 0);
     io_regs.nr14 &= ~(1 << 7);
     this->ch1.counter = MAX_PERIOD - this->ch1.period;
-    CheckedSDL(ResumeAudioStreamDevice(this->output_stream));
+    CheckedSDL(ResumeAudioStreamDevice(this->ch1.stream));
   }
   if (ch2_triggered) {
     io_regs.nr52 |= (1 << 1);
@@ -83,7 +85,7 @@ void gb_apu_t::sync_regs() {
   this->ch1.period    = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
   if (this->ch1.period != old_period) {
     this->ch1.spec.freq = this->ch1.samp_freq();
-    CheckedSDL(SetAudioStreamFormat(this->output_stream, &this->ch1.spec, NULL));
+    CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
   }
   uint8_t cycle_index = ((io_regs.nr11 >> 6) & 0b11);
   switch (cycle_index) {
@@ -120,7 +122,7 @@ void gb_apu_t::tick() {
         ch.phase %= 8;
 
         float curr_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
-        SDL_PutAudioStreamData(this->output_stream, &curr_sample, sizeof(float));
+        SDL_PutAudioStreamData(this->ch1.stream, &curr_sample, sizeof(float));
       }
     }
     if (CH_IS_ON(2)) {
