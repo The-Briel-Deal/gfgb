@@ -83,7 +83,7 @@ void gb_apu_t::sync_regs() {
   this->ch1.period    = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
   if (this->ch1.period != old_period) {
     this->ch1.spec.freq = this->ch1.samp_freq();
-    CheckedSDL(SetAudioStreamFormat(this->output_stream, NULL, &this->ch1.spec));
+    CheckedSDL(SetAudioStreamFormat(this->output_stream, &this->ch1.spec, NULL));
   }
   uint8_t cycle_index = ((io_regs.nr11 >> 6) & 0b11);
   switch (cycle_index) {
