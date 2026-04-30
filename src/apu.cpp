@@ -97,7 +97,7 @@ void gb_apu_t::tick() {
       if (ch.counter == 0) {
         ch.counter = MAX_PERIOD - ch.period;
         ch.phase++;
-        ch.phase &= 0b0000'0111; // Equal to `ch.phase %= 8` except without the expensive mod.
+        ch.phase %= 8;
       }
     }
     if (CH_IS_ON(2)) {
