@@ -12,7 +12,13 @@
 
 #define CH_IS_ON(chan_nr) ((io_regs.nr52 >> (chan_nr - 1)) & 1)
 
-gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(MAX_PERIOD), period(0) {}
+gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(MAX_PERIOD), period(0) {
+  this->spec = {
+      .format   = SDL_AUDIO_F32,
+      .channels = 1,
+      .freq     = int(this->samp_freq()),
+  };
+}
 
 bool gb_pulsewave_channel_t::waveform_step() {
   assert(this->phase < 8);
@@ -42,13 +48,7 @@ double gb_pulsewave_channel_t::tone_freq() {
 gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 
-  SDL_AudioSpec spec = {
-      .format   = SDL_AUDIO_F32,
-      .channels = 1,
-      .freq     = AUDIO_SAMPLE_FREQ,
-  };
-
-  this->output_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+  this->output_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &this->ch1.spec, NULL, NULL);
   if (!this->output_stream) {
     Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
   }
@@ -79,7 +79,12 @@ void gb_apu_t::sync_regs() {
     io_regs.nr44 &= ~(1 << 7);
   }
 
+  uint16_t old_period = this->ch1.period;
   this->ch1.period    = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
+  if (this->ch1.period != old_period) {
+    this->ch1.spec.freq = this->ch1.samp_freq();
+    CheckedSDL(SetAudioStreamFormat(this->output_stream, NULL, &this->ch1.spec));
+  }
   uint8_t cycle_index = ((io_regs.nr11 >> 6) & 0b11);
   switch (cycle_index) {
   case 0b00: this->ch1.duty_cycle = GB_DUTY_CYCLE_EIGHTH; break;
@@ -100,10 +105,6 @@ void gb_apu_t::tick() {
   io_regs_t &io_regs = this->parent.saved.regs.io;
   // TODO: This doesn't need to be called every tick, I could also just do this on write for each NRx4.
   this->sync_regs();
-  if (SDL_GetAudioStreamQueued(this->output_stream) < (int)(10 * sizeof(float))) {
-    float curr_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
-    SDL_PutAudioStreamData(this->output_stream, &curr_sample, sizeof(float));
-  }
 
   // TODO: Go through the rest of the audio registers and play sound accordingly.
   bool apu_powered_on = ((io_regs.nr52 >> 7) & 1);
@@ -117,6 +118,9 @@ void gb_apu_t::tick() {
         ch.counter = MAX_PERIOD - ch.period;
         ch.phase++;
         ch.phase %= 8;
+
+        float curr_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
+        SDL_PutAudioStreamData(this->output_stream, &curr_sample, sizeof(float));
       }
     }
     if (CH_IS_ON(2)) {
