@@ -4,7 +4,13 @@
 #define MAX_PERIOD           (1 << 11)
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
 #define SAMPLES_PER_WAVEFORM 8
-#define CH_IS_ON(chan_nr)    ((io_regs.nr52 >> (chan_nr - 1)) & 1)
+
+#define AUDIO_SAMPLE_FREQ 8000
+#define MIN_AUDIO_QUEUED                                                                                               \
+  ((AUDIO_SAMPLE_FREQ * sizeof(float)) /                                                                               \
+   60) /* We should have roughly a 60th of a second of audio queued at any given time  */
+
+#define CH_IS_ON(chan_nr) ((io_regs.nr52 >> (chan_nr - 1)) & 1)
 
 gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(MAX_PERIOD), period(0) {}
 
@@ -20,7 +26,7 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   SDL_AudioSpec spec = {
       .format   = SDL_AUDIO_F32,
       .channels = 1,
-      .freq     = 8000,
+      .freq     = AUDIO_SAMPLE_FREQ,
   };
 
   this->output_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
@@ -65,14 +71,19 @@ void gb_apu_t::sync_regs() {
 }
 
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
-  for (uint16_t i = 0; i < m_cycles; i++)
+  for (uint16_t i = 0; i < m_cycles; i++) {
     this->tick();
+  }
 }
 
 void gb_apu_t::tick() {
   io_regs_t &io_regs = this->parent.saved.regs.io;
   // TODO: This doesn't need to be called every tick, I could also just do this on write for each NRx4.
   this->sync_regs();
+
+  if (SDL_GetAudioStreamQueued(this->output_stream) < (int)MIN_AUDIO_QUEUED) {
+    /* SDL_PutAudioStreamData(SDL_AudioStream * stream, const void *buf, int len); */
+  }
 
   // TODO: Go through the rest of the audio registers and play sound accordingly.
   bool apu_powered_on = ((io_regs.nr52 >> 7) & 1);
