@@ -27,6 +27,7 @@ typedef struct gb_pulsewave_channel {
   uint16_t        counter;
   uint16_t        period;
   gb_duty_cycle_t duty_cycle;
+  SDL_AudioSpec   spec;
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
@@ -44,7 +45,8 @@ private:
 #endif
 
   gb_pulsewave_channel_t ch1;
-  SDL_AudioStream       *output_stream;
+  // TODO: I'm probably going to want to have multiple audio streams on each channel, and just 1 audio device in gb_apu
+  SDL_AudioStream *output_stream;
 
 #ifdef __cplusplus
   gb_state_t &parent;
