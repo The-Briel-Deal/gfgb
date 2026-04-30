@@ -19,7 +19,9 @@ typedef enum gb_duty_cycle : uint8_t {
 typedef struct gb_pulsewave_channel {
 #ifdef __cplusplus
   gb_pulsewave_channel();
-  bool waveform_step();
+  bool   waveform_step();
+  double samp_freq(); // How many times a sec the apu changes phase
+  double tone_freq(); // this->samp_freq() / 8
 #endif
   uint8_t         phase;
   uint16_t        counter;

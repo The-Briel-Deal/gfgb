@@ -19,6 +19,25 @@ bool gb_pulsewave_channel_t::waveform_step() {
   if ((this->duty_cycle >> this->phase) & 1) return true;
   return false;
 }
+double gb_pulsewave_channel_t::samp_freq() {
+  /*
+   *    1,048,576
+   *  ------------- Hz
+   *  2048 - period
+   */
+  GB_assert(this->period < 2048);
+
+  return 1'048'576.0 / (2048 - this->period);
+}
+double gb_pulsewave_channel_t::tone_freq() {
+  /*
+   *     131,072
+   *  ------------- Hz
+   *  2048 - period
+   */
+
+  return this->samp_freq() / 8;
+}
 
 gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
