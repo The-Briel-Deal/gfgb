@@ -31,7 +31,7 @@ typedef struct gb_pulsewave_channel {
 
 typedef struct gb_apu {
 #ifdef __cplusplus
-  // I want methods to still be able touch other parts gameboy state like the audio registers.
+  // I want methods to still be able touch other parts of gameboy state like the audio registers.
   gb_apu(gb_state_t &gb_state);
 
   // Essentially just calls tick m_cycle times (m_cycle/2 times in cgb double speed once that is implemented).
