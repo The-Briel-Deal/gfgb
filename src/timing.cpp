@@ -10,9 +10,6 @@
 
 #define TAC_ENABLE_BIT 0b0000'0100
 
-#define rising_edge(was, is)  (!was && is)
-#define falling_edge(was, is) (was && !is)
-
 static void gb_incr_tima(gb_state_t *gb_state) {
   if (gb_state->saved.regs.io.tima == 0xFF) {
     gb_state->saved.regs.io.if_ |= 0b00100;
@@ -193,7 +190,13 @@ void gb_spend_mcycles(gb_state_t *gb_state, uint16_t mcycles) {
   uint16_t new_sysclk     = gb_state->timing.sysclk + tcycles;
   gb_state->timing.sysclk = new_sysclk;
   gb_sync_tima(gb_state, old_sysclk, new_sysclk);
-  gb_state->saved.regs.io.div = (gb_state->timing.sysclk & 0xFF00) >> 8;
+  uint8_t old_div             = gb_state->saved.regs.io.div;
+  uint8_t new_div             = (gb_state->timing.sysclk & 0xFF00) >> 8;
+  gb_state->saved.regs.io.div = new_div;
+  if (falling_edge_bit(4, old_div, new_div)) {
+    gb_state->apu.div_tick();
+  }
+
   gb_ppu_spend_dots(gb_state, dots);
   gb_state->apu.spend_mcycles(mcycles); // TODO: This will be different from tcycles once I impl GBC double speed mode.
 }

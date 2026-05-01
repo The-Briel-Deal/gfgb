@@ -40,11 +40,14 @@ typedef struct gb_apu {
   void spend_mcycles(uint16_t m_cycles);
   // Call once per cycle (1,048,576 Hz regardless of cgb double speed).
   void tick();
+  // Call 512 times per second on the falling edge of div bit 4.
+  void div_tick();
 
 private:
   void sync_regs();
 #endif
 
+  uint8_t                div;
   gb_pulsewave_channel_t ch1;
   SDL_AudioDeviceID      output_device;
 

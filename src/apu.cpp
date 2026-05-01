@@ -136,3 +136,23 @@ void gb_apu_t::tick() {
     }
   }
 }
+
+void gb_apu_t::div_tick() {
+  // See: https://gbdev.io/pandocs/Audio_details.html#div-apu
+  uint8_t old_div_apu = this->div;
+  this->div++;
+  uint8_t new_div_apu = this->div;
+
+  // Sound Length
+  if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
+    // TODO: Impl Sound Length
+  }
+  // Channel 1 Freq Sweep
+  if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
+    // TODO: Impl Freq Sweep
+  }
+  // Envelope Sweep
+  if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
+    // TODO: Impl Envelope Sweep
+  }
+}

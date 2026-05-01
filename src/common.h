@@ -197,6 +197,12 @@ enum GB_LogCategory {
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
+#define rising_edge(was, is)  (!was && is)
+#define falling_edge(was, is) (was && !is)
+
+#define rising_edge_bit(bit, was, is)  rising_edge(((was >> bit) & 1), ((is >> bit) & 1))
+#define falling_edge_bit(bit, was, is) falling_edge(((was >> bit) & 1), ((is >> bit) & 1))
+
 #define TRACY_COLOR_RED   0xff0000
 #define TRACY_COLOR_GREEN 0x00ff00
 #define TRACY_COLOR_BLUE  0x0000ff
