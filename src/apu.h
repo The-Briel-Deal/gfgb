@@ -23,10 +23,12 @@ typedef struct gb_pulsewave_channel {
   double samp_freq(); // How many times a sec the apu changes phase
   double tone_freq(); // this->samp_freq() / 8
 #endif
+  gb_duty_cycle_t  duty_cycle;
+  bool             length_enabled;
+  uint8_t          length;
   uint8_t          phase;
   uint16_t         counter;
   uint16_t         period;
-  gb_duty_cycle_t  duty_cycle;
   SDL_AudioSpec    spec;
   SDL_AudioStream *stream;
 } gb_pulsewave_channel_t;

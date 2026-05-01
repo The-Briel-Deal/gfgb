@@ -12,7 +12,13 @@
 
 #define CH_IS_ON(chan_nr) ((io_regs.nr52 >> (chan_nr - 1)) & 1)
 
-gb_pulsewave_channel_t::gb_pulsewave_channel() : phase(0), counter(MAX_PERIOD), period(0) {
+gb_pulsewave_channel_t::gb_pulsewave_channel() {
+  this->phase          = 0;
+  this->counter        = MAX_PERIOD;
+  this->period         = 0;
+  this->length         = 0;
+  this->length_enabled = false;
+
   this->spec = {
       .format   = SDL_AUDIO_F32,
       .channels = 1,
@@ -57,35 +63,27 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
 }
 
 void gb_apu_t::sync_regs() {
-  io_regs_t &io_regs       = this->parent.saved.regs.io;
-  bool       ch1_triggered = (io_regs.nr14 >> 7) & 1;
-  bool       ch2_triggered = (io_regs.nr24 >> 7) & 1;
-  bool       ch3_triggered = (io_regs.nr34 >> 7) & 1;
-  bool       ch4_triggered = (io_regs.nr44 >> 7) & 1;
-  if (ch1_triggered) {
-    io_regs.nr52 |= (1 << 0);
-    io_regs.nr14 &= ~(1 << 7);
-    this->ch1.counter = MAX_PERIOD - this->ch1.period;
-    CheckedSDL(ResumeAudioStreamDevice(this->ch1.stream));
-  }
-  if (ch2_triggered) {
-    io_regs.nr52 |= (1 << 1);
-    io_regs.nr24 &= ~(1 << 7);
-  }
-  if (ch3_triggered) {
-    io_regs.nr52 |= (1 << 2);
-    io_regs.nr34 &= ~(1 << 7);
-  }
-  if (ch4_triggered) {
-    io_regs.nr52 |= (1 << 3);
-    io_regs.nr44 &= ~(1 << 7);
-  }
+  io_regs_t &io_regs = this->parent.saved.regs.io;
 
-  uint16_t old_period = this->ch1.period;
-  this->ch1.period    = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
+  // Channel 1
+  bool     ch1_triggered = (io_regs.nr14 >> 7) & 1;
+  uint16_t old_period    = this->ch1.period;
+  this->ch1.period       = io_regs.nr13 | ((io_regs.nr14 & 0b0000'0111) << 8);
   if (this->ch1.period != old_period) {
     this->ch1.spec.freq = this->ch1.samp_freq();
     CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
+  }
+  if (ch1_triggered) {
+    io_regs.nr52 |= (1 << 0);
+    io_regs.nr14 &= ~(1 << 7);
+    this->ch1.length_enabled = (io_regs.nr14 >> 6) & 1;
+    if (this->ch1.length_enabled) {
+      uint8_t initial_length = (io_regs.nr11 >> 0) & 0b0011'1111;
+      this->ch1.length       = 64 - initial_length;
+    }
+
+    this->ch1.counter = MAX_PERIOD - this->ch1.period;
+    CheckedSDL(ResumeAudioStreamDevice(this->ch1.stream));
   }
   uint8_t cycle_index = ((io_regs.nr11 >> 6) & 0b11);
   switch (cycle_index) {
@@ -94,6 +92,27 @@ void gb_apu_t::sync_regs() {
   case 0b10: this->ch1.duty_cycle = GB_DUTY_CYCLE_HALF; break;
   case 0b11: this->ch1.duty_cycle = GB_DUTY_CYCLE_THREE_FOURTHS; break;
   default: unreachable();
+  }
+
+  // Channel 2
+  bool ch2_triggered = (io_regs.nr24 >> 7) & 1;
+  if (ch2_triggered) {
+    io_regs.nr52 |= (1 << 1);
+    io_regs.nr24 &= ~(1 << 7);
+  }
+
+  // Channel 3
+  bool ch3_triggered = (io_regs.nr34 >> 7) & 1;
+  if (ch3_triggered) {
+    io_regs.nr52 |= (1 << 2);
+    io_regs.nr34 &= ~(1 << 7);
+  }
+
+  // Channel 4
+  bool ch4_triggered = (io_regs.nr44 >> 7) & 1;
+  if (ch4_triggered) {
+    io_regs.nr52 |= (1 << 3);
+    io_regs.nr44 &= ~(1 << 7);
   }
 }
 
@@ -139,13 +158,26 @@ void gb_apu_t::tick() {
 
 void gb_apu_t::div_tick() {
   // See: https://gbdev.io/pandocs/Audio_details.html#div-apu
+  io_regs_t &io_regs = this->parent.saved.regs.io;
+
   uint8_t old_div_apu = this->div;
   this->div++;
   uint8_t new_div_apu = this->div;
 
   // Sound Length
   if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
-    // TODO: Impl Sound Length
+    if (CH_IS_ON(1)) {
+      if (this->ch1.length_enabled && ((--this->ch1.length) > 0)) {
+        // TODO: I should probably make a helper method to play/pause a channel, i'll have to make sure I keep nr52 in
+        // sync with the channel however.
+
+        // Turn off channel 1.
+        io_regs.nr52 &= ~(1 << 0);
+        SDL_PauseAudioStreamDevice(this->ch1.stream);
+        // TODO: Identify if it would be better for me to flush instead of clear here.
+        SDL_ClearAudioStream(this->ch1.stream);
+      }
+    }
   }
   // Channel 1 Freq Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
