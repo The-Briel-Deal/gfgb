@@ -74,6 +74,16 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       // val |= (this->ch4.on << 3);
       return val;
     }
+    case IO_NR11: {
+      uint8_t val = 0b0011'1111;
+      switch (this->ch1.duty_cycle) {
+        case GB_DUTY_CYCLE_EIGHTH: val &= (0b00 << 6); break;
+        case GB_DUTY_CYCLE_FOURTH: val &= (0b01 << 6); break;
+        case GB_DUTY_CYCLE_HALF: val &= (0b10 << 6); break;
+        case GB_DUTY_CYCLE_THREE_FOURTHS: val &= (0b11 << 6); break;
+      }
+      return val;
+    }
     case IO_NR13: return 0xFF; // Write only
     case IO_NR14: {
       uint8_t val = 0b1011'1111;
@@ -89,6 +99,17 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     case IO_NR52: {
       this->on = (val >> 7) & 1;
       return;
+    }
+    case IO_NR11: {
+      switch (((val >> 6) & 0b11)) {
+        case 0b00: this->ch1.duty_cycle = GB_DUTY_CYCLE_EIGHTH; break;
+        case 0b01: this->ch1.duty_cycle = GB_DUTY_CYCLE_FOURTH; break;
+        case 0b10: this->ch1.duty_cycle = GB_DUTY_CYCLE_HALF; break;
+        case 0b11: this->ch1.duty_cycle = GB_DUTY_CYCLE_THREE_FOURTHS; break;
+        default: unreachable();
+      }
+      uint8_t initial_length = (val >> 0) & 0b0011'1111;
+      this->ch1.length       = 64 - initial_length;
     }
     case IO_NR13: {
       this->ch1.period &= 0xFF00;
@@ -178,7 +199,6 @@ void gb_apu_t::tick() {
     if (CH_IS_ON(1)) {
       gb_pulsewave_channel_t &ch = this->ch1;
       // TODO: Sweep functionality (NR10)
-      // TODO: Length Timer and Duty Cycle (NR11)
       ch.counter--;
       if (ch.counter == 0) {
         ch.counter = MAX_PERIOD - ch.period;
