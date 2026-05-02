@@ -29,6 +29,7 @@ typedef struct gb_pulsewave_channel {
   bool             on;
   gb_duty_cycle_t  duty_cycle;
   bool             length_enabled;
+  uint8_t          initial_length;
   uint8_t          length;
   uint8_t          phase;
   uint16_t         counter;
