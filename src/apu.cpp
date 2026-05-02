@@ -62,6 +62,33 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
   this->ch1.stream = SDL_OpenAudioDeviceStream(this->output_device, &this->ch1.spec, NULL, NULL);
 }
 
+uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
+  switch (reg) {
+    // Global
+  case IO_NR52: {
+    uint8_t val = 0b0111'0000;
+    val |= (this->on << 7);
+    val |= (this->ch1.on << 0);
+    // TODO: Uncomment once these channels are added.
+    // val |= (this->ch2.on << 1);
+    // val |= (this->ch3.on << 2);
+    // val |= (this->ch4.on << 3);
+    return val;
+  }
+  default: unreachable();
+  }
+}
+void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
+  switch (reg) {
+    // Global
+  case IO_NR52: {
+    this->on = (this->on >> 7) & 1;
+    return;
+  }
+  default: unreachable();
+  }
+}
+
 void gb_apu_t::sync_regs() {
   io_regs_t &io_regs = this->parent.saved.regs.io;
 

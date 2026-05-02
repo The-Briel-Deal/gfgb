@@ -26,6 +26,7 @@ typedef struct gb_pulsewave_channel {
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
 #endif
+  bool             on;
   gb_duty_cycle_t  duty_cycle;
   bool             length_enabled;
   uint8_t          length;
@@ -59,6 +60,8 @@ private:
   // TODO: Remove this once read/write_io_reg methods are implemented.
   void sync_regs();
 #endif
+
+  bool on;
 
   uint8_t                div;
   gb_pulsewave_channel_t ch1;
