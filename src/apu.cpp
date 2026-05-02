@@ -91,7 +91,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       return val;
     }
 
-    default: unreachable();
+    default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
   }
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
@@ -110,6 +110,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       }
       uint8_t initial_length = (val >> 0) & 0b0011'1111;
       this->ch1.length       = 64 - initial_length;
+      return;
     }
     case IO_NR13: {
       this->ch1.period &= 0xFF00;
@@ -124,7 +125,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
 
-    default: unreachable();
+    default: LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg); return;
   }
 }
 
