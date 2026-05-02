@@ -172,13 +172,15 @@ blargg_cpu_tests = [
 ]
 
 test_flags = ['--no_bootrom']
+# I do not want any windows popping up or my 70 tests screaming at me during the bootrom.
+test_env = ['SDL_VIDEODRIVER=dummy', 'SDL_AUDIODRIVER=dummy']
 
 foreach test : blargg_cpu_tests
   test(
     'blargg_cpu_' + test,
     exe,
     args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=100', test_flags],
-    env : ['SDL_VIDEODRIVER=dummy'],
+    env : test_env,
   )
 
 endforeach
@@ -194,7 +196,7 @@ foreach test : blargg_mem_timing_tests
     'blargg_mem_timing_' + test,
     exe,
     args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=100', test_flags],
-    env : ['SDL_VIDEODRIVER=dummy'],
+    env : test_env,
   )
 endforeach
 
@@ -202,7 +204,7 @@ test(
   'blargg_instr_timing',
   exe,
   args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=100', test_flags],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 test(
   'mooneye_vblank_stat_intr',
@@ -215,7 +217,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -229,7 +231,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -243,7 +245,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -257,7 +259,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -271,7 +273,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -285,7 +287,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -299,7 +301,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -313,7 +315,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 test(
   'mooneye_mbc1_ram_256kbit',
@@ -326,7 +328,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(

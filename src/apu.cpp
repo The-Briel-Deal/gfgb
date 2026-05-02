@@ -167,7 +167,7 @@ void gb_apu_t::div_tick() {
   // Sound Length
   if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
     if (CH_IS_ON(1)) {
-      if (this->ch1.length_enabled && ((--this->ch1.length) > 0)) {
+      if (this->ch1.length_enabled && !((--this->ch1.length) > 0)) {
         // TODO: I should probably make a helper method to play/pause a channel, i'll have to make sure I keep nr52 in
         // sync with the channel however.
 
