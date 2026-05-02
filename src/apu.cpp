@@ -64,7 +64,6 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
-    // Global
   case IO_NR52: {
     uint8_t val = 0b0111'0000;
     val |= (this->on << 7);
@@ -75,16 +74,35 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     // val |= (this->ch4.on << 3);
     return val;
   }
+  case IO_NR13: return 0xFF; // Write only
+  case IO_NR14: {
+    uint8_t val = 0b1011'1111;
+    val |= (this->ch1.length_enabled & 1) << 6;
+    return val;
+  }
+
   default: unreachable();
   }
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   switch (reg) {
-    // Global
   case IO_NR52: {
-    this->on = (this->on >> 7) & 1;
+    this->on = (val >> 7) & 1;
     return;
   }
+  case IO_NR13: {
+    this->ch1.period &= 0xFF00;
+    this->ch1.period |= (val & 0x00FF);
+    return;
+  }
+  case IO_NR14: {
+    if ((val >> 7) & 1) this->ch1.on = true;
+    this->ch1.length_enabled = (val >> 6) & 1;
+    this->ch1.period &= 0x00FF;
+    this->ch1.period |= (val & 0b0000'0111) << 8;
+    return;
+  }
+
   default: unreachable();
   }
 }

@@ -21,6 +21,9 @@ INCBIN(dmg0_boot_rom, "bootroms/dmg0_boot.bin");
 #define GB_HEADER_ROM_SIZE_ADDR  0x0148
 #define GB_HEADER_RAM_SIZE_ADDR  0x0149
 
+#define GB_APU_IO_REG_START 0xFF10
+#define GB_APU_IO_REG_END   0xFF40
+
 #define SET_CART_TYPE(parsed_header, _mbc_type, _has_ram, _has_battery, _has_rtc, _has_rumble)                         \
   {                                                                                                                    \
     parsed_header.mbc_type    = _mbc_type;                                                                             \
@@ -239,6 +242,10 @@ not_implemented:
 
 static uint8_t gb_read_io_reg(struct gb_state *gb_state, io_reg_addr_t reg) {
   uint8_t val;
+  if (reg >= GB_APU_IO_REG_START && reg < GB_APU_IO_REG_END) {
+    val = gb_state->apu.read_io_reg(reg);
+    return val;
+  }
   switch (reg) {
   case IO_LY: val = get_ro_io_reg(gb_state, reg); break;
   case IO_DIV: {
@@ -295,6 +302,10 @@ void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
 
 static void gb_write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
   io_regs_t &io_regs = gb_state->saved.regs.io;
+  if (reg >= GB_APU_IO_REG_START && reg < GB_APU_IO_REG_END) {
+    gb_state->apu.write_io_reg(reg, val);
+    return;
+  }
   // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
   // read-only.
   LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
@@ -309,25 +320,20 @@ static void gb_write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_
     break;
   case IO_DIV: gb_handle_div_write(gb_state); break;
   case IO_BANK:
-    // if bit 0 is set unmap bootrom. This can't be re-enabled without a restart.
+    // If bit 0 is set unmap boot ROM. This can't be re-enabled without a restart.
     if (val & 1) {
       io_regs.bank = false;
     }
     break;
 
-  case IO_NR52:
-    // Audio on/off (bit 7) is the only writable bit
-    io_regs.nr52 &= 0b0111'1111;
-    io_regs.nr52 |= (val & 0b1000'0000);
-    break;
   default:
     if (reg == IO_DMA) {
       gb_state->video.oam_dma_start = true;
     }
     uint8_t *reg_ptr = get_io_reg(gb_state, reg);
     if (reg_ptr == NULL) {
-      // Since I don't have all IO regs implemented yet, this log was getting really noisy in the error severity. Maybe
-      // once I have all IO regs impl'd I can move this back to the error sev.
+      // Since I don't have all IO registers implemented yet, this log was getting really noisy in the error severity.
+      // Maybe once I have all IO registers implemented I can move this back to the error severity.
       LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", reg);
       ErrQuiet(gb_state);
       break;
