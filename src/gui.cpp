@@ -230,9 +230,9 @@ static void       gb_imgui_tiledata_viewer(gb_state_t *gb_state) {
     gb_tiledata_viewer_palette_t &selected = gb_state->imgui.tile_atlas_palette;
     const char                   *preview;
     switch (selected) {
-    case GB_TILEDATA_VIEWER_PALETTE_BGP: preview = BGP_LABEL; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_0: preview = OBP0_LABEL; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_1: preview = OBP1_LABEL; break;
+      case GB_TILEDATA_VIEWER_PALETTE_BGP: preview = BGP_LABEL; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_0: preview = OBP0_LABEL; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_1: preview = OBP1_LABEL; break;
     }
     if (ImGui::BeginCombo("Palette", preview)) {
       if (ImGui::Selectable(BGP_LABEL, selected == GB_TILEDATA_VIEWER_PALETTE_BGP))
@@ -245,9 +245,9 @@ static void       gb_imgui_tiledata_viewer(gb_state_t *gb_state) {
     }
     SDL_Palette *palette;
     switch (selected) {
-    case GB_TILEDATA_VIEWER_PALETTE_BGP: palette = gb_state->video.sdl_bg_palette; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_0: palette = gb_state->video.sdl_obj_palette_0; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_1: palette = gb_state->video.sdl_obj_palette_1; break;
+      case GB_TILEDATA_VIEWER_PALETTE_BGP: palette = gb_state->video.sdl_bg_palette; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_0: palette = gb_state->video.sdl_obj_palette_0; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_1: palette = gb_state->video.sdl_obj_palette_1; break;
     }
     SDL_Surface *locked;
     SDL_LockTextureToSurface(gb_state->imgui.tile_atlas, NULL, &locked);
@@ -436,12 +436,12 @@ static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
   }
   if (ImGui::TreeNodeEx("MBC State", ImGuiTreeNodeFlags_Framed)) {
     switch (gb_state->saved.header.mbc_type) {
-    case GB_NO_MBC: ImGui::TextUnformatted("No MBC"); break;
-    case GB_MBC1:
-      ImGui::TextUnformatted("MBC1");
-      ImGui::Value("Rom Bank", gb_state->saved.regs.mbc1_regs.rom_bank);
-      break;
-    default: ImGui::TextUnformatted("Debug viewer is not setup for the current MBC type."); break;
+      case GB_NO_MBC: ImGui::TextUnformatted("No MBC"); break;
+      case GB_MBC1:
+        ImGui::TextUnformatted("MBC1");
+        ImGui::Value("Rom Bank", gb_state->saved.regs.mbc1_regs.rom_bank);
+        break;
+      default: ImGui::TextUnformatted("Debug viewer is not setup for the current MBC type."); break;
     }
     ImGui::TreePop();
   }

@@ -38,37 +38,37 @@ gb_cart_header_t gb_parse_cart_header(uint8_t header[0x50]) {
 
   uint8_t cart_type = header[GB_HEADER_CART_TYPE_ADDR - 0x100];
   switch (cart_type) {
-  case 0x00: SET_CART_TYPE(parsed_header, GB_NO_MBC, false, false, false, false); break; // ROM ONLY
-  case 0x01: SET_CART_TYPE(parsed_header, GB_MBC1, false, false, false, false); break;   // MBC1
-  case 0x02: SET_CART_TYPE(parsed_header, GB_MBC1, true, false, false, false); break;    // MBC1+RAM
-  case 0x03: SET_CART_TYPE(parsed_header, GB_MBC1, true, true, false, false); break;     // MBC1+RAM+BATTERY
-  case 0x05: SET_CART_TYPE(parsed_header, GB_MBC2, true, false, false, false); break;    // MBC2
-  case 0x06: SET_CART_TYPE(parsed_header, GB_MBC2, true, true, false, false); break;     // MBC2+BATTERY
-  case 0x08: SET_CART_TYPE(parsed_header, GB_NO_MBC, true, false, false, false); break;  // ROM+RAM
-  case 0x09: SET_CART_TYPE(parsed_header, GB_NO_MBC, true, true, false, false); break;   // ROM+RAM+BATTERY
-  case 0x0B: SET_CART_TYPE(parsed_header, GB_MMM01, false, false, false, false); break;  // MMM01
-  case 0x0C: SET_CART_TYPE(parsed_header, GB_MMM01, true, false, false, false); break;   // MMM01+RAM
-  case 0x0D: SET_CART_TYPE(parsed_header, GB_MMM01, true, true, false, false); break;    // MMM01+RAM+BATTERY
-  case 0x0F: SET_CART_TYPE(parsed_header, GB_MBC3, false, true, true, false); break;     // MBC3+TIMER+BATTERY
-  case 0x10: SET_CART_TYPE(parsed_header, GB_MBC3, true, true, true, false); break;      // MBC3+TIMER+RAM+BATTERY
-  case 0x11: SET_CART_TYPE(parsed_header, GB_MBC3, false, false, false, false); break;   // MBC3
-  case 0x12: SET_CART_TYPE(parsed_header, GB_MBC3, true, false, false, false); break;    // MBC3+RAM
-  case 0x13: SET_CART_TYPE(parsed_header, GB_MBC3, true, true, false, false); break;     // MBC3+RAM+BATTERY
-  case 0x19: SET_CART_TYPE(parsed_header, GB_MBC5, false, false, false, false); break;   // MBC5
-  case 0x1A: SET_CART_TYPE(parsed_header, GB_MBC5, true, false, false, false); break;    // MBC5+RAM
-  case 0x1B: SET_CART_TYPE(parsed_header, GB_MBC5, true, true, false, false); break;     // MBC5+RAM+BATTERY
-  case 0x1C: SET_CART_TYPE(parsed_header, GB_MBC5, false, false, false, true); break;    // MBC5+RUMBLE
-  case 0x1D: SET_CART_TYPE(parsed_header, GB_MBC5, true, false, false, true); break;     // MBC5+RUMBLE+RAM
-  case 0x1E: SET_CART_TYPE(parsed_header, GB_MBC5, true, true, false, true); break;      // MBC5+RUMBLE+RAM+BATTERY
-  case 0x22: SET_CART_TYPE(parsed_header, GB_MBC7, true, true, false, false); break;     // MBC7+ACCEL+EEPROM
-  case 0xFC: SET_CART_TYPE(parsed_header, GB_CAMERA, true, true, false, false); break;   // POCKET CAMERA
-  case 0xFD: SET_CART_TYPE(parsed_header, GB_NO_MBC, false, false, false, false); break; // BANDAI TAMA5
-  case 0xFE: SET_CART_TYPE(parsed_header, GB_HUC3, true, true, true, false); break;      // HuC3
-  case 0xFF: SET_CART_TYPE(parsed_header, GB_HUC1, true, true, false, false); break;     // HuC1+RAM+BATTERY
-  default:
-    LogWarn("`gb_parse_cart_header() called an unknown cart type [$0147]`");
-    SET_CART_TYPE(parsed_header, GB_MBC_UNKNOWN, false, false, false, false);
-    break;
+    case 0x00: SET_CART_TYPE(parsed_header, GB_NO_MBC, false, false, false, false); break; // ROM ONLY
+    case 0x01: SET_CART_TYPE(parsed_header, GB_MBC1, false, false, false, false); break;   // MBC1
+    case 0x02: SET_CART_TYPE(parsed_header, GB_MBC1, true, false, false, false); break;    // MBC1+RAM
+    case 0x03: SET_CART_TYPE(parsed_header, GB_MBC1, true, true, false, false); break;     // MBC1+RAM+BATTERY
+    case 0x05: SET_CART_TYPE(parsed_header, GB_MBC2, true, false, false, false); break;    // MBC2
+    case 0x06: SET_CART_TYPE(parsed_header, GB_MBC2, true, true, false, false); break;     // MBC2+BATTERY
+    case 0x08: SET_CART_TYPE(parsed_header, GB_NO_MBC, true, false, false, false); break;  // ROM+RAM
+    case 0x09: SET_CART_TYPE(parsed_header, GB_NO_MBC, true, true, false, false); break;   // ROM+RAM+BATTERY
+    case 0x0B: SET_CART_TYPE(parsed_header, GB_MMM01, false, false, false, false); break;  // MMM01
+    case 0x0C: SET_CART_TYPE(parsed_header, GB_MMM01, true, false, false, false); break;   // MMM01+RAM
+    case 0x0D: SET_CART_TYPE(parsed_header, GB_MMM01, true, true, false, false); break;    // MMM01+RAM+BATTERY
+    case 0x0F: SET_CART_TYPE(parsed_header, GB_MBC3, false, true, true, false); break;     // MBC3+TIMER+BATTERY
+    case 0x10: SET_CART_TYPE(parsed_header, GB_MBC3, true, true, true, false); break;      // MBC3+TIMER+RAM+BATTERY
+    case 0x11: SET_CART_TYPE(parsed_header, GB_MBC3, false, false, false, false); break;   // MBC3
+    case 0x12: SET_CART_TYPE(parsed_header, GB_MBC3, true, false, false, false); break;    // MBC3+RAM
+    case 0x13: SET_CART_TYPE(parsed_header, GB_MBC3, true, true, false, false); break;     // MBC3+RAM+BATTERY
+    case 0x19: SET_CART_TYPE(parsed_header, GB_MBC5, false, false, false, false); break;   // MBC5
+    case 0x1A: SET_CART_TYPE(parsed_header, GB_MBC5, true, false, false, false); break;    // MBC5+RAM
+    case 0x1B: SET_CART_TYPE(parsed_header, GB_MBC5, true, true, false, false); break;     // MBC5+RAM+BATTERY
+    case 0x1C: SET_CART_TYPE(parsed_header, GB_MBC5, false, false, false, true); break;    // MBC5+RUMBLE
+    case 0x1D: SET_CART_TYPE(parsed_header, GB_MBC5, true, false, false, true); break;     // MBC5+RUMBLE+RAM
+    case 0x1E: SET_CART_TYPE(parsed_header, GB_MBC5, true, true, false, true); break;      // MBC5+RUMBLE+RAM+BATTERY
+    case 0x22: SET_CART_TYPE(parsed_header, GB_MBC7, true, true, false, false); break;     // MBC7+ACCEL+EEPROM
+    case 0xFC: SET_CART_TYPE(parsed_header, GB_CAMERA, true, true, false, false); break;   // POCKET CAMERA
+    case 0xFD: SET_CART_TYPE(parsed_header, GB_NO_MBC, false, false, false, false); break; // BANDAI TAMA5
+    case 0xFE: SET_CART_TYPE(parsed_header, GB_HUC3, true, true, true, false); break;      // HuC3
+    case 0xFF: SET_CART_TYPE(parsed_header, GB_HUC1, true, true, false, false); break;     // HuC1+RAM+BATTERY
+    default:
+      LogWarn("`gb_parse_cart_header() called an unknown cart type [$0147]`");
+      SET_CART_TYPE(parsed_header, GB_MBC_UNKNOWN, false, false, false, false);
+      break;
   }
   uint8_t rom_size = header[GB_HEADER_ROM_SIZE_ADDR - 0x100];
   // https://gbdev.io/pandocs/The_Cartridge_Header.html#weird_rom_sizes
@@ -144,69 +144,69 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
   GB_assert((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF);
   switch (addr) {
-  case IO_JOYP: return &gb_state->saved.regs.io.joyp;
-  case IO_SB:
-    return &gb_state->saved.regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
-  case IO_SC: return &gb_state->saved.regs.io.sc;
-  case IO_TIMA: return &gb_state->saved.regs.io.tima;
-  case IO_TMA: return &gb_state->saved.regs.io.tma;
-  case IO_TAC: return &gb_state->saved.regs.io.tac;
-  case IO_NR10:
-  case IO_NR11:
-  case IO_NR12:
-  case IO_NR13:
-  case IO_NR14:
-  case IO_NR21:
-  case IO_NR22:
-  case IO_NR23:
-  case IO_NR24:
-  case IO_NR30:
-  case IO_NR31:
-  case IO_NR32:
-  case IO_NR33:
-  case IO_NR34:
-  case IO_NR41:
-  case IO_NR42:
-  case IO_NR43:
-  case IO_NR44:
-  case IO_NR50:
-  case IO_NR51:
-  case IO_NR52:
-    std::unreachable(); // All APU regs reads/writes should be forwarded to the APU. This was done to prevent needing to
-                        // sync state in two places.
-  case IO_IF: return &gb_state->saved.regs.io.if_;
-  case IO_IE: return &gb_state->saved.regs.io.ie;
-  case IO_DMA: return &gb_state->saved.regs.io.dma;
-  case IO_LCDC: return &gb_state->saved.regs.io.lcdc;
-  case IO_SCY: return &gb_state->saved.regs.io.scy;
-  case IO_SCX: return &gb_state->saved.regs.io.scx;
-  case IO_WY: return &gb_state->saved.regs.io.wy;
-  case IO_WX: return &gb_state->saved.regs.io.wx;
-  case IO_LYC: return &gb_state->saved.regs.io.lyc;
-  case IO_STAT: return &gb_state->saved.regs.io.stat; // TODO: Lower 3 bits need to be RO.
-  case IO_BGP: return &gb_state->saved.regs.io.bgp;
-  case IO_OBP0: return &gb_state->saved.regs.io.obp0;
-  case IO_OBP1: return &gb_state->saved.regs.io.obp1;
-  default:
-    // Since I don't have all IO regs implemented yet, this log was getting really noisy in the error severity. Maybe
-    // once I have all IO regs impl'd I can move this back to the error sev.
-    LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", addr);
-    ErrQuiet(gb_state);
-    return NULL;
+    case IO_JOYP: return &gb_state->saved.regs.io.joyp;
+    case IO_SB:
+      return &gb_state->saved.regs.io.sb; // Actual reg not used. I currently just write this to a file for logging.
+    case IO_SC: return &gb_state->saved.regs.io.sc;
+    case IO_TIMA: return &gb_state->saved.regs.io.tima;
+    case IO_TMA: return &gb_state->saved.regs.io.tma;
+    case IO_TAC: return &gb_state->saved.regs.io.tac;
+    case IO_NR10:
+    case IO_NR11:
+    case IO_NR12:
+    case IO_NR13:
+    case IO_NR14:
+    case IO_NR21:
+    case IO_NR22:
+    case IO_NR23:
+    case IO_NR24:
+    case IO_NR30:
+    case IO_NR31:
+    case IO_NR32:
+    case IO_NR33:
+    case IO_NR34:
+    case IO_NR41:
+    case IO_NR42:
+    case IO_NR43:
+    case IO_NR44:
+    case IO_NR50:
+    case IO_NR51:
+    case IO_NR52:
+      std::unreachable(); // All APU regs reads/writes should be forwarded to the APU. This was done to prevent needing
+                          // to sync state in two places.
+    case IO_IF: return &gb_state->saved.regs.io.if_;
+    case IO_IE: return &gb_state->saved.regs.io.ie;
+    case IO_DMA: return &gb_state->saved.regs.io.dma;
+    case IO_LCDC: return &gb_state->saved.regs.io.lcdc;
+    case IO_SCY: return &gb_state->saved.regs.io.scy;
+    case IO_SCX: return &gb_state->saved.regs.io.scx;
+    case IO_WY: return &gb_state->saved.regs.io.wy;
+    case IO_WX: return &gb_state->saved.regs.io.wx;
+    case IO_LYC: return &gb_state->saved.regs.io.lyc;
+    case IO_STAT: return &gb_state->saved.regs.io.stat; // TODO: Lower 3 bits need to be RO.
+    case IO_BGP: return &gb_state->saved.regs.io.bgp;
+    case IO_OBP0: return &gb_state->saved.regs.io.obp0;
+    case IO_OBP1: return &gb_state->saved.regs.io.obp1;
+    default:
+      // Since I don't have all IO regs implemented yet, this log was getting really noisy in the error severity. Maybe
+      // once I have all IO regs impl'd I can move this back to the error sev.
+      LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", addr);
+      ErrQuiet(gb_state);
+      return NULL;
   }
 }
 uint8_t get_ro_io_reg(struct gb_state *gb_state, uint16_t addr) {
   (void)gb_state;
 
   switch (addr) {
-  case IO_LY: {
-    return gb_state->saved.regs.io.ly;
-  }
-  case IO_DIV: {
-    // Internally div is a 16 bit register but only the most significant 8 bits are mapped to mem.
-    return gb_state->saved.regs.io.div;
-  }
-  default: NOT_IMPLEMENTED("Read Only IO Reg Not Implemented");
+    case IO_LY: {
+      return gb_state->saved.regs.io.ly;
+    }
+    case IO_DIV: {
+      // Internally div is a 16 bit register but only the most significant 8 bits are mapped to mem.
+      return gb_state->saved.regs.io.div;
+    }
+    default: NOT_IMPLEMENTED("Read Only IO Reg Not Implemented");
   }
 }
 
@@ -247,21 +247,21 @@ static uint8_t gb_read_io_reg(struct gb_state *gb_state, io_reg_addr_t reg) {
     return val;
   }
   switch (reg) {
-  case IO_LY: val = get_ro_io_reg(gb_state, reg); break;
-  case IO_DIV: {
-    val = get_ro_io_reg(gb_state, reg);
-    break;
-  }
-  case IO_STAT:
-    // stat is partially read only. we also want to make sure bit 7 is high.
-    val = *get_io_reg(gb_state, reg);
-    val |= (1 << 7);
-    break;
-  default:
-    uint8_t *io_reg_ptr = get_io_reg(gb_state, reg);
-    if (io_reg_ptr == NULL) goto not_implemented;
-    val = *io_reg_ptr;
-    break;
+    case IO_LY: val = get_ro_io_reg(gb_state, reg); break;
+    case IO_DIV: {
+      val = get_ro_io_reg(gb_state, reg);
+      break;
+    }
+    case IO_STAT:
+      // stat is partially read only. we also want to make sure bit 7 is high.
+      val = *get_io_reg(gb_state, reg);
+      val |= (1 << 7);
+      break;
+    default:
+      uint8_t *io_reg_ptr = get_io_reg(gb_state, reg);
+      if (io_reg_ptr == NULL) goto not_implemented;
+      val = *io_reg_ptr;
+      break;
   }
   LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", reg, val);
   return val;
@@ -310,36 +310,36 @@ static void gb_write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_
   // read-only.
   LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Writing val = 0x%.2X to IO Reg at addr = 0x%.4X", val, reg);
   switch (reg) {
-  case IO_SC:
-    // TODO: CGB uses bit 1 for clock speed. I'll need to implement that if I add CGB support.
-    *get_io_reg(gb_state, IO_SC) = val | 0b0111'1110;
-    break;
-  case IO_JOYP:
-    io_regs.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
-    io_regs.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
-    break;
-  case IO_DIV: gb_handle_div_write(gb_state); break;
-  case IO_BANK:
-    // If bit 0 is set unmap boot ROM. This can't be re-enabled without a restart.
-    if (val & 1) {
-      io_regs.bank = false;
-    }
-    break;
-
-  default:
-    if (reg == IO_DMA) {
-      gb_state->video.oam_dma_start = true;
-    }
-    uint8_t *reg_ptr = get_io_reg(gb_state, reg);
-    if (reg_ptr == NULL) {
-      // Since I don't have all IO registers implemented yet, this log was getting really noisy in the error severity.
-      // Maybe once I have all IO registers implemented I can move this back to the error severity.
-      LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", reg);
-      ErrQuiet(gb_state);
+    case IO_SC:
+      // TODO: CGB uses bit 1 for clock speed. I'll need to implement that if I add CGB support.
+      *get_io_reg(gb_state, IO_SC) = val | 0b0111'1110;
       break;
-    }
-    *reg_ptr = val;
-    break;
+    case IO_JOYP:
+      io_regs.joyp &= ~(JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD);
+      io_regs.joyp |= (val & (JOYP_SELECT_BUTTONS | JOYP_SELECT_D_PAD));
+      break;
+    case IO_DIV: gb_handle_div_write(gb_state); break;
+    case IO_BANK:
+      // If bit 0 is set unmap boot ROM. This can't be re-enabled without a restart.
+      if (val & 1) {
+        io_regs.bank = false;
+      }
+      break;
+
+    default:
+      if (reg == IO_DMA) {
+        gb_state->video.oam_dma_start = true;
+      }
+      uint8_t *reg_ptr = get_io_reg(gb_state, reg);
+      if (reg_ptr == NULL) {
+        // Since I don't have all IO registers implemented yet, this log was getting really noisy in the error severity.
+        // Maybe once I have all IO registers implemented I can move this back to the error severity.
+        LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "IO Reg Not Implemented at addr 0x%04X", reg);
+        ErrQuiet(gb_state);
+        break;
+      }
+      *reg_ptr = val;
+      break;
   }
 }
 

@@ -37,10 +37,10 @@ static void gb_sync_tima(gb_state_t *gb_state, uint16_t old_sysclk, uint16_t new
   for (uint16_t curr_sysclk = old_sysclk; curr_sysclk != new_sysclk; curr_sysclk++) {
     bool this_bit = 0;
     switch (tac & 0b0000'0011) {
-    case 0: this_bit = (curr_sysclk >> 9) & 1; break;
-    case 3: this_bit = (curr_sysclk >> 7) & 1; break;
-    case 2: this_bit = (curr_sysclk >> 5) & 1; break;
-    case 1: this_bit = (curr_sysclk >> 3) & 1; break;
+      case 0: this_bit = (curr_sysclk >> 9) & 1; break;
+      case 3: this_bit = (curr_sysclk >> 7) & 1; break;
+      case 2: this_bit = (curr_sysclk >> 5) & 1; break;
+      case 1: this_bit = (curr_sysclk >> 3) & 1; break;
     }
     // Don't increment TIMA if the enable bit is clear.
     this_bit &= ((tac & TAC_ENABLE_BIT) >> 2);
@@ -67,17 +67,17 @@ static void gb_sync_lcd_stat(gb_state_t *gb_state) {
 
   bool stat_interrupt = false;
   switch (mode) {
-  case HBLANK:
-    if (m0_select) stat_interrupt |= true;
-    break;
-  case VBLANK:
-    if (m1_select) stat_interrupt |= true;
-    if (m2_select && gb_state->saved.regs.io.ly == 144) stat_interrupt |= true;
-    break;
-  case OAM_SCAN:
-    if (m2_select) stat_interrupt |= true;
-    break;
-  case DRAWING_PIXELS: break;
+    case HBLANK:
+      if (m0_select) stat_interrupt |= true;
+      break;
+    case VBLANK:
+      if (m1_select) stat_interrupt |= true;
+      if (m2_select && gb_state->saved.regs.io.ly == 144) stat_interrupt |= true;
+      break;
+    case OAM_SCAN:
+      if (m2_select) stat_interrupt |= true;
+      break;
+    case DRAWING_PIXELS: break;
   }
 
   if (lyc_select && lyc_eq_ly) stat_interrupt |= true;
@@ -103,32 +103,32 @@ static void gb_ppu_mode_change(gb_state_t *gb_state, gb_ppu_mode_t new_mode) {
     if (!gb_state->dbg.headless_mode) {
       ZoneScopedN("Rendering");
       switch (new_mode) {
-      case OAM_SCAN: {
-        ZoneScopedN("OAM Read");
-        gb_read_oam_entries(gb_state);
-        break;
-      }
-      case DRAWING_PIXELS: {
-        ZoneScopedN("Drawing Pixels");
-        gb_draw(gb_state);
-        break;
-      }
-      case HBLANK: {
-        ZoneScopedN("H-Blank");
-        gb_composite_line(gb_state);
-        if (gb_state->dbg.pause_next_hblank) {
-          gb_state->dbg.next_line_hit();
+        case OAM_SCAN: {
+          ZoneScopedN("OAM Read");
+          gb_read_oam_entries(gb_state);
+          break;
         }
-        break;
-      }
-      case VBLANK: {
-        ZoneScopedN("V-Blank");
-        gb_flip_frame(gb_state);
-        if (gb_state->dbg.pause_next_vblank) {
-          gb_state->dbg.next_frame_hit();
+        case DRAWING_PIXELS: {
+          ZoneScopedN("Drawing Pixels");
+          gb_draw(gb_state);
+          break;
         }
-        break;
-      }
+        case HBLANK: {
+          ZoneScopedN("H-Blank");
+          gb_composite_line(gb_state);
+          if (gb_state->dbg.pause_next_hblank) {
+            gb_state->dbg.next_line_hit();
+          }
+          break;
+        }
+        case VBLANK: {
+          ZoneScopedN("V-Blank");
+          gb_flip_frame(gb_state);
+          if (gb_state->dbg.pause_next_vblank) {
+            gb_state->dbg.next_frame_hit();
+          }
+          break;
+        }
       }
     }
   }

@@ -64,46 +64,46 @@ gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
-  case IO_NR52: {
-    uint8_t val = 0b0111'0000;
-    val |= (this->on << 7);
-    val |= (this->ch1.on << 0);
-    // TODO: Uncomment once these channels are added.
-    // val |= (this->ch2.on << 1);
-    // val |= (this->ch3.on << 2);
-    // val |= (this->ch4.on << 3);
-    return val;
-  }
-  case IO_NR13: return 0xFF; // Write only
-  case IO_NR14: {
-    uint8_t val = 0b1011'1111;
-    val |= (this->ch1.length_enabled & 1) << 6;
-    return val;
-  }
+    case IO_NR52: {
+      uint8_t val = 0b0111'0000;
+      val |= (this->on << 7);
+      val |= (this->ch1.on << 0);
+      // TODO: Uncomment once these channels are added.
+      // val |= (this->ch2.on << 1);
+      // val |= (this->ch3.on << 2);
+      // val |= (this->ch4.on << 3);
+      return val;
+    }
+    case IO_NR13: return 0xFF; // Write only
+    case IO_NR14: {
+      uint8_t val = 0b1011'1111;
+      val |= (this->ch1.length_enabled & 1) << 6;
+      return val;
+    }
 
-  default: unreachable();
+    default: unreachable();
   }
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   switch (reg) {
-  case IO_NR52: {
-    this->on = (val >> 7) & 1;
-    return;
-  }
-  case IO_NR13: {
-    this->ch1.period &= 0xFF00;
-    this->ch1.period |= (val & 0x00FF);
-    return;
-  }
-  case IO_NR14: {
-    if ((val >> 7) & 1) this->ch1.on = true;
-    this->ch1.length_enabled = (val >> 6) & 1;
-    this->ch1.period &= 0x00FF;
-    this->ch1.period |= (val & 0b0000'0111) << 8;
-    return;
-  }
+    case IO_NR52: {
+      this->on = (val >> 7) & 1;
+      return;
+    }
+    case IO_NR13: {
+      this->ch1.period &= 0xFF00;
+      this->ch1.period |= (val & 0x00FF);
+      return;
+    }
+    case IO_NR14: {
+      if ((val >> 7) & 1) this->ch1.on = true;
+      this->ch1.length_enabled = (val >> 6) & 1;
+      this->ch1.period &= 0x00FF;
+      this->ch1.period |= (val & 0b0000'0111) << 8;
+      return;
+    }
 
-  default: unreachable();
+    default: unreachable();
   }
 }
 
@@ -132,11 +132,11 @@ void gb_apu_t::sync_regs() {
   }
   uint8_t cycle_index = ((io_regs.nr11 >> 6) & 0b11);
   switch (cycle_index) {
-  case 0b00: this->ch1.duty_cycle = GB_DUTY_CYCLE_EIGHTH; break;
-  case 0b01: this->ch1.duty_cycle = GB_DUTY_CYCLE_FOURTH; break;
-  case 0b10: this->ch1.duty_cycle = GB_DUTY_CYCLE_HALF; break;
-  case 0b11: this->ch1.duty_cycle = GB_DUTY_CYCLE_THREE_FOURTHS; break;
-  default: unreachable();
+    case 0b00: this->ch1.duty_cycle = GB_DUTY_CYCLE_EIGHTH; break;
+    case 0b01: this->ch1.duty_cycle = GB_DUTY_CYCLE_FOURTH; break;
+    case 0b10: this->ch1.duty_cycle = GB_DUTY_CYCLE_HALF; break;
+    case 0b11: this->ch1.duty_cycle = GB_DUTY_CYCLE_THREE_FOURTHS; break;
+    default: unreachable();
   }
 
   // Channel 2

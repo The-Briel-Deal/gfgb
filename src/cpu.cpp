@@ -24,30 +24,30 @@ static inline uint16_t next16(struct gb_state *gb_state) {
 uint8_t get_r8(struct gb_state *gb_state, r8_t r8) {
   regs_t *r = &gb_state->saved.regs;
   switch (r8) {
-  case R8_B: return r->b;
-  case R8_C: return r->c;
-  case R8_D: return r->d;
-  case R8_E: return r->e;
-  case R8_H: return r->h;
-  case R8_L: return r->l;
-  case R8_HL_DREF: return gb_read_mem(gb_state, COMBINED_REG((*r), h, l));
-  case R8_A: return r->a;
-  default: abort();
+    case R8_B: return r->b;
+    case R8_C: return r->c;
+    case R8_D: return r->d;
+    case R8_E: return r->e;
+    case R8_H: return r->h;
+    case R8_L: return r->l;
+    case R8_HL_DREF: return gb_read_mem(gb_state, COMBINED_REG((*r), h, l));
+    case R8_A: return r->a;
+    default: abort();
   }
 }
 
 void set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val) {
   regs_t *r = &gb_state->saved.regs;
   switch (r8) {
-  case R8_B: r->b = val; return;
-  case R8_C: r->c = val; return;
-  case R8_D: r->d = val; return;
-  case R8_E: r->e = val; return;
-  case R8_H: r->h = val; return;
-  case R8_L: r->l = val; return;
-  case R8_HL_DREF: gb_write_mem(gb_state, COMBINED_REG((*r), h, l), val); return;
-  case R8_A: r->a = val; return;
-  default: abort();
+    case R8_B: r->b = val; return;
+    case R8_C: r->c = val; return;
+    case R8_D: r->d = val; return;
+    case R8_E: r->e = val; return;
+    case R8_H: r->h = val; return;
+    case R8_L: r->l = val; return;
+    case R8_HL_DREF: gb_write_mem(gb_state, COMBINED_REG((*r), h, l), val); return;
+    case R8_A: r->a = val; return;
+    default: abort();
   }
 }
 
@@ -57,22 +57,22 @@ void     set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->saved.re
 uint16_t get_r16(struct gb_state *gb_state, r16_t r16) {
   regs_t *r = &gb_state->saved.regs;
   switch (r16) {
-  case R16_BC: return COMBINED_REG((*r), b, c);
-  case R16_DE: return COMBINED_REG((*r), d, e);
-  case R16_HL: return COMBINED_REG((*r), h, l);
-  case R16_SP: return r->sp;
-  default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
+    case R16_BC: return COMBINED_REG((*r), b, c);
+    case R16_DE: return COMBINED_REG((*r), d, e);
+    case R16_HL: return COMBINED_REG((*r), h, l);
+    case R16_SP: return r->sp;
+    default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
 void set_r16(struct gb_state *gb_state, r16_t r16, uint16_t val) {
   regs_t *r = &gb_state->saved.regs;
   switch (r16) {
-  case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
-  case R16_DE: SET_COMBINED_REG((*r), d, e, val); return;
-  case R16_HL: SET_COMBINED_REG((*r), h, l, val); return;
-  case R16_SP: r->sp = val; return;
-  default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
+    case R16_BC: SET_COMBINED_REG((*r), b, c, val); return;
+    case R16_DE: SET_COMBINED_REG((*r), d, e, val); return;
+    case R16_HL: SET_COMBINED_REG((*r), h, l, val); return;
+    case R16_SP: r->sp = val; return;
+    default: abort(); // bc, de, hl, and sp are the only valid r16 registers.
   }
 }
 
@@ -80,17 +80,17 @@ void set_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem, uint8_t val) {
   regs_t  *r = &gb_state->saved.regs;
   uint16_t mem_offset;
   switch (r16_mem) {
-  case R16_MEM_BC: mem_offset = COMBINED_REG((*r), b, c); break;
-  case R16_MEM_DE: mem_offset = COMBINED_REG((*r), d, e); break;
-  case R16_MEM_HLI:
-    mem_offset = COMBINED_REG((*r), h, l);
-    set_r16(gb_state, R16_HL, mem_offset + 1);
-    break;
-  case R16_MEM_HLD:
-    mem_offset = COMBINED_REG((*r), h, l);
-    set_r16(gb_state, R16_HL, mem_offset - 1);
-    break;
-  default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
+    case R16_MEM_BC: mem_offset = COMBINED_REG((*r), b, c); break;
+    case R16_MEM_DE: mem_offset = COMBINED_REG((*r), d, e); break;
+    case R16_MEM_HLI:
+      mem_offset = COMBINED_REG((*r), h, l);
+      set_r16(gb_state, R16_HL, mem_offset + 1);
+      break;
+    case R16_MEM_HLD:
+      mem_offset = COMBINED_REG((*r), h, l);
+      set_r16(gb_state, R16_HL, mem_offset - 1);
+      break;
+    default: exit(1); // bc, de, hl, and sp are the only valid r16 registers.
   }
   gb_write_mem(gb_state, mem_offset, val);
 }
@@ -99,37 +99,37 @@ uint16_t get_r16_mem(struct gb_state *gb_state, r16_mem_t r16_mem) {
   GB_assert(r16_mem <= R16_MEM_HLD);
   uint16_t addr;
   switch (r16_mem) {
-  case R16_MEM_BC: return get_r16(gb_state, R16_BC);
-  case R16_MEM_DE: return get_r16(gb_state, R16_DE);
-  case R16_MEM_HLI: // Increment HL after deref
-    addr = get_r16(gb_state, R16_HL);
-    set_r16(gb_state, R16_HL, addr + 1);
-    return addr;
-  case R16_MEM_HLD: // Decrement HL after deref
-    addr = get_r16(gb_state, R16_HL);
-    set_r16(gb_state, R16_HL, addr - 1);
-    return addr;
+    case R16_MEM_BC: return get_r16(gb_state, R16_BC);
+    case R16_MEM_DE: return get_r16(gb_state, R16_DE);
+    case R16_MEM_HLI: // Increment HL after deref
+      addr = get_r16(gb_state, R16_HL);
+      set_r16(gb_state, R16_HL, addr + 1);
+      return addr;
+    case R16_MEM_HLD: // Decrement HL after deref
+      addr = get_r16(gb_state, R16_HL);
+      set_r16(gb_state, R16_HL, addr - 1);
+      return addr;
   }
   abort(); // This should never happen unless something is very wrong.
 }
 uint16_t get_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk) {
   GB_assert(r16_stk <= R16_STK_AF);
   switch (r16_stk) {
-  case R16_STK_BC: return get_r16(gb_state, R16_BC);
-  case R16_STK_DE: return get_r16(gb_state, R16_DE);
-  case R16_STK_HL: return get_r16(gb_state, R16_HL);
-  case R16_STK_AF: return COMBINED_REG(gb_state->saved.regs, a, f);
+    case R16_STK_BC: return get_r16(gb_state, R16_BC);
+    case R16_STK_DE: return get_r16(gb_state, R16_DE);
+    case R16_STK_HL: return get_r16(gb_state, R16_HL);
+    case R16_STK_AF: return COMBINED_REG(gb_state->saved.regs, a, f);
   }
   abort(); // This should never happen unless something is very wrong.
 }
 void set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val) {
   regs_t *r = &gb_state->saved.regs;
   switch (r16_stk) {
-  case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
-  case R16_STK_DE: SET_COMBINED_REG((*r), d, e, val); return;
-  case R16_STK_HL: SET_COMBINED_REG((*r), h, l, val); return;
-  case R16_STK_AF: SET_COMBINED_REG((*r), a, f, val & 0xFFF0); return; // only set upper 4 on flag reg
-  default: abort(); // bc, de, hl, and af are the only valid r16_stk registers.
+    case R16_STK_BC: SET_COMBINED_REG((*r), b, c, val); return;
+    case R16_STK_DE: SET_COMBINED_REG((*r), d, e, val); return;
+    case R16_STK_HL: SET_COMBINED_REG((*r), h, l, val); return;
+    case R16_STK_AF: SET_COMBINED_REG((*r), a, f, val & 0xFFF0); return; // only set upper 4 on flag reg
+    default: abort(); // bc, de, hl, and af are the only valid r16_stk registers.
   }
 }
 
@@ -161,248 +161,249 @@ static inline struct inst _fetch(struct gb_state *gb_state) {
   uint8_t curr_byte = next8(gb_state);
   uint8_t block     = CRUMB0(curr_byte);
   switch (block) {
-  case /* block */ 0:
-    // First we'll look for all the instructions where params aren't in the first byte. This way we can specify them in
-    // hex for readability.
-    switch (curr_byte) {
-    case 0x00: return inst_t{.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    case 0x10:
-      // TODO: apparently STOP has some weird edge cases where it can consume two bytes.
-      // See: https://gist.github.com/SonoSooS/c0055300670d678b5ae8433e20bea595#nop-and-stop
-      return inst_t{.type = STOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    switch (NIBBLE1(curr_byte)) {
-    case 0b0001:
-      return inst_t{
-          .type = LD,
-          .p1   = R16_PARAM(CRUMB1(curr_byte)),
-          .p2   = IMM16_PARAM(next16(gb_state)),
-      };
-    case 0b0010:
-      return inst_t{
-          .type = LD,
-          .p1   = R16_MEM_PARAM(CRUMB1(curr_byte)),
-          .p2   = R8_PARAM(R8_A),
-      };
-    case 0b0011:
-      return inst_t{
-          .type = INC,
-          .p1   = R16_PARAM(CRUMB1(curr_byte)),
-          .p2   = VOID_PARAM,
-      };
-    case 0b1011:
-      return inst_t{
-          .type = DEC,
-          .p1   = R16_PARAM(CRUMB1(curr_byte)),
-          .p2   = VOID_PARAM,
-      };
-    case 0b1001:
-      return inst_t{
-          .type = ADD,
-          .p1   = R16_PARAM(R16_HL),
-          .p2   = R16_PARAM(CRUMB1(curr_byte)),
-      };
-    case 0b1010:
-      return inst_t{
-          .type = LD,
-          .p1   = R8_PARAM(R8_A),
-          .p2   = R16_MEM_PARAM(CRUMB1(curr_byte)),
-      };
-    case 0b1000:
-      if (CRUMB1(curr_byte) == 0b00)
+    case /* block */ 0:
+      // First we'll look for all the instructions where params aren't in the first byte. This way we can specify them
+      // in hex for readability.
+      switch (curr_byte) {
+        case 0x00: return inst_t{.type = NOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+        case 0x10:
+          // TODO: apparently STOP has some weird edge cases where it can consume two bytes.
+          // See: https://gist.github.com/SonoSooS/c0055300670d678b5ae8433e20bea595#nop-and-stop
+          return inst_t{.type = STOP, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      switch (NIBBLE1(curr_byte)) {
+        case 0b0001:
+          return inst_t{
+              .type = LD,
+              .p1   = R16_PARAM(CRUMB1(curr_byte)),
+              .p2   = IMM16_PARAM(next16(gb_state)),
+          };
+        case 0b0010:
+          return inst_t{
+              .type = LD,
+              .p1   = R16_MEM_PARAM(CRUMB1(curr_byte)),
+              .p2   = R8_PARAM(R8_A),
+          };
+        case 0b0011:
+          return inst_t{
+              .type = INC,
+              .p1   = R16_PARAM(CRUMB1(curr_byte)),
+              .p2   = VOID_PARAM,
+          };
+        case 0b1011:
+          return inst_t{
+              .type = DEC,
+              .p1   = R16_PARAM(CRUMB1(curr_byte)),
+              .p2   = VOID_PARAM,
+          };
+        case 0b1001:
+          return inst_t{
+              .type = ADD,
+              .p1   = R16_PARAM(R16_HL),
+              .p2   = R16_PARAM(CRUMB1(curr_byte)),
+          };
+        case 0b1010:
+          return inst_t{
+              .type = LD,
+              .p1   = R8_PARAM(R8_A),
+              .p2   = R16_MEM_PARAM(CRUMB1(curr_byte)),
+          };
+        case 0b1000:
+          if (CRUMB1(curr_byte) == 0b00)
+            return inst_t{
+                .type = LD,
+                .p1   = IMM16_MEM_PARAM(next16(gb_state)),
+                .p2   = R16_PARAM(R16_SP),
+            };
+          break;
+      }
+      // ld r8, imm8
+      if ((curr_byte & 0b00000111) == 0b00000110)
+        return inst_t{.type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = IMM8_PARAM(next8(gb_state))};
+      // inc r8
+      if ((curr_byte & 0b00000111) == 0b00000100)
+        return inst_t{.type = INC, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = VOID_PARAM};
+      // dec r8
+      if ((curr_byte & 0b00000111) == 0b00000101)
+        return inst_t{.type = DEC, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = VOID_PARAM};
+
+      // jr imm8
+      if (curr_byte == 0b00011000) return inst_t{.type = JR, .p1 = IMM8_PARAM(next8(gb_state)), .p2 = VOID_PARAM};
+      // jr cond, imm8
+      if ((curr_byte & ~CONDITION_CODE_MASK) == 0b00100000)
         return inst_t{
-            .type = LD,
-            .p1   = IMM16_MEM_PARAM(next16(gb_state)),
-            .p2   = R16_PARAM(R16_SP),
-        };
+            .type = JR, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM8_PARAM(next8(gb_state))};
+
+      // rlca
+      if (curr_byte == 0b00000111) {
+        return inst_t{.type = RLCA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // rrca
+      if (curr_byte == 0b00001111) {
+        return inst_t{.type = RRCA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // rla
+      if (curr_byte == 0b00010111) {
+        return inst_t{.type = RLA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // rra
+      if (curr_byte == 0b00011111) {
+        return inst_t{.type = RRA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // daa
+      if (curr_byte == 0b00100111) {
+        return inst_t{.type = DAA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // cpl
+      if (curr_byte == 0b00101111) {
+        return inst_t{.type = CPL, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // scf
+      if (curr_byte == 0b00110111) {
+        return inst_t{.type = SCF, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      // ccf
+      if (curr_byte == 0b00111111) {
+        return inst_t{.type = CCF, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      }
+      break;
+    case /* block */ 1:
+      if (curr_byte == 0x76) return inst_t{.type = HALT, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      return inst_t{
+          .type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
+
+    case /* block */ 2: {
+      struct inst inst = {
+          .type = UNKNOWN_INST, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM((curr_byte & ARITHMETIC_R8_MASK) >> 0)};
+      uint8_t arithmetic_op_code = (curr_byte & ARITHMETIC_OP_MASK) >> 3;
+      switch (arithmetic_op_code) {
+        case 0: inst.type = ADD; break;
+        case 1: inst.type = ADC; break;
+        case 2: inst.type = SUB; break;
+        case 3: inst.type = SBC; break;
+        case 4: inst.type = AND; break;
+        case 5: inst.type = XOR; break;
+        case 6: inst.type = OR; break;
+        case 7: inst.type = CP; break;
+      }
+      if (inst.type != UNKNOWN_INST) return inst;
       break;
     }
-    // ld r8, imm8
-    if ((curr_byte & 0b00000111) == 0b00000110)
-      return inst_t{.type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = IMM8_PARAM(next8(gb_state))};
-    // inc r8
-    if ((curr_byte & 0b00000111) == 0b00000100)
-      return inst_t{.type = INC, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = VOID_PARAM};
-    // dec r8
-    if ((curr_byte & 0b00000111) == 0b00000101)
-      return inst_t{.type = DEC, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = VOID_PARAM};
-
-    // jr imm8
-    if (curr_byte == 0b00011000) return inst_t{.type = JR, .p1 = IMM8_PARAM(next8(gb_state)), .p2 = VOID_PARAM};
-    // jr cond, imm8
-    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b00100000)
-      return inst_t{
-          .type = JR, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM8_PARAM(next8(gb_state))};
-
-    // rlca
-    if (curr_byte == 0b00000111) {
-      return inst_t{.type = RLCA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // rrca
-    if (curr_byte == 0b00001111) {
-      return inst_t{.type = RRCA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // rla
-    if (curr_byte == 0b00010111) {
-      return inst_t{.type = RLA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // rra
-    if (curr_byte == 0b00011111) {
-      return inst_t{.type = RRA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // daa
-    if (curr_byte == 0b00100111) {
-      return inst_t{.type = DAA, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // cpl
-    if (curr_byte == 0b00101111) {
-      return inst_t{.type = CPL, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // scf
-    if (curr_byte == 0b00110111) {
-      return inst_t{.type = SCF, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    // ccf
-    if (curr_byte == 0b00111111) {
-      return inst_t{.type = CCF, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    }
-    break;
-  case /* block */ 1:
-    if (curr_byte == 0x76) return inst_t{.type = HALT, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    return inst_t{
-        .type = LD, .p1 = R8_PARAM((curr_byte & 0b00111000) >> 3), .p2 = R8_PARAM((curr_byte & 0b00000111) >> 0)};
-
-  case /* block */ 2: {
-    struct inst inst = {
-        .type = UNKNOWN_INST, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM((curr_byte & ARITHMETIC_R8_MASK) >> 0)};
-    uint8_t arithmetic_op_code = (curr_byte & ARITHMETIC_OP_MASK) >> 3;
-    switch (arithmetic_op_code) {
-    case 0: inst.type = ADD; break;
-    case 1: inst.type = ADC; break;
-    case 2: inst.type = SUB; break;
-    case 3: inst.type = SBC; break;
-    case 4: inst.type = AND; break;
-    case 5: inst.type = XOR; break;
-    case 6: inst.type = OR; break;
-    case 7: inst.type = CP; break;
-    }
-    if (inst.type != UNKNOWN_INST) return inst;
-    break;
-  }
-  case /* block */ 3:
-    switch (curr_byte) {
-    case 0xC9: return inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    case 0xD9: return inst_t{.type = RETI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    case 0xE0: return inst_t{.type = LDH, .p1 = IMM8_HMEM_PARAM(next8(gb_state)), .p2 = R8_PARAM(R8_A)};
-    case 0xE2: return inst_t{.type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
-    case 0xE8: return inst_t{.type = ADD, .p1 = R16_PARAM(R16_SP), .p2 = E8_PARAM(next8(gb_state))};
-    case 0xE9: return inst_t{.type = JP, .p1 = R16_PARAM(R16_HL), .p2 = VOID_PARAM};
-    case 0xEA: return inst_t{.type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), .p2 = R8_PARAM(R8_A)};
-    case 0xF0: return inst_t{.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
-    case 0xF2: return inst_t{.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
-    case 0xF8: return inst_t{.type = LD, .p1 = R16_PARAM(R16_HL), .p2 = SP_IMM8_PARAM(next8(gb_state))};
-    case 0xF9: return inst_t{.type = LD, .p1 = R16_PARAM(R16_SP), .p2 = R16_PARAM(R16_HL)};
-    case 0xFA: return inst_t{.type = LD, .p1 = R8_PARAM(R8_A), .p2 = IMM16_MEM_PARAM(next16(gb_state))};
-    }
-    if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
-      return inst_t{.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
-    if (NIBBLE1(curr_byte) == 0b0101) // Push r16stk
-      return inst_t{.type = PUSH, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
-    if (curr_byte == 0b11000011) // Unconditional jump
-      return inst_t{.type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
-    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000000) // RET
-      return inst_t{.type = RET, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = VOID_PARAM};
-
-    if (curr_byte == 0b11001101) // Unconditional call
-      return inst_t{.type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
-
-    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000100) // Conditional call
-      return inst_t{
-          .type = CALL, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
-
-    if ((curr_byte & ~0b00111000) == 0b11000111)
-      return inst_t{.type = RST, .p1 = TGT3_PARAM((0b00111000 & curr_byte) >> 3), .p2 = VOID_PARAM};
-
-    // Control Instructions
-    if (curr_byte == 0xF3) // DI (Disable Interrupts)
-      return inst_t{.type = DI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-    if (curr_byte == 0xFB) // EI (Enable Interrupts)
-      return inst_t{.type = EI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
-
-    if (OCTAL2(curr_byte) == 0b110) {
-      switch (OCTAL1(curr_byte)) {
-      case 0: return inst_t{.type = ADD, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 1: return inst_t{.type = ADC, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 2: return inst_t{.type = SUB, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 3: return inst_t{.type = SBC, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 4: return inst_t{.type = AND, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 5: return inst_t{.type = XOR, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 6: return inst_t{.type = OR, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
-      case 7: return inst_t{.type = CP, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+    case /* block */ 3:
+      switch (curr_byte) {
+        case 0xC9: return inst_t{.type = RET, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+        case 0xD9: return inst_t{.type = RETI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+        case 0xE0: return inst_t{.type = LDH, .p1 = IMM8_HMEM_PARAM(next8(gb_state)), .p2 = R8_PARAM(R8_A)};
+        case 0xE2: return inst_t{.type = LDH, .p1 = R8_PARAM(R8_C), .p2 = R8_PARAM(R8_A)};
+        case 0xE8: return inst_t{.type = ADD, .p1 = R16_PARAM(R16_SP), .p2 = E8_PARAM(next8(gb_state))};
+        case 0xE9: return inst_t{.type = JP, .p1 = R16_PARAM(R16_HL), .p2 = VOID_PARAM};
+        case 0xEA: return inst_t{.type = LD, .p1 = IMM16_MEM_PARAM(next16(gb_state)), .p2 = R8_PARAM(R8_A)};
+        case 0xF0: return inst_t{.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = IMM8_HMEM_PARAM(next8(gb_state))};
+        case 0xF2: return inst_t{.type = LDH, .p1 = R8_PARAM(R8_A), .p2 = R8_PARAM(R8_C)};
+        case 0xF8: return inst_t{.type = LD, .p1 = R16_PARAM(R16_HL), .p2 = SP_IMM8_PARAM(next8(gb_state))};
+        case 0xF9: return inst_t{.type = LD, .p1 = R16_PARAM(R16_SP), .p2 = R16_PARAM(R16_HL)};
+        case 0xFA: return inst_t{.type = LD, .p1 = R8_PARAM(R8_A), .p2 = IMM16_MEM_PARAM(next16(gb_state))};
       }
-    }
+      if (NIBBLE1(curr_byte) == 0b0001) // Pop r16stk
+        return inst_t{.type = POP, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
+      if (NIBBLE1(curr_byte) == 0b0101) // Push r16stk
+        return inst_t{.type = PUSH, .p1 = R16_STK_PARAM(CRUMB1(curr_byte)), .p2 = VOID_PARAM};
+      if (curr_byte == 0b11000011) // Unconditional jump
+        return inst_t{.type = JP, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
+      if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000000) // RET
+        return inst_t{.type = RET, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = VOID_PARAM};
 
-    if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000010) // JP COND, IMM16
-      return inst_t{
-          .type = JP, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
+      if (curr_byte == 0b11001101) // Unconditional call
+        return inst_t{.type = CALL, .p1 = IMM16_PARAM(next16(gb_state)), .p2 = VOID_PARAM};
 
-    // 0xCB prefix instructions
-    if (curr_byte == 0xCB) {
-      uint8_t     cb_suffix = next8(gb_state);
-      struct inst inst      = {.type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000100) // Conditional call
+        return inst_t{.type = CALL,
+                      .p1   = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3),
+                      .p2   = IMM16_PARAM(next16(gb_state))};
 
-      switch (CRUMB0(cb_suffix)) {
-      case 0b00:
-        switch (OCTAL1(cb_suffix)) {
-        case 0b000: // RLC R8
-          inst.type = RLC;
-          goto r8_inst;
-        case 0b001: // RRC R8
-          inst.type = RRC;
-          goto r8_inst;
-        case 0b010: // RL R8
-          inst.type = RL;
-          goto r8_inst;
-        case 0b011: // RR R8
-          inst.type = RR;
-          goto r8_inst;
-        case 0b100: // SLA R8
-          inst.type = SLA;
-          goto r8_inst;
-        case 0b101: // SRA R8
-          inst.type = SRA;
-          goto r8_inst;
-        case 0b110: // SWAP R8
-          inst.type = SWAP;
-          goto r8_inst;
-        case 0b111: // SRL R8
-          inst.type = SRL;
-          goto r8_inst;
+      if ((curr_byte & ~0b00111000) == 0b11000111)
+        return inst_t{.type = RST, .p1 = TGT3_PARAM((0b00111000 & curr_byte) >> 3), .p2 = VOID_PARAM};
+
+      // Control Instructions
+      if (curr_byte == 0xF3) // DI (Disable Interrupts)
+        return inst_t{.type = DI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+      if (curr_byte == 0xFB) // EI (Enable Interrupts)
+        return inst_t{.type = EI, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+
+      if (OCTAL2(curr_byte) == 0b110) {
+        switch (OCTAL1(curr_byte)) {
+          case 0: return inst_t{.type = ADD, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 1: return inst_t{.type = ADC, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 2: return inst_t{.type = SUB, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 3: return inst_t{.type = SBC, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 4: return inst_t{.type = AND, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 5: return inst_t{.type = XOR, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 6: return inst_t{.type = OR, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
+          case 7: return inst_t{.type = CP, .p1 = R8_PARAM(R8_A), .p2 = IMM8_PARAM(next8(gb_state))};
         }
-        break;
-      case 0b01: // BIT B3, R8
-        inst.type = BIT;
-        goto b3_r8_inst;
-      case 0b10: // RES B3, R8
-        inst.type = RES;
-        goto b3_r8_inst;
-      case 0b11: // SET B3, R8
-        inst.type = SET;
-        goto b3_r8_inst;
       }
-      // every possible 0xCB suffix maps to an opcode.
-      unreachable();
-    b3_r8_inst:
-      inst.p1 = B3_PARAM(OCTAL1(cb_suffix));
-      inst.p2 = R8_PARAM(OCTAL2(cb_suffix));
-      return inst;
 
-    r8_inst:
-      inst.p1 = R8_PARAM(OCTAL2(cb_suffix));
-      return inst;
-    }
+      if ((curr_byte & ~CONDITION_CODE_MASK) == 0b11000010) // JP COND, IMM16
+        return inst_t{
+            .type = JP, .p1 = COND_PARAM((curr_byte & CONDITION_CODE_MASK) >> 3), .p2 = IMM16_PARAM(next16(gb_state))};
 
-    break;
+      // 0xCB prefix instructions
+      if (curr_byte == 0xCB) {
+        uint8_t     cb_suffix = next8(gb_state);
+        struct inst inst      = {.type = UNKNOWN_INST, .p1 = VOID_PARAM, .p2 = VOID_PARAM};
+
+        switch (CRUMB0(cb_suffix)) {
+          case 0b00:
+            switch (OCTAL1(cb_suffix)) {
+              case 0b000: // RLC R8
+                inst.type = RLC;
+                goto r8_inst;
+              case 0b001: // RRC R8
+                inst.type = RRC;
+                goto r8_inst;
+              case 0b010: // RL R8
+                inst.type = RL;
+                goto r8_inst;
+              case 0b011: // RR R8
+                inst.type = RR;
+                goto r8_inst;
+              case 0b100: // SLA R8
+                inst.type = SLA;
+                goto r8_inst;
+              case 0b101: // SRA R8
+                inst.type = SRA;
+                goto r8_inst;
+              case 0b110: // SWAP R8
+                inst.type = SWAP;
+                goto r8_inst;
+              case 0b111: // SRL R8
+                inst.type = SRL;
+                goto r8_inst;
+            }
+            break;
+          case 0b01: // BIT B3, R8
+            inst.type = BIT;
+            goto b3_r8_inst;
+          case 0b10: // RES B3, R8
+            inst.type = RES;
+            goto b3_r8_inst;
+          case 0b11: // SET B3, R8
+            inst.type = SET;
+            goto b3_r8_inst;
+        }
+        // every possible 0xCB suffix maps to an opcode.
+        unreachable();
+      b3_r8_inst:
+        inst.p1 = B3_PARAM(OCTAL1(cb_suffix));
+        inst.p2 = R8_PARAM(OCTAL2(cb_suffix));
+        return inst;
+
+      r8_inst:
+        inst.p1 = R8_PARAM(OCTAL2(cb_suffix));
+        return inst;
+      }
+
+      break;
   }
   LogError("Unknown instruction 0x%.2X.", curr_byte);
   return inst_t{.type = UNKNOWN_INST, .p1 = UNKNOWN_INST_BYTE_PARAM(curr_byte), .p2 = VOID_PARAM};
@@ -1127,10 +1128,10 @@ static void ex_daa(struct gb_state *gb_state, struct inst inst) {
 static bool eval_condition(struct gb_state *gb_state, const struct inst_param inst_param) {
   GB_assert(inst_param.type == COND);
   switch (inst_param.cond) {
-  case COND_NZ: return (gb_state->saved.regs.f & (1 << 7)) == 0;
-  case COND_Z: return ((gb_state->saved.regs.f & (1 << 7)) >> 7) == 1;
-  case COND_NC: return (gb_state->saved.regs.f & (1 << 4)) == 0;
-  case COND_C: return ((gb_state->saved.regs.f & (1 << 4)) >> 4) == 1;
+    case COND_NZ: return (gb_state->saved.regs.f & (1 << 7)) == 0;
+    case COND_Z: return ((gb_state->saved.regs.f & (1 << 7)) >> 7) == 1;
+    case COND_NC: return (gb_state->saved.regs.f & (1 << 4)) == 0;
+    case COND_C: return ((gb_state->saved.regs.f & (1 << 4)) >> 4) == 1;
   }
   unreachable();
 }
@@ -1207,24 +1208,24 @@ static void ex_jr(struct gb_state *gb_state, struct inst inst) {
 
 static void ex_jp(struct gb_state *gb_state, struct inst inst) {
   switch (inst.p1.type) {
-  case IMM16:
-    gb_spend_mcycles(gb_state, 4);
-    gb_state->saved.regs.pc = inst.p1.imm16;
-    return;
-  case COND:
-    GB_assert(IS_IMM16(inst.p2));
-    gb_spend_mcycles(gb_state, 3);
-    if (eval_condition(gb_state, inst.p1)) {
+    case IMM16:
+      gb_spend_mcycles(gb_state, 4);
+      gb_state->saved.regs.pc = inst.p1.imm16;
+      return;
+    case COND:
+      GB_assert(IS_IMM16(inst.p2));
+      gb_spend_mcycles(gb_state, 3);
+      if (eval_condition(gb_state, inst.p1)) {
+        gb_spend_mcycles(gb_state, 1);
+        gb_state->saved.regs.pc = inst.p2.imm16;
+      }
+      return;
+    case R16:
+      GB_assert(inst.p1.r16 == R16_HL);
       gb_spend_mcycles(gb_state, 1);
-      gb_state->saved.regs.pc = inst.p2.imm16;
-    }
-    return;
-  case R16:
-    GB_assert(inst.p1.r16 == R16_HL);
-    gb_spend_mcycles(gb_state, 1);
-    gb_state->saved.regs.pc = get_r16(gb_state, R16_HL);
-    return;
-  default: Err(gb_state, "Unknown JP inst params"); return;
+      gb_state->saved.regs.pc = get_r16(gb_state, R16_HL);
+      return;
+    default: Err(gb_state, "Unknown JP inst params"); return;
   }
 }
 
@@ -1322,53 +1323,53 @@ static inline void _execute(struct gb_state *gb_state, struct inst inst) {
   GB_assert(!gb_state->saved.halted);
   bool set_ime_after_this_inst = gb_state->saved.regs.io.set_ime_after;
   switch (inst.type) {
-  case ADC: ex_adc(gb_state, inst); break;
-  case ADD: ex_add(gb_state, inst); break;
-  case AND: ex_and(gb_state, inst); break;
-  case BIT: ex_bit(gb_state, inst); break;
-  case CALL: ex_call(gb_state, inst); break;
-  case CCF: ex_ccf(gb_state, inst); break;
-  case CP: ex_cp(gb_state, inst); break;
-  case CPL: ex_cpl(gb_state, inst); break;
-  case DAA: ex_daa(gb_state, inst); break;
-  case DEC: ex_dec(gb_state, inst); break;
-  case DI: ex_di(gb_state, inst); break;
-  case EI: ex_ei(gb_state, inst); break;
-  case INC: ex_inc(gb_state, inst); break;
-  case JP: ex_jp(gb_state, inst); break;
-  case JR: ex_jr(gb_state, inst); break;
-  case LD: ex_ld(gb_state, inst); break;
-  case LDH: ex_ldh(gb_state, inst); break;
-  case NOP: ex_nop(gb_state, inst); break;
-  case OR: ex_or(gb_state, inst); break;
-  case POP: ex_pop(gb_state, inst); break;
-  case PUSH: ex_push(gb_state, inst); break;
-  case RES: ex_res(gb_state, inst); break;
-  case RET: ex_ret(gb_state, inst); break;
-  case RETI: ex_reti(gb_state, inst); break;
-  case RL: ex_rl(gb_state, inst); break;
-  case RLA: ex_rla(gb_state, inst); break;
-  case RLC: ex_rlc(gb_state, inst); break;
-  case RLCA: ex_rlca(gb_state, inst); break;
-  case RR: ex_rr(gb_state, inst); break;
-  case RRA: ex_rra(gb_state, inst); break;
-  case RRC: ex_rrc(gb_state, inst); break;
-  case RRCA: ex_rrca(gb_state, inst); break;
-  case RST: ex_rst(gb_state, inst); break;
-  case SBC: ex_sbc(gb_state, inst); break;
-  case SCF: ex_scf(gb_state, inst); break;
-  case SET: ex_set(gb_state, inst); break;
-  case SLA: ex_sla(gb_state, inst); break;
-  case SRA: ex_sra(gb_state, inst); break;
-  case SRL: ex_srl(gb_state, inst); break;
-  case STOP: ex_stop(gb_state, inst); break;
-  case HALT: ex_halt(gb_state, inst); break;
-  case SUB: ex_sub(gb_state, inst); break;
-  case SWAP: ex_swap(gb_state, inst); break;
-  case XOR: ex_xor(gb_state, inst); break;
+    case ADC: ex_adc(gb_state, inst); break;
+    case ADD: ex_add(gb_state, inst); break;
+    case AND: ex_and(gb_state, inst); break;
+    case BIT: ex_bit(gb_state, inst); break;
+    case CALL: ex_call(gb_state, inst); break;
+    case CCF: ex_ccf(gb_state, inst); break;
+    case CP: ex_cp(gb_state, inst); break;
+    case CPL: ex_cpl(gb_state, inst); break;
+    case DAA: ex_daa(gb_state, inst); break;
+    case DEC: ex_dec(gb_state, inst); break;
+    case DI: ex_di(gb_state, inst); break;
+    case EI: ex_ei(gb_state, inst); break;
+    case INC: ex_inc(gb_state, inst); break;
+    case JP: ex_jp(gb_state, inst); break;
+    case JR: ex_jr(gb_state, inst); break;
+    case LD: ex_ld(gb_state, inst); break;
+    case LDH: ex_ldh(gb_state, inst); break;
+    case NOP: ex_nop(gb_state, inst); break;
+    case OR: ex_or(gb_state, inst); break;
+    case POP: ex_pop(gb_state, inst); break;
+    case PUSH: ex_push(gb_state, inst); break;
+    case RES: ex_res(gb_state, inst); break;
+    case RET: ex_ret(gb_state, inst); break;
+    case RETI: ex_reti(gb_state, inst); break;
+    case RL: ex_rl(gb_state, inst); break;
+    case RLA: ex_rla(gb_state, inst); break;
+    case RLC: ex_rlc(gb_state, inst); break;
+    case RLCA: ex_rlca(gb_state, inst); break;
+    case RR: ex_rr(gb_state, inst); break;
+    case RRA: ex_rra(gb_state, inst); break;
+    case RRC: ex_rrc(gb_state, inst); break;
+    case RRCA: ex_rrca(gb_state, inst); break;
+    case RST: ex_rst(gb_state, inst); break;
+    case SBC: ex_sbc(gb_state, inst); break;
+    case SCF: ex_scf(gb_state, inst); break;
+    case SET: ex_set(gb_state, inst); break;
+    case SLA: ex_sla(gb_state, inst); break;
+    case SRA: ex_sra(gb_state, inst); break;
+    case SRL: ex_srl(gb_state, inst); break;
+    case STOP: ex_stop(gb_state, inst); break;
+    case HALT: ex_halt(gb_state, inst); break;
+    case SUB: ex_sub(gb_state, inst); break;
+    case SWAP: ex_swap(gb_state, inst); break;
+    case XOR: ex_xor(gb_state, inst); break;
 
-  case UNKNOWN_INST:
-  default: Err(gb_state, "`execute()` called with `inst.type` that isn't implemented."); break;
+    case UNKNOWN_INST:
+    default: Err(gb_state, "`execute()` called with `inst.type` that isn't implemented."); break;
   }
   if (set_ime_after_this_inst) {
     gb_state->saved.regs.io.ime           = true;

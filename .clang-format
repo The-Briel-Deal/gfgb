@@ -3,4 +3,5 @@ AllowShortIfStatementsOnASingleLine: true
 AlignConsecutiveMacros: Consecutive
 AlignConsecutiveAssignments: Consecutive 
 AlignConsecutiveDeclarations: Consecutive 
+IndentCaseLabels: true
 ColumnLimit: 120

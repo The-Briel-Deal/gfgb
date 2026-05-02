@@ -388,7 +388,7 @@ inline static const char *gb_get_mbc_name(gb_mbc_type_t type) {
   case name: return #name;
     MBC_TYPES
 #undef X
-  default: unreachable();
+    default: unreachable();
   }
 }
 
@@ -637,7 +637,7 @@ inline static const char *gb_io_reg_name(io_reg_addr_t io_reg) {
   case name: return #name;
     LIST_OF_IO_REGS
 #undef X
-  default: unreachable();
+    default: unreachable();
   }
 }
 #undef LIST_OF_IO_REGS
