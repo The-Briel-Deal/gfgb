@@ -267,32 +267,6 @@ typedef struct io_regs {
   uint8_t tima; // timer counter
   uint8_t tma;  // timer modulo
   uint8_t tac;  // timer control
-  // Sound
-  uint8_t nr10;
-  uint8_t nr11;
-  uint8_t nr12;
-  uint8_t nr13;
-  uint8_t nr14;
-
-  uint8_t nr21;
-  uint8_t nr22;
-  uint8_t nr23;
-  uint8_t nr24;
-
-  uint8_t nr30;
-  uint8_t nr31;
-  uint8_t nr32;
-  uint8_t nr33;
-  uint8_t nr34;
-
-  uint8_t nr41;
-  uint8_t nr42;
-  uint8_t nr43;
-  uint8_t nr44;
-
-  uint8_t nr50;
-  uint8_t nr51;
-  uint8_t nr52; // sound on/off
 
   uint8_t ly;
   uint8_t lyc;
