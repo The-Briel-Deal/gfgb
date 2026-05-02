@@ -148,27 +148,29 @@ uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
   case IO_TIMA: return &gb_state->saved.regs.io.tima;
   case IO_TMA: return &gb_state->saved.regs.io.tma;
   case IO_TAC: return &gb_state->saved.regs.io.tac;
-  case IO_NR10: return &gb_state->saved.regs.io.nr10;
-  case IO_NR11: return &gb_state->saved.regs.io.nr11;
-  case IO_NR12: return &gb_state->saved.regs.io.nr12;
-  case IO_NR13: return &gb_state->saved.regs.io.nr13;
-  case IO_NR14: return &gb_state->saved.regs.io.nr14;
-  case IO_NR21: return &gb_state->saved.regs.io.nr21;
-  case IO_NR22: return &gb_state->saved.regs.io.nr22;
-  case IO_NR23: return &gb_state->saved.regs.io.nr23;
-  case IO_NR24: return &gb_state->saved.regs.io.nr24;
-  case IO_NR30: return &gb_state->saved.regs.io.nr30;
-  case IO_NR31: return &gb_state->saved.regs.io.nr31;
-  case IO_NR32: return &gb_state->saved.regs.io.nr32;
-  case IO_NR33: return &gb_state->saved.regs.io.nr33;
-  case IO_NR34: return &gb_state->saved.regs.io.nr34;
-  case IO_NR41: return &gb_state->saved.regs.io.nr41;
-  case IO_NR42: return &gb_state->saved.regs.io.nr42;
-  case IO_NR43: return &gb_state->saved.regs.io.nr43;
-  case IO_NR44: return &gb_state->saved.regs.io.nr44;
-  case IO_NR50: return &gb_state->saved.regs.io.nr50;
-  case IO_NR51: return &gb_state->saved.regs.io.nr51;
-  case IO_NR52: return &gb_state->saved.regs.io.nr52;
+  case IO_NR10:
+  case IO_NR11:
+  case IO_NR12:
+  case IO_NR13:
+  case IO_NR14:
+  case IO_NR21:
+  case IO_NR22:
+  case IO_NR23:
+  case IO_NR24:
+  case IO_NR30:
+  case IO_NR31:
+  case IO_NR32:
+  case IO_NR33:
+  case IO_NR34:
+  case IO_NR41:
+  case IO_NR42:
+  case IO_NR43:
+  case IO_NR44:
+  case IO_NR50:
+  case IO_NR51:
+  case IO_NR52:
+    std::unreachable(); // All APU regs reads/writes should be forwarded to the APU. This was done to prevent needing to
+                        // sync state in two places.
   case IO_IF: return &gb_state->saved.regs.io.if_;
   case IO_IE: return &gb_state->saved.regs.io.ie;
   case IO_DMA: return &gb_state->saved.regs.io.dma;
@@ -235,6 +237,33 @@ not_implemented:
   return NULL;
 }
 
+static uint8_t gb_read_io_reg(struct gb_state *gb_state, io_reg_addr_t reg) {
+  uint8_t val;
+  switch (reg) {
+  case IO_LY: val = get_ro_io_reg(gb_state, reg); break;
+  case IO_DIV: {
+    val = get_ro_io_reg(gb_state, reg);
+    break;
+  }
+  case IO_STAT:
+    // stat is partially read only. we also want to make sure bit 7 is high.
+    val = *get_io_reg(gb_state, reg);
+    val |= (1 << 7);
+    break;
+  default:
+    uint8_t *io_reg_ptr = get_io_reg(gb_state, reg);
+    if (io_reg_ptr == NULL) goto not_implemented;
+    val = *io_reg_ptr;
+    break;
+  }
+  LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", reg, val);
+  return val;
+not_implemented:
+  // It isn't always a critical issue to read unused mem/io-regs, tetris seems to do it unintentionally.
+  LogDebug("`read_mem()` received a null pointer from `gb_unmap_address()` when addr = 0x%.4X", reg);
+  return 0xFF;
+}
+
 uint8_t gb_read_mem(struct gb_state *gb_state, uint16_t addr) {
   uint8_t *val_ptr;
   if (gb_state->dbg.use_flat_ram) {
@@ -242,26 +271,7 @@ uint8_t gb_read_mem(struct gb_state *gb_state, uint16_t addr) {
   } else {
     LogTrace("Reading 8 bits from address 0x%.4X", addr);
     if ((addr >= IO_REG_START && addr <= IO_REG_END) || addr == 0xFFFF) {
-      uint8_t val;
-      switch (addr) {
-      case IO_LY: val = get_ro_io_reg(gb_state, addr); break;
-      case IO_DIV: {
-        val = get_ro_io_reg(gb_state, addr);
-        break;
-      }
-      case IO_STAT:
-        // stat is partially read only. we also want to make sure bit 7 is high.
-        val = *get_io_reg(gb_state, addr);
-        val |= (1 << 7);
-        break;
-      default:
-        uint8_t *io_reg_ptr = get_io_reg(gb_state, addr);
-        if (io_reg_ptr == NULL) goto not_implemented;
-        val = *io_reg_ptr;
-        break;
-      }
-      LogDebugCat(GB_LOG_CATEGORY_IO_REGS, "Successfully read IO reg at addr = 0x%.4X, val = 0x%.2X", addr, val);
-      return val;
+      return gb_read_io_reg(gb_state, addr);
     }
 
     val_ptr = (uint8_t *)gb_unmap_address(gb_state, addr);
@@ -283,7 +293,7 @@ void mark_dirty(struct gb_state *gb_state, uint16_t addr) {
   }
 }
 
-static void write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
+static void gb_write_io_reg(struct gb_state *gb_state, io_reg_addr_t reg, uint8_t val) {
   io_regs_t &io_regs = gb_state->saved.regs.io;
   // Some IO registers require special handling, like the joypad reg where bit 5 and 4 are read/write, while 3-0 are
   // read-only.
@@ -346,7 +356,7 @@ void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
       gb_state->serial_port_output_string->push_back(val);
       return;
     }
-    write_io_reg(gb_state, addr, val);
+    gb_write_io_reg(gb_state, addr, val);
     return;
   }
 

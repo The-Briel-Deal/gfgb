@@ -1,6 +1,8 @@
 #ifndef GB_APU_H
 #define GB_APU_H
 
+#include <stdint.h>
+
 #include <SDL3/SDL_audio.h>
 #ifdef __cplusplus
 extern "C" {
@@ -8,6 +10,7 @@ extern "C" {
 
 struct gb_state;
 typedef struct gb_state gb_state_t;
+typedef uint16_t        io_reg_addr_t;
 
 typedef enum gb_duty_cycle : uint8_t {
   GB_DUTY_CYCLE_EIGHTH        = 0b1000'0000,
@@ -20,7 +23,7 @@ typedef struct gb_pulsewave_channel {
 #ifdef __cplusplus
   gb_pulsewave_channel();
   bool   waveform_step();
-  double samp_freq(); // How many times a sec the apu changes phase
+  double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
 #endif
   gb_duty_cycle_t  duty_cycle;
@@ -38,14 +41,22 @@ typedef struct gb_apu {
   // I want methods to still be able touch other parts of gameboy state like the audio registers.
   gb_apu(gb_state_t &gb_state);
 
-  // Essentially just calls tick m_cycle times (m_cycle/2 times in cgb double speed once that is implemented).
+  // We dispatch APU reg reads/writes to here so that they can be immediately parsed on write and reconstructed on read.
+  // This prevents
+  uint8_t read_io_reg(io_reg_addr_t reg);
+  void    write_io_reg(io_reg_addr_t reg, uint8_t val);
+
+  // Essentially just calls tick m_cycle times (m_cycle/2 times in CGB double speed once that is implemented).
   void spend_mcycles(uint16_t m_cycles);
-  // Call once per cycle (1,048,576 Hz regardless of cgb double speed).
+
+  // Call once per cycle (1,048,576 Hz regardless of CGB double speed).
   void tick();
+
   // Call 512 times per second on the falling edge of div bit 4.
   void div_tick();
 
 private:
+  // TODO: Remove this once read/write_io_reg methods are implemented.
   void sync_regs();
 #endif
 
@@ -54,7 +65,7 @@ private:
   SDL_AudioDeviceID      output_device;
 
 #ifdef __cplusplus
-  gb_state_t &parent;
+  gb_state_t &parent; // TODO: I should be able to remove this once read/write_io_reg methods are implemented.
 #endif
 } gb_apu_t;
 
