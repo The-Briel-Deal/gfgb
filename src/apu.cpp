@@ -110,6 +110,12 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch1.length         = 64 - this->ch1.initial_length;
       return;
     }
+    case IO_NR12: {
+      this->ch1.initial_volume  = (val & 0b1111'0000) >> 4;
+      this->ch1.next_env_dir    = (val & 0b0000'1000) >> 3;
+      this->ch1.next_sweep_pace = (val & 0b0000'0111) >> 0;
+      return;
+    }
     case IO_NR13: {
       this->ch1.period &= 0xFF00;
       this->ch1.period |= (val & 0x00FF);
@@ -118,10 +124,13 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR14: {
-      if ((val >> 7) & 1) {
+      if ((val >> 7) & 1) { // Trigger if this bit is high
         this->ch1.on = true;
         SDL_ResumeAudioStreamDevice(this->ch1.stream);
-        this->ch1.length = 64 - this->ch1.initial_length;
+        this->ch1.length          = 64 - this->ch1.initial_length;
+        this->ch1.curr_volume     = this->ch1.initial_volume;
+        this->ch1.curr_env_dir    = this->ch1.next_env_dir;
+        this->ch1.curr_sweep_pace = this->ch1.next_sweep_pace;
       }
       this->ch1.length_enabled = (val >> 6) & 1;
       this->ch1.period &= 0x00FF;

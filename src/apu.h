@@ -26,14 +26,25 @@ typedef struct gb_pulsewave_channel {
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
 #endif
-  bool             on;
-  gb_duty_cycle_t  duty_cycle;
-  bool             length_enabled;
-  uint8_t          initial_length;
-  uint8_t          length;
-  uint8_t          phase;
-  uint16_t         counter;
-  uint16_t         period;
+  bool            on;
+  gb_duty_cycle_t duty_cycle;
+  bool            length_enabled;
+  uint8_t         initial_length;
+  uint8_t         length;
+  uint8_t         phase;
+  uint16_t        counter;
+  uint16_t        period;
+
+  // From `NR12`, these don't take effect until a next trigger.
+  uint8_t initial_volume;
+  bool    next_env_dir;
+  bool    next_sweep_pace;
+
+  // On trigger, copy the above three fields into these 3.
+  uint8_t curr_volume;
+  bool    curr_env_dir;
+  bool    curr_sweep_pace;
+
   SDL_AudioSpec    spec;
   SDL_AudioStream *stream;
 } gb_pulsewave_channel_t;
