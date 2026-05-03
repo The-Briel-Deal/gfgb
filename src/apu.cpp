@@ -165,6 +165,8 @@ void gb_apu_t::tick() {
         ch.phase %= 8;
 
         float curr_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
+        GB_assert(this->ch1.curr_volume < 16);
+        curr_sample *= (float(this->ch1.curr_volume) / 16.0f);
         SDL_PutAudioStreamData(this->ch1.stream, &curr_sample, sizeof(float));
       }
     }
