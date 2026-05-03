@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <format>
 
 using std::unreachable;
 using str                       = std::string;
