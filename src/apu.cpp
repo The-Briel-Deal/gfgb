@@ -49,12 +49,14 @@ double gb_pulsewave_channel_t::tone_freq() {
   return this->samp_freq() / 8;
 }
 
-gb_apu_t::gb_apu(gb_state_t &gb_state) : parent(gb_state) {
+gb_apu_t::gb_apu() {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 
   this->output_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
   if (this->output_device == 0) {
-    Err((&gb_state), "Couldn't create audio stream: %s", SDL_GetError());
+    // TODO: I should probably handle this case gracefully since audio isn't really mandatory.
+    LogError("Couldn't create audio stream: %s", SDL_GetError());
+    abort();
   }
 
   this->ch1.stream = SDL_OpenAudioDeviceStream(this->output_device, &this->ch1.spec, NULL, NULL);

@@ -52,7 +52,7 @@ typedef struct gb_pulsewave_channel {
 typedef struct gb_apu {
 #ifdef __cplusplus
   // I want methods to still be able touch other parts of gameboy state like the audio registers.
-  gb_apu(gb_state_t &gb_state);
+  gb_apu();
 
   // We dispatch APU reg reads/writes to here so that they can be immediately parsed on write and reconstructed on read.
   // This prevents
@@ -78,10 +78,6 @@ private:
   uint8_t                div;
   gb_pulsewave_channel_t ch1;
   SDL_AudioDeviceID      output_device;
-
-#ifdef __cplusplus
-  gb_state_t &parent; // TODO: I should be able to remove this once read/write_io_reg methods are implemented.
-#endif
 } gb_apu_t;
 
 #ifdef __cplusplus
