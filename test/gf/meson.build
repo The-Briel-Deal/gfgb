@@ -1,5 +1,4 @@
-sources = [
-  'src/intro.asm',
+common_sources = [
   'src/lib/bank_numbers.asm',
   'src/lib/build_date.asm',
   'src/lib/crash_handler.asm',
@@ -63,8 +62,34 @@ if rgbasm.found() and rgblink.found() and rgbfix.found() and rgbgfx.found()
     output: '@BASENAME@.o',
   )
   
+  apu_ch1_timer_test_unfixed = custom_target('apu_ch1_timer_test_unfixed',
+    input: gb_obj_generator.process(['src/apu_ch1_timer.asm', common_sources]),
+    command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
+    output: ['apu_ch1_timer_test_unfixed.gb', 'apu_ch1_timer_test.sym'],
+  )
+  
+  custom_target('apu_ch1_timer_test',
+    command: [
+      rgbfix,
+      '-v',
+      '-p', '0xFF',
+      '-i', 'LTST',
+      '-k', 'HB',
+      '-l', '0x33',
+      '-m', 'ROM_ONLY',
+      '-n', '0',
+      '-r', '0x00',
+      '-t', 'LAYER_TEST',
+      apu_ch1_timer_test_unfixed,
+      '-o', '@OUTPUT@',
+    ],
+    output: 'apu_ch1_timer_test.gb',
+    build_by_default: true,
+  )
+
+
   apu_ch1_test_unfixed = custom_target('apu_ch1_test_unfixed',
-    input: gb_obj_generator.process(sources),
+    input: gb_obj_generator.process(['src/apu_ch1.asm', common_sources]),
     command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
     output: ['apu_ch1_test_unfixed.gb', 'apu_ch1_test.sym'],
   )
@@ -85,6 +110,32 @@ if rgbasm.found() and rgblink.found() and rgbfix.found() and rgbgfx.found()
       '-o', '@OUTPUT@',
     ],
     output: 'apu_ch1_test.gb',
+    build_by_default: true,
+  )
+
+
+  layer_prio_test_unfixed = custom_target('layer_prio_test_unfixed',
+    input: gb_obj_generator.process(['src/layer_prio.asm', common_sources]),
+    command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
+    output: ['layer_prio_test_unfixed.gb', 'layer_prio_test.sym'],
+  )
+  
+  custom_target('layer_prio_test',
+    command: [
+      rgbfix,
+      '-v',
+      '-p', '0xFF',
+      '-i', 'LTST',
+      '-k', 'HB',
+      '-l', '0x33',
+      '-m', 'ROM_ONLY',
+      '-n', '0',
+      '-r', '0x00',
+      '-t', 'LAYER_TEST',
+      layer_prio_test_unfixed,
+      '-o', '@OUTPUT@',
+    ],
+    output: 'layer_prio_test.gb',
     build_by_default: true,
   )
 endif
