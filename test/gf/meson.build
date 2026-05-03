@@ -61,81 +61,31 @@ if rgbasm.found() and rgblink.found() and rgbfix.found() and rgbgfx.found()
     ],
     output: '@BASENAME@.o',
   )
-  
-  apu_ch1_timer_test_unfixed = custom_target('apu_ch1_timer_test_unfixed',
-    input: gb_obj_generator.process(['src/apu_ch1_timer.asm', common_sources]),
-    command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
-    output: ['apu_ch1_timer_test_unfixed.gb', 'apu_ch1_timer_test.sym'],
-  )
-  
-  custom_target('apu_ch1_timer_test',
-    command: [
-      rgbfix,
-      '-v',
-      '-p', '0xFF',
-      '-i', 'LTST',
-      '-k', 'HB',
-      '-l', '0x33',
-      '-m', 'ROM_ONLY',
-      '-n', '0',
-      '-r', '0x00',
-      '-t', 'LAYER_TEST',
-      apu_ch1_timer_test_unfixed,
-      '-o', '@OUTPUT@',
-    ],
-    output: 'apu_ch1_timer_test.gb',
-    build_by_default: true,
-  )
 
-
-  apu_ch1_test_unfixed = custom_target('apu_ch1_test_unfixed',
-    input: gb_obj_generator.process(['src/apu_ch1.asm', common_sources]),
-    command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
-    output: ['apu_ch1_test_unfixed.gb', 'apu_ch1_test.sym'],
-  )
+  tests = ['apu_ch1_timer', 'apu_ch1', 'layer_prio']
   
-  custom_target('apu_ch1_test',
-    command: [
-      rgbfix,
-      '-v',
-      '-p', '0xFF',
-      '-i', 'LTST',
-      '-k', 'HB',
-      '-l', '0x33',
-      '-m', 'ROM_ONLY',
-      '-n', '0',
-      '-r', '0x00',
-      '-t', 'LAYER_TEST',
-      apu_ch1_test_unfixed,
-      '-o', '@OUTPUT@',
-    ],
-    output: 'apu_ch1_test.gb',
-    build_by_default: true,
-  )
-
-
-  layer_prio_test_unfixed = custom_target('layer_prio_test_unfixed',
-    input: gb_obj_generator.process(['src/layer_prio.asm', common_sources]),
-    command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
-    output: ['layer_prio_test_unfixed.gb', 'layer_prio_test.sym'],
-  )
-  
-  custom_target('layer_prio_test',
-    command: [
-      rgbfix,
-      '-v',
-      '-p', '0xFF',
-      '-i', 'LTST',
-      '-k', 'HB',
-      '-l', '0x33',
-      '-m', 'ROM_ONLY',
-      '-n', '0',
-      '-r', '0x00',
-      '-t', 'LAYER_TEST',
-      layer_prio_test_unfixed,
-      '-o', '@OUTPUT@',
-    ],
-    output: 'layer_prio_test.gb',
-    build_by_default: true,
-  )
+  foreach test : tests
+    test_unfixed = custom_target(test + '_test_unfixed',
+      input: gb_obj_generator.process(['src/' + test + '.asm', common_sources]),
+      command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
+      output: [test + '_test_unfixed.gb', test + '_test.sym'],
+    )
+    
+    custom_target(test + '_test',
+      command: [
+        rgbfix,
+        '-v',
+        '-p', '0xFF',
+        '-k', 'HB',
+        '-l', '0x33',
+        '-m', 'ROM_ONLY',
+        '-n', '0',
+        '-r', '0x00',
+        test_unfixed,
+        '-o', '@OUTPUT@',
+      ],
+      output: test + '_test.gb',
+      build_by_default: true,
+    )
+  endforeach
 endif
