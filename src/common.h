@@ -280,10 +280,10 @@ typedef struct io_regs {
   uint8_t obp1;
   uint8_t wx;
   uint8_t wy;
-  uint8_t ie;  // interupt enable
-  uint8_t if_; // interupt flag
+  uint8_t ie;  // interrupt enable
+  uint8_t if_; // interrupt flag
   uint8_t dma;
-  bool    ime;           // interupt master enable
+  bool    ime;           // interrupt master enable
   bool    set_ime_after; // IME is only set after the following instruction.
   bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
 } io_regs_t;
