@@ -14,8 +14,18 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
   this->period         = 0;
+  this->initial_length = 0;
   this->length         = 0;
   this->length_enabled = false;
+  this->duty_cycle     = GB_DUTY_CYCLE_HALF;
+
+  this->initial_volume  = 0;
+  this->next_env_dir    = false;
+  this->next_sweep_pace = 0;
+
+  this->curr_volume     = 0;
+  this->curr_env_dir    = false;
+  this->curr_sweep_pace = 0;
 
   this->spec = {
       .format   = SDL_AUDIO_F32,
