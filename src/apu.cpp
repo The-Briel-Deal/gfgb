@@ -1,6 +1,8 @@
 #include "apu.h"
 #include "common.h"
 
+#include <cmath>
+
 #define MAX_PERIOD           (1 << 11)
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
 #define SAMPLES_PER_WAVEFORM 8
@@ -13,7 +15,8 @@
 gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
-  this->period         = 0;
+  this->next_period    = 0;
+  this->curr_period    = 0;
   this->initial_length = 0;
   this->length         = 0;
   this->length_enabled = false;
@@ -42,9 +45,10 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   };
 }
 void gb_pulsewave_channel_t::start() {
-  this->on = true;
   SDL_ResumeAudioStreamDevice(this->stream);
+  this->on                     = true;
   this->length                 = 64 - this->initial_length;
+  this->curr_period            = this->next_period;
   this->curr_volume            = this->initial_volume;
   this->curr_env_dir           = this->next_env_dir;
   this->curr_env_sweep_pace    = this->next_env_sweep_pace;
@@ -71,9 +75,9 @@ double gb_pulsewave_channel_t::samp_freq() {
    *  ------------- Hz
    *  2048 - period
    */
-  GB_assert(this->period < 2048);
+  GB_assert(this->curr_period < 2048);
 
-  return 1'048'576.0 / (2048 - this->period);
+  return 1'048'576.0 / (2048 - this->curr_period);
 }
 double gb_pulsewave_channel_t::tone_freq() {
   /*
@@ -176,20 +180,20 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR13: {
-      this->ch1.period &= 0xFF00;
-      this->ch1.period |= (val & 0x00FF);
+      this->ch1.next_period &= 0xFF00;
+      this->ch1.next_period |= (val & 0x00FF);
       this->ch1.spec.freq = this->ch1.samp_freq();
       CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
       return;
     }
     case IO_NR14: {
+      this->ch1.length_enabled = (val >> 6) & 1;
+      this->ch1.next_period &= 0x00FF;
+      this->ch1.next_period |= (val & 0b0000'0111) << 8;
+      this->ch1.spec.freq = this->ch1.samp_freq();
       if ((val >> 7) & 1) { // Trigger if this bit is high
         this->ch1.start();
       }
-      this->ch1.length_enabled = (val >> 6) & 1;
-      this->ch1.period &= 0x00FF;
-      this->ch1.period |= (val & 0b0000'0111) << 8;
-      this->ch1.spec.freq = this->ch1.samp_freq();
       CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
       return;
     }
@@ -212,7 +216,9 @@ void gb_apu_t::tick() {
       // TODO: Sweep functionality (NR10)
       ch.counter--;
       if (ch.counter == 0) {
-        ch.counter = MAX_PERIOD - ch.period;
+        this->ch1.spec.freq = this->ch1.samp_freq();
+        CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
+        ch.counter = MAX_PERIOD - ch.curr_period;
         ch.phase++;
         ch.phase %= 8;
 
@@ -236,18 +242,35 @@ void gb_apu_t::div_tick() {
 
   // Sound Length
   if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
-    if (this->ch1.on) {
-      if (this->ch1.length_enabled && !((--this->ch1.length) > 0)) {
-        this->ch1.stop();
-      }
+    if (!this->ch1.on) goto sound_len_end;
+    if (this->ch1.length_enabled && !((--this->ch1.length) > 0)) {
+      this->ch1.stop();
     }
   }
-  // Channel 1 Freq Sweep
+sound_len_end:
+  // Channel 1 Freq/Period Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
-    // TODO: Implement Freq Sweep
+    if (!this->ch1.on) goto per_sweep_end;
+    if (this->ch1.curr_period_sweep_pace == 0) goto per_sweep_end;
+    this->ch1.period_sweep_ticks++;
+    if (this->ch1.period_sweep_ticks < this->ch1.curr_period_sweep_pace) goto per_sweep_end;
+    this->ch1.period_sweep_ticks = 0;
+
+    int addend = (this->ch1.curr_period / (std::pow(2, this->ch1.period_sweep_step)));
+    if (this->ch1.period_sweep_dir) {
+      GB_assert(((int)this->ch1.curr_period - addend) > 0);
+      addend *= -1;
+    }
+    if ((this->ch1.curr_period + addend) > 0x7FF) {
+      this->ch1.stop();
+      goto per_sweep_end;
+    }
+    this->ch1.curr_period += addend;
   }
+per_sweep_end:
   // Envelope Sweep
   if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
+    if (!this->ch1.on) goto env_sweep_end;
     if (this->ch1.curr_env_sweep_pace == 0) goto env_sweep_end;
 
     this->ch1.env_sweep_ticks++;
