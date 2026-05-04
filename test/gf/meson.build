@@ -62,7 +62,7 @@ if rgbasm.found() and rgblink.found() and rgbfix.found() and rgbgfx.found()
     output: '@BASENAME@.o',
   )
 
-  tests = ['apu_ch1_timer', 'apu_ch1', 'layer_prio', 'apu_ch1_env_sweep']
+  tests = ['apu_ch1_timer', 'apu_ch1', 'layer_prio', 'apu_ch1_env_sweep', 'apu_ch1_period_sweep']
   
   foreach test : tests
     test_unfixed = custom_target(test + '_test_unfixed',
