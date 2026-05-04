@@ -15,7 +15,6 @@ MACRO ch1_set_period_and_trigger
   ; Upper 3
   ld a, b
   and a, 0b0000_0111
-  set 6, a ; Enable Len
   set 7, a ; Trigger Bit
   ldh [rNR14], a
   PURGE period
@@ -29,9 +28,9 @@ Intro::
   ld a, $ff
   ldh [rNR50], a  ; Full volume, both channels on.
   ldh [rNR51], a  ; All sounds to all terminals.
-  ld a, 0b1000_0001
+  ld a, 0b1000_0000
   ldh [rNR11], a
-  ld a, 0b1111_0010
+  ld a, 0b1111_0111
   ldh [rNR12], a
 
 .loop:
