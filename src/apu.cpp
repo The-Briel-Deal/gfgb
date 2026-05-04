@@ -258,7 +258,8 @@ sound_len_end:
 
     int addend = (this->ch1.curr_period / (std::pow(2, this->ch1.period_sweep_step)));
     if (this->ch1.period_sweep_dir) {
-      GB_assert(((int)this->ch1.curr_period - addend) > 0);
+      // Shouldn't be possible unless I have crazybonesitis
+      GB_assert(this->ch1.curr_period >= addend);
       addend *= -1;
     }
     if ((this->ch1.curr_period + addend) > 0x7FF) {
