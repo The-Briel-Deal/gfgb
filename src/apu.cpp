@@ -112,6 +112,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       }
       return val;
     }
+    // TODO: Create read case for NR12
     case IO_NR13: return 0xFF; // Write only
     case IO_NR14: {
       uint8_t val = 0b1011'1111;
@@ -144,6 +145,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch1.initial_volume  = (val & 0b1111'0000) >> 4;
       this->ch1.next_env_dir    = (val & 0b0000'1000) >> 3;
       this->ch1.next_sweep_pace = (val & 0b0000'0111) >> 0;
+      if ((val & 0xF8) == 0) this->ch1.stop();
       return;
     }
     case IO_NR13: {
