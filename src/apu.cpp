@@ -35,6 +35,22 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
       .freq     = int(this->samp_freq()),
   };
 }
+void gb_pulsewave_channel_t::start() {
+  this->on = true;
+  SDL_ResumeAudioStreamDevice(this->stream);
+  this->length          = 64 - this->initial_length;
+  this->curr_volume     = this->initial_volume;
+  this->curr_env_dir    = this->next_env_dir;
+  this->curr_sweep_pace = this->next_sweep_pace;
+
+  this->env_sweep_ticks = 0;
+}
+void gb_pulsewave_channel_t::stop() {
+  this->on = false;
+  SDL_PauseAudioStreamDevice(this->stream);
+  // TODO: Identify if it would be better for me to flush instead of clear here.
+  SDL_ClearAudioStream(this->stream);
+}
 
 bool gb_pulsewave_channel_t::waveform_step() {
   assert(this->phase < 8);
@@ -139,14 +155,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     }
     case IO_NR14: {
       if ((val >> 7) & 1) { // Trigger if this bit is high
-        this->ch1.on = true;
-        SDL_ResumeAudioStreamDevice(this->ch1.stream);
-        this->ch1.length          = 64 - this->ch1.initial_length;
-        this->ch1.curr_volume     = this->ch1.initial_volume;
-        this->ch1.curr_env_dir    = this->ch1.next_env_dir;
-        this->ch1.curr_sweep_pace = this->ch1.next_sweep_pace;
-
-        this->ch1.env_sweep_ticks = 0;
+        this->ch1.start();
       }
       this->ch1.length_enabled = (val >> 6) & 1;
       this->ch1.period &= 0x00FF;
@@ -200,13 +209,7 @@ void gb_apu_t::div_tick() {
   if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
     if (this->ch1.on) {
       if (this->ch1.length_enabled && !((--this->ch1.length) > 0)) {
-        // TODO: I should probably make a helper method to play/pause a channel.
-
-        // Turn off channel 1.
-        this->ch1.on = false;
-        SDL_PauseAudioStreamDevice(this->ch1.stream);
-        // TODO: Identify if it would be better for me to flush instead of clear here.
-        SDL_ClearAudioStream(this->ch1.stream);
+        this->ch1.stop();
       }
     }
   }

@@ -25,6 +25,8 @@ typedef struct gb_pulsewave_channel {
   bool   waveform_step();
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
+  void   start();
+  void   stop();
 #endif
   bool            on;
   gb_duty_cycle_t duty_cycle;
