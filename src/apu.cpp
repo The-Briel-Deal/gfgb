@@ -112,7 +112,13 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       }
       return val;
     }
-    // TODO: Create read case for NR12
+    case IO_NR12: {
+      uint8_t val = 0;
+      val |= 0b1111'0000 & (this->ch1.initial_volume << 4);
+      val |= 0b0000'1000 & (this->ch1.next_env_dir << 3);
+      val |= 0b0000'0111 & (this->ch1.next_sweep_pace << 0);
+      return val;
+    }
     case IO_NR13: return 0xFF; // Write only
     case IO_NR14: {
       uint8_t val = 0b1011'1111;
