@@ -40,14 +40,26 @@ typedef struct gb_pulsewave_channel {
   // From `NR12`, these don't take effect until a next trigger.
   uint8_t initial_volume;
   bool    next_env_dir;
-  uint8_t next_sweep_pace;
+  uint8_t next_env_sweep_pace;
 
   // On trigger, copy the above three fields into these 3.
   uint8_t curr_volume;
   bool    curr_env_dir;
-  uint8_t curr_sweep_pace;
+  uint8_t curr_env_sweep_pace;
 
   uint8_t env_sweep_ticks;
+
+  // TODO: Once I add channel 2 I need to add a field which indicates whether or not the channel has a period sweep.
+
+  // From `NR10`, these don't take effect until a next trigger.
+  uint8_t next_period_sweep_pace;
+  uint8_t curr_period_sweep_pace;
+  // I'm struggling to find info on if these only take effect on trigger. It looks like resetting sweep direction from
+  // 1->0 stops the channel however.
+  uint8_t period_sweep_dir;
+  uint8_t period_sweep_step;
+
+  uint8_t period_sweep_ticks;
 
   SDL_AudioSpec    spec;
   SDL_AudioStream *stream;

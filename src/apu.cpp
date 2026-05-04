@@ -19,15 +19,21 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->length_enabled = false;
   this->duty_cycle     = GB_DUTY_CYCLE_HALF;
 
-  this->initial_volume  = 0;
-  this->next_env_dir    = false;
-  this->next_sweep_pace = 0;
+  // `NRx2`
+  this->initial_volume      = 0;
+  this->next_env_dir        = false;
+  this->next_env_sweep_pace = 0;
+  this->curr_volume         = 0;
+  this->curr_env_dir        = false;
+  this->curr_env_sweep_pace = 0;
+  this->env_sweep_ticks     = 0;
 
-  this->curr_volume     = 0;
-  this->curr_env_dir    = false;
-  this->curr_sweep_pace = 0;
-
-  this->env_sweep_ticks = 0;
+  // `NR10` (only on channel 1)
+  this->next_period_sweep_pace = 0;
+  this->curr_period_sweep_pace = 0;
+  this->period_sweep_dir       = 0;
+  this->period_sweep_step      = 0;
+  this->period_sweep_ticks     = 0;
 
   this->spec = {
       .format   = SDL_AUDIO_F32,
@@ -38,12 +44,14 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
 void gb_pulsewave_channel_t::start() {
   this->on = true;
   SDL_ResumeAudioStreamDevice(this->stream);
-  this->length          = 64 - this->initial_length;
-  this->curr_volume     = this->initial_volume;
-  this->curr_env_dir    = this->next_env_dir;
-  this->curr_sweep_pace = this->next_sweep_pace;
+  this->length                 = 64 - this->initial_length;
+  this->curr_volume            = this->initial_volume;
+  this->curr_env_dir           = this->next_env_dir;
+  this->curr_env_sweep_pace    = this->next_env_sweep_pace;
+  this->curr_period_sweep_pace = this->next_period_sweep_pace;
 
-  this->env_sweep_ticks = 0;
+  this->env_sweep_ticks    = 0;
+  this->period_sweep_ticks = 0;
 }
 void gb_pulsewave_channel_t::stop() {
   this->on = false;
@@ -102,6 +110,13 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       // val |= (this->ch4.on << 3);
       return val;
     }
+    case IO_NR10: {
+      uint8_t val = 0b1000'0000;
+      val |= 0b0111'0000 & (this->ch1.next_period_sweep_pace << 4);
+      val |= 0b0000'1000 & (this->ch1.period_sweep_dir << 3);
+      val |= 0b0000'0111 & (this->ch1.period_sweep_step << 0);
+      return val;
+    }
     case IO_NR11: {
       uint8_t val = 0b0011'1111;
       switch (this->ch1.duty_cycle) {
@@ -116,7 +131,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       uint8_t val = 0;
       val |= 0b1111'0000 & (this->ch1.initial_volume << 4);
       val |= 0b0000'1000 & (this->ch1.next_env_dir << 3);
-      val |= 0b0000'0111 & (this->ch1.next_sweep_pace << 0);
+      val |= 0b0000'0111 & (this->ch1.next_env_sweep_pace << 0);
       return val;
     }
     case IO_NR13: return 0xFF; // Write only
@@ -135,6 +150,12 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->on = (val >> 7) & 1;
       return;
     }
+    case IO_NR10: {
+      this->ch1.next_period_sweep_pace = (val & 0b0111'0000) >> 4;
+      this->ch1.period_sweep_dir       = (val & 0b0000'1000) >> 3;
+      this->ch1.period_sweep_step      = (val & 0b0000'0111) >> 0;
+      return;
+    }
     case IO_NR11: {
       switch (((val >> 6) & 0b11)) {
         case 0b00: this->ch1.duty_cycle = GB_DUTY_CYCLE_EIGHTH; break;
@@ -148,9 +169,9 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR12: {
-      this->ch1.initial_volume  = (val & 0b1111'0000) >> 4;
-      this->ch1.next_env_dir    = (val & 0b0000'1000) >> 3;
-      this->ch1.next_sweep_pace = (val & 0b0000'0111) >> 0;
+      this->ch1.initial_volume      = (val & 0b1111'0000) >> 4;
+      this->ch1.next_env_dir        = (val & 0b0000'1000) >> 3;
+      this->ch1.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
       if ((val & 0xF8) == 0) this->ch1.stop();
       return;
     }
@@ -227,10 +248,10 @@ void gb_apu_t::div_tick() {
   }
   // Envelope Sweep
   if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
-    if (this->ch1.curr_sweep_pace == 0) goto env_sweep_end;
+    if (this->ch1.curr_env_sweep_pace == 0) goto env_sweep_end;
 
     this->ch1.env_sweep_ticks++;
-    if (this->ch1.env_sweep_ticks < this->ch1.curr_sweep_pace) goto env_sweep_end;
+    if (this->ch1.env_sweep_ticks < this->ch1.curr_env_sweep_pace) goto env_sweep_end;
     this->ch1.env_sweep_ticks = 0;
 
     if (this->ch1.curr_env_dir) {
