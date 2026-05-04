@@ -27,6 +27,8 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->curr_env_dir    = false;
   this->curr_sweep_pace = 0;
 
+  this->env_sweep_ticks = 0;
+
   this->spec = {
       .format   = SDL_AUDIO_F32,
       .channels = 1,
@@ -143,6 +145,8 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         this->ch1.curr_volume     = this->ch1.initial_volume;
         this->ch1.curr_env_dir    = this->ch1.next_env_dir;
         this->ch1.curr_sweep_pace = this->ch1.next_sweep_pace;
+
+        this->ch1.env_sweep_ticks = 0;
       }
       this->ch1.length_enabled = (val >> 6) & 1;
       this->ch1.period &= 0x00FF;
@@ -212,6 +216,21 @@ void gb_apu_t::div_tick() {
   }
   // Envelope Sweep
   if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
-    // TODO: Implement Envelope Sweep
+    if (this->ch1.curr_sweep_pace == 0) goto env_sweep_end;
+
+    this->ch1.env_sweep_ticks++;
+    if (this->ch1.env_sweep_ticks < this->ch1.curr_sweep_pace) goto env_sweep_end;
+    this->ch1.env_sweep_ticks = 0;
+
+    if (this->ch1.curr_env_dir) {
+      // Increase Vol
+      if (this->ch1.curr_volume >= 15) goto env_sweep_end;
+      this->ch1.curr_volume++;
+    } else {
+      // Decrease Vol
+      if (this->ch1.curr_volume == 0) goto env_sweep_end;
+      this->ch1.curr_volume--;
+    }
   }
+env_sweep_end:
 }

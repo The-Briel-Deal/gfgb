@@ -45,6 +45,8 @@ typedef struct gb_pulsewave_channel {
   bool    curr_env_dir;
   uint8_t curr_sweep_pace;
 
+  uint8_t env_sweep_ticks;
+
   SDL_AudioSpec    spec;
   SDL_AudioStream *stream;
 } gb_pulsewave_channel_t;
