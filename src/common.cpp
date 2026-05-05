@@ -519,6 +519,8 @@ bool gb_state::load_syms(const str sym_filename) {
 }
 
 void gb_state::init_no_bootrom() {
+  // I set a breakpoint at $0100 in DMG-0 bootrom and just dumped all registers state in GDB. These were the values I
+  // got. They seem to work but it's possible i'm missing something.
   this->saved.regs = {.a         = 1,
                       .b         = 255,
                       .c         = 19,
