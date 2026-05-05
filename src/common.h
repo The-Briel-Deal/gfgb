@@ -17,13 +17,13 @@
 
 #ifdef __cplusplus
 
+#include <format>
 #include <optional>
 #include <regex>
 #include <stack>
 #include <string>
 #include <utility>
 #include <vector>
-#include <format>
 
 using std::unreachable;
 using str                       = std::string;
@@ -513,13 +513,19 @@ typedef struct gb_dbg_state {
   debug_symbol_list_t syms;
 } gb_dbg_state_t;
 
+enum gb_load_rom_opts : uint32_t {
+  GB_LOAD_ROM_NO_BOOTROM = 1 << 0, // Don't use or map a bootrom, just set the regs to what they are expected to be
+                                   // after DMG-0 bootrom and start PC at 0x100
+};
+typedef uint32_t gb_load_rom_opts_t;
 // TODO: finish moving the rest of these fields into the appropriate nested structs.
 typedef struct gb_state {
 #ifdef __cplusplus
   gb_state();
   ~gb_state();
 
-  bool load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename);
+  bool load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename,
+                gb_load_rom_opts_t opts = 0);
   bool load_rom(const str rom_filename);
 
   bool load_bootrom(const str bootrom_filename);
@@ -528,6 +534,7 @@ typedef struct gb_state {
   bool load_syms(const str sym_filename);
   bool load_syms(std::istream &sym_stream); // This is called from the above overload after opening file. I expose this
                                             // so that tests don't have to write the symbol text to a file.
+  void init_no_bootrom();
 #endif
   gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;

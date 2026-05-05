@@ -113,6 +113,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       ->check(CLI::ExistingFile)
       ->check(CLI::ReadPermissions);
 
+  bool no_bootrom;
+  gb_cli_exec->add_flag("--nb,--no_bootrom", no_bootrom,
+                        "Don't use the embedded bootrom, this will let you skip the Nintendo logo but there may be "
+                        "compatibility issues in some games.");
+
   opt<str> bootrom_filename;
   gb_cli_exec
       ->add_option("-b,--bootrom_file", bootrom_filename) //

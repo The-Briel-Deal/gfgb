@@ -517,17 +517,88 @@ bool gb_state::load_syms(const str sym_filename) {
   std::ifstream f(sym_filename);
   return this->load_syms(f);
 }
-bool gb_state::load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename) {
+
+void gb_state::init_no_bootrom() {
+  this->saved.regs = {.a         = 1,
+                      .b         = 255,
+                      .c         = 19,
+                      .d         = 0,
+                      .e         = 193,
+                      .f         = 0,
+                      .h         = 132,
+                      .l         = 3,
+                      .sp        = 65534,
+                      .pc        = 257,
+                      .io        = {.joyp = 207,
+                                    .sb   = 0,
+                                    .sc   = 126,
+                                    .div  = 47,
+                                    .tima = 0,
+                                    .tma  = 0,
+                                    .tac  = 0,
+
+                                    .nr10 = 0,
+                                    .nr11 = 0,
+                                    .nr12 = 0,
+                                    .nr13 = 0,
+                                    .nr14 = 0,
+
+                                    .nr21 = 0,
+                                    .nr22 = 0,
+                                    .nr23 = 0,
+                                    .nr24 = 0,
+
+                                    .nr30 = 0,
+                                    .nr31 = 0,
+                                    .nr32 = 0,
+                                    .nr33 = 0,
+                                    .nr34 = 0,
+
+                                    .nr41 = 0,
+                                    .nr42 = 0,
+                                    .nr43 = 0,
+                                    .nr44 = 0,
+
+                                    .nr50          = 0,
+                                    .nr51          = 0,
+                                    .nr52          = 0, // sound on/off
+                                    .ly            = 144,
+                                    .lyc           = 0,
+                                    .stat          = 1,
+                                    .lcdc          = 145,
+                                    .scy           = 0,
+                                    .scx           = 0,
+                                    .bgp           = 252,
+                                    .obp0          = 0,
+                                    .obp1          = 0,
+                                    .wx            = 0,
+                                    .wy            = 0,
+                                    .ie            = 0,
+                                    .if_           = 1,
+                                    .dma           = 0,
+                                    .ime           = false,
+                                    .set_ime_after = false,
+                                    .bank          = false},
+                      .mbc1_regs = {}};
+}
+bool gb_state::load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename,
+                        gb_load_rom_opts_t opts) {
   bool success = true;
   success &= this->load_rom(rom_filename);
   if (sym_filename) {
     success &= this->load_syms(*sym_filename);
   }
+  if (opts & GB_LOAD_ROM_NO_BOOTROM) {
+    this->init_no_bootrom();
+    goto bootrom_loaded;
+  }
   if (bootrom_filename) {
     success &= this->load_bootrom(*bootrom_filename);
-  } else {
-    success &= this->load_bootrom();
+    goto bootrom_loaded;
   }
+  success &= this->load_bootrom();
+
+bootrom_loaded:
 
   return success;
 }
