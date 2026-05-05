@@ -175,7 +175,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     gb_cli.exit(e);
     return SDL_APP_FAILURE;
   }
-  if (!gb_state->load_rom(rom_filename, bootrom_filename, symbol_filename)) {
+  gb_load_rom_opts_t opts = 0;
+  if (no_bootrom) opts |= GB_LOAD_ROM_NO_BOOTROM;
+  if (!gb_state->load_rom(rom_filename, bootrom_filename, symbol_filename, opts)) {
     return SDL_APP_FAILURE;
   }
   if (gb_state->dbg.test_mode) {
