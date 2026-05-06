@@ -554,39 +554,13 @@ void gb_state::init_no_bootrom() {
   this->saved.regs.l  = 3;
   this->saved.regs.sp = 65534;
   this->saved.regs.pc = 0x0100;
-  this->saved.regs.io = {.joyp = 207,
-                         .sb   = 0,
-                         .sc   = 126,
-                         .div  = 47,
-                         .tima = 0,
-                         .tma  = 0,
-                         .tac  = 0,
-
-                         .nr10 = 0,
-                         .nr11 = 0,
-                         .nr12 = 0,
-                         .nr13 = 0,
-                         .nr14 = 0,
-
-                         .nr21 = 0,
-                         .nr22 = 0,
-                         .nr23 = 0,
-                         .nr24 = 0,
-
-                         .nr30 = 0,
-                         .nr31 = 0,
-                         .nr32 = 0,
-                         .nr33 = 0,
-                         .nr34 = 0,
-
-                         .nr41 = 0,
-                         .nr42 = 0,
-                         .nr43 = 0,
-                         .nr44 = 0,
-
-                         .nr50          = 0,
-                         .nr51          = 0,
-                         .nr52          = 0, // sound on/off
+  this->saved.regs.io = {.joyp          = 207,
+                         .sb            = 0,
+                         .sc            = 126,
+                         .div           = 47,
+                         .tima          = 0,
+                         .tma           = 0,
+                         .tac           = 0,
                          .ly            = 144,
                          .lyc           = 0,
                          .stat          = 1,
