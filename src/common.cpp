@@ -521,67 +521,66 @@ bool gb_state::load_syms(const str sym_filename) {
 void gb_state::init_no_bootrom() {
   // I set a breakpoint at $0100 in DMG-0 bootrom and just dumped all registers state in GDB. These were the values I
   // got. They seem to work but it's possible i'm missing something.
-  this->saved.regs = {.a         = 1,
-                      .b         = 255,
-                      .c         = 19,
-                      .d         = 0,
-                      .e         = 193,
-                      .f         = 0,
-                      .h         = 132,
-                      .l         = 3,
-                      .sp        = 65534,
-                      .pc        = 257,
-                      .io        = {.joyp = 207,
-                                    .sb   = 0,
-                                    .sc   = 126,
-                                    .div  = 47,
-                                    .tima = 0,
-                                    .tma  = 0,
-                                    .tac  = 0,
+  this->saved.regs.a  = 1;
+  this->saved.regs.b  = 255;
+  this->saved.regs.c  = 19;
+  this->saved.regs.d  = 0;
+  this->saved.regs.e  = 193;
+  this->saved.regs.f  = 0;
+  this->saved.regs.h  = 132;
+  this->saved.regs.l  = 3;
+  this->saved.regs.sp = 65534;
+  this->saved.regs.pc = 257;
+  this->saved.regs.io = {.joyp = 207,
+                         .sb   = 0,
+                         .sc   = 126,
+                         .div  = 47,
+                         .tima = 0,
+                         .tma  = 0,
+                         .tac  = 0,
 
-                                    .nr10 = 0,
-                                    .nr11 = 0,
-                                    .nr12 = 0,
-                                    .nr13 = 0,
-                                    .nr14 = 0,
+                         .nr10 = 0,
+                         .nr11 = 0,
+                         .nr12 = 0,
+                         .nr13 = 0,
+                         .nr14 = 0,
 
-                                    .nr21 = 0,
-                                    .nr22 = 0,
-                                    .nr23 = 0,
-                                    .nr24 = 0,
+                         .nr21 = 0,
+                         .nr22 = 0,
+                         .nr23 = 0,
+                         .nr24 = 0,
 
-                                    .nr30 = 0,
-                                    .nr31 = 0,
-                                    .nr32 = 0,
-                                    .nr33 = 0,
-                                    .nr34 = 0,
+                         .nr30 = 0,
+                         .nr31 = 0,
+                         .nr32 = 0,
+                         .nr33 = 0,
+                         .nr34 = 0,
 
-                                    .nr41 = 0,
-                                    .nr42 = 0,
-                                    .nr43 = 0,
-                                    .nr44 = 0,
+                         .nr41 = 0,
+                         .nr42 = 0,
+                         .nr43 = 0,
+                         .nr44 = 0,
 
-                                    .nr50          = 0,
-                                    .nr51          = 0,
-                                    .nr52          = 0, // sound on/off
-                                    .ly            = 144,
-                                    .lyc           = 0,
-                                    .stat          = 1,
-                                    .lcdc          = 145,
-                                    .scy           = 0,
-                                    .scx           = 0,
-                                    .bgp           = 252,
-                                    .obp0          = 0,
-                                    .obp1          = 0,
-                                    .wx            = 0,
-                                    .wy            = 0,
-                                    .ie            = 0,
-                                    .if_           = 1,
-                                    .dma           = 0,
-                                    .ime           = false,
-                                    .set_ime_after = false,
-                                    .bank          = false},
-                      .mbc1_regs = {}};
+                         .nr50          = 0,
+                         .nr51          = 0,
+                         .nr52          = 0, // sound on/off
+                         .ly            = 144,
+                         .lyc           = 0,
+                         .stat          = 1,
+                         .lcdc          = 145,
+                         .scy           = 0,
+                         .scx           = 0,
+                         .bgp           = 252,
+                         .obp0          = 0,
+                         .obp1          = 0,
+                         .wx            = 0,
+                         .wy            = 0,
+                         .ie            = 0,
+                         .if_           = 1,
+                         .dma           = 0,
+                         .ime           = false,
+                         .set_ime_after = false,
+                         .bank          = false};
 }
 bool gb_state::load_rom(const str rom_filename, const opt<str> bootrom_filename, const opt<str> sym_filename,
                         gb_load_rom_opts_t opts) {
