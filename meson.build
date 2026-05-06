@@ -168,11 +168,13 @@ blargg_cpu_tests = [
   '11-op a,(hl).gb',
 ]
 
+test_flags = ['--no_bootrom']
+
 foreach test : blargg_cpu_tests
   test(
     'blargg_cpu_' + test,
     exe,
-    args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=100'],
+    args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=100', test_flags],
     env : ['SDL_VIDEODRIVER=dummy'],
   )
 
@@ -188,7 +190,7 @@ foreach test : blargg_mem_timing_tests
   test(
     'blargg_mem_timing_' + test,
     exe,
-    args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=100'],
+    args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=100', test_flags],
     env : ['SDL_VIDEODRIVER=dummy'],
   )
 endforeach
@@ -196,7 +198,7 @@ endforeach
 test(
   'blargg_instr_timing',
   exe,
-  args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=100'],
+  args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=100', test_flags],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
 test(
@@ -208,6 +210,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -221,6 +224,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -234,6 +238,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -247,6 +252,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -260,6 +266,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -273,6 +280,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -286,6 +294,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -299,6 +308,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
@@ -311,6 +321,7 @@ test(
     '--exec_speed=100',
     '--test_fail_regex=BBBBBB',
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
+    test_flags,
   ],
   env : ['SDL_VIDEODRIVER=dummy'],
 )
