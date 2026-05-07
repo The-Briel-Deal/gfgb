@@ -530,7 +530,7 @@ void gb_state::init_no_bootrom() {
   this->saved.regs.h  = 132;
   this->saved.regs.l  = 3;
   this->saved.regs.sp = 65534;
-  this->saved.regs.pc = 257;
+  this->saved.regs.pc = 0x0100;
   this->saved.regs.io = {.joyp = 207,
                          .sb   = 0,
                          .sc   = 126,
