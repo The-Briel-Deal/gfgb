@@ -95,6 +95,8 @@ private:
   uint8_t                div;
   gb_pulsewave_channel_t ch1;
   SDL_AudioDeviceID      output_device;
+  uint8_t sample_counter; // This is reset to `TICKS_PER_SAMPLE` every time it reaches 0. When it reaches 0 a sample is
+                          // put in the queue for SDL.
 } gb_apu_t;
 
 #ifdef __cplusplus

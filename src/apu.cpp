@@ -6,11 +6,9 @@
 #define MAX_PERIOD           (1 << 11)
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
 #define SAMPLES_PER_WAVEFORM 8
+#define TICKS_PER_SAMPLE     4
 
-#define AUDIO_SAMPLE_FREQ 8000
-#define MIN_AUDIO_QUEUED                                                                                               \
-  ((AUDIO_SAMPLE_FREQ * sizeof(float)) /                                                                               \
-   60) /* We should have roughly a 60th of a second of audio queued at any given time  */
+#define AUDIO_SAMPLE_FREQ (APU_CLOCK / TICKS_PER_SAMPLE)
 
 gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->phase          = 0;
@@ -41,7 +39,7 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->spec = {
       .format   = SDL_AUDIO_F32,
       .channels = 1,
-      .freq     = int(this->samp_freq()),
+      .freq     = int(AUDIO_SAMPLE_FREQ),
   };
 }
 void gb_pulsewave_channel_t::start() {
@@ -92,7 +90,8 @@ double gb_pulsewave_channel_t::tone_freq() {
 gb_apu_t::gb_apu() {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 
-  this->output_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+  this->sample_counter = TICKS_PER_SAMPLE;
+  this->output_device  = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
   if (this->output_device == 0) {
     // TODO: I should probably handle this case gracefully since audio isn't really mandatory.
     LogError("Couldn't create audio stream: %s", SDL_GetError());
@@ -182,19 +181,15 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     case IO_NR13: {
       this->ch1.next_period &= 0xFF00;
       this->ch1.next_period |= (val & 0x00FF);
-      this->ch1.spec.freq = this->ch1.samp_freq();
-      CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
       return;
     }
     case IO_NR14: {
       this->ch1.length_enabled = (val >> 6) & 1;
       this->ch1.next_period &= 0x00FF;
       this->ch1.next_period |= (val & 0b0000'0111) << 8;
-      this->ch1.spec.freq = this->ch1.samp_freq();
       if ((val >> 7) & 1) { // Trigger if this bit is high
         this->ch1.start();
       }
-      CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
       return;
     }
 
@@ -210,28 +205,37 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 
 void gb_apu_t::tick() {
   bool apu_powered_on = (this->on);
+
+  bool  sample_this_tick = false;
+  float sample           = 0.0f;
+  if (--this->sample_counter == 0) {
+    sample_this_tick     = true;
+    this->sample_counter = TICKS_PER_SAMPLE;
+  }
   if (apu_powered_on) {
     if (this->ch1.on) {
       gb_pulsewave_channel_t &ch = this->ch1;
       // TODO: Sweep functionality (NR10)
       ch.counter--;
       if (ch.counter == 0) {
-        this->ch1.spec.freq = this->ch1.samp_freq();
-        CheckedSDL(SetAudioStreamFormat(this->ch1.stream, &this->ch1.spec, NULL));
         ch.counter = MAX_PERIOD - ch.curr_period;
         ch.phase++;
         ch.phase %= 8;
+      }
 
-        float curr_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
+      if (sample_this_tick) {
+        float ch1_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
         GB_assert(this->ch1.curr_volume < 16);
-        curr_sample *= (float(this->ch1.curr_volume) / 16.0f);
-        SDL_PutAudioStreamData(this->ch1.stream, &curr_sample, sizeof(float));
+        ch1_sample *= (float(this->ch1.curr_volume) / 16.0f);
+        sample += ch1_sample;
       }
     }
     // TODO: Implement Channel 2
     // TODO: Implement Channel 3
     // TODO: Implement Channel 4
   }
+  // TODO: Move stream back to `gb_apu_t` struct, I'm going to mix the channels myself and output them to one stream.
+  if (sample_this_tick) SDL_PutAudioStreamData(this->ch1.stream, &sample, sizeof(float));
 }
 
 void gb_apu_t::div_tick() {
