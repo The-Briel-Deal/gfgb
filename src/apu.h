@@ -66,9 +66,10 @@ typedef struct gb_pulsewave_channel {
   SDL_AudioStream *stream;
 
   // A circular buffer of the last n samples which are displayed.
-  int   sample_buffer_start;
-  int   sample_buffer_len;
-  float sample_buffer[1000];
+  int sample_buffer_start;
+  int sample_buffer_len;
+  // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
+  float sample_buffer[10'000];
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
