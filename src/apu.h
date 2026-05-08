@@ -64,6 +64,11 @@ typedef struct gb_pulsewave_channel {
 
   SDL_AudioSpec    spec;
   SDL_AudioStream *stream;
+
+  // A circular buffer of the last n samples which are displayed.
+  int   sample_buffer_start;
+  int   sample_buffer_len;
+  float sample_buffer[1000];
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
@@ -89,9 +94,6 @@ typedef struct gb_apu {
   // if the emulator is running faster/slower.
   void set_speed(float speed);
 
-private:
-  // TODO: Remove this once read/write_io_reg methods are implemented.
-  void sync_regs();
 #endif
 
   bool on;

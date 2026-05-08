@@ -121,6 +121,7 @@ static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("Windows")) {
       ImGui::MenuItem("Fullscreen Debug UI", NULL, &imgui_state.fs_dockspace);
+      ImGui::MenuItem("Audio Viewer", NULL, &imgui_state.audio_viewer);
       ImGui::MenuItem("OAM Viewer", NULL, &imgui_state.oam_viewer);
       ImGui::MenuItem("Tiledata Viewer", NULL, &imgui_state.tiledata_viewer);
       ImGui::MenuItem("Layer Viewer", NULL, &imgui_state.layer_viewer);
@@ -481,6 +482,16 @@ static void gb_imgui_settings_win(gb_state_t *gb_state) {
   ImGui::End();
 }
 
+static void gb_imgui_audio_win(gb_state_t *gb_state) {
+  if (ImGui::Begin("Audio")) {
+    // TODO: Impl this once I have audio buffer ready
+    ImGui::PlotLines("Channel 1", gb_state->apu.ch1.sample_buffer,
+                     sizeof(gb_state->apu.ch1.sample_buffer) / sizeof(*gb_state->apu.ch1.sample_buffer),
+                     gb_state->apu.ch1.sample_buffer_start, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+  }
+  ImGui::End();
+}
+
 void gb_imgui_render(gb_state_t *gb_state) {
   gb_imgui_state_t &imgui_state = gb_state->imgui;
   ImGuiIO          &io          = ImGui::GetIO();
@@ -521,6 +532,9 @@ void gb_imgui_render(gb_state_t *gb_state) {
 
   if (imgui_state.settings) {
     gb_imgui_settings_win(gb_state);
+  }
+  if (imgui_state.audio_viewer) {
+    gb_imgui_audio_win(gb_state);
   }
 
   ImGui::Render();

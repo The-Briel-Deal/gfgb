@@ -41,6 +41,11 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
       .channels = 1,
       .freq     = int(AUDIO_SAMPLE_FREQ),
   };
+
+  // Audio buffer for graph in ImGui debugger.
+  GB_memset(this->sample_buffer, 0, sizeof(this->sample_buffer));
+  this->sample_buffer_start = 0;
+  this->sample_buffer_len   = 0;
 }
 void gb_pulsewave_channel_t::start() {
   SDL_ResumeAudioStreamDevice(this->stream);
@@ -225,9 +230,17 @@ void gb_apu_t::tick() {
       }
 
       if (sample_this_tick) {
-        float ch1_sample = this->ch1.waveform_step() ? 1.0f : -1.0f;
-        GB_assert(this->ch1.curr_volume < 16);
-        ch1_sample *= (float(this->ch1.curr_volume) / 16.0f);
+        float ch1_sample = ch.waveform_step() ? 1.0f : -1.0f;
+        GB_assert(ch.curr_volume < 16);
+        ch1_sample *= (float(ch.curr_volume) / 16.0f);
+        static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
+        if (ch.sample_buffer_len >= sample_buffer_size) {
+          ch.sample_buffer_len--;
+          ch.sample_buffer_start++;
+          ch.sample_buffer_start %= sample_buffer_size;
+        }
+        ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch1_sample;
+
         sample += ch1_sample;
       }
     }
