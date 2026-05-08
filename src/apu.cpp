@@ -36,19 +36,12 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->period_sweep_step      = 0;
   this->period_sweep_ticks     = 0;
 
-  this->spec = {
-      .format   = SDL_AUDIO_F32,
-      .channels = 1,
-      .freq     = int(AUDIO_SAMPLE_FREQ),
-  };
-
   // Audio buffer for graph in ImGui debugger.
   GB_memset(this->sample_buffer, 0, sizeof(this->sample_buffer));
   this->sample_buffer_start = 0;
   this->sample_buffer_len   = 0;
 }
 void gb_pulsewave_channel_t::start() {
-  SDL_ResumeAudioStreamDevice(this->stream);
   this->on                     = true;
   this->length                 = 64 - this->initial_length;
   this->curr_period            = this->next_period;
@@ -60,12 +53,7 @@ void gb_pulsewave_channel_t::start() {
   this->env_sweep_ticks    = 0;
   this->period_sweep_ticks = 0;
 }
-void gb_pulsewave_channel_t::stop() {
-  this->on = false;
-  SDL_PauseAudioStreamDevice(this->stream);
-  // TODO: Identify if it would be better for me to flush instead of clear here.
-  SDL_ClearAudioStream(this->stream);
-}
+void gb_pulsewave_channel_t::stop() { this->on = false; }
 
 bool gb_pulsewave_channel_t::waveform_step() {
   assert(this->phase < 8);
@@ -103,7 +91,14 @@ gb_apu_t::gb_apu() {
     abort();
   }
 
-  this->ch1.stream = SDL_OpenAudioDeviceStream(this->output_device, &this->ch1.spec, NULL, NULL);
+  // All gameboy channels share a single stream which we mix.
+  SDL_AudioSpec spec = {
+      .format   = SDL_AUDIO_F32,
+      .channels = 1,
+      .freq     = int(AUDIO_SAMPLE_FREQ),
+  };
+  this->stream = SDL_OpenAudioDeviceStream(this->output_device, &spec, NULL, NULL);
+  SDL_ResumeAudioStreamDevice(this->stream);
 }
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
@@ -202,7 +197,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   }
 }
 
-void gb_apu_t::set_speed(float speed) { CheckedSDL(SetAudioStreamFrequencyRatio(this->ch1.stream, speed)); }
+void gb_apu_t::set_speed(float speed) { CheckedSDL(SetAudioStreamFrequencyRatio(this->stream, speed)); }
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
   for (uint16_t i = 0; i < m_cycles; i++) {
     this->tick();
@@ -248,8 +243,7 @@ void gb_apu_t::tick() {
     // TODO: Implement Channel 3
     // TODO: Implement Channel 4
   }
-  // TODO: Move stream back to `gb_apu_t` struct, I'm going to mix the channels myself and output them to one stream.
-  if (sample_this_tick) SDL_PutAudioStreamData(this->ch1.stream, &sample, sizeof(float));
+  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, &sample, sizeof(float));
 }
 
 void gb_apu_t::div_tick() {

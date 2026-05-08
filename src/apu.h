@@ -62,9 +62,6 @@ typedef struct gb_pulsewave_channel {
 
   uint8_t period_sweep_ticks;
 
-  SDL_AudioSpec    spec;
-  SDL_AudioStream *stream;
-
   // A circular buffer of the last n samples which are displayed.
   int sample_buffer_start;
   int sample_buffer_len;
@@ -102,6 +99,8 @@ typedef struct gb_apu {
   uint8_t                div;
   gb_pulsewave_channel_t ch1;
   SDL_AudioDeviceID      output_device;
+  SDL_AudioStream       *stream;
+
   uint8_t sample_counter; // This is reset to `TICKS_PER_SAMPLE` every time it reaches 0. When it reaches 0 a sample is
                           // put in the queue for SDL.
 } gb_apu_t;
