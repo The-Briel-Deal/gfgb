@@ -85,6 +85,10 @@ typedef struct gb_apu {
   // Call 512 times per second on the falling edge of div bit 4.
   void div_tick();
 
+  // The exec speed of the emulator, stored in `gb_state->dbg.speed_factor`, used to consume audio samples faster/slower
+  // if the emulator is running faster/slower.
+  void set_speed(float speed);
+
 private:
   // TODO: Remove this once read/write_io_reg methods are implemented.
   void sync_regs();

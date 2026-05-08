@@ -197,6 +197,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   }
 }
 
+void gb_apu_t::set_speed(float speed) { CheckedSDL(SetAudioStreamFrequencyRatio(this->ch1.stream, speed)); }
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
   for (uint16_t i = 0; i < m_cycles; i++) {
     this->tick();
