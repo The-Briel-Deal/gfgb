@@ -471,8 +471,9 @@ static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
 
 static void gb_imgui_settings_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Settings")) {
-    // TODO: I need to update SDL's audio frequency ratio when this changes
-    ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg.speed_factor, 0.0f, 10.0f);
+    if (ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg.speed_factor, 0.0f, 10.0f)) {
+      gb_state->apu.set_speed(gb_state->dbg.speed_factor);
+    }
     ImGui::Checkbox("Pause on Error", &gb_state->dbg.pause_on_err);
     ImGui::Checkbox("Print Instructions", &gb_state->dbg.trace_exec);
     ImGui::Checkbox("Show Scanline", &gb_state->imgui.show_scanline);
