@@ -27,6 +27,9 @@ typedef struct gb_pulsewave_channel {
   double tone_freq(); // this->samp_freq() / 8
   void   start();
   void   stop();
+  void   len_tick();
+  void   env_sweep_tick();
+  void   period_sweep_tick();
 #endif
   bool            on;
   gb_duty_cycle_t duty_cycle;
@@ -98,6 +101,7 @@ typedef struct gb_apu {
 
   uint8_t                div;
   gb_pulsewave_channel_t ch1;
+  gb_pulsewave_channel_t ch2;
   SDL_AudioDeviceID      output_device;
   SDL_AudioStream       *stream;
 
