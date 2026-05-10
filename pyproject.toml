@@ -32,13 +32,10 @@ classifiers = [
 ]
 
 [dependency-groups]
-dev = ["cython", "pytest", "pytest-tap"]
+dev = ["cython", "pytest", "pytest-tap", "pytest-xdist"]
 
 [tool.pyright]
 stubPath = "./stubs/"
 
 [tool.meson-python.wheel]
 exclude = ['{libdir_static}/libtracy.a', 'share/pkgconfig/CLI11.pc']
-
-[tool.uv]
-config-settings = { build-dir = 'build' }

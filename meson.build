@@ -14,7 +14,7 @@ if not get_option('enable_audio')
 endif
 python_install_path = get_option('python_install')
 if python_install_path != ''
-  py = import('python').find_installation(python_install_path)
+  py = import('python').find_installation(python_install_path, modules : ['pytest', 'pytest_tap', 'xdist'])
 else
   py = import('python').find_installation()
 endif
@@ -336,7 +336,7 @@ test(
 test(
   'single_step_tests',
   py,
-  args : ['-mpytest', '--tap', current_src_dir / 'test/sst/'],
+  args : ['-mpytest', '--tap', '-n8', current_src_dir / 'test/sst/'],
   depends : [gfgb_py_ext],
   protocol : 'tap',
   env : test_env,
