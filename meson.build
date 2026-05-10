@@ -338,6 +338,5 @@ test(
   py,
   args : ['-mpytest', '--tap', '-n8', current_src_dir / 'test/sst/'],
   depends : [gfgb_py_ext],
-  protocol : 'tap',
   env : test_env,
 )
