@@ -349,6 +349,7 @@ void gb_apu_t::tick() {
         float ch1_sample = ch.waveform_step() ? 1.0f : -1.0f;
         GB_assert(ch.curr_volume < 16);
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
+        ch1_sample /= 4; // Divide the channels sample by 1/4th to prevent clipping when all channels are mixed together
         static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
         if (ch.sample_buffer_len >= sample_buffer_size) {
           ch.sample_buffer_len--;
@@ -374,6 +375,7 @@ void gb_apu_t::tick() {
         float ch2_sample = ch.waveform_step() ? 1.0f : -1.0f;
         GB_assert(ch.curr_volume < 16);
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
+        ch2_sample /= 4;
         static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
         if (ch.sample_buffer_len >= sample_buffer_size) {
           ch.sample_buffer_len--;
