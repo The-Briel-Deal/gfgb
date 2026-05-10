@@ -15,61 +15,61 @@
 
 static void print_inst_param(char *inst_param_str, const struct inst_param inst_param) {
   switch (inst_param.type) {
-  case R8:
-    switch (inst_param.r8) {
-      PRINT_ENUM_CASE(R8_B)
-      PRINT_ENUM_CASE(R8_C)
-      PRINT_ENUM_CASE(R8_D)
-      PRINT_ENUM_CASE(R8_E)
-      PRINT_ENUM_CASE(R8_H)
-      PRINT_ENUM_CASE(R8_L)
-      PRINT_ENUM_CASE(R8_HL_DREF)
-      PRINT_ENUM_CASE(R8_A)
-    }
-    break;
-  case R16:
-    switch (inst_param.r16) {
-      PRINT_ENUM_CASE(R16_BC)
-      PRINT_ENUM_CASE(R16_DE)
-      PRINT_ENUM_CASE(R16_HL)
-      PRINT_ENUM_CASE(R16_SP)
-    }
-    break;
-  case R16_MEM:
-    switch (inst_param.r16_mem) {
-      PRINT_ENUM_CASE(R16_MEM_BC)
-      PRINT_ENUM_CASE(R16_MEM_DE)
-      PRINT_ENUM_CASE(R16_MEM_HLI)
-      PRINT_ENUM_CASE(R16_MEM_HLD)
-    }
-    break;
-  case R16_STK:
-    switch (inst_param.r16_stk) {
-      PRINT_ENUM_CASE(R16_STK_BC)
-      PRINT_ENUM_CASE(R16_STK_DE)
-      PRINT_ENUM_CASE(R16_STK_HL)
-      PRINT_ENUM_CASE(R16_STK_AF)
-    }
-    break;
-  case IMM8: sprintf(inst_param_str, "0x%.2X", inst_param.imm8); break;
-  case E8: sprintf(inst_param_str, "%d", *(int8_t *)&inst_param.imm8); break;
-  case IMM8_HMEM: sprintf(inst_param_str, "[0x%.2X]", inst_param.imm8); break;
-  case SP_IMM8: sprintf(inst_param_str, "SP+0x%.2X", inst_param.imm8); break;
-  // TODO: Print label for imm16 when possible.
-  case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
-  case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
-  case B3: sprintf(inst_param_str, "B3_%d", inst_param.b3); break;
-  case TGT3: sprintf(inst_param_str, "TGT3_%d", inst_param.tgt3); break;
-  case COND:
-    switch (inst_param.cond) {
-      PRINT_ENUM_CASE(COND_NZ)
-      PRINT_ENUM_CASE(COND_Z)
-      PRINT_ENUM_CASE(COND_NC)
-      PRINT_ENUM_CASE(COND_C)
-    }
-    break;
-  case UNKNOWN_INST_BYTE: sprintf(inst_param_str, "0x%.2X", inst_param.unknown_inst_byte); break;
-  case VOID_PARAM_TYPE: sprintf(inst_param_str, "(void)"); break;
+    case R8:
+      switch (inst_param.r8) {
+        PRINT_ENUM_CASE(R8_B)
+        PRINT_ENUM_CASE(R8_C)
+        PRINT_ENUM_CASE(R8_D)
+        PRINT_ENUM_CASE(R8_E)
+        PRINT_ENUM_CASE(R8_H)
+        PRINT_ENUM_CASE(R8_L)
+        PRINT_ENUM_CASE(R8_HL_DREF)
+        PRINT_ENUM_CASE(R8_A)
+      }
+      break;
+    case R16:
+      switch (inst_param.r16) {
+        PRINT_ENUM_CASE(R16_BC)
+        PRINT_ENUM_CASE(R16_DE)
+        PRINT_ENUM_CASE(R16_HL)
+        PRINT_ENUM_CASE(R16_SP)
+      }
+      break;
+    case R16_MEM:
+      switch (inst_param.r16_mem) {
+        PRINT_ENUM_CASE(R16_MEM_BC)
+        PRINT_ENUM_CASE(R16_MEM_DE)
+        PRINT_ENUM_CASE(R16_MEM_HLI)
+        PRINT_ENUM_CASE(R16_MEM_HLD)
+      }
+      break;
+    case R16_STK:
+      switch (inst_param.r16_stk) {
+        PRINT_ENUM_CASE(R16_STK_BC)
+        PRINT_ENUM_CASE(R16_STK_DE)
+        PRINT_ENUM_CASE(R16_STK_HL)
+        PRINT_ENUM_CASE(R16_STK_AF)
+      }
+      break;
+    case IMM8: sprintf(inst_param_str, "0x%.2X", inst_param.imm8); break;
+    case E8: sprintf(inst_param_str, "%d", *(int8_t *)&inst_param.imm8); break;
+    case IMM8_HMEM: sprintf(inst_param_str, "[0x%.2X]", inst_param.imm8); break;
+    case SP_IMM8: sprintf(inst_param_str, "SP+0x%.2X", inst_param.imm8); break;
+    // TODO: Print label for imm16 when possible.
+    case IMM16: sprintf(inst_param_str, "0x%.4X", inst_param.imm16); break;
+    case IMM16_MEM: sprintf(inst_param_str, "[0x%.4X]", inst_param.imm16); break;
+    case B3: sprintf(inst_param_str, "B3_%d", inst_param.b3); break;
+    case TGT3: sprintf(inst_param_str, "TGT3_%d", inst_param.tgt3); break;
+    case COND:
+      switch (inst_param.cond) {
+        PRINT_ENUM_CASE(COND_NZ)
+        PRINT_ENUM_CASE(COND_Z)
+        PRINT_ENUM_CASE(COND_NC)
+        PRINT_ENUM_CASE(COND_C)
+      }
+      break;
+    case UNKNOWN_INST_BYTE: sprintf(inst_param_str, "0x%.2X", inst_param.unknown_inst_byte); break;
+    case VOID_PARAM_TYPE: sprintf(inst_param_str, "(void)"); break;
   }
 }
 #undef PRINT_ENUM_CASE
@@ -149,12 +149,12 @@ void print_inst(gb_state_t *gb_state, FILE *stream, const struct inst inst, bool
     PRINT_INST_NAME(stream, SWAP)
     PRINT_INST_NAME(stream, XOR)
 
-  case UNKNOWN_INST: {
-    // I only use the `_INST` suffix to prevent name collision, so i'm going
-    // just print `UNKNOWN` here so I don't need to add more padding.
-    fprintf(stream, "%-10s", "UNKNOWN");
-    break;
-  }
+    case UNKNOWN_INST: {
+      // I only use the `_INST` suffix to prevent name collision, so i'm going
+      // just print `UNKNOWN` here so I don't need to add more padding.
+      fprintf(stream, "%-10s", "UNKNOWN");
+      break;
+    }
   }
   char inst_param_str[16];
   print_inst_param(inst_param_str, inst.p1);

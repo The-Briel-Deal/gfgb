@@ -1,3 +1,4 @@
 option('tracy_enable', type: 'boolean', value: false, description: 'Enable profiling')
 option('enable_logging', type: 'boolean', value: true, description: 'Enable logging')
+option('enable_audio', type: 'boolean', value: true, description: 'Enable Audio (significantly slows down single step tests)')
 option('python_install', type: 'string', value: '', description: 'Python installation to run pytest tests in')

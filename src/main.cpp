@@ -210,45 +210,45 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   SDL_SetAppMetadata("GF-GB", "0.0.1", "com.gf.gameboy-emu");
 
   switch (run_mode) {
-  case EXECUTE: {
-    if (!gb_setup_serial_out(gb_state, serial_output_filename_cstr)) return SDL_APP_FAILURE;
-    if (!gb_setup_exec_tracing(gb_state, trace_exec_filename_cstr)) return SDL_APP_FAILURE;
-    if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
-    return SDL_APP_CONTINUE; /* carry on with the program! */
-  };
-  case DISASSEMBLE: {
-    disassemble(gb_state, stdout);
+    case EXECUTE: {
+      if (!gb_setup_serial_out(gb_state, serial_output_filename_cstr)) return SDL_APP_FAILURE;
+      if (!gb_setup_exec_tracing(gb_state, trace_exec_filename_cstr)) return SDL_APP_FAILURE;
+      if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
+      return SDL_APP_CONTINUE; /* carry on with the program! */
+    };
+    case DISASSEMBLE: {
+      disassemble(gb_state, stdout);
 
-    return SDL_APP_SUCCESS;
-  }
-  case UNSET:
-    fprintf(stderr, "Run Mode unset, please specify either `exec` to execute or "
-                    "`disasm` to disassemble.\n");
-    return SDL_APP_FAILURE;
-  default: return SDL_APP_FAILURE;
+      return SDL_APP_SUCCESS;
+    }
+    case UNSET:
+      fprintf(stderr, "Run Mode unset, please specify either `exec` to execute or "
+                      "`disasm` to disassemble.\n");
+      return SDL_APP_FAILURE;
+    default: return SDL_APP_FAILURE;
   }
 }
 
 void handle_key_event(struct gb_state *gb_state, const SDL_KeyboardEvent *event) {
   (void)gb_state;
   switch (event->type) {
-  case SDL_EVENT_KEY_UP:
-  case SDL_EVENT_KEY_DOWN: {
-    // TODO: I should expose this as user-changable conf
-    switch (event->key) {
-    case SDLK_W: gb_state->joy_pad.dpad_up = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_A: gb_state->joy_pad.dpad_left = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_S: gb_state->joy_pad.dpad_down = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_D: gb_state->joy_pad.dpad_right = (event->type == SDL_EVENT_KEY_DOWN); break;
+    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_KEY_DOWN: {
+      // TODO: I should expose this as user-changable conf
+      switch (event->key) {
+        case SDLK_W: gb_state->joy_pad.dpad_up = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_A: gb_state->joy_pad.dpad_left = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_S: gb_state->joy_pad.dpad_down = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_D: gb_state->joy_pad.dpad_right = (event->type == SDL_EVENT_KEY_DOWN); break;
 
-    case SDLK_U: gb_state->joy_pad.button_a = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_I: gb_state->joy_pad.button_b = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_O: gb_state->joy_pad.button_start = (event->type == SDL_EVENT_KEY_DOWN); break;
-    case SDLK_P: gb_state->joy_pad.button_select = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_U: gb_state->joy_pad.button_a = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_I: gb_state->joy_pad.button_b = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_O: gb_state->joy_pad.button_start = (event->type == SDL_EVENT_KEY_DOWN); break;
+        case SDLK_P: gb_state->joy_pad.button_select = (event->type == SDL_EVENT_KEY_DOWN); break;
+      }
+      break;
     }
-    break;
-  }
-  default: unreachable();
+    default: unreachable();
   }
 }
 
@@ -262,11 +262,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   if (gb_gui_handle_sdl_event(gb_state, event)) return SDL_APP_CONTINUE;
 
   switch (event->type) {
-  case SDL_EVENT_KEY_UP:
-  case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;
-  case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x
-                                    height, screen will be automatically letter boxed on resize */
-    break;
+    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;
+    case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x
+                                      height, screen will be automatically letter boxed on resize */
+      break;
   }
 
   return SDL_APP_CONTINUE; /* carry on with the program! */

@@ -9,6 +9,9 @@ project(
 if get_option('enable_logging')
   add_global_arguments('-DGFGB_ENABLE_LOGGING=1', language : 'cpp')
 endif
+if not get_option('enable_audio')
+  add_global_arguments('-DGFGB_NO_AUDIO=1', language : 'cpp')
+endif
 python_install_path = get_option('python_install')
 if python_install_path != ''
   py = import('python').find_installation(python_install_path)
@@ -76,6 +79,7 @@ sources = [
   'src/gui.cpp',
   'src/mbc.cpp',
   'src/ppu.cpp',
+  'src/apu.cpp',
   'src/timing.cpp',
 ]
 include = include_directories(['src/', 'embed/'])
@@ -147,12 +151,15 @@ disasm_test_exe = executable(
 
 current_src_dir = meson.current_source_dir()
 
-subdir('test/gf/layer_priority/')
+subdir('test/gf/')
 
-test('cpu_test', cpu_test_exe, workdir : current_src_dir)
-test('mbc_test', mbc_test_exe, workdir : current_src_dir)
-test('ppu_test', ppu_test_exe, workdir : current_src_dir)
-test('disasm_test', disasm_test_exe, workdir : current_src_dir)
+# I do not want any windows popping up or my 70 tests screaming at me during the bootrom.
+test_env = ['SDL_VIDEODRIVER=dummy', 'SDL_AUDIODRIVER=dummy']
+
+test('cpu_test', cpu_test_exe, workdir : current_src_dir, env : test_env)
+test('mbc_test', mbc_test_exe, workdir : current_src_dir, env : test_env)
+test('ppu_test', ppu_test_exe, workdir : current_src_dir, env : test_env)
+test('disasm_test', disasm_test_exe, workdir : current_src_dir, env : test_env)
 
 blargg_cpu_tests = [
   '01-special.gb',
@@ -175,7 +182,7 @@ foreach test : blargg_cpu_tests
     'blargg_cpu_' + test,
     exe,
     args : ['exec', current_src_dir / 'test/blargg/cpu_instrs/individual' / test, '--test_mode', '--exec_speed=100', test_flags],
-    env : ['SDL_VIDEODRIVER=dummy'],
+    env : test_env,
   )
 
 endforeach
@@ -191,7 +198,7 @@ foreach test : blargg_mem_timing_tests
     'blargg_mem_timing_' + test,
     exe,
     args : ['exec', current_src_dir / 'test/blargg/mem_timing/individual' / test, '--test_mode', '--exec_speed=100', test_flags],
-    env : ['SDL_VIDEODRIVER=dummy'],
+    env : test_env,
   )
 endforeach
 
@@ -199,7 +206,7 @@ test(
   'blargg_instr_timing',
   exe,
   args : ['exec', current_src_dir / 'test/blargg/instr_timing/instr_timing.gb', '--test_mode', '--exec_speed=100', test_flags],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 test(
   'mooneye_vblank_stat_intr',
@@ -212,7 +219,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -226,7 +233,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -240,7 +247,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -254,7 +261,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -268,7 +275,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -282,7 +289,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -296,7 +303,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -310,7 +317,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 test(
   'mooneye_mbc1_ram_256kbit',
@@ -323,7 +330,7 @@ test(
     '--test_pass_regex=\\x03\\x05\\x08\\x0D\\x15"',
     test_flags,
   ],
-  env : ['SDL_VIDEODRIVER=dummy'],
+  env : test_env,
 )
 
 test(
@@ -332,4 +339,5 @@ test(
   args : ['-mpytest', '--tap', current_src_dir / 'test/sst/'],
   depends : [gfgb_py_ext],
   protocol : 'tap',
+  env : test_env,
 )

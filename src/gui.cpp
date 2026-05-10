@@ -121,6 +121,7 @@ static void gb_imgui_main_menu_bar(gb_state_t *gb_state) {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("Windows")) {
       ImGui::MenuItem("Fullscreen Debug UI", NULL, &imgui_state.fs_dockspace);
+      ImGui::MenuItem("Audio Viewer", NULL, &imgui_state.audio_viewer);
       ImGui::MenuItem("OAM Viewer", NULL, &imgui_state.oam_viewer);
       ImGui::MenuItem("Tiledata Viewer", NULL, &imgui_state.tiledata_viewer);
       ImGui::MenuItem("Layer Viewer", NULL, &imgui_state.layer_viewer);
@@ -230,9 +231,9 @@ static void       gb_imgui_tiledata_viewer(gb_state_t *gb_state) {
     gb_tiledata_viewer_palette_t &selected = gb_state->imgui.tile_atlas_palette;
     const char                   *preview;
     switch (selected) {
-    case GB_TILEDATA_VIEWER_PALETTE_BGP: preview = BGP_LABEL; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_0: preview = OBP0_LABEL; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_1: preview = OBP1_LABEL; break;
+      case GB_TILEDATA_VIEWER_PALETTE_BGP: preview = BGP_LABEL; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_0: preview = OBP0_LABEL; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_1: preview = OBP1_LABEL; break;
     }
     if (ImGui::BeginCombo("Palette", preview)) {
       if (ImGui::Selectable(BGP_LABEL, selected == GB_TILEDATA_VIEWER_PALETTE_BGP))
@@ -245,9 +246,9 @@ static void       gb_imgui_tiledata_viewer(gb_state_t *gb_state) {
     }
     SDL_Palette *palette;
     switch (selected) {
-    case GB_TILEDATA_VIEWER_PALETTE_BGP: palette = gb_state->video.sdl_bg_palette; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_0: palette = gb_state->video.sdl_obj_palette_0; break;
-    case GB_TILEDATA_VIEWER_PALETTE_OBP_1: palette = gb_state->video.sdl_obj_palette_1; break;
+      case GB_TILEDATA_VIEWER_PALETTE_BGP: palette = gb_state->video.sdl_bg_palette; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_0: palette = gb_state->video.sdl_obj_palette_0; break;
+      case GB_TILEDATA_VIEWER_PALETTE_OBP_1: palette = gb_state->video.sdl_obj_palette_1; break;
     }
     SDL_Surface *locked;
     SDL_LockTextureToSurface(gb_state->imgui.tile_atlas, NULL, &locked);
@@ -436,12 +437,12 @@ static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
   }
   if (ImGui::TreeNodeEx("MBC State", ImGuiTreeNodeFlags_Framed)) {
     switch (gb_state->saved.header.mbc_type) {
-    case GB_NO_MBC: ImGui::TextUnformatted("No MBC"); break;
-    case GB_MBC1:
-      ImGui::TextUnformatted("MBC1");
-      ImGui::Value("Rom Bank", gb_state->saved.regs.mbc1_regs.rom_bank);
-      break;
-    default: ImGui::TextUnformatted("Debug viewer is not setup for the current MBC type."); break;
+      case GB_NO_MBC: ImGui::TextUnformatted("No MBC"); break;
+      case GB_MBC1:
+        ImGui::TextUnformatted("MBC1");
+        ImGui::Value("Rom Bank", gb_state->saved.regs.mbc1_regs.rom_bank);
+        break;
+      default: ImGui::TextUnformatted("Debug viewer is not setup for the current MBC type."); break;
     }
     ImGui::TreePop();
   }
@@ -471,10 +472,22 @@ static void gb_imgui_state_inspector_win(gb_state_t *gb_state) {
 
 static void gb_imgui_settings_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Settings")) {
-    ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg.speed_factor, 0.0f, 10.0f);
+    if (ImGui::SliderFloat("Internal GB Speed", &gb_state->dbg.speed_factor, 0.0f, 10.0f)) {
+      gb_state->apu.set_speed(gb_state->dbg.speed_factor);
+    }
     ImGui::Checkbox("Pause on Error", &gb_state->dbg.pause_on_err);
     ImGui::Checkbox("Print Instructions", &gb_state->dbg.trace_exec);
     ImGui::Checkbox("Show Scanline", &gb_state->imgui.show_scanline);
+  }
+  ImGui::End();
+}
+
+static void gb_imgui_audio_win(gb_state_t *gb_state) {
+  if (ImGui::Begin("Audio")) {
+    // TODO: Impl this once I have audio buffer ready
+    ImGui::PlotLines("Channel 1", gb_state->apu.ch1.sample_buffer,
+                     sizeof(gb_state->apu.ch1.sample_buffer) / sizeof(*gb_state->apu.ch1.sample_buffer),
+                     gb_state->apu.ch1.sample_buffer_start, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
   }
   ImGui::End();
 }
@@ -519,6 +532,9 @@ void gb_imgui_render(gb_state_t *gb_state) {
 
   if (imgui_state.settings) {
     gb_imgui_settings_win(gb_state);
+  }
+  if (imgui_state.audio_viewer) {
+    gb_imgui_audio_win(gb_state);
   }
 
   ImGui::Render();

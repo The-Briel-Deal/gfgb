@@ -1,5 +1,4 @@
-sources = [
-  'src/intro.asm',
+common_sources = [
   'src/lib/bank_numbers.asm',
   'src/lib/build_date.asm',
   'src/lib/crash_handler.asm',
@@ -62,29 +61,31 @@ if rgbasm.found() and rgblink.found() and rgbfix.found() and rgbgfx.found()
     ],
     output: '@BASENAME@.o',
   )
+
+  tests = ['apu_ch1_timer', 'apu_ch1', 'layer_prio', 'apu_ch1_env_sweep', 'apu_ch1_period_sweep']
   
-  layer_prio_test_unfixed = custom_target('layer_prio_test_unfixed',
-    input: gb_obj_generator.process(sources),
-    command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
-    output: ['layer_prio_test_unfixed.gb', 'layer_prio_test.sym'],
-  )
-  
-  custom_target('layer_prio_test',
-    command: [
-      rgbfix,
-      '-v',
-      '-p', '0xFF',
-      '-i', 'LTST',
-      '-k', 'HB',
-      '-l', '0x33',
-      '-m', 'ROM_ONLY',
-      '-n', '0',
-      '-r', '0x00',
-      '-t', 'LAYER_TEST',
-      layer_prio_test_unfixed,
-      '-o', '@OUTPUT@',
-    ],
-    output: 'layer_prio_test.gb',
-    build_by_default: true,
-  )
+  foreach test : tests
+    test_unfixed = custom_target(test + '_test_unfixed',
+      input: gb_obj_generator.process(['src/' + test + '.asm', common_sources]),
+      command: [rgblink, '-p', '0xFF', '@INPUT@', '-o', '@OUTPUT0@', '--sym', '@OUTPUT1@'],
+      output: [test + '_test_unfixed.gb', test + '_test.sym'],
+    )
+    
+    custom_target(test + '_test',
+      command: [
+        rgbfix,
+        '-v',
+        '-p', '0xFF',
+        '-k', 'HB',
+        '-l', '0x33',
+        '-m', 'ROM_ONLY',
+        '-n', '0',
+        '-r', '0x00',
+        test_unfixed,
+        '-o', '@OUTPUT@',
+      ],
+      output: test + '_test.gb',
+      build_by_default: true,
+    )
+  endforeach
 endif

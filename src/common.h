@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "apu.h"
 #include "cpu.h"
 #include "disassemble.h"
 #include "gui.h"
@@ -196,6 +197,12 @@ enum GB_LogCategory {
     regs.r2 = (0x00FF & val) >> 0;                                                                                     \
   }
 
+#define rising_edge(was, is)  (!was && is)
+#define falling_edge(was, is) (was && !is)
+
+#define rising_edge_bit(bit, was, is)  rising_edge(((was >> bit) & 1), ((is >> bit) & 1))
+#define falling_edge_bit(bit, was, is) falling_edge(((was >> bit) & 1), ((is >> bit) & 1))
+
 #define TRACY_COLOR_RED   0xff0000
 #define TRACY_COLOR_GREEN 0x00ff00
 #define TRACY_COLOR_BLUE  0x0000ff
@@ -260,32 +267,6 @@ typedef struct io_regs {
   uint8_t tima; // timer counter
   uint8_t tma;  // timer modulo
   uint8_t tac;  // timer control
-  // Sound
-  uint8_t nr10;
-  uint8_t nr11;
-  uint8_t nr12;
-  uint8_t nr13;
-  uint8_t nr14;
-
-  uint8_t nr21;
-  uint8_t nr22;
-  uint8_t nr23;
-  uint8_t nr24;
-
-  uint8_t nr30;
-  uint8_t nr31;
-  uint8_t nr32;
-  uint8_t nr33;
-  uint8_t nr34;
-
-  uint8_t nr41;
-  uint8_t nr42;
-  uint8_t nr43;
-  uint8_t nr44;
-
-  uint8_t nr50;
-  uint8_t nr51;
-  uint8_t nr52; // sound on/off
 
   uint8_t ly;
   uint8_t lyc;
@@ -299,10 +280,10 @@ typedef struct io_regs {
   uint8_t obp1;
   uint8_t wx;
   uint8_t wy;
-  uint8_t ie;  // interupt enable
-  uint8_t if_; // interupt flag
+  uint8_t ie;  // interrupt enable
+  uint8_t if_; // interrupt flag
   uint8_t dma;
-  bool    ime;           // interupt master enable
+  bool    ime;           // interrupt master enable
   bool    set_ime_after; // IME is only set after the following instruction.
   bool    bank;          // True at start if bootrom is mapped, then once 0xFF50 is written to it becomes false.
 } io_regs_t;
@@ -381,7 +362,7 @@ inline static const char *gb_get_mbc_name(gb_mbc_type_t type) {
   case name: return #name;
     MBC_TYPES
 #undef X
-  default: unreachable();
+    default: unreachable();
   }
 }
 
@@ -536,6 +517,7 @@ typedef struct gb_state {
                                             // so that tests don't have to write the symbol text to a file.
   void init_no_bootrom();
 #endif
+  gb_apu_t                    apu;
   gb_saved_state_t            saved;
   gb_dbg_state_t              dbg;
   gb_imgui_state_t            imgui;
@@ -593,9 +575,9 @@ void gb_state_load_bootrom(gb_state_t *gb_state, const char *bootrom_name);
   X(IO_NR44, 0xFF23)                                                                                                   \
   X(IO_NR50, 0xFF24)                                                                                                   \
   X(IO_NR51, 0xFF25)                                                                                                   \
+  X(IO_NR52, 0xFF26)                                                                                                   \
   X(IO_IF, 0xFF0F)                                                                                                     \
   X(IO_IE, 0xFFFF)                                                                                                     \
-  X(IO_SND_ON, 0xFF26)                                                                                                 \
   X(IO_LCDC, 0xFF40)                                                                                                   \
   X(IO_SCY, 0xFF42)                                                                                                    \
   X(IO_SCX, 0xFF43)                                                                                                    \
@@ -629,7 +611,7 @@ inline static const char *gb_io_reg_name(io_reg_addr_t io_reg) {
   case name: return #name;
     LIST_OF_IO_REGS
 #undef X
-  default: unreachable();
+    default: unreachable();
   }
 }
 #undef LIST_OF_IO_REGS
