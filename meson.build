@@ -150,10 +150,13 @@ current_src_dir = meson.current_source_dir()
 
 subdir('test/gf/')
 
-test('cpu_test', cpu_test_exe, workdir : current_src_dir)
-test('mbc_test', mbc_test_exe, workdir : current_src_dir)
-test('ppu_test', ppu_test_exe, workdir : current_src_dir)
-test('disasm_test', disasm_test_exe, workdir : current_src_dir)
+# I do not want any windows popping up or my 70 tests screaming at me during the bootrom.
+test_env = ['SDL_VIDEODRIVER=dummy', 'SDL_AUDIODRIVER=dummy']
+
+test('cpu_test', cpu_test_exe, workdir : current_src_dir, env : test_env)
+test('mbc_test', mbc_test_exe, workdir : current_src_dir, env : test_env)
+test('ppu_test', ppu_test_exe, workdir : current_src_dir, env : test_env)
+test('disasm_test', disasm_test_exe, workdir : current_src_dir, env : test_env)
 
 blargg_cpu_tests = [
   '01-special.gb',
@@ -170,8 +173,6 @@ blargg_cpu_tests = [
 ]
 
 test_flags = ['--no_bootrom']
-# I do not want any windows popping up or my 70 tests screaming at me during the bootrom.
-test_env = ['SDL_VIDEODRIVER=dummy', 'SDL_AUDIODRIVER=dummy']
 
 foreach test : blargg_cpu_tests
   test(
@@ -335,4 +336,5 @@ test(
   args : ['-mpytest', '--tap', current_src_dir / 'test/sst/'],
   depends : [gfgb_py_ext],
   protocol : 'tap',
+  env : test_env,
 )
