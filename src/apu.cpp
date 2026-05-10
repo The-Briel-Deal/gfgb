@@ -128,15 +128,19 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
 }
 
 gb_apu_t::gb_apu() {
+#ifndef GFGB_NO_AUDIO
   CheckedSDL(Init(SDL_INIT_AUDIO));
+#endif
 
   this->sample_counter = TICKS_PER_SAMPLE;
-  this->output_device  = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+#ifndef GFGB_NO_AUDIO
+  this->output_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
   if (this->output_device == 0) {
     // TODO: I should probably handle this case gracefully since audio isn't really mandatory.
     LogError("Couldn't create audio stream: %s", SDL_GetError());
     abort();
   }
+#endif
 
   // All gameboy channels share a single stream which we mix.
   SDL_AudioSpec spec = {
@@ -144,8 +148,10 @@ gb_apu_t::gb_apu() {
       .channels = 1,
       .freq     = int(AUDIO_SAMPLE_FREQ),
   };
+#ifndef GFGB_NO_AUDIO
   this->stream = SDL_OpenAudioDeviceStream(this->output_device, &spec, NULL, NULL);
   SDL_ResumeAudioStreamDevice(this->stream);
+#endif
 }
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
@@ -308,7 +314,11 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   }
 }
 
-void gb_apu_t::set_speed(float speed) { CheckedSDL(SetAudioStreamFrequencyRatio(this->stream, speed)); }
+void gb_apu_t::set_speed(float speed) {
+#ifndef GFGB_NO_AUDIO
+  CheckedSDL(SetAudioStreamFrequencyRatio(this->stream, speed));
+#endif
+}
 void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
   for (uint16_t i = 0; i < m_cycles; i++) {
     this->tick();
@@ -378,7 +388,10 @@ void gb_apu_t::tick() {
     // TODO: Implement Channel 3
     // TODO: Implement Channel 4
   }
+
+#ifndef GFGB_NO_AUDIO
   if (sample_this_tick) SDL_PutAudioStreamData(this->stream, &sample, sizeof(float));
+#endif
 }
 
 void gb_apu_t::div_tick() {
