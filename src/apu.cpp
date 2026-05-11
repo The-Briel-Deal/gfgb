@@ -37,7 +37,8 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->period_sweep_ticks     = 0;
 
   // Audio buffer for graph in ImGui debugger.
-  GB_memset(this->sample_buffer, 0, sizeof(this->sample_buffer));
+  GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
+  GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
   this->sample_buffer_start = 0;
   this->sample_buffer_len   = 0;
 }
@@ -387,16 +388,22 @@ void gb_apu_t::tick() {
         GB_assert(ch.curr_volume < 16);
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
         ch1_sample /= 4; // Divide the channels sample by 1/4th to prevent clipping when all channels are mixed together
-        static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
-        if (ch.sample_buffer_len >= sample_buffer_size) {
+        if (ch.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
           ch.sample_buffer_len--;
           ch.sample_buffer_start++;
-          ch.sample_buffer_start %= sample_buffer_size;
+          ch.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
         }
-        ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch1_sample;
 
-        if (ch.left_ch_on) left_sample += ch1_sample;
-        if (ch.right_ch_on) right_sample += ch1_sample;
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
+              ch1_sample;
+          left_sample += ch1_sample;
+        }
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
+              ch1_sample;
+          right_sample += ch1_sample;
+        }
       }
     }
     // Channel 2
@@ -414,16 +421,22 @@ void gb_apu_t::tick() {
         GB_assert(ch.curr_volume < 16);
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
         ch2_sample /= 4;
-        static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
-        if (ch.sample_buffer_len >= sample_buffer_size) {
+        if (ch.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
           ch.sample_buffer_len--;
           ch.sample_buffer_start++;
-          ch.sample_buffer_start %= sample_buffer_size;
+          ch.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
         }
-        ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch2_sample;
 
-        if (ch.left_ch_on) left_sample += ch2_sample;
-        if (ch.right_ch_on) right_sample += ch2_sample;
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
+              ch2_sample;
+          left_sample += ch2_sample;
+        }
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
+              ch2_sample;
+          right_sample += ch2_sample;
+        }
       }
     }
     // TODO: Implement Channel 3

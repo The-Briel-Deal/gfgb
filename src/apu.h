@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#define APU_DBG_SAMPLE_BUFFER_SIZE 10'000
+
 struct gb_state;
 typedef struct gb_state gb_state_t;
 typedef uint16_t        io_reg_addr_t;
@@ -71,7 +73,8 @@ typedef struct gb_pulsewave_channel {
   int sample_buffer_start;
   int sample_buffer_len;
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
-  float sample_buffer[10'000];
+  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
+  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
 } gb_pulsewave_channel_t;
 
 typedef struct gb_apu {
