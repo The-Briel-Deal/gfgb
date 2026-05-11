@@ -368,12 +368,26 @@ void gb_apu_t::tick() {
   float  samples[2]       = {0.0f, 0.0f};
   float &left_sample      = samples[0];
   float &right_sample     = samples[1];
+
+  int sample_buf_index;
   if (--this->sample_counter == 0) {
     sample_this_tick     = true;
     this->sample_counter = TICKS_PER_SAMPLE;
   }
   if (apu_powered_on) {
     // Channel 1
+    // TODO: This should be the same on all channels, so I should be able to move the len/start to the apu struct.
+    if (sample_this_tick) {
+      if (this->ch1.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
+        this->ch1.sample_buffer_len--;
+        this->ch1.sample_buffer_start++;
+        this->ch1.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
+      }
+      sample_buf_index = (this->ch1.sample_buffer_start + (this->ch1.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
+
+      this->ch1.sample_buffer_left[sample_buf_index]  = 0;
+      this->ch1.sample_buffer_right[sample_buf_index] = 0;
+    }
     if (this->ch1.on) {
       gb_pulsewave_channel_t &ch = this->ch1;
       ch.counter--;
@@ -388,20 +402,11 @@ void gb_apu_t::tick() {
         GB_assert(ch.curr_volume < 16);
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
         ch1_sample /= 4; // Divide the channels sample by 1/4th to prevent clipping when all channels are mixed together
-        if (ch.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
-          ch.sample_buffer_len--;
-          ch.sample_buffer_start++;
-          ch.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
-        }
-        int sample_buf_index = (ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
-
-        ch.sample_buffer_left[sample_buf_index] = 0;
         if (ch.left_ch_on) {
           ch.sample_buffer_left[sample_buf_index] = ch1_sample;
           left_sample += ch1_sample;
         }
 
-        ch.sample_buffer_right[sample_buf_index] = 0;
         if (ch.right_ch_on) {
           ch.sample_buffer_right[sample_buf_index] = ch1_sample;
           right_sample += ch1_sample;
@@ -409,6 +414,19 @@ void gb_apu_t::tick() {
       }
     }
     // Channel 2
+
+    if (sample_this_tick) {
+      if (this->ch2.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
+        this->ch2.sample_buffer_len--;
+        this->ch2.sample_buffer_start++;
+        this->ch2.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
+      }
+      sample_buf_index = (this->ch2.sample_buffer_start + (this->ch2.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
+
+      this->ch2.sample_buffer_left[sample_buf_index]  = 0;
+      this->ch2.sample_buffer_right[sample_buf_index] = 0;
+    }
+
     if (this->ch2.on) {
       gb_pulsewave_channel_t &ch = this->ch2;
       ch.counter--;
@@ -423,20 +441,11 @@ void gb_apu_t::tick() {
         GB_assert(ch.curr_volume < 16);
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
         ch2_sample /= 4;
-        if (ch.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
-          ch.sample_buffer_len--;
-          ch.sample_buffer_start++;
-          ch.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
-        }
-        int sample_buf_index = (ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
-
-        ch.sample_buffer_left[sample_buf_index] = 0;
         if (ch.left_ch_on) {
           ch.sample_buffer_left[sample_buf_index] = ch2_sample;
           left_sample += ch2_sample;
         }
 
-        ch.sample_buffer_right[sample_buf_index] = 0;
         if (ch.right_ch_on) {
           ch.sample_buffer_right[sample_buf_index] = ch2_sample;
           right_sample += ch2_sample;
