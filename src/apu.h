@@ -32,8 +32,10 @@ typedef struct gb_pulsewave_channel {
   void   period_sweep_tick();
 #endif
   bool            on;
-  gb_duty_cycle_t duty_cycle;
+  bool            left_ch_on;
+  bool            right_ch_on;
   bool            length_enabled;
+  gb_duty_cycle_t duty_cycle;
   uint8_t         initial_length;
   uint8_t         length;
   uint8_t         phase;

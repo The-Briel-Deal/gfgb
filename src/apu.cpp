@@ -156,6 +156,24 @@ gb_apu_t::gb_apu() {
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
+    // Global
+    case IO_NR51: { // Sound Panning
+      uint8_t val = 0b0000'0000;
+      val |= (this->ch1.right_ch_on << 0);
+      val |= (this->ch1.left_ch_on << 4);
+
+      val |= (this->ch2.right_ch_on << 1);
+      val |= (this->ch2.left_ch_on << 5);
+
+      /** TODO: Uncomment once channels 3 and 4 are added.
+      * val |= (this->ch3.right_ch_on << 2);
+      * val |= (this->ch3.left_ch_on << 6);
+
+      * val |= (this->ch4.right_ch_on << 3);
+      * val |= (this->ch4.left_ch_on << 7);
+      **/
+      return val;
+    }
     case IO_NR52: {
       uint8_t val = 0b0111'0000;
       val |= (this->on << 7);
@@ -229,7 +247,24 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   switch (reg) {
-    case IO_NR52: {
+    // Global
+    case IO_NR51: { // Sound Panning
+      this->ch1.right_ch_on = (val >> 0) & 1;
+      this->ch1.left_ch_on  = (val >> 4) & 1;
+
+      this->ch2.right_ch_on = (val >> 1) & 1;
+      this->ch2.left_ch_on  = (val >> 5) & 1;
+
+      /** TODO: Uncomment once channels 3 and 4 are added.
+      * this->ch3.right_ch_on = (val >> 2) & 1;
+      * this->ch3.left_ch_on  = (val >> 6) & 1;
+
+      * this->ch4.right_ch_on = (val >> 3) & 1;
+      * this->ch4.left_ch_on  = (val >> 7) & 1;
+      **/
+      return;
+    }
+    case IO_NR52: { // Sound On/Off
       this->on = (val >> 7) & 1;
       return;
     }
