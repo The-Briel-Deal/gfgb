@@ -393,15 +393,17 @@ void gb_apu_t::tick() {
           ch.sample_buffer_start++;
           ch.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
         }
+        int sample_buf_index = (ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
 
+        ch.sample_buffer_left[sample_buf_index] = 0;
         if (ch.left_ch_on) {
-          ch.sample_buffer_left[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
-              ch1_sample;
+          ch.sample_buffer_left[sample_buf_index] = ch1_sample;
           left_sample += ch1_sample;
         }
+
+        ch.sample_buffer_right[sample_buf_index] = 0;
         if (ch.right_ch_on) {
-          ch.sample_buffer_right[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
-              ch1_sample;
+          ch.sample_buffer_right[sample_buf_index] = ch1_sample;
           right_sample += ch1_sample;
         }
       }
@@ -426,15 +428,17 @@ void gb_apu_t::tick() {
           ch.sample_buffer_start++;
           ch.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
         }
+        int sample_buf_index = (ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
 
+        ch.sample_buffer_left[sample_buf_index] = 0;
         if (ch.left_ch_on) {
-          ch.sample_buffer_left[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
-              ch2_sample;
+          ch.sample_buffer_left[sample_buf_index] = ch2_sample;
           left_sample += ch2_sample;
         }
+
+        ch.sample_buffer_right[sample_buf_index] = 0;
         if (ch.right_ch_on) {
-          ch.sample_buffer_right[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE] =
-              ch2_sample;
+          ch.sample_buffer_right[sample_buf_index] = ch2_sample;
           right_sample += ch2_sample;
         }
       }
