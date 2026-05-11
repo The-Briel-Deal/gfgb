@@ -145,7 +145,7 @@ gb_apu_t::gb_apu() {
   // All gameboy channels share a single stream which we mix.
   SDL_AudioSpec spec = {
       .format   = SDL_AUDIO_F32,
-      .channels = 1,
+      .channels = 2,
       .freq     = int(AUDIO_SAMPLE_FREQ),
   };
 #ifndef GFGB_NO_AUDIO
@@ -363,8 +363,10 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 void gb_apu_t::tick() {
   bool apu_powered_on = (this->on);
 
-  bool  sample_this_tick = false;
-  float sample           = 0.0f;
+  bool   sample_this_tick = false;
+  float  samples[2]       = {0.0f, 0.0f};
+  float &left_sample      = samples[0];
+  float &right_sample     = samples[1];
   if (--this->sample_counter == 0) {
     sample_this_tick     = true;
     this->sample_counter = TICKS_PER_SAMPLE;
@@ -393,7 +395,8 @@ void gb_apu_t::tick() {
         }
         ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch1_sample;
 
-        sample += ch1_sample;
+        if (ch.left_ch_on) left_sample += ch1_sample;
+        if (ch.right_ch_on) right_sample += ch1_sample;
       }
     }
     // Channel 2
@@ -419,7 +422,8 @@ void gb_apu_t::tick() {
         }
         ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch2_sample;
 
-        sample += ch2_sample;
+        if (ch.left_ch_on) left_sample += ch2_sample;
+        if (ch.right_ch_on) right_sample += ch2_sample;
       }
     }
     // TODO: Implement Channel 3
@@ -427,7 +431,7 @@ void gb_apu_t::tick() {
   }
 
 #ifndef GFGB_NO_AUDIO
-  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, &sample, sizeof(float));
+  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
 #endif
 }
 
