@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL_audio.h>
 #ifdef __cplusplus
+#include <limits>
 extern "C" {
 #endif
 
@@ -69,9 +70,7 @@ typedef struct gb_pulsewave_channel {
 
   uint8_t period_sweep_ticks;
 
-  // A circular buffer of the last n samples which are displayed.
-  int sample_buffer_start;
-  int sample_buffer_len;
+  // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
   float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
   float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
@@ -104,7 +103,13 @@ typedef struct gb_apu {
 
   bool on;
 
-  uint8_t                div;
+  uint8_t div;
+  // The current position we are at in
+  uint16_t sample_buffer_index;
+#ifdef __cplusplus
+  static_assert(std::numeric_limits<decltype(sample_buffer_index)>::max() >= APU_DBG_SAMPLE_BUFFER_SIZE,
+                "Max val of sample_buffer_index must be greater than the size of sample buffers.");
+#endif
   gb_pulsewave_channel_t ch1;
   gb_pulsewave_channel_t ch2;
   SDL_AudioDeviceID      output_device;

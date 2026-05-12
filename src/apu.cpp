@@ -39,8 +39,6 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   // Audio buffer for graph in ImGui debugger.
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
   GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
-  this->sample_buffer_start = 0;
-  this->sample_buffer_len   = 0;
 }
 void gb_pulsewave_channel_t::start() {
   this->on                     = true;
@@ -133,7 +131,8 @@ gb_apu_t::gb_apu() {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
 
-  this->sample_counter = TICKS_PER_SAMPLE;
+  this->sample_counter      = TICKS_PER_SAMPLE;
+  this->sample_buffer_index = 0;
 #ifndef GFGB_NO_AUDIO
   this->output_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
   if (this->output_device == 0) {
@@ -364,30 +363,25 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 void gb_apu_t::tick() {
   bool apu_powered_on = (this->on);
 
-  bool   sample_this_tick = false;
-  float  samples[2]       = {0.0f, 0.0f};
-  float &left_sample      = samples[0];
-  float &right_sample     = samples[1];
+  float  samples[2]   = {0.0f, 0.0f};
+  float &left_sample  = samples[0];
+  float &right_sample = samples[1];
 
-  int sample_buf_index;
+  bool sample_this_tick = false;
   if (--this->sample_counter == 0) {
     sample_this_tick     = true;
     this->sample_counter = TICKS_PER_SAMPLE;
+    this->sample_buffer_index++;
+    if (this->sample_buffer_index >= APU_DBG_SAMPLE_BUFFER_SIZE) this->sample_buffer_index = 0;
+
+    this->ch1.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch1.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->ch2.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch2.sample_buffer_right[this->sample_buffer_index] = 0;
   }
   if (apu_powered_on) {
     // Channel 1
-    // TODO: This should be the same on all channels, so I should be able to move the len/start to the apu struct.
-    if (sample_this_tick) {
-      if (this->ch1.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
-        this->ch1.sample_buffer_len--;
-        this->ch1.sample_buffer_start++;
-        this->ch1.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
-      }
-      sample_buf_index = (this->ch1.sample_buffer_start + (this->ch1.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
-
-      this->ch1.sample_buffer_left[sample_buf_index]  = 0;
-      this->ch1.sample_buffer_right[sample_buf_index] = 0;
-    }
     if (this->ch1.on) {
       gb_pulsewave_channel_t &ch = this->ch1;
       ch.counter--;
@@ -403,30 +397,17 @@ void gb_apu_t::tick() {
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
         ch1_sample /= 4; // Divide the channels sample by 1/4th to prevent clipping when all channels are mixed together
         if (ch.left_ch_on) {
-          ch.sample_buffer_left[sample_buf_index] = ch1_sample;
+          ch.sample_buffer_left[this->sample_buffer_index] = ch1_sample;
           left_sample += ch1_sample;
         }
 
         if (ch.right_ch_on) {
-          ch.sample_buffer_right[sample_buf_index] = ch1_sample;
+          ch.sample_buffer_right[this->sample_buffer_index] = ch1_sample;
           right_sample += ch1_sample;
         }
       }
     }
     // Channel 2
-
-    if (sample_this_tick) {
-      if (this->ch2.sample_buffer_len >= APU_DBG_SAMPLE_BUFFER_SIZE) {
-        this->ch2.sample_buffer_len--;
-        this->ch2.sample_buffer_start++;
-        this->ch2.sample_buffer_start %= APU_DBG_SAMPLE_BUFFER_SIZE;
-      }
-      sample_buf_index = (this->ch2.sample_buffer_start + (this->ch2.sample_buffer_len++)) % APU_DBG_SAMPLE_BUFFER_SIZE;
-
-      this->ch2.sample_buffer_left[sample_buf_index]  = 0;
-      this->ch2.sample_buffer_right[sample_buf_index] = 0;
-    }
-
     if (this->ch2.on) {
       gb_pulsewave_channel_t &ch = this->ch2;
       ch.counter--;
@@ -442,12 +423,12 @@ void gb_apu_t::tick() {
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
         ch2_sample /= 4;
         if (ch.left_ch_on) {
-          ch.sample_buffer_left[sample_buf_index] = ch2_sample;
+          ch.sample_buffer_left[this->sample_buffer_index] = ch2_sample;
           left_sample += ch2_sample;
         }
 
         if (ch.right_ch_on) {
-          ch.sample_buffer_right[sample_buf_index] = ch2_sample;
+          ch.sample_buffer_right[this->sample_buffer_index] = ch2_sample;
           right_sample += ch2_sample;
         }
       }
