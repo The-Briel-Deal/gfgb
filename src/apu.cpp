@@ -37,9 +37,8 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->period_sweep_ticks     = 0;
 
   // Audio buffer for graph in ImGui debugger.
-  GB_memset(this->sample_buffer, 0, sizeof(this->sample_buffer));
-  this->sample_buffer_start = 0;
-  this->sample_buffer_len   = 0;
+  GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
+  GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
 }
 void gb_pulsewave_channel_t::start() {
   this->on                     = true;
@@ -132,7 +131,8 @@ gb_apu_t::gb_apu() {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
 
-  this->sample_counter = TICKS_PER_SAMPLE;
+  this->sample_counter      = TICKS_PER_SAMPLE;
+  this->sample_buffer_index = 0;
 #ifndef GFGB_NO_AUDIO
   this->output_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
   if (this->output_device == 0) {
@@ -145,7 +145,7 @@ gb_apu_t::gb_apu() {
   // All gameboy channels share a single stream which we mix.
   SDL_AudioSpec spec = {
       .format   = SDL_AUDIO_F32,
-      .channels = 1,
+      .channels = 2,
       .freq     = int(AUDIO_SAMPLE_FREQ),
   };
 #ifndef GFGB_NO_AUDIO
@@ -156,6 +156,24 @@ gb_apu_t::gb_apu() {
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
+    // Global
+    case IO_NR51: { // Sound Panning
+      uint8_t val = 0b0000'0000;
+      val |= (this->ch1.right_ch_on << 0);
+      val |= (this->ch1.left_ch_on << 4);
+
+      val |= (this->ch2.right_ch_on << 1);
+      val |= (this->ch2.left_ch_on << 5);
+
+      /** TODO: Uncomment once channels 3 and 4 are added.
+      * val |= (this->ch3.right_ch_on << 2);
+      * val |= (this->ch3.left_ch_on << 6);
+
+      * val |= (this->ch4.right_ch_on << 3);
+      * val |= (this->ch4.left_ch_on << 7);
+      **/
+      return val;
+    }
     case IO_NR52: {
       uint8_t val = 0b0111'0000;
       val |= (this->on << 7);
@@ -229,7 +247,24 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   switch (reg) {
-    case IO_NR52: {
+    // Global
+    case IO_NR51: { // Sound Panning
+      this->ch1.right_ch_on = (val >> 0) & 1;
+      this->ch1.left_ch_on  = (val >> 4) & 1;
+
+      this->ch2.right_ch_on = (val >> 1) & 1;
+      this->ch2.left_ch_on  = (val >> 5) & 1;
+
+      /** TODO: Uncomment once channels 3 and 4 are added.
+      * this->ch3.right_ch_on = (val >> 2) & 1;
+      * this->ch3.left_ch_on  = (val >> 6) & 1;
+
+      * this->ch4.right_ch_on = (val >> 3) & 1;
+      * this->ch4.left_ch_on  = (val >> 7) & 1;
+      **/
+      return;
+    }
+    case IO_NR52: { // Sound On/Off
       this->on = (val >> 7) & 1;
       return;
     }
@@ -328,11 +363,22 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 void gb_apu_t::tick() {
   bool apu_powered_on = (this->on);
 
-  bool  sample_this_tick = false;
-  float sample           = 0.0f;
+  float  samples[2]   = {0.0f, 0.0f};
+  float &left_sample  = samples[0];
+  float &right_sample = samples[1];
+
+  bool sample_this_tick = false;
   if (--this->sample_counter == 0) {
     sample_this_tick     = true;
     this->sample_counter = TICKS_PER_SAMPLE;
+    this->sample_buffer_index++;
+    if (this->sample_buffer_index >= APU_DBG_SAMPLE_BUFFER_SIZE) this->sample_buffer_index = 0;
+
+    this->ch1.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch1.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->ch2.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch2.sample_buffer_right[this->sample_buffer_index] = 0;
   }
   if (apu_powered_on) {
     // Channel 1
@@ -350,15 +396,15 @@ void gb_apu_t::tick() {
         GB_assert(ch.curr_volume < 16);
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
         ch1_sample /= 4; // Divide the channels sample by 1/4th to prevent clipping when all channels are mixed together
-        static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
-        if (ch.sample_buffer_len >= sample_buffer_size) {
-          ch.sample_buffer_len--;
-          ch.sample_buffer_start++;
-          ch.sample_buffer_start %= sample_buffer_size;
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[this->sample_buffer_index] = ch1_sample;
+          left_sample += ch1_sample;
         }
-        ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch1_sample;
 
-        sample += ch1_sample;
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[this->sample_buffer_index] = ch1_sample;
+          right_sample += ch1_sample;
+        }
       }
     }
     // Channel 2
@@ -376,15 +422,15 @@ void gb_apu_t::tick() {
         GB_assert(ch.curr_volume < 16);
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
         ch2_sample /= 4;
-        static constexpr int sample_buffer_size = ((sizeof(ch.sample_buffer) / sizeof(*ch.sample_buffer)));
-        if (ch.sample_buffer_len >= sample_buffer_size) {
-          ch.sample_buffer_len--;
-          ch.sample_buffer_start++;
-          ch.sample_buffer_start %= sample_buffer_size;
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[this->sample_buffer_index] = ch2_sample;
+          left_sample += ch2_sample;
         }
-        ch.sample_buffer[(ch.sample_buffer_start + (ch.sample_buffer_len++)) % sample_buffer_size] = ch2_sample;
 
-        sample += ch2_sample;
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[this->sample_buffer_index] = ch2_sample;
+          right_sample += ch2_sample;
+        }
       }
     }
     // TODO: Implement Channel 3
@@ -392,7 +438,7 @@ void gb_apu_t::tick() {
   }
 
 #ifndef GFGB_NO_AUDIO
-  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, &sample, sizeof(float));
+  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
 #endif
 }
 

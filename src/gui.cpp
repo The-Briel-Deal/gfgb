@@ -484,10 +484,16 @@ static void gb_imgui_settings_win(gb_state_t *gb_state) {
 
 static void gb_imgui_audio_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Audio")) {
-    // TODO: Impl this once I have audio buffer ready
-    ImGui::PlotLines("Channel 1", gb_state->apu.ch1.sample_buffer,
-                     sizeof(gb_state->apu.ch1.sample_buffer) / sizeof(*gb_state->apu.ch1.sample_buffer),
-                     gb_state->apu.ch1.sample_buffer_start, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+
+    ImGui::PlotLines("Channel 1 Left", gb_state->apu.ch1.sample_buffer_left, APU_DBG_SAMPLE_BUFFER_SIZE,
+                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+    ImGui::PlotLines("Channel 1 Right", gb_state->apu.ch1.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
+                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+
+    ImGui::PlotLines("Channel 2 Left", gb_state->apu.ch2.sample_buffer_left, APU_DBG_SAMPLE_BUFFER_SIZE,
+                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+    ImGui::PlotLines("Channel 2 Right", gb_state->apu.ch2.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
+                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
   }
   ImGui::End();
 }
