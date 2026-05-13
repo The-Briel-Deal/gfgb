@@ -12,7 +12,6 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL_main.h>
 
-#include <assert.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -53,7 +52,7 @@ bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename
 }
 
 bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len) {
-  assert(bp_str != NULL);
+  GB_assert(bp_str != NULL);
   if (bp_str_len == 5 && bp_str[0] == '$') {
     char    *endptr;
     uint16_t bp_addr = strtoul(bp_str + 1, &endptr, 16);
@@ -81,6 +80,7 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_state_t *gb_state = new gb_state_t();
   *appstate            = gb_state;
+  CheckedSDL(Init(SDL_INIT_GAMEPAD));
 
   enum run_mode run_mode = UNSET;
 
@@ -262,6 +262,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   if (gb_gui_handle_sdl_event(gb_state, event)) return SDL_APP_CONTINUE;
 
   switch (event->type) {
+    case SDL_EVENT_GAMEPAD_ADDED: {
+      gb_state->joy_pad.sdl_gamepad = SDL_OpenGamepad(event->gdevice.which);
+      LogInfo("Gamepad %d added", event->gdevice.which);
+      break;
+    }
     case SDL_EVENT_KEY_UP:
     case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;
     case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x

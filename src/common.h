@@ -243,7 +243,10 @@ typedef struct gb_mem {
 } gb_mem_t;
 
 // true if pressed down
-typedef struct gb_internal_joy_pad_state {
+typedef struct gb_joypad_state {
+  SDL_Gamepad *sdl_gamepad;
+
+  // Internal GameBoy state
   bool dpad_right;
   bool dpad_left;
   bool dpad_up;
@@ -253,7 +256,7 @@ typedef struct gb_internal_joy_pad_state {
   bool button_b;
   bool button_select;
   bool button_start;
-} gb_internal_joy_pad_state_t;
+} gb_joypad_state_t;
 
 typedef struct io_regs {
   uint8_t joyp;
@@ -517,13 +520,13 @@ typedef struct gb_state {
                                             // so that tests don't have to write the symbol text to a file.
   void init_no_bootrom();
 #endif
-  gb_apu_t                    apu;
-  gb_saved_state_t            saved;
-  gb_dbg_state_t              dbg;
-  gb_imgui_state_t            imgui;
-  gb_internal_joy_pad_state_t joy_pad;
-  gb_video_state_t            video;
-  gb_timing_state_t           timing;
+  gb_apu_t          apu;
+  gb_saved_state_t  saved;
+  gb_dbg_state_t    dbg;
+  gb_imgui_state_t  imgui;
+  gb_joypad_state_t joy_pad;
+  gb_video_state_t  video;
+  gb_timing_state_t timing;
 
   // TODO: This state needs to be at the end of the struct so that this doesn't break layout for C FFI. I should
   // probably just have a private void ptr on the state sections which use cpp structs.

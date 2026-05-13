@@ -419,6 +419,20 @@ gb_state::gb_state() {
 
   this->timing = {};
 
+  /// Gamepad State
+  this->joy_pad = {
+      .sdl_gamepad = NULL,
+
+      .dpad_right    = false,
+      .dpad_left     = false,
+      .dpad_up       = false,
+      .dpad_down     = false,
+      .button_a      = false,
+      .button_b      = false,
+      .button_select = false,
+      .button_start  = false,
+  };
+
   /// Video State
   this->video                             = {};
   this->video.initialized                 = false;
