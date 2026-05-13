@@ -305,9 +305,24 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   }
   if (((*io_joyp) >> 4 & 0b11) == 0b01) {
     // Buttons selected
+    gb_state->joy_pad.button_a = false;
+    gb_state->joy_pad.button_a |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    gb_state->joy_pad.button_a |= keyboard_state[SDL_SCANCODE_U];
     if (gb_state->joy_pad.button_a) new_lower_nibble &= ~JOYP_BUTTON_A;
+
+    gb_state->joy_pad.button_b = false;
+    gb_state->joy_pad.button_b |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    gb_state->joy_pad.button_b |= keyboard_state[SDL_SCANCODE_I];
     if (gb_state->joy_pad.button_b) new_lower_nibble &= ~JOYP_BUTTON_B;
+
+    gb_state->joy_pad.button_select = false;
+    gb_state->joy_pad.button_select |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_BACK);
+    gb_state->joy_pad.button_select |= keyboard_state[SDL_SCANCODE_O];
     if (gb_state->joy_pad.button_select) new_lower_nibble &= ~JOYP_BUTTON_SELECT;
+
+    gb_state->joy_pad.button_start = false;
+    gb_state->joy_pad.button_start |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_START);
+    gb_state->joy_pad.button_start |= keyboard_state[SDL_SCANCODE_P];
     if (gb_state->joy_pad.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
   }
 
