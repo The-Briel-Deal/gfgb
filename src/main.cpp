@@ -267,8 +267,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       LogInfo("Gamepad %d added", event->gdevice.which);
       break;
     }
-    case SDL_EVENT_KEY_UP:
-    case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;
     case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x
                                       height, screen will be automatically letter boxed on resize */
       break;
@@ -280,11 +278,29 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 static void gb_update_io_joyp(gb_state_t *gb_state) {
   uint8_t *io_joyp          = &gb_state->saved.regs.io.joyp;
   uint8_t  new_lower_nibble = 0x0F;
+
+  int         keyboard_state_len;
+  const bool *keyboard_state = SDL_GetKeyboardState(&keyboard_state_len);
   if (((*io_joyp) >> 4 & 0b11) == 0b10) {
     // D-Pad selected
+    gb_state->joy_pad.dpad_right = false;
+    gb_state->joy_pad.dpad_right |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT);
+    gb_state->joy_pad.dpad_right |= keyboard_state[SDL_SCANCODE_D];
     if (gb_state->joy_pad.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
+
+    gb_state->joy_pad.dpad_left = false;
+    gb_state->joy_pad.dpad_left |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT);
+    gb_state->joy_pad.dpad_left |= keyboard_state[SDL_SCANCODE_A];
     if (gb_state->joy_pad.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
+
+    gb_state->joy_pad.dpad_up = false;
+    gb_state->joy_pad.dpad_up |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP);
+    gb_state->joy_pad.dpad_up |= keyboard_state[SDL_SCANCODE_W];
     if (gb_state->joy_pad.dpad_up) new_lower_nibble &= ~JOYP_D_PAD_UP;
+
+    gb_state->joy_pad.dpad_down = false;
+    gb_state->joy_pad.dpad_down |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN);
+    gb_state->joy_pad.dpad_down |= keyboard_state[SDL_SCANCODE_S];
     if (gb_state->joy_pad.dpad_down) new_lower_nibble &= ~JOYP_D_PAD_DOWN;
   }
   if (((*io_joyp) >> 4 & 0b11) == 0b01) {
