@@ -8,33 +8,61 @@ extern "C" {
 #endif
 
 #define R8_PARAM(r)                                                                                                    \
-  inst_param_t { .type = R8, .r8 = (r8_t)(r) }
+  inst_param_t {                                                                                                       \
+    .type = R8, .r8 = (r8_t)(r)                                                                                        \
+  }
 #define R16_PARAM(r)                                                                                                   \
-  inst_param_t { .type = R16, .r16 = (r16_t)(r) }
+  inst_param_t {                                                                                                       \
+    .type = R16, .r16 = (r16_t)(r)                                                                                     \
+  }
 #define R16_MEM_PARAM(r)                                                                                               \
-  inst_param_t { .type = R16_MEM, .r16_mem = (r16_mem_t)(r) }
+  inst_param_t {                                                                                                       \
+    .type = R16_MEM, .r16_mem = (r16_mem_t)(r)                                                                         \
+  }
 #define R16_STK_PARAM(r)                                                                                               \
-  inst_param_t { .type = R16_STK, .r16_stk = (r16_stk_t)(r) }
+  inst_param_t {                                                                                                       \
+    .type = R16_STK, .r16_stk = (r16_stk_t)(r)                                                                         \
+  }
 #define IMM16_PARAM(imm)                                                                                               \
-  inst_param_t { .type = IMM16, .imm16 = imm }
+  inst_param_t {                                                                                                       \
+    .type = IMM16, .imm16 = imm                                                                                        \
+  }
 #define SP_IMM8_PARAM(imm)                                                                                             \
-  inst_param_t { .type = SP_IMM8, .imm8 = imm }
+  inst_param_t {                                                                                                       \
+    .type = SP_IMM8, .imm8 = imm                                                                                       \
+  }
 #define IMM8_PARAM(imm)                                                                                                \
-  inst_param_t { .type = IMM8, .imm8 = imm }
+  inst_param_t {                                                                                                       \
+    .type = IMM8, .imm8 = imm                                                                                          \
+  }
 #define E8_PARAM(imm)                                                                                                  \
-  inst_param_t { .type = E8, .imm8 = imm }
+  inst_param_t {                                                                                                       \
+    .type = E8, .imm8 = imm                                                                                            \
+  }
 #define IMM8_HMEM_PARAM(imm)                                                                                           \
-  inst_param_t { .type = IMM8_HMEM, .imm8 = imm }
+  inst_param_t {                                                                                                       \
+    .type = IMM8_HMEM, .imm8 = imm                                                                                     \
+  }
 #define IMM16_MEM_PARAM(imm)                                                                                           \
-  inst_param_t { .type = IMM16_MEM, .imm16 = imm }
+  inst_param_t {                                                                                                       \
+    .type = IMM16_MEM, .imm16 = imm                                                                                    \
+  }
 #define B3_PARAM(b)                                                                                                    \
-  inst_param_t { .type = B3, .b3 = (uint8_t)(b) }
+  inst_param_t {                                                                                                       \
+    .type = B3, .b3 = (uint8_t)(b)                                                                                     \
+  }
 #define TGT3_PARAM(b)                                                                                                  \
-  inst_param_t { .type = TGT3, .tgt3 = (uint8_t)(b) }
+  inst_param_t {                                                                                                       \
+    .type = TGT3, .tgt3 = (uint8_t)(b)                                                                                 \
+  }
 #define COND_PARAM(cond_p)                                                                                             \
-  inst_param_t { .type = COND, .cond = (cond_t)(cond_p) }
+  inst_param_t {                                                                                                       \
+    .type = COND, .cond = (cond_t)(cond_p)                                                                             \
+  }
 #define UNKNOWN_INST_BYTE_PARAM(b)                                                                                     \
-  inst_param_t { .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b }
+  inst_param_t {                                                                                                       \
+    .type = UNKNOWN_INST_BYTE, .unknown_inst_byte = b                                                                  \
+  }
 #define VOID_PARAM inst_param_t{.type = VOID_PARAM_TYPE, .void_val = 0}
 
 enum gb_flag_reg_bits {

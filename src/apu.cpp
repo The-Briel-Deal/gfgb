@@ -52,7 +52,9 @@ void gb_pulsewave_channel_t::start() {
   this->env_sweep_ticks    = 0;
   this->period_sweep_ticks = 0;
 }
-void gb_pulsewave_channel_t::stop() { this->on = false; }
+void gb_pulsewave_channel_t::stop() {
+  this->on = false;
+}
 
 bool gb_pulsewave_channel_t::waveform_step() {
   assert(this->phase < 8);

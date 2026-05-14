@@ -375,8 +375,10 @@ inline static const char *gb_get_mbc_name(gb_mbc_type_t type) {
 extern "C++" {
 // super simple formatter specialization for the MBC type enum, this just makes it easier print/format the cart type
 template <> struct std::formatter<gb_mbc_type_t> : formatter<std::string> {
-  constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
-  auto           format(gb_mbc_type_t type, format_context &ctx) const {
+  constexpr auto parse(std::format_parse_context &ctx) {
+    return ctx.begin();
+  }
+  auto format(gb_mbc_type_t type, format_context &ctx) const {
     return std::format_to(ctx.out(), "{}", gb_get_mbc_name(type));
   }
 };

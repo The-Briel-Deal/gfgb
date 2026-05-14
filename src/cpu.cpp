@@ -51,8 +51,12 @@ void set_r8(struct gb_state *gb_state, r8_t r8, uint8_t val) {
   }
 }
 
-uint16_t get_pc(struct gb_state *gb_state) { return gb_state->saved.regs.pc; }
-void     set_pc(struct gb_state *gb_state, uint16_t new_pc) { gb_state->saved.regs.pc = new_pc; }
+uint16_t get_pc(struct gb_state *gb_state) {
+  return gb_state->saved.regs.pc;
+}
+void set_pc(struct gb_state *gb_state, uint16_t new_pc) {
+  gb_state->saved.regs.pc = new_pc;
+}
 
 uint16_t get_r16(struct gb_state *gb_state, r16_t r16) {
   regs_t *r = &gb_state->saved.regs;
@@ -133,8 +137,12 @@ void set_r16_stk(struct gb_state *gb_state, r16_stk_t r16_stk, uint16_t val) {
   }
 }
 
-void set_ime(struct gb_state *gb_state, bool on) { gb_state->saved.regs.io.ime = on; }
-bool get_ime(struct gb_state *gb_state) { return gb_state->saved.regs.io.ime; } // This is only for tests and debugging.
+void set_ime(struct gb_state *gb_state, bool on) {
+  gb_state->saved.regs.io.ime = on;
+}
+bool get_ime(struct gb_state *gb_state) {
+  return gb_state->saved.regs.io.ime;
+} // This is only for tests and debugging.
 
 void set_flags(struct gb_state *gb_state, gb_flag_reg_bits_t flags, bool on) {
   if (on) {
