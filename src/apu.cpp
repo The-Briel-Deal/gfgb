@@ -10,7 +10,33 @@
 
 #define AUDIO_SAMPLE_FREQ (APU_CLOCK / TICKS_PER_SAMPLE)
 
+// TODO: Test what happens if a SET instruction is used on a register that is partially write only. Since write only
+// portions of registers always return high bits I think my current implementation will rewrite those write only fields
+// to all high. I'm not sure how actual hardware behaves.
+
 gb_pulsewave_channel_t::gb_pulsewave_channel() {
+  this->dbg_muted = false;
+  this->reset();
+}
+void gb_pulsewave_channel_t::start() {
+  this->on                     = true;
+  this->length                 = 64 - this->initial_length;
+  this->curr_period            = this->next_period;
+  this->curr_volume            = this->initial_volume;
+  this->curr_env_dir           = this->next_env_dir;
+  this->curr_env_sweep_pace    = this->next_env_sweep_pace;
+  this->curr_period_sweep_pace = this->next_period_sweep_pace;
+
+  this->env_sweep_ticks    = 0;
+  this->period_sweep_ticks = 0;
+}
+void gb_pulsewave_channel_t::stop() {
+  this->on = false;
+}
+void gb_pulsewave_channel_t::reset() {
+  this->stop();
+  this->left_ch_on     = false;
+  this->right_ch_on    = false;
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
   this->next_period    = 0;
@@ -18,7 +44,7 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->initial_length = 0;
   this->length         = 0;
   this->length_enabled = false;
-  this->duty_cycle     = GB_DUTY_CYCLE_HALF;
+  this->duty_cycle     = GB_DUTY_CYCLE_EIGHTH;
 
   // `NRx2`
   this->initial_volume      = 0;
@@ -40,19 +66,6 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
   GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
 }
-void gb_pulsewave_channel_t::start() {
-  this->on                     = true;
-  this->length                 = 64 - this->initial_length;
-  this->curr_period            = this->next_period;
-  this->curr_volume            = this->initial_volume;
-  this->curr_env_dir           = this->next_env_dir;
-  this->curr_env_sweep_pace    = this->next_env_sweep_pace;
-  this->curr_period_sweep_pace = this->next_period_sweep_pace;
-
-  this->env_sweep_ticks    = 0;
-  this->period_sweep_ticks = 0;
-}
-void gb_pulsewave_channel_t::stop() { this->on = false; }
 
 bool gb_pulsewave_channel_t::waveform_step() {
   assert(this->phase < 8);
@@ -107,7 +120,6 @@ void gb_pulsewave_channel_t::period_sweep_tick() {
 }
 
 void gb_pulsewave_channel_t::env_sweep_tick() {
-
   if (!this->on) return;
   if (this->curr_env_sweep_pace == 0) return;
 
@@ -126,10 +138,84 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
   }
 }
 
+gb_wave_output_channel_t::gb_wave_output_channel() {
+  this->dbg_muted = false;
+  this->reset();
+  GB_memset(this->wave_pattern, 0, sizeof(this->wave_pattern));
+  GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
+  GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
+}
+
+void gb_wave_output_channel_t::start() {
+  this->on = true;
+  // TODO: I need to verify if it should be 256 - initial_length or 255 - initial_length. If I had this set to 256 then
+  // an initial length of 0 would overflow the 8 bit length field but maybe they use a bigger internal register to hold
+  // length in a real gameboy.
+  this->length      = 255 - this->initial_length;
+  this->curr_period = this->next_period;
+}
+
+void gb_wave_output_channel_t::stop() {
+  this->on = false;
+}
+
+void gb_wave_output_channel_t::reset() {
+  this->stop();
+  this->dac_on         = false;
+  this->right_ch_on    = false;
+  this->left_ch_on     = false;
+  this->length_enabled = false;
+  this->initial_length = 0;
+  // TODO: Investigate when length timers aren't reset
+  // (https://gbdev.io/pandocs/Audio_Registers.html#footnote-dmg_apu_off)
+  this->length      = 0;
+  this->next_period = 0;
+  this->curr_period = 0;
+  this->counter     = MAX_PERIOD;
+  this->vol         = GB_CH3_VOLUME_MUTE;
+}
+
+void gb_wave_output_channel_t::len_tick() {
+  if (!this->on) return;
+  if (this->length_enabled && !((--this->length) > 0)) {
+    this->stop();
+  }
+}
+
+gb_noise_channel_t::gb_noise_channel() {
+  this->reset();
+}
+void gb_noise_channel_t::reset() {
+  this->on = false;
+  // `NR51`
+  this->left_ch_on  = false;
+  this->right_ch_on = false;
+  // `NRx2`
+  this->initial_volume      = 0;
+  this->next_env_dir        = false;
+  this->next_env_sweep_pace = 0;
+  this->curr_volume         = 0;
+  this->curr_env_dir        = false;
+  this->curr_env_sweep_pace = 0;
+
+  // From `NR43`
+  this->clock_shift = 0;
+  this->lsfr_width  = false;
+  this->clock_div   = 0;
+
+  // From `NR44`
+  this->length_enabled = false;
+}
+
 gb_apu_t::gb_apu() {
 #ifndef GFGB_NO_AUDIO
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
+
+  this->vin_left  = false;
+  this->vin_right = false;
+  this->vol_left  = 0;
+  this->vol_right = 0;
 
   this->sample_counter      = TICKS_PER_SAMPLE;
   this->sample_buffer_index = 0;
@@ -152,11 +238,21 @@ gb_apu_t::gb_apu() {
   this->stream = SDL_OpenAudioDeviceStream(this->output_device, &spec, NULL, NULL);
   SDL_ResumeAudioStreamDevice(this->stream);
 #endif
+  GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
+  GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
 }
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
     // Global
+    case IO_NR50: { // Master Volume and VIN Panning
+      uint8_t val = 0b0000'0000;
+      val |= (this->vin_left << 7);
+      val |= (this->vol_left << 4);
+      val |= (this->vin_right << 3);
+      val |= (this->vol_right << 0);
+      return val;
+    }
     case IO_NR51: { // Sound Panning
       uint8_t val = 0b0000'0000;
       val |= (this->ch1.right_ch_on << 0);
@@ -165,13 +261,11 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->ch2.right_ch_on << 1);
       val |= (this->ch2.left_ch_on << 5);
 
-      /** TODO: Uncomment once channels 3 and 4 are added.
-      * val |= (this->ch3.right_ch_on << 2);
-      * val |= (this->ch3.left_ch_on << 6);
+      val |= (this->ch3.right_ch_on << 2);
+      val |= (this->ch3.left_ch_on << 6);
 
-      * val |= (this->ch4.right_ch_on << 3);
-      * val |= (this->ch4.left_ch_on << 7);
-      **/
+      val |= (this->ch4.right_ch_on << 3);
+      val |= (this->ch4.left_ch_on << 7);
       return val;
     }
     case IO_NR52: {
@@ -179,9 +273,8 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->on << 7);
       val |= (this->ch1.on << 0);
       val |= (this->ch2.on << 1);
-      // TODO: Uncomment once these channels are added.
-      // val |= (this->ch3.on << 2);
-      // val |= (this->ch4.on << 3);
+      val |= (this->ch3.on << 2);
+      val |= (this->ch4.on << 3);
       return val;
     }
 
@@ -196,10 +289,10 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     case IO_NR11: {
       uint8_t val = 0b0011'1111;
       switch (this->ch1.duty_cycle) {
-        case GB_DUTY_CYCLE_EIGHTH: val &= (0b00 << 6); break;
-        case GB_DUTY_CYCLE_FOURTH: val &= (0b01 << 6); break;
-        case GB_DUTY_CYCLE_HALF: val &= (0b10 << 6); break;
-        case GB_DUTY_CYCLE_THREE_FOURTHS: val &= (0b11 << 6); break;
+        case GB_DUTY_CYCLE_EIGHTH: val |= (0b00 << 6); break;
+        case GB_DUTY_CYCLE_FOURTH: val |= (0b01 << 6); break;
+        case GB_DUTY_CYCLE_HALF: val |= (0b10 << 6); break;
+        case GB_DUTY_CYCLE_THREE_FOURTHS: val |= (0b11 << 6); break;
       }
       return val;
     }
@@ -221,10 +314,10 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     case IO_NR21: {
       uint8_t val = 0b0011'1111;
       switch (this->ch2.duty_cycle) {
-        case GB_DUTY_CYCLE_EIGHTH: val &= (0b00 << 6); break;
-        case GB_DUTY_CYCLE_FOURTH: val &= (0b01 << 6); break;
-        case GB_DUTY_CYCLE_HALF: val &= (0b10 << 6); break;
-        case GB_DUTY_CYCLE_THREE_FOURTHS: val &= (0b11 << 6); break;
+        case GB_DUTY_CYCLE_EIGHTH: val |= (0b00 << 6); break;
+        case GB_DUTY_CYCLE_FOURTH: val |= (0b01 << 6); break;
+        case GB_DUTY_CYCLE_HALF: val |= (0b10 << 6); break;
+        case GB_DUTY_CYCLE_THREE_FOURTHS: val |= (0b11 << 6); break;
       }
       return val;
     }
@@ -242,12 +335,70 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       return val;
     }
 
-    default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
+    // Channel 3
+    case IO_NR30: {
+      uint8_t val = 0b0111'1111;
+      val |= (this->ch3.dac_on & 1) << 7;
+      return val;
+    }
+    case IO_NR31: return 0xFF; // Write only
+    case IO_NR32: {
+      uint8_t val = 0b1001'1111;
+      val |= (this->ch3.vol & 0b11) << 5;
+      return val;
+    }
+    case IO_NR33: return 0xFF; // Write only
+    case IO_NR34: {
+      uint8_t val = 0b1011'1111;
+      val |= (this->ch3.length_enabled & 1) << 6;
+      return val;
+    }
+
+    // Channel 4
+    case IO_NR41: return 0xFF; // Write only
+    case IO_NR42: {
+      uint8_t val = 0;
+      val |= 0b1111'0000 & (this->ch4.initial_volume << 4);
+      val |= 0b0000'1000 & (this->ch4.next_env_dir << 3);
+      val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
+      return val;
+    }
+    case IO_NR43: {
+      uint8_t val = 0;
+      val |= 0b1111'0000 & (this->ch4.clock_shift << 4);
+      val |= 0b0000'1000 & (this->ch4.lsfr_width << 3);
+      val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
+      return val;
+    }
+    case IO_NR44: {
+      uint8_t val = 0b1011'1111;
+      val |= 0b0100'0000 & (this->ch4.length_enabled << 6);
+      return val;
+    }
+
+    default: {
+      if (reg >= IO_WAVE_PATTERN_RAM_START && reg < (IO_WAVE_PATTERN_RAM_START + IO_WAVE_PATTERN_RAM_LEN)) {
+        uint8_t index = reg - IO_WAVE_PATTERN_RAM_START;
+        GB_assert(index < IO_WAVE_PATTERN_RAM_LEN);
+
+        return this->ch3.wave_pattern[index];
+      }
+      LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg);
+      return 0xFF;
+    }
   }
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
+  if (!this->on && reg != IO_NR52) return;
   switch (reg) {
     // Global
+    case IO_NR50: { // Master Volume and VIN Panning
+      this->vin_left  = (val & 0b1000'0000) >> 7;
+      this->vol_left  = (val & 0b0111'0000) >> 4;
+      this->vin_right = (val & 0b0000'1000) >> 3;
+      this->vol_right = (val & 0b0000'0111) >> 0;
+      return;
+    }
     case IO_NR51: { // Sound Panning
       this->ch1.right_ch_on = (val >> 0) & 1;
       this->ch1.left_ch_on  = (val >> 4) & 1;
@@ -255,17 +406,28 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch2.right_ch_on = (val >> 1) & 1;
       this->ch2.left_ch_on  = (val >> 5) & 1;
 
-      /** TODO: Uncomment once channels 3 and 4 are added.
-      * this->ch3.right_ch_on = (val >> 2) & 1;
-      * this->ch3.left_ch_on  = (val >> 6) & 1;
+      this->ch3.right_ch_on = (val >> 2) & 1;
+      this->ch3.left_ch_on  = (val >> 6) & 1;
 
-      * this->ch4.right_ch_on = (val >> 3) & 1;
-      * this->ch4.left_ch_on  = (val >> 7) & 1;
-      **/
+      this->ch4.right_ch_on = (val >> 3) & 1;
+      this->ch4.left_ch_on  = (val >> 7) & 1;
       return;
     }
     case IO_NR52: { // Sound On/Off
       this->on = (val >> 7) & 1;
+      if (!this->on) {
+        // TODO: If audio is turned off via NR52 bit 7 all APU registers are cleared, it appears that this includes
+        // turning off the individual channels but I haven't verified this on real hardware yet.
+
+        this->vin_left  = false;
+        this->vin_right = false;
+        this->vol_left  = 0;
+        this->vol_right = 0;
+        this->ch1.reset();
+        this->ch2.reset();
+        this->ch3.reset();
+        this->ch4.reset();
+      }
       return;
     }
 
@@ -344,8 +506,74 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       }
       return;
     }
+    // Channel 3
+    case IO_NR30: {
+      this->ch3.dac_on = (val >> 7) & 1;
+      if (!this->ch3.dac_on) this->ch3.stop();
+      return;
+    }
+    case IO_NR31: {
+      this->ch3.initial_length = val;
+      return;
+    }
+    case IO_NR32: {
+      this->ch3.vol = (gb_ch3_volume_t)((val >> 5) & 0b11);
+      return;
+    }
+    case IO_NR33: {
+      this->ch3.next_period &= 0xFF00;
+      this->ch3.next_period |= (val & 0x00FF);
+      return;
+    }
+    case IO_NR34: {
+      this->ch3.next_period &= 0x00FF;
+      this->ch3.next_period |= (val & 0b0000'0111) << 8;
+      this->ch3.length_enabled = (val >> 6) & 1;
+      if ((val >> 7) & 1) { // Trigger if this bit is high
+        this->ch3.start();
+      }
+      return;
+    }
 
-    default: LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg); return;
+    // Channel 4
+    case IO_NR41: {
+      // TODO: Implement Noise Channel Length
+      return;
+    }
+    case IO_NR42: {
+      this->ch4.initial_volume      = (val & 0b1111'0000) >> 4;
+      this->ch4.next_env_dir        = (val & 0b0000'1000) >> 3;
+      this->ch4.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
+      if ((val & 0xF8) == 0) {
+        // TODO: Uncomment once stop is implemented
+        // this->ch4.stop();
+      }
+      return;
+    }
+    case IO_NR43: {
+      this->ch4.clock_shift = (val & 0b1111'0000) >> 4;
+      this->ch4.lsfr_width  = (val & 0b0000'1000) >> 3;
+      this->ch4.clock_div   = (val & 0b0000'0111) >> 0;
+      return;
+    }
+    case IO_NR44: {
+      this->ch4.length_enabled = (val & 0b0100'0000) >> 6;
+
+      // TODO: Handle trigger
+      return;
+    }
+
+    default: {
+      if (reg >= IO_WAVE_PATTERN_RAM_START && reg < (IO_WAVE_PATTERN_RAM_START + IO_WAVE_PATTERN_RAM_LEN)) {
+        uint8_t index = reg - IO_WAVE_PATTERN_RAM_START;
+        GB_assert(index < IO_WAVE_PATTERN_RAM_LEN);
+
+        this->ch3.wave_pattern[index] = val;
+        return;
+      }
+      LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg);
+      return;
+    }
   }
 }
 
@@ -379,6 +607,12 @@ void gb_apu_t::tick() {
 
     this->ch2.sample_buffer_left[this->sample_buffer_index]  = 0;
     this->ch2.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->ch3.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch3.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->sample_buffer_right[this->sample_buffer_index] = 0;
   }
   if (apu_powered_on) {
     // Channel 1
@@ -391,7 +625,7 @@ void gb_apu_t::tick() {
         ch.phase %= 8;
       }
 
-      if (sample_this_tick) {
+      if (sample_this_tick && !ch.dbg_muted) {
         float ch1_sample = ch.waveform_step() ? 1.0f : -1.0f;
         GB_assert(ch.curr_volume < 16);
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
@@ -417,7 +651,7 @@ void gb_apu_t::tick() {
         ch.phase %= 8;
       }
 
-      if (sample_this_tick) {
+      if (sample_this_tick && !ch.dbg_muted) {
         float ch2_sample = ch.waveform_step() ? 1.0f : -1.0f;
         GB_assert(ch.curr_volume < 16);
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
@@ -433,13 +667,52 @@ void gb_apu_t::tick() {
         }
       }
     }
-    // TODO: Implement Channel 3
+    // Channel 3
+    if (this->ch3.on) {
+      // The Channel 3 period timer ticks once for every 2 t-cycles (aka half of one m-cycle). Since this tick
+      // function is called for every m-cycle we need to increment the counter by two every tick.
+      gb_wave_output_channel_t &ch = this->ch3;
+      ch.counter -= 2;
+      if (ch.counter <= 0) {
+        ch.curr_period = ch.next_period;
+        ch.counter += (MAX_PERIOD - ch.curr_period);
+        ch.phase++;
+        ch.phase %= 32;
+      }
+
+      if (sample_this_tick && !ch.dbg_muted) {
+        uint8_t ch3_sample_i = ch.wave_pattern[(int)(ch.phase / 2)];
+        if ((ch.phase & 1) == 0) ch3_sample_i >>= 4;
+        ch3_sample_i &= 0x0F;
+        float ch3_sample;
+        switch (ch.vol) {
+          case GB_CH3_VOLUME_MUTE: ch3_sample = 0.0f; break;
+          case GB_CH3_VOLUME_FULL: ch3_sample = (float(ch3_sample_i >> 0) / 15.0f) - 0.5f; break;
+          case GB_CH3_VOLUME_HALF: ch3_sample = (float(ch3_sample_i >> 1) / 15.0f) - 0.25f; break;
+          case GB_CH3_VOLUME_QUAR: ch3_sample = (float(ch3_sample_i >> 2) / 15.0f) - 0.125f; break;
+        }
+        ch3_sample /= 2;
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[this->sample_buffer_index] = ch3_sample;
+          left_sample += ch3_sample;
+        }
+
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[this->sample_buffer_index] = ch3_sample;
+          right_sample += ch3_sample;
+        }
+      }
+    }
     // TODO: Implement Channel 4
   }
 
+  if (sample_this_tick) {
+    this->sample_buffer_left[this->sample_buffer_index]  = left_sample;
+    this->sample_buffer_right[this->sample_buffer_index] = right_sample;
 #ifndef GFGB_NO_AUDIO
-  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
+    SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
 #endif
+  }
 }
 
 void gb_apu_t::div_tick() {
@@ -452,6 +725,7 @@ void gb_apu_t::div_tick() {
   if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
     this->ch1.len_tick();
     this->ch2.len_tick();
+    this->ch3.len_tick();
   }
   // Period Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {

@@ -14,6 +14,7 @@ extern "C" {
 struct gb_state;
 typedef struct gb_state gb_state_t;
 typedef uint16_t        io_reg_addr_t;
+typedef float           gb_apu_sample_buffer_t[APU_DBG_SAMPLE_BUFFER_SIZE];
 
 typedef enum gb_duty_cycle : uint8_t {
   GB_DUTY_CYCLE_EIGHTH        = 0b1000'0000,
@@ -30,10 +31,13 @@ typedef struct gb_pulsewave_channel {
   double tone_freq(); // this->samp_freq() / 8
   void   start();
   void   stop();
+  void   reset();
   void   len_tick();
   void   env_sweep_tick();
   void   period_sweep_tick();
 #endif
+  bool dbg_muted; // Set if muted via the imgui debug ui.
+
   bool            on;
   bool            left_ch_on;
   bool            right_ch_on;
@@ -46,7 +50,7 @@ typedef struct gb_pulsewave_channel {
   uint16_t        next_period;
   uint16_t        curr_period;
 
-  // From `NR12`, these don't take effect until a next trigger.
+  // From `NRx2`, these don't take effect until a next trigger.
   uint8_t initial_volume;
   bool    next_env_dir;
   uint8_t next_env_sweep_pace;
@@ -60,7 +64,7 @@ typedef struct gb_pulsewave_channel {
 
   // TODO: Once I add channel 2 I need to add a field which indicates whether or not the channel has a period sweep.
 
-  // From `NR10`, these don't take effect until a next trigger.
+  // From `NRx0`, these don't take effect until a next trigger.
   uint8_t next_period_sweep_pace;
   uint8_t curr_period_sweep_pace;
   // I'm struggling to find info on if these only take effect on trigger. It looks like resetting sweep direction from
@@ -72,9 +76,82 @@ typedef struct gb_pulsewave_channel {
 
   // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
-  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
-  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
 } gb_pulsewave_channel_t;
+
+typedef enum gb_ch3_volume : uint8_t {
+  GB_CH3_VOLUME_MUTE = 0b00,
+  GB_CH3_VOLUME_FULL = 0b01,
+  GB_CH3_VOLUME_HALF = 0b10,
+  GB_CH3_VOLUME_QUAR = 0b11,
+} gb_ch3_volume_t;
+
+#define IO_WAVE_PATTERN_RAM_START 0xFF30
+#define IO_WAVE_PATTERN_RAM_LEN   16
+
+typedef struct gb_wave_output_channel {
+#ifdef __cplusplus
+  gb_wave_output_channel();
+  void start();
+  void stop();
+  void reset();
+  void len_tick();
+#endif
+  bool dbg_muted; // Set if muted via the imgui debug ui.
+  bool on;
+  bool dac_on;
+  bool right_ch_on;
+  bool left_ch_on;
+
+  bool    length_enabled;
+  uint8_t initial_length;
+  uint8_t length;
+
+  gb_ch3_volume_t vol;
+
+  uint16_t next_period;
+  uint16_t curr_period;
+  uint8_t  phase;
+  int32_t  counter;
+
+  uint8_t wave_pattern[IO_WAVE_PATTERN_RAM_LEN];
+
+  // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
+  // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
+} gb_wave_output_channel_t;
+
+typedef struct gb_noise_channel {
+#ifdef __cplusplus
+  gb_noise_channel();
+  // TODO: Add start/stop helpers
+  void reset();
+#endif
+  bool on;
+
+  // From `NR51`
+  bool left_ch_on;
+  bool right_ch_on;
+  // From `NRx2`, these don't take effect until a next trigger.
+  uint8_t initial_volume;
+  bool    next_env_dir;
+  uint8_t next_env_sweep_pace;
+
+  // On trigger, copy the above three fields into these 3.
+  uint8_t curr_volume;
+  bool    curr_env_dir;
+  uint8_t curr_env_sweep_pace;
+
+  // From `NR43`
+  uint8_t clock_shift;
+  bool    lsfr_width;
+  uint8_t clock_div;
+
+  // From `NR44`
+  bool length_enabled;
+} gb_noise_channel_t;
 
 typedef struct gb_apu {
 #ifdef __cplusplus
@@ -103,6 +180,12 @@ typedef struct gb_apu {
 
   bool on;
 
+  // From `NR50`
+  bool    vin_left;
+  bool    vin_right;
+  uint8_t vol_left;
+  uint8_t vol_right;
+
   uint8_t div;
   // The current position we are at in
   uint16_t sample_buffer_index;
@@ -110,10 +193,16 @@ typedef struct gb_apu {
   static_assert(std::numeric_limits<decltype(sample_buffer_index)>::max() >= APU_DBG_SAMPLE_BUFFER_SIZE,
                 "Max val of sample_buffer_index must be greater than the size of sample buffers.");
 #endif
-  gb_pulsewave_channel_t ch1;
-  gb_pulsewave_channel_t ch2;
-  SDL_AudioDeviceID      output_device;
-  SDL_AudioStream       *stream;
+  // Sample buffer containing the mixed result of all channels
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
+
+  gb_pulsewave_channel_t   ch1;
+  gb_pulsewave_channel_t   ch2;
+  gb_wave_output_channel_t ch3;
+  gb_noise_channel_t       ch4;
+  SDL_AudioDeviceID        output_device;
+  SDL_AudioStream         *stream;
 
   uint8_t sample_counter; // This is reset to `TICKS_PER_SAMPLE` every time it reaches 0. When it reaches 0 a sample is
                           // put in the queue for SDL.

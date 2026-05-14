@@ -108,7 +108,9 @@ void gb_dstr_free(gb_dstr_t *dstr) {
   dstr->txt = NULL;
 }
 // clear dynamic string without freeing or reallocating
-void gb_dstr_clear(gb_dstr_t *dstr) { dstr->len = 0; }
+void gb_dstr_clear(gb_dstr_t *dstr) {
+  dstr->len = 0;
+}
 // make sure `n` bytes are available after the len of this str
 void gb_dstr_ensure_space(gb_dstr_t *dstr, size_t n) {
   size_t req_len = dstr->len + n;
@@ -136,9 +138,13 @@ void gb_state_reset(struct gb_state *gb_state) {
   gb_state->timing.ns_elapsed_while_running   = 0;
 }
 
-struct gb_state *gb_state_alloc() { return new gb_state_t; }
+struct gb_state *gb_state_alloc() {
+  return new gb_state_t;
+}
 
-void gb_state_free(struct gb_state *gb_state) { delete gb_state; }
+void gb_state_free(struct gb_state *gb_state) {
+  delete gb_state;
+}
 
 uint8_t *get_io_reg(struct gb_state *gb_state, uint16_t addr) {
 
@@ -378,7 +384,9 @@ void gb_write_mem(struct gb_state *gb_state, uint16_t addr, uint8_t val) {
   *val_ptr = val;
 }
 
-uint64_t gb_m_cycles(struct gb_state *gb_state) { return gb_state->saved.m_cycles_elapsed; }
+uint64_t gb_m_cycles(struct gb_state *gb_state) {
+  return gb_state->saved.m_cycles_elapsed;
+}
 
 #define DOTS_PER_LINE   456
 #define LINES_PER_FRAME 153
@@ -389,7 +397,9 @@ bool gb_state_get_err(struct gb_state *gb_state) {
   return err;
 }
 
-void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) { gb_state->dbg.use_flat_ram = enabled; }
+void gb_state_use_flat_mem(struct gb_state *gb_state, bool enabled) {
+  gb_state->dbg.use_flat_ram = enabled;
+}
 
 gb_state::gb_state() {
   /// Registers
