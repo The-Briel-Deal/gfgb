@@ -12,7 +12,6 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL_main.h>
 
-#include <assert.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -53,7 +52,7 @@ bool gb_setup_exec_tracing(gb_state_t *gb_state, const char *trace_exec_filename
 }
 
 bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len) {
-  assert(bp_str != NULL);
+  GB_assert(bp_str != NULL);
   if (bp_str_len == 5 && bp_str[0] == '$') {
     char    *endptr;
     uint16_t bp_addr = strtoul(bp_str + 1, &endptr, 16);
@@ -81,6 +80,7 @@ bool gb_set_breakpoint(gb_state_t *gb_state, const char *bp_str, int bp_str_len)
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_state_t *gb_state = new gb_state_t();
   *appstate            = gb_state;
+  CheckedSDL(Init(SDL_INIT_GAMEPAD));
 
   enum run_mode run_mode = UNSET;
 
@@ -262,8 +262,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   if (gb_gui_handle_sdl_event(gb_state, event)) return SDL_APP_CONTINUE;
 
   switch (event->type) {
-    case SDL_EVENT_KEY_UP:
-    case SDL_EVENT_KEY_DOWN: handle_key_event(gb_state, &event->key); break;
+    case SDL_EVENT_GAMEPAD_ADDED: {
+      gb_state->joy_pad.sdl_gamepad = SDL_OpenGamepad(event->gdevice.which);
+      LogInfo("Gamepad %d added", event->gdevice.which);
+      break;
+    }
     case SDL_EVENT_WINDOW_RESIZED: /* no action should be needed since the the logical representation is the gb width x
                                       height, screen will be automatically letter boxed on resize */
       break;
@@ -272,21 +275,41 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
+#define BUTTON_DOWN(gamepad_button, keyboard_key)                                                                      \
+  (SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, gamepad_button) || keyboard_state[keyboard_key])
+
 static void gb_update_io_joyp(gb_state_t *gb_state) {
   uint8_t *io_joyp          = &gb_state->saved.regs.io.joyp;
   uint8_t  new_lower_nibble = 0x0F;
+
+  int         keyboard_state_len;
+  const bool *keyboard_state = SDL_GetKeyboardState(&keyboard_state_len);
   if (((*io_joyp) >> 4 & 0b11) == 0b10) {
     // D-Pad selected
-    if (gb_state->joy_pad.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
-    if (gb_state->joy_pad.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
+    gb_state->joy_pad.dpad_up = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_UP, SDL_SCANCODE_W);
     if (gb_state->joy_pad.dpad_up) new_lower_nibble &= ~JOYP_D_PAD_UP;
+
+    gb_state->joy_pad.dpad_left = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_LEFT, SDL_SCANCODE_A);
+    if (gb_state->joy_pad.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
+
+    gb_state->joy_pad.dpad_down = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_DOWN, SDL_SCANCODE_S);
     if (gb_state->joy_pad.dpad_down) new_lower_nibble &= ~JOYP_D_PAD_DOWN;
+
+    gb_state->joy_pad.dpad_right = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_RIGHT, SDL_SCANCODE_D);
+    if (gb_state->joy_pad.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
   }
   if (((*io_joyp) >> 4 & 0b11) == 0b01) {
     // Buttons selected
+    gb_state->joy_pad.button_a = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_SOUTH, SDL_SCANCODE_U);
     if (gb_state->joy_pad.button_a) new_lower_nibble &= ~JOYP_BUTTON_A;
+
+    gb_state->joy_pad.button_b = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_EAST, SDL_SCANCODE_I);
     if (gb_state->joy_pad.button_b) new_lower_nibble &= ~JOYP_BUTTON_B;
+
+    gb_state->joy_pad.button_select = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_BACK, SDL_SCANCODE_O);
     if (gb_state->joy_pad.button_select) new_lower_nibble &= ~JOYP_BUTTON_SELECT;
+
+    gb_state->joy_pad.button_start = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_START, SDL_SCANCODE_P);
     if (gb_state->joy_pad.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
   }
 
@@ -295,6 +318,9 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   *io_joyp |= new_lower_nibble;
   *io_joyp |= 0xC0; // most significant two bits are set high since they are unused
 }
+
+#undef BUTTON_DOWN
+
 static bool in_range(uint16_t val, uint16_t bot, uint16_t top) {
   if (val < bot) return false;
   if (val >= top) return false;
