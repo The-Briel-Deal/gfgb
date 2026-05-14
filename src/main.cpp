@@ -275,6 +275,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
+#define BUTTON_DOWN(gamepad_button, keyboard_key)                                                                      \
+  (SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, gamepad_button) || keyboard_state[keyboard_key])
+
 static void gb_update_io_joyp(gb_state_t *gb_state) {
   uint8_t *io_joyp          = &gb_state->saved.regs.io.joyp;
   uint8_t  new_lower_nibble = 0x0F;
@@ -283,46 +286,30 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   const bool *keyboard_state = SDL_GetKeyboardState(&keyboard_state_len);
   if (((*io_joyp) >> 4 & 0b11) == 0b10) {
     // D-Pad selected
-    gb_state->joy_pad.dpad_right = false;
-    gb_state->joy_pad.dpad_right |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT);
-    gb_state->joy_pad.dpad_right |= keyboard_state[SDL_SCANCODE_D];
-    if (gb_state->joy_pad.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
-
-    gb_state->joy_pad.dpad_left = false;
-    gb_state->joy_pad.dpad_left |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT);
-    gb_state->joy_pad.dpad_left |= keyboard_state[SDL_SCANCODE_A];
-    if (gb_state->joy_pad.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
-
-    gb_state->joy_pad.dpad_up = false;
-    gb_state->joy_pad.dpad_up |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP);
-    gb_state->joy_pad.dpad_up |= keyboard_state[SDL_SCANCODE_W];
+    gb_state->joy_pad.dpad_up = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_UP, SDL_SCANCODE_W);
     if (gb_state->joy_pad.dpad_up) new_lower_nibble &= ~JOYP_D_PAD_UP;
 
-    gb_state->joy_pad.dpad_down = false;
-    gb_state->joy_pad.dpad_down |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN);
-    gb_state->joy_pad.dpad_down |= keyboard_state[SDL_SCANCODE_S];
+    gb_state->joy_pad.dpad_left = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_LEFT, SDL_SCANCODE_A);
+    if (gb_state->joy_pad.dpad_left) new_lower_nibble &= ~JOYP_D_PAD_LEFT;
+
+    gb_state->joy_pad.dpad_down = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_DOWN, SDL_SCANCODE_S);
     if (gb_state->joy_pad.dpad_down) new_lower_nibble &= ~JOYP_D_PAD_DOWN;
+
+    gb_state->joy_pad.dpad_right = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_DPAD_RIGHT, SDL_SCANCODE_D);
+    if (gb_state->joy_pad.dpad_right) new_lower_nibble &= ~JOYP_D_PAD_RIGHT;
   }
   if (((*io_joyp) >> 4 & 0b11) == 0b01) {
     // Buttons selected
-    gb_state->joy_pad.button_a = false;
-    gb_state->joy_pad.button_a |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
-    gb_state->joy_pad.button_a |= keyboard_state[SDL_SCANCODE_U];
+    gb_state->joy_pad.button_a = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_SOUTH, SDL_SCANCODE_U);
     if (gb_state->joy_pad.button_a) new_lower_nibble &= ~JOYP_BUTTON_A;
 
-    gb_state->joy_pad.button_b = false;
-    gb_state->joy_pad.button_b |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_EAST);
-    gb_state->joy_pad.button_b |= keyboard_state[SDL_SCANCODE_I];
+    gb_state->joy_pad.button_b = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_EAST, SDL_SCANCODE_I);
     if (gb_state->joy_pad.button_b) new_lower_nibble &= ~JOYP_BUTTON_B;
 
-    gb_state->joy_pad.button_select = false;
-    gb_state->joy_pad.button_select |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_BACK);
-    gb_state->joy_pad.button_select |= keyboard_state[SDL_SCANCODE_O];
+    gb_state->joy_pad.button_select = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_BACK, SDL_SCANCODE_O);
     if (gb_state->joy_pad.button_select) new_lower_nibble &= ~JOYP_BUTTON_SELECT;
 
-    gb_state->joy_pad.button_start = false;
-    gb_state->joy_pad.button_start |= SDL_GetGamepadButton(gb_state->joy_pad.sdl_gamepad, SDL_GAMEPAD_BUTTON_START);
-    gb_state->joy_pad.button_start |= keyboard_state[SDL_SCANCODE_P];
+    gb_state->joy_pad.button_start = BUTTON_DOWN(SDL_GAMEPAD_BUTTON_START, SDL_SCANCODE_P);
     if (gb_state->joy_pad.button_start) new_lower_nibble &= ~JOYP_BUTTON_START;
   }
 
@@ -331,6 +318,9 @@ static void gb_update_io_joyp(gb_state_t *gb_state) {
   *io_joyp |= new_lower_nibble;
   *io_joyp |= 0xC0; // most significant two bits are set high since they are unused
 }
+
+#undef BUTTON_DOWN
+
 static bool in_range(uint16_t val, uint16_t bot, uint16_t top) {
   if (val < bot) return false;
   if (val >= top) return false;
