@@ -46,7 +46,7 @@ typedef struct gb_pulsewave_channel {
   uint16_t        next_period;
   uint16_t        curr_period;
 
-  // From `NR12`, these don't take effect until a next trigger.
+  // From `NRx2`, these don't take effect until a next trigger.
   uint8_t initial_volume;
   bool    next_env_dir;
   uint8_t next_env_sweep_pace;
@@ -60,7 +60,7 @@ typedef struct gb_pulsewave_channel {
 
   // TODO: Once I add channel 2 I need to add a field which indicates whether or not the channel has a period sweep.
 
-  // From `NR10`, these don't take effect until a next trigger.
+  // From `NRx0`, these don't take effect until a next trigger.
   uint8_t next_period_sweep_pace;
   uint8_t curr_period_sweep_pace;
   // I'm struggling to find info on if these only take effect on trigger. It looks like resetting sweep direction from
@@ -75,6 +75,13 @@ typedef struct gb_pulsewave_channel {
   float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
   float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
 } gb_pulsewave_channel_t;
+
+typedef struct gb_wave_output_channel {
+#ifdef __cplusplus
+  gb_wave_output_channel();
+#endif
+  bool dac_on;
+} gb_wave_output_channel_t;
 
 typedef struct gb_apu {
 #ifdef __cplusplus
@@ -110,10 +117,11 @@ typedef struct gb_apu {
   static_assert(std::numeric_limits<decltype(sample_buffer_index)>::max() >= APU_DBG_SAMPLE_BUFFER_SIZE,
                 "Max val of sample_buffer_index must be greater than the size of sample buffers.");
 #endif
-  gb_pulsewave_channel_t ch1;
-  gb_pulsewave_channel_t ch2;
-  SDL_AudioDeviceID      output_device;
-  SDL_AudioStream       *stream;
+  gb_pulsewave_channel_t   ch1;
+  gb_pulsewave_channel_t   ch2;
+  gb_wave_output_channel_t ch3;
+  SDL_AudioDeviceID        output_device;
+  SDL_AudioStream         *stream;
 
   uint8_t sample_counter; // This is reset to `TICKS_PER_SAMPLE` every time it reaches 0. When it reaches 0 a sample is
                           // put in the queue for SDL.

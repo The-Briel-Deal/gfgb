@@ -128,6 +128,10 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
   }
 }
 
+gb_wave_output_channel_t::gb_wave_output_channel() {
+  this->dac_on = false;
+}
+
 gb_apu_t::gb_apu() {
 #ifndef GFGB_NO_AUDIO
   CheckedSDL(Init(SDL_INIT_AUDIO));
@@ -243,6 +247,12 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->ch2.length_enabled & 1) << 6;
       return val;
     }
+    // Channel 3
+    case IO_NR30: {
+      uint8_t val = 0b0111'1111;
+      val |= (this->ch3.dac_on & 1) << 7;
+      return val;
+    }
 
     default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
   }
@@ -345,6 +355,10 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         this->ch2.start();
       }
       return;
+    }
+    // Channel 3
+    case IO_NR30: {
+      this->ch3.dac_on = (val >> 7) & 1;
     }
 
     default: LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg); return;
