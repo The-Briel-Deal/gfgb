@@ -141,6 +141,7 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
   this->vol            = GB_CH3_VOLUME_MUTE;
 }
 void gb_wave_output_channel_t::start() {
+  // TODO: I need to figure out if triggering ch3 re-enables the DAC.
   this->on          = true;
   this->length      = 64 - this->initial_length;
   this->curr_period = this->next_period;
