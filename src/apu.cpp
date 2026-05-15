@@ -132,6 +132,9 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
   this->dac_on         = false;
   this->right_ch_on    = false;
   this->left_ch_on     = false;
+  this->length_enabled = false;
+  this->initial_length = 0;
+  this->length         = 0;
 }
 
 gb_apu_t::gb_apu() {
@@ -255,6 +258,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->ch3.dac_on & 1) << 7;
       return val;
     }
+    case IO_NR31: return 0xFF; // Write only
 
     default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
   }
@@ -361,6 +365,9 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     // Channel 3
     case IO_NR30: {
       this->ch3.dac_on = (val >> 7) & 1;
+    }
+    case IO_NR31: {
+      this->ch3.initial_length = val;
     }
 
     default: LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg); return;

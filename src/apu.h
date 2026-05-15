@@ -83,6 +83,10 @@ typedef struct gb_wave_output_channel {
   bool dac_on;
   bool right_ch_on;
   bool left_ch_on;
+
+  bool            length_enabled;
+  uint8_t         initial_length;
+  uint8_t         length;
 } gb_wave_output_channel_t;
 
 typedef struct gb_apu {
