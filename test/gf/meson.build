@@ -68,6 +68,7 @@ if rgbasm.found() and rgblink.found() and rgbfix.found() and rgbgfx.found()
     'apu_ch1_env_sweep',
     'apu_ch1_period_sweep',
     'apu_ch1_timer',
+    'apu_ch3',
     'layer_prio',
   ]
   
