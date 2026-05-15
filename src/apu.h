@@ -76,17 +76,33 @@ typedef struct gb_pulsewave_channel {
   float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
 } gb_pulsewave_channel_t;
 
+typedef enum gb_ch3_volume : uint8_t {
+  GB_CH3_VOLUME_MUTE = 0b00,
+  GB_CH3_VOLUME_FULL = 0b01,
+  GB_CH3_VOLUME_HALF = 0b10,
+  GB_CH3_VOLUME_QUAR = 0b11,
+} gb_ch3_volume_t;
+
 typedef struct gb_wave_output_channel {
 #ifdef __cplusplus
   gb_wave_output_channel();
+  void start();
+  void stop();
+  void len_tick();
 #endif
+  bool on;
   bool dac_on;
   bool right_ch_on;
   bool left_ch_on;
 
-  bool            length_enabled;
-  uint8_t         initial_length;
-  uint8_t         length;
+  bool    length_enabled;
+  uint8_t initial_length;
+  uint8_t length;
+
+  gb_ch3_volume_t vol;
+
+  uint16_t next_period;
+  uint16_t curr_period;
 } gb_wave_output_channel_t;
 
 typedef struct gb_apu {
