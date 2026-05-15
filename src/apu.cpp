@@ -129,7 +129,9 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
 }
 
 gb_wave_output_channel_t::gb_wave_output_channel() {
-  this->dac_on = false;
+  this->dac_on         = false;
+  this->right_ch_on    = false;
+  this->left_ch_on     = false;
 }
 
 gb_apu_t::gb_apu() {
@@ -171,13 +173,13 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->ch2.right_ch_on << 1);
       val |= (this->ch2.left_ch_on << 5);
 
-      /** TODO: Uncomment once channels 3 and 4 are added.
-      * val |= (this->ch3.right_ch_on << 2);
-      * val |= (this->ch3.left_ch_on << 6);
+      val |= (this->ch3.right_ch_on << 2);
+      val |= (this->ch3.left_ch_on << 6);
 
-      * val |= (this->ch4.right_ch_on << 3);
-      * val |= (this->ch4.left_ch_on << 7);
-      **/
+      /** TODO: Uncomment once channel 4 is added.
+       * val |= (this->ch4.right_ch_on << 3);
+       * val |= (this->ch4.left_ch_on << 7);
+       **/
       return val;
     }
     case IO_NR52: {
@@ -267,13 +269,13 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch2.right_ch_on = (val >> 1) & 1;
       this->ch2.left_ch_on  = (val >> 5) & 1;
 
-      /** TODO: Uncomment once channels 3 and 4 are added.
-      * this->ch3.right_ch_on = (val >> 2) & 1;
-      * this->ch3.left_ch_on  = (val >> 6) & 1;
+      this->ch3.right_ch_on = (val >> 2) & 1;
+      this->ch3.left_ch_on  = (val >> 6) & 1;
 
-      * this->ch4.right_ch_on = (val >> 3) & 1;
-      * this->ch4.left_ch_on  = (val >> 7) & 1;
-      **/
+      /** TODO: Uncomment once channel 4 is added.
+       * this->ch4.right_ch_on = (val >> 3) & 1;
+       * this->ch4.left_ch_on  = (val >> 7) & 1;
+       **/
       return;
     }
     case IO_NR52: { // Sound On/Off
