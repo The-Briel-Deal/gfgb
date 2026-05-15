@@ -283,6 +283,12 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->ch3.vol & 0b11) << 5;
       return val;
     }
+    case IO_NR33: return 0xFF; // Write only
+    case IO_NR34: {
+      uint8_t val = 0b1011'1111;
+      val |= (this->ch3.length_enabled & 1) << 6;
+      return val;
+    }
 
     default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
   }
@@ -397,6 +403,20 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     }
     case IO_NR32: {
       this->ch3.vol = (gb_ch3_volume_t)((val >> 5) & 0b11);
+      return;
+    }
+    case IO_NR33: {
+      this->ch3.next_period &= 0xFF00;
+      this->ch3.next_period |= (val & 0x00FF);
+      return;
+    }
+    case IO_NR34: {
+      this->ch3.next_period &= 0x00FF;
+      this->ch3.next_period |= (val & 0b0000'0111) << 8;
+      this->ch3.length_enabled = (val >> 6) & 1;
+      if ((val >> 7) & 1) { // Trigger if this bit is high
+        this->ch3.start();
+      }
       return;
     }
 
