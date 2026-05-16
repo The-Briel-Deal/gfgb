@@ -105,6 +105,21 @@ typedef struct gb_wave_output_channel {
   uint16_t curr_period;
 } gb_wave_output_channel_t;
 
+typedef struct gb_noise_channel {
+#ifdef __cplusplus
+  gb_noise_channel();
+#endif
+  // From `NRx2`, these don't take effect until a next trigger.
+  uint8_t initial_volume;
+  bool    next_env_dir;
+  uint8_t next_env_sweep_pace;
+
+  // On trigger, copy the above three fields into these 3.
+  uint8_t curr_volume;
+  bool    curr_env_dir;
+  uint8_t curr_env_sweep_pace;
+} gb_noise_channel_t;
+
 typedef struct gb_apu {
 #ifdef __cplusplus
   // I want methods to still be able touch other parts of gameboy state like the audio registers.
@@ -142,6 +157,7 @@ typedef struct gb_apu {
   gb_pulsewave_channel_t   ch1;
   gb_pulsewave_channel_t   ch2;
   gb_wave_output_channel_t ch3;
+  gb_noise_channel_t       ch4;
   SDL_AudioDeviceID        output_device;
   SDL_AudioStream         *stream;
 

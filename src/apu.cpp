@@ -160,6 +160,15 @@ void gb_wave_output_channel_t::len_tick() {
     this->stop();
   }
 }
+gb_noise_channel_t::gb_noise_channel() {
+  // `NRx2`
+  this->initial_volume      = 0;
+  this->next_env_dir        = false;
+  this->next_env_sweep_pace = 0;
+  this->curr_volume         = 0;
+  this->curr_env_dir        = false;
+  this->curr_env_sweep_pace = 0;
+}
 
 gb_apu_t::gb_apu() {
 #ifndef GFGB_NO_AUDIO
@@ -276,6 +285,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->ch2.length_enabled & 1) << 6;
       return val;
     }
+
     // Channel 3
     case IO_NR30: {
       uint8_t val = 0b0111'1111;
@@ -292,6 +302,15 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     case IO_NR34: {
       uint8_t val = 0b1011'1111;
       val |= (this->ch3.length_enabled & 1) << 6;
+      return val;
+    }
+
+    // Channel 4
+    case IO_NR42: {
+      uint8_t val = 0;
+      val |= 0b1111'0000 & (this->ch4.initial_volume << 4);
+      val |= 0b0000'1000 & (this->ch4.next_env_dir << 3);
+      val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
       return val;
     }
 
@@ -421,6 +440,18 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch3.length_enabled = (val >> 6) & 1;
       if ((val >> 7) & 1) { // Trigger if this bit is high
         this->ch3.start();
+      }
+      return;
+    }
+
+    // Channel 4
+    case IO_NR42: {
+      this->ch4.initial_volume      = (val & 0b1111'0000) >> 4;
+      this->ch4.next_env_dir        = (val & 0b0000'1000) >> 3;
+      this->ch4.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
+      if ((val & 0xF8) == 0) {
+        // TODO: Uncomment once stop is implemented
+        // this->ch4.stop();
       }
       return;
     }
