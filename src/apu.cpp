@@ -227,10 +227,10 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     case IO_NR11: {
       uint8_t val = 0b0011'1111;
       switch (this->ch1.duty_cycle) {
-        case GB_DUTY_CYCLE_EIGHTH: val &= (0b00 << 6); break;
-        case GB_DUTY_CYCLE_FOURTH: val &= (0b01 << 6); break;
-        case GB_DUTY_CYCLE_HALF: val &= (0b10 << 6); break;
-        case GB_DUTY_CYCLE_THREE_FOURTHS: val &= (0b11 << 6); break;
+        case GB_DUTY_CYCLE_EIGHTH: val |= (0b00 << 6); break;
+        case GB_DUTY_CYCLE_FOURTH: val |= (0b01 << 6); break;
+        case GB_DUTY_CYCLE_HALF: val |= (0b10 << 6); break;
+        case GB_DUTY_CYCLE_THREE_FOURTHS: val |= (0b11 << 6); break;
       }
       return val;
     }
@@ -252,10 +252,10 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     case IO_NR21: {
       uint8_t val = 0b0011'1111;
       switch (this->ch2.duty_cycle) {
-        case GB_DUTY_CYCLE_EIGHTH: val &= (0b00 << 6); break;
-        case GB_DUTY_CYCLE_FOURTH: val &= (0b01 << 6); break;
-        case GB_DUTY_CYCLE_HALF: val &= (0b10 << 6); break;
-        case GB_DUTY_CYCLE_THREE_FOURTHS: val &= (0b11 << 6); break;
+        case GB_DUTY_CYCLE_EIGHTH: val |= (0b00 << 6); break;
+        case GB_DUTY_CYCLE_FOURTH: val |= (0b01 << 6); break;
+        case GB_DUTY_CYCLE_HALF: val |= (0b10 << 6); break;
+        case GB_DUTY_CYCLE_THREE_FOURTHS: val |= (0b11 << 6); break;
       }
       return val;
     }
