@@ -379,6 +379,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   }
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
+  if (!this->on && reg != IO_NR52) return;
   switch (reg) {
     // Global
     case IO_NR50: { // Master Volume and VIN Panning
