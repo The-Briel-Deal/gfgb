@@ -83,6 +83,9 @@ typedef enum gb_ch3_volume : uint8_t {
   GB_CH3_VOLUME_QUAR = 0b11,
 } gb_ch3_volume_t;
 
+#define IO_WAVE_PATTERN_RAM_START 0xFF30
+#define IO_WAVE_PATTERN_RAM_LEN 16
+
 typedef struct gb_wave_output_channel {
 #ifdef __cplusplus
   gb_wave_output_channel();
@@ -103,6 +106,9 @@ typedef struct gb_wave_output_channel {
 
   uint16_t next_period;
   uint16_t curr_period;
+
+  uint8_t wave_pattern[IO_WAVE_PATTERN_RAM_LEN];
+
 } gb_wave_output_channel_t;
 
 typedef struct gb_noise_channel {

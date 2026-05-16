@@ -143,6 +143,7 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
   this->next_period    = 0;
   this->curr_period    = 0;
   this->vol            = GB_CH3_VOLUME_MUTE;
+  GB_memset(this->wave_pattern, 0, sizeof(this->wave_pattern));
 }
 void gb_wave_output_channel_t::start() {
   // TODO: I need to figure out if triggering ch3 re-enables the DAC.
@@ -347,7 +348,16 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       return val;
     }
 
-    default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
+    default: {
+      if (reg >= IO_WAVE_PATTERN_RAM_START && reg < (IO_WAVE_PATTERN_RAM_START + IO_WAVE_PATTERN_RAM_LEN)) {
+        uint8_t index = reg - IO_WAVE_PATTERN_RAM_START;
+        GB_assert(index < IO_WAVE_PATTERN_RAM_LEN);
+
+        return this->ch3.wave_pattern[index];
+      }
+      LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg);
+      return 0xFF;
+    }
   }
 }
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
@@ -508,7 +518,16 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
 
-    default: LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg); return;
+    default: {
+      if (reg >= IO_WAVE_PATTERN_RAM_START && reg < (IO_WAVE_PATTERN_RAM_START + IO_WAVE_PATTERN_RAM_LEN)) {
+        uint8_t index = reg - IO_WAVE_PATTERN_RAM_START;
+        GB_assert(index < IO_WAVE_PATTERN_RAM_LEN);
+
+        this->ch3.wave_pattern[index] = val;
+      }
+      LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg);
+      return;
+    }
   }
 }
 
