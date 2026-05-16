@@ -115,6 +115,10 @@ typedef struct gb_noise_channel {
 #ifdef __cplusplus
   gb_noise_channel();
 #endif
+
+  // From `NR51`
+  bool            left_ch_on;
+  bool            right_ch_on;
   // From `NRx2`, these don't take effect until a next trigger.
   uint8_t initial_volume;
   bool    next_env_dir;
