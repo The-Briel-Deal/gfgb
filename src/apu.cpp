@@ -165,6 +165,7 @@ void gb_wave_output_channel_t::reset() {
   this->length      = 0;
   this->next_period = 0;
   this->curr_period = 0;
+  this->counter     = MAX_PERIOD;
   this->vol         = GB_CH3_VOLUME_MUTE;
 }
 
@@ -646,7 +647,40 @@ void gb_apu_t::tick() {
         }
       }
     }
-    // TODO: Implement Channel 3
+    // Channel 3
+    if (this->ch3.on) {
+      // The Channel 3 period timer ticks once for every 2 t-cycles (aka half of one m-cycle). Since this tick
+      // function is called for every m-cycle we need to increment the counter by two every tick.
+      gb_wave_output_channel_t &ch = this->ch3;
+      ch.counter -= 2;
+      if (ch.counter <= 0) {
+        ch.counter += (MAX_PERIOD - ch.curr_period);
+        ch.phase++;
+        ch.phase %= 32;
+      }
+
+      if (sample_this_tick) {
+        uint8_t ch3_sample_i = ch.wave_pattern[(int)(ch.phase / 2)];
+        if ((ch.phase & 1) == 0) ch3_sample_i >>= 4;
+        ch3_sample_i &= 0x0F;
+        float ch3_sample = ((float)(ch3_sample_i) / 15.0f) - 0.5f;
+
+        // TODO: Use volume
+        // GB_assert(ch.curr_volume < 16);
+        // ch3_sample *= (float(ch.curr_volume) / 16.0f);
+        ch3_sample /= 2;
+        if (ch.left_ch_on) {
+          // TODO: Add sample buffer
+          // ch.sample_buffer_left[this->sample_buffer_index] = ch3_sample;
+          left_sample += ch3_sample;
+        }
+
+        if (ch.right_ch_on) {
+          // ch.sample_buffer_right[this->sample_buffer_index] = ch3_sample;
+          right_sample += ch3_sample;
+        }
+      }
+    }
     // TODO: Implement Channel 4
   }
 

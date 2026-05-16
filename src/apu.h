@@ -108,6 +108,8 @@ typedef struct gb_wave_output_channel {
 
   uint16_t next_period;
   uint16_t curr_period;
+  uint8_t  phase;
+  int32_t  counter;
 
   uint8_t wave_pattern[IO_WAVE_PATTERN_RAM_LEN];
 
