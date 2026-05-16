@@ -117,7 +117,6 @@ void gb_pulsewave_channel_t::period_sweep_tick() {
 }
 
 void gb_pulsewave_channel_t::env_sweep_tick() {
-
   if (!this->on) return;
   if (this->curr_env_sweep_pace == 0) return;
 
@@ -137,26 +136,34 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
 }
 
 gb_wave_output_channel_t::gb_wave_output_channel() {
-  this->on             = false;
-  this->dac_on         = false;
-  this->right_ch_on    = false;
-  this->left_ch_on     = false;
-  this->length_enabled = false;
-  this->initial_length = 0;
-  this->length         = 0;
-  this->next_period    = 0;
-  this->curr_period    = 0;
-  this->vol            = GB_CH3_VOLUME_MUTE;
+  this->reset();
   GB_memset(this->wave_pattern, 0, sizeof(this->wave_pattern));
 }
+
 void gb_wave_output_channel_t::start() {
   // TODO: I need to figure out if triggering ch3 re-enables the DAC.
   this->on          = true;
   this->length      = 64 - this->initial_length;
   this->curr_period = this->next_period;
 }
+
 void gb_wave_output_channel_t::stop() {
   this->on = false;
+}
+
+void gb_wave_output_channel_t::reset() {
+  this->stop();
+  this->dac_on         = false;
+  this->right_ch_on    = false;
+  this->left_ch_on     = false;
+  this->length_enabled = false;
+  this->initial_length = 0;
+  // TODO: Investigate when length timers aren't reset
+  // (https://gbdev.io/pandocs/Audio_Registers.html#footnote-dmg_apu_off)
+  this->length      = 0;
+  this->next_period = 0;
+  this->curr_period = 0;
+  this->vol         = GB_CH3_VOLUME_MUTE;
 }
 
 void gb_wave_output_channel_t::len_tick() {
@@ -165,6 +172,7 @@ void gb_wave_output_channel_t::len_tick() {
     this->stop();
   }
 }
+
 gb_noise_channel_t::gb_noise_channel() {
   this->on = false;
   // `NRx2`
@@ -394,7 +402,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
 
         this->ch1.reset();
         this->ch2.reset();
-        this->ch3.on = false;
+        this->ch3.reset();
         this->ch4.on = false;
       }
       return;

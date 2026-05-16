@@ -92,6 +92,7 @@ typedef struct gb_wave_output_channel {
   gb_wave_output_channel();
   void start();
   void stop();
+  void reset();
   void len_tick();
 #endif
   bool on;
