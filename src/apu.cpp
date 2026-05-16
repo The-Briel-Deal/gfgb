@@ -41,7 +41,7 @@ void gb_pulsewave_channel_t::reset() {
   this->initial_length = 0;
   this->length         = 0;
   this->length_enabled = false;
-  this->duty_cycle     = GB_DUTY_CYCLE_HALF;
+  this->duty_cycle     = GB_DUTY_CYCLE_EIGHTH;
 
   // `NRx2`
   this->initial_volume      = 0;
