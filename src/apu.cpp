@@ -162,6 +162,7 @@ void gb_wave_output_channel_t::len_tick() {
   }
 }
 gb_noise_channel_t::gb_noise_channel() {
+  this->on = false;
   // `NRx2`
   this->initial_volume      = 0;
   this->next_env_dir        = false;
@@ -243,9 +244,8 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= (this->on << 7);
       val |= (this->ch1.on << 0);
       val |= (this->ch2.on << 1);
-      // TODO: Uncomment once these channels are added.
-      // val |= (this->ch3.on << 2);
-      // val |= (this->ch4.on << 3);
+      val |= (this->ch3.on << 2);
+      val |= (this->ch4.on << 3);
       return val;
     }
 
@@ -384,6 +384,16 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     }
     case IO_NR52: { // Sound On/Off
       this->on = (val >> 7) & 1;
+      if (!this->on) {
+        // TODO: If audio is turned off via NR52 bit 7 all APU registers are cleared, it appears that this includes
+        // turning off the individual channels but I haven't verified this on real hardware yet.
+
+        // TODO: Clear the rest of the APU registers here.
+        this->ch1.on = false;
+        this->ch2.on = false;
+        this->ch3.on = false;
+        this->ch4.on = false;
+      }
       return;
     }
 
@@ -520,6 +530,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         GB_assert(index < IO_WAVE_PATTERN_RAM_LEN);
 
         this->ch3.wave_pattern[index] = val;
+        return;
       }
       LogError("Write performed on unimplemented APU IO Reg 0x%.4X", reg);
       return;
