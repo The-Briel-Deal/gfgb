@@ -183,6 +183,11 @@ gb_apu_t::gb_apu() {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
 
+  this->vin_left  = false;
+  this->vin_right = false;
+  this->vol_left  = 0;
+  this->vol_right = 0;
+
   this->sample_counter      = TICKS_PER_SAMPLE;
   this->sample_buffer_index = 0;
 #ifndef GFGB_NO_AUDIO
@@ -209,6 +214,14 @@ gb_apu_t::gb_apu() {
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
     // Global
+    case IO_NR50: { // Master Volume and VIN Panning
+      uint8_t val = 0b0000'0000;
+      val |= (this->vin_left << 7);
+      val |= (this->vol_left << 4);
+      val |= (this->vin_right << 3);
+      val |= (this->vol_right << 0);
+      return val;
+    }
     case IO_NR51: { // Sound Panning
       uint8_t val = 0b0000'0000;
       val |= (this->ch1.right_ch_on << 0);
@@ -340,6 +353,13 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   switch (reg) {
     // Global
+    case IO_NR50: { // Master Volume and VIN Panning
+      this->vin_left  = (val & 0b1000'0000) >> 7;
+      this->vol_left  = (val & 0b0111'0000) >> 4;
+      this->vin_right = (val & 0b0000'1000) >> 3;
+      this->vol_right = (val & 0b0000'0111) >> 0;
+      return;
+    }
     case IO_NR51: { // Sound Panning
       this->ch1.right_ch_on = (val >> 0) & 1;
       this->ch1.left_ch_on  = (val >> 4) & 1;

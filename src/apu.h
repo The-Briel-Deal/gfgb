@@ -155,6 +155,12 @@ typedef struct gb_apu {
 
   bool on;
 
+  // From `NR50`
+  bool    vin_left;
+  bool    vin_right;
+  uint8_t vol_left;
+  uint8_t vol_right;
+
   uint8_t div;
   // The current position we are at in
   uint16_t sample_buffer_index;
