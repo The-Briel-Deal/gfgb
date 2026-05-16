@@ -118,6 +118,11 @@ typedef struct gb_noise_channel {
   uint8_t curr_volume;
   bool    curr_env_dir;
   uint8_t curr_env_sweep_pace;
+
+  // From `NR43`
+  uint8_t clock_shift;
+  bool    lsfr_width;
+  uint8_t clock_div;
 } gb_noise_channel_t;
 
 typedef struct gb_apu {

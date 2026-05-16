@@ -168,6 +168,11 @@ gb_noise_channel_t::gb_noise_channel() {
   this->curr_volume         = 0;
   this->curr_env_dir        = false;
   this->curr_env_sweep_pace = 0;
+
+  // From `NR43`
+  this->clock_shift = 0;
+  this->lsfr_width  = false;
+  this->clock_div   = 0;
 }
 
 gb_apu_t::gb_apu() {
@@ -313,6 +318,13 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
       return val;
     }
+    case IO_NR43: {
+      uint8_t val = 0;
+      val |= 0b1111'0000 & (this->ch4.clock_shift << 4);
+      val |= 0b0000'1000 & (this->ch4.lsfr_width << 3);
+      val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
+      return val;
+    }
 
     default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
   }
@@ -453,6 +465,12 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         // TODO: Uncomment once stop is implemented
         // this->ch4.stop();
       }
+      return;
+    }
+    case IO_NR43: {
+      this->ch4.clock_shift = (val & 0b1111'0000) >> 4;
+      this->ch4.lsfr_width  = (val & 0b0000'1000) >> 3;
+      this->ch4.clock_div   = (val & 0b0000'0111) >> 0;
       return;
     }
 
