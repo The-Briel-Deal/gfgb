@@ -616,7 +616,7 @@ inline static const char *gb_io_reg_name(io_reg_addr_t io_reg) {
   case name: return #name;
     LIST_OF_IO_REGS
 #undef X
-    default: unreachable();
+    default: return "UNKNOWN_IO_REG";
   }
 }
 #undef LIST_OF_IO_REGS
