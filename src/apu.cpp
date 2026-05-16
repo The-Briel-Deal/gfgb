@@ -10,6 +10,10 @@
 
 #define AUDIO_SAMPLE_FREQ (APU_CLOCK / TICKS_PER_SAMPLE)
 
+// TODO: Test what happens if a SET instruction is used on a register that is partially write only. Since write only
+// portions of registers always return high bits I think my current implementation will rewrite those write only fields
+// to all high. I'm not sure how actual hardware behaves.
+
 gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
