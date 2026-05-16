@@ -173,6 +173,9 @@ gb_noise_channel_t::gb_noise_channel() {
   this->clock_shift = 0;
   this->lsfr_width  = false;
   this->clock_div   = 0;
+
+  // From `NR44`
+  this->length_enabled = false;
 }
 
 gb_apu_t::gb_apu() {
@@ -325,6 +328,11 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
       return val;
     }
+    case IO_NR44: {
+      uint8_t val = 0b1011'1111;
+      val |= 0b0100'0000 & (this->ch4.length_enabled << 6);
+      return val;
+    }
 
     default: LogError("Read performed on unimplemented APU IO Reg 0x%.4X", reg); return 0xFF;
   }
@@ -471,6 +479,12 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch4.clock_shift = (val & 0b1111'0000) >> 4;
       this->ch4.lsfr_width  = (val & 0b0000'1000) >> 3;
       this->ch4.clock_div   = (val & 0b0000'0111) >> 0;
+      return;
+    }
+    case IO_NR44: {
+      this->ch4.length_enabled = (val & 0b0100'0000) >> 6;
+
+      // TODO: Handle trigger
       return;
     }
 

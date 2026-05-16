@@ -123,6 +123,9 @@ typedef struct gb_noise_channel {
   uint8_t clock_shift;
   bool    lsfr_width;
   uint8_t clock_div;
+
+  // From `NR44`
+  bool length_enabled;
 } gb_noise_channel_t;
 
 typedef struct gb_apu {
