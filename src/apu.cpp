@@ -174,6 +174,9 @@ void gb_wave_output_channel_t::len_tick() {
 }
 
 gb_noise_channel_t::gb_noise_channel() {
+  this->reset();
+}
+void gb_noise_channel_t::reset() {
   this->on = false;
   // `NRx2`
   this->initial_volume      = 0;
@@ -403,7 +406,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         this->ch1.reset();
         this->ch2.reset();
         this->ch3.reset();
-        this->ch4.on = false;
+        this->ch4.reset();
       }
       return;
     }

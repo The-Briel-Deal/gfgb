@@ -116,6 +116,8 @@ typedef struct gb_wave_output_channel {
 typedef struct gb_noise_channel {
 #ifdef __cplusplus
   gb_noise_channel();
+  // TODO: Add start/stop helpers
+  void reset();
 #endif
   bool on;
 
