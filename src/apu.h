@@ -30,6 +30,7 @@ typedef struct gb_pulsewave_channel {
   double tone_freq(); // this->samp_freq() / 8
   void   start();
   void   stop();
+  void   reset();
   void   len_tick();
   void   env_sweep_tick();
   void   period_sweep_tick();

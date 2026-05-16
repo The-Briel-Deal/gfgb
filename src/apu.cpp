@@ -15,6 +15,25 @@
 // to all high. I'm not sure how actual hardware behaves.
 
 gb_pulsewave_channel_t::gb_pulsewave_channel() {
+  this->reset();
+}
+void gb_pulsewave_channel_t::start() {
+  this->on                     = true;
+  this->length                 = 64 - this->initial_length;
+  this->curr_period            = this->next_period;
+  this->curr_volume            = this->initial_volume;
+  this->curr_env_dir           = this->next_env_dir;
+  this->curr_env_sweep_pace    = this->next_env_sweep_pace;
+  this->curr_period_sweep_pace = this->next_period_sweep_pace;
+
+  this->env_sweep_ticks    = 0;
+  this->period_sweep_ticks = 0;
+}
+void gb_pulsewave_channel_t::stop() {
+  this->on = false;
+}
+void gb_pulsewave_channel_t::reset() {
+  this->stop();
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
   this->next_period    = 0;
@@ -43,21 +62,6 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   // Audio buffer for graph in ImGui debugger.
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
   GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
-}
-void gb_pulsewave_channel_t::start() {
-  this->on                     = true;
-  this->length                 = 64 - this->initial_length;
-  this->curr_period            = this->next_period;
-  this->curr_volume            = this->initial_volume;
-  this->curr_env_dir           = this->next_env_dir;
-  this->curr_env_sweep_pace    = this->next_env_sweep_pace;
-  this->curr_period_sweep_pace = this->next_period_sweep_pace;
-
-  this->env_sweep_ticks    = 0;
-  this->period_sweep_ticks = 0;
-}
-void gb_pulsewave_channel_t::stop() {
-  this->on = false;
 }
 
 bool gb_pulsewave_channel_t::waveform_step() {
@@ -388,9 +392,8 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         // TODO: If audio is turned off via NR52 bit 7 all APU registers are cleared, it appears that this includes
         // turning off the individual channels but I haven't verified this on real hardware yet.
 
-        // TODO: Clear the rest of the APU registers here.
-        this->ch1.on = false;
-        this->ch2.on = false;
+        this->ch1.reset();
+        this->ch2.reset();
         this->ch3.on = false;
         this->ch4.on = false;
       }
