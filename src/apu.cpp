@@ -34,6 +34,8 @@ void gb_pulsewave_channel_t::stop() {
 }
 void gb_pulsewave_channel_t::reset() {
   this->stop();
+  this->left_ch_on     = false;
+  this->right_ch_on    = false;
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
   this->next_period    = 0;
@@ -178,6 +180,9 @@ gb_noise_channel_t::gb_noise_channel() {
 }
 void gb_noise_channel_t::reset() {
   this->on = false;
+  // `NR51`
+  this->left_ch_on  = false;
+  this->right_ch_on = false;
   // `NRx2`
   this->initial_volume      = 0;
   this->next_env_dir        = false;
@@ -403,6 +408,10 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
         // TODO: If audio is turned off via NR52 bit 7 all APU registers are cleared, it appears that this includes
         // turning off the individual channels but I haven't verified this on real hardware yet.
 
+        this->vin_left  = false;
+        this->vin_right = false;
+        this->vol_left  = 0;
+        this->vol_right = 0;
         this->ch1.reset();
         this->ch2.reset();
         this->ch3.reset();
