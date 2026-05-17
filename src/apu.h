@@ -113,6 +113,10 @@ typedef struct gb_wave_output_channel {
 
   uint8_t wave_pattern[IO_WAVE_PATTERN_RAM_LEN];
 
+  // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
+  // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
+  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
+  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
 } gb_wave_output_channel_t;
 
 typedef struct gb_noise_channel {

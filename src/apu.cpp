@@ -670,13 +670,12 @@ void gb_apu_t::tick() {
         // ch3_sample *= (float(ch.curr_volume) / 16.0f);
         ch3_sample /= 2;
         if (ch.left_ch_on) {
-          // TODO: Add sample buffer
-          // ch.sample_buffer_left[this->sample_buffer_index] = ch3_sample;
+          ch.sample_buffer_left[this->sample_buffer_index] = ch3_sample;
           left_sample += ch3_sample;
         }
 
         if (ch.right_ch_on) {
-          // ch.sample_buffer_right[this->sample_buffer_index] = ch3_sample;
+          ch.sample_buffer_right[this->sample_buffer_index] = ch3_sample;
           right_sample += ch3_sample;
         }
       }

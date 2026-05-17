@@ -494,6 +494,11 @@ static void gb_imgui_audio_win(gb_state_t *gb_state) {
                      gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
     ImGui::PlotLines("Channel 2 Right", gb_state->apu.ch2.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
                      gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+
+    ImGui::PlotLines("Channel 3 Left", gb_state->apu.ch3.sample_buffer_left, APU_DBG_SAMPLE_BUFFER_SIZE,
+                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
+    ImGui::PlotLines("Channel 3 Right", gb_state->apu.ch3.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
+                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f, ImVec2(0, 80));
   }
   ImGui::End();
 }
