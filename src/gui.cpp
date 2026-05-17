@@ -506,9 +506,12 @@ static void gb_apu_ch_graph(gb_state_t *gb_state, const char *name, gb_apu_sampl
 static void gb_imgui_audio_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Audio")) {
     gb_apu_ch_graph(gb_state, "Mixed", gb_state->apu.sample_buffer_left, gb_state->apu.sample_buffer_right);
-    gb_apu_ch_graph(gb_state, "Channel 1", gb_state->apu.ch1.sample_buffer_left, gb_state->apu.ch1.sample_buffer_right);
-    gb_apu_ch_graph(gb_state, "Channel 2", gb_state->apu.ch2.sample_buffer_left, gb_state->apu.ch2.sample_buffer_right);
-    gb_apu_ch_graph(gb_state, "Channel 3", gb_state->apu.ch3.sample_buffer_left, gb_state->apu.ch3.sample_buffer_right);
+    gb_apu_ch_graph(gb_state, "Channel 1 (Pulsewave With Freq Sweep)", gb_state->apu.ch1.sample_buffer_left,
+                    gb_state->apu.ch1.sample_buffer_right);
+    gb_apu_ch_graph(gb_state, "Channel 2 (Pulsewave)", gb_state->apu.ch2.sample_buffer_left,
+                    gb_state->apu.ch2.sample_buffer_right);
+    gb_apu_ch_graph(gb_state, "Channel 3 (Custom Waveform)", gb_state->apu.ch3.sample_buffer_left,
+                    gb_state->apu.ch3.sample_buffer_right);
   }
   ImGui::End();
 }
