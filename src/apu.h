@@ -74,8 +74,8 @@ typedef struct gb_pulsewave_channel {
 
   // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
-  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
-  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
 } gb_pulsewave_channel_t;
 
 typedef enum gb_ch3_volume : uint8_t {
@@ -116,8 +116,8 @@ typedef struct gb_wave_output_channel {
 
   // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
-  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
-  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
 } gb_wave_output_channel_t;
 
 typedef struct gb_noise_channel {
@@ -186,13 +186,14 @@ typedef struct gb_apu {
   uint8_t div;
   // The current position we are at in
   uint16_t sample_buffer_index;
-  // Sample buffer containing the mixed result of all channels
-  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
-  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
 #ifdef __cplusplus
   static_assert(std::numeric_limits<decltype(sample_buffer_index)>::max() >= APU_DBG_SAMPLE_BUFFER_SIZE,
                 "Max val of sample_buffer_index must be greater than the size of sample buffers.");
 #endif
+  // Sample buffer containing the mixed result of all channels
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
+
   gb_pulsewave_channel_t   ch1;
   gb_pulsewave_channel_t   ch2;
   gb_wave_output_channel_t ch3;
