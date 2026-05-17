@@ -505,6 +505,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     // Channel 3
     case IO_NR30: {
       this->ch3.dac_on = (val >> 7) & 1;
+      if (!this->ch3.dac_on) this->ch3.stop();
       return;
     }
     case IO_NR31: {
