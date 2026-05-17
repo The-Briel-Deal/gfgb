@@ -14,7 +14,7 @@ extern "C" {
 struct gb_state;
 typedef struct gb_state gb_state_t;
 typedef uint16_t        io_reg_addr_t;
-typedef float gb_apu_sample_buffer_t[APU_DBG_SAMPLE_BUFFER_SIZE];
+typedef float           gb_apu_sample_buffer_t[APU_DBG_SAMPLE_BUFFER_SIZE];
 
 typedef enum gb_duty_cycle : uint8_t {
   GB_DUTY_CYCLE_EIGHTH        = 0b1000'0000,
