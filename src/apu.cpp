@@ -351,6 +351,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     }
 
     // Channel 4
+    case IO_NR41: return 0xFF; // Write only
     case IO_NR42: {
       uint8_t val = 0;
       val |= 0b1111'0000 & (this->ch4.initial_volume << 4);
@@ -530,6 +531,10 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     }
 
     // Channel 4
+    case IO_NR41: {
+      // TODO: Implement Noise Channel Length
+      return;
+    }
     case IO_NR42: {
       this->ch4.initial_volume      = (val & 0b1111'0000) >> 4;
       this->ch4.next_env_dir        = (val & 0b0000'1000) >> 3;
