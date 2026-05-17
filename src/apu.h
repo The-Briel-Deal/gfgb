@@ -36,6 +36,8 @@ typedef struct gb_pulsewave_channel {
   void   env_sweep_tick();
   void   period_sweep_tick();
 #endif
+  bool dbg_muted; // Set if muted via the imgui debug ui.
+
   bool            on;
   bool            left_ch_on;
   bool            right_ch_on;
@@ -96,6 +98,7 @@ typedef struct gb_wave_output_channel {
   void reset();
   void len_tick();
 #endif
+  bool dbg_muted; // Set if muted via the imgui debug ui.
   bool on;
   bool dac_on;
   bool right_ch_on;

@@ -483,35 +483,40 @@ static void gb_imgui_settings_win(gb_state_t *gb_state) {
 }
 
 static void gb_apu_ch_graph(gb_state_t *gb_state, const char *name, gb_apu_sample_buffer_t &left_sample_buf,
-                            gb_apu_sample_buffer_t &right_sample_buf) {
+                            gb_apu_sample_buffer_t &right_sample_buf, bool *mute_toggle = NULL) {
   static const float label_width        = 70.0f;
   auto               content_region_max = ImGui::GetWindowContentRegionMax();
+  ImGui::PushID(name);
 
   ImGui::PushFont(NULL, 24.0f);
   ImGui::SeparatorText(name);
   ImGui::PopFont();
 
+  if (mute_toggle != NULL) ImGui::Checkbox("Mute Channel", mute_toggle);
+
   ImGui::TextUnformatted("Left:");
   ImGui::SameLine(label_width);
-  ImGui::PlotLines(std::format("##{:s}_LEFT", name).c_str(), left_sample_buf, APU_DBG_SAMPLE_BUFFER_SIZE,
-                   gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                   ImVec2(content_region_max.x - label_width, 120));
+  ImGui::PlotLines("##LEFT", left_sample_buf, APU_DBG_SAMPLE_BUFFER_SIZE, gb_state->apu.sample_buffer_index, nullptr,
+                   -1.0f, 1.0f, ImVec2(content_region_max.x - label_width, 120));
   ImGui::TextUnformatted("Right:");
   ImGui::SameLine(label_width);
-  ImGui::PlotLines(std::format("##{:s}_RIGHT", name).c_str(), right_sample_buf, APU_DBG_SAMPLE_BUFFER_SIZE,
-                   gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                   ImVec2(content_region_max.x - label_width, 120));
+  ImGui::PlotLines("##RIGHT", right_sample_buf, APU_DBG_SAMPLE_BUFFER_SIZE, gb_state->apu.sample_buffer_index, nullptr,
+                   -1.0f, 1.0f, ImVec2(content_region_max.x - label_width, 120));
+  ImGui::PopID();
 }
 
 static void gb_imgui_audio_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Audio")) {
     gb_apu_ch_graph(gb_state, "Mixed", gb_state->apu.sample_buffer_left, gb_state->apu.sample_buffer_right);
+
     gb_apu_ch_graph(gb_state, "Channel 1 (Pulsewave With Freq Sweep)", gb_state->apu.ch1.sample_buffer_left,
-                    gb_state->apu.ch1.sample_buffer_right);
+                    gb_state->apu.ch1.sample_buffer_right, &gb_state->apu.ch1.dbg_muted);
+
     gb_apu_ch_graph(gb_state, "Channel 2 (Pulsewave)", gb_state->apu.ch2.sample_buffer_left,
-                    gb_state->apu.ch2.sample_buffer_right);
+                    gb_state->apu.ch2.sample_buffer_right, &gb_state->apu.ch2.dbg_muted);
+
     gb_apu_ch_graph(gb_state, "Channel 3 (Custom Waveform)", gb_state->apu.ch3.sample_buffer_left,
-                    gb_state->apu.ch3.sample_buffer_right);
+                    gb_state->apu.ch3.sample_buffer_right, &gb_state->apu.ch3.dbg_muted);
   }
   ImGui::End();
 }

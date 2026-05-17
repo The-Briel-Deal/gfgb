@@ -15,6 +15,7 @@
 // to all high. I'm not sure how actual hardware behaves.
 
 gb_pulsewave_channel_t::gb_pulsewave_channel() {
+  this->dbg_muted = false;
   this->reset();
 }
 void gb_pulsewave_channel_t::start() {
@@ -138,6 +139,7 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
 }
 
 gb_wave_output_channel_t::gb_wave_output_channel() {
+  this->dbg_muted = false;
   this->reset();
   GB_memset(this->wave_pattern, 0, sizeof(this->wave_pattern));
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
@@ -621,7 +623,7 @@ void gb_apu_t::tick() {
         ch.phase %= 8;
       }
 
-      if (sample_this_tick) {
+      if (sample_this_tick && !ch.dbg_muted) {
         float ch1_sample = ch.waveform_step() ? 1.0f : -1.0f;
         GB_assert(ch.curr_volume < 16);
         ch1_sample *= (float(ch.curr_volume) / 16.0f);
@@ -647,7 +649,7 @@ void gb_apu_t::tick() {
         ch.phase %= 8;
       }
 
-      if (sample_this_tick) {
+      if (sample_this_tick && !ch.dbg_muted) {
         float ch2_sample = ch.waveform_step() ? 1.0f : -1.0f;
         GB_assert(ch.curr_volume < 16);
         ch2_sample *= (float(ch.curr_volume) / 16.0f);
@@ -675,7 +677,7 @@ void gb_apu_t::tick() {
         ch.phase %= 32;
       }
 
-      if (sample_this_tick) {
+      if (sample_this_tick && !ch.dbg_muted) {
         uint8_t ch3_sample_i = ch.wave_pattern[(int)(ch.phase / 2)];
         if ((ch.phase & 1) == 0) ch3_sample_i >>= 4;
         ch3_sample_i &= 0x0F;
