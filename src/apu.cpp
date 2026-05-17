@@ -147,7 +147,6 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
 }
 
 void gb_wave_output_channel_t::start() {
-  // TODO: I need to figure out if triggering ch3 re-enables the DAC.
   this->on          = true;
   this->length      = 64 - this->initial_length;
   this->curr_period = this->next_period;
@@ -720,6 +719,7 @@ void gb_apu_t::div_tick() {
   if (falling_edge_bit(0, old_div_apu, new_div_apu)) {
     this->ch1.len_tick();
     this->ch2.len_tick();
+    this->ch3.len_tick();
   }
   // Period Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
