@@ -14,6 +14,7 @@ extern "C" {
 struct gb_state;
 typedef struct gb_state gb_state_t;
 typedef uint16_t        io_reg_addr_t;
+typedef float gb_apu_sample_buffer_t[APU_DBG_SAMPLE_BUFFER_SIZE];
 
 typedef enum gb_duty_cycle : uint8_t {
   GB_DUTY_CYCLE_EIGHTH        = 0b1000'0000,
@@ -185,6 +186,9 @@ typedef struct gb_apu {
   uint8_t div;
   // The current position we are at in
   uint16_t sample_buffer_index;
+  // Sample buffer containing the mixed result of all channels
+  float sample_buffer_left[APU_DBG_SAMPLE_BUFFER_SIZE];
+  float sample_buffer_right[APU_DBG_SAMPLE_BUFFER_SIZE];
 #ifdef __cplusplus
   static_assert(std::numeric_limits<decltype(sample_buffer_index)>::max() >= APU_DBG_SAMPLE_BUFFER_SIZE,
                 "Max val of sample_buffer_index must be greater than the size of sample buffers.");

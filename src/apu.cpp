@@ -140,6 +140,8 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
 gb_wave_output_channel_t::gb_wave_output_channel() {
   this->reset();
   GB_memset(this->wave_pattern, 0, sizeof(this->wave_pattern));
+  GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
+  GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
 }
 
 void gb_wave_output_channel_t::start() {
@@ -232,6 +234,8 @@ gb_apu_t::gb_apu() {
   this->stream = SDL_OpenAudioDeviceStream(this->output_device, &spec, NULL, NULL);
   SDL_ResumeAudioStreamDevice(this->stream);
 #endif
+  GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
+  GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
 }
 
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
@@ -593,6 +597,12 @@ void gb_apu_t::tick() {
 
     this->ch2.sample_buffer_left[this->sample_buffer_index]  = 0;
     this->ch2.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->ch3.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch3.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->sample_buffer_right[this->sample_buffer_index] = 0;
   }
   if (apu_powered_on) {
     // Channel 1
@@ -683,9 +693,13 @@ void gb_apu_t::tick() {
     // TODO: Implement Channel 4
   }
 
+  if (sample_this_tick) {
+    this->sample_buffer_left[this->sample_buffer_index]  = left_sample;
+    this->sample_buffer_right[this->sample_buffer_index] = left_sample;
 #ifndef GFGB_NO_AUDIO
-  if (sample_this_tick) SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
+    SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
 #endif
+  }
 }
 
 void gb_apu_t::div_tick() {

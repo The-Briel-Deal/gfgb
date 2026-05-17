@@ -482,56 +482,32 @@ static void gb_imgui_settings_win(gb_state_t *gb_state) {
   ImGui::End();
 }
 
+static void gb_apu_ch_graph(gb_state_t *gb_state, const char *name, gb_apu_sample_buffer_t &left_sample_buf,
+                            gb_apu_sample_buffer_t &right_sample_buf) {
+  static const float label_width        = 70.0f;
+  auto               content_region_max = ImGui::GetWindowContentRegionMax();
+
+  ImGui::PushFont(NULL, 24.0f);
+  ImGui::SeparatorText(name);
+  ImGui::PopFont();
+
+  ImGui::TextUnformatted("Left:");
+  ImGui::SameLine(label_width);
+  ImGui::PlotLines(std::format("##{:s}_LEFT", name).c_str(), left_sample_buf, APU_DBG_SAMPLE_BUFFER_SIZE,
+                   gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
+                   ImVec2(content_region_max.x - label_width, 120));
+  ImGui::TextUnformatted("Right:");
+  ImGui::SameLine(label_width);
+  ImGui::PlotLines(std::format("##{:s}_RIGHT", name).c_str(), right_sample_buf, APU_DBG_SAMPLE_BUFFER_SIZE,
+                   gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
+                   ImVec2(content_region_max.x - label_width, 120));
+}
+
 static void gb_imgui_audio_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Audio")) {
-
-    static const float label_width        = 70.0f;
-    auto               content_region_max = ImGui::GetWindowContentRegionMax();
-
-    ImGui::PushFont(NULL, 24.0f);
-    ImGui::SeparatorText("Channel 1");
-    ImGui::PopFont();
-
-    ImGui::TextUnformatted("Left:");
-    ImGui::SameLine(label_width);
-    ImGui::PlotLines("##CH1_LEFT", gb_state->apu.ch1.sample_buffer_left, APU_DBG_SAMPLE_BUFFER_SIZE,
-                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                     ImVec2(content_region_max.x - label_width, 120));
-    ImGui::TextUnformatted("Right:");
-    ImGui::SameLine(label_width);
-    ImGui::PlotLines("##CH1_RIGHT", gb_state->apu.ch1.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
-                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                     ImVec2(content_region_max.x - label_width, 120));
-
-    ImGui::PushFont(NULL, 24.0f);
-    ImGui::SeparatorText("Channel 2");
-    ImGui::PopFont();
-
-    ImGui::TextUnformatted("Left:");
-    ImGui::SameLine(label_width);
-    ImGui::PlotLines("##CH2_LEFT", gb_state->apu.ch2.sample_buffer_left, APU_DBG_SAMPLE_BUFFER_SIZE,
-                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                     ImVec2(content_region_max.x - label_width, 120));
-    ImGui::TextUnformatted("Right:");
-    ImGui::SameLine(label_width);
-    ImGui::PlotLines("##CH2_RIGHT", gb_state->apu.ch2.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
-                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                     ImVec2(content_region_max.x - label_width, 120));
-
-    ImGui::PushFont(NULL, 24.0f);
-    ImGui::SeparatorText("Channel 3");
-    ImGui::PopFont();
-
-    ImGui::TextUnformatted("Left:");
-    ImGui::SameLine(label_width);
-    ImGui::PlotLines("##CH3_LEFT", gb_state->apu.ch3.sample_buffer_left, APU_DBG_SAMPLE_BUFFER_SIZE,
-                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                     ImVec2(content_region_max.x - label_width, 120));
-    ImGui::TextUnformatted("Right:");
-    ImGui::SameLine(label_width);
-    ImGui::PlotLines("##CH3_RIGHT", gb_state->apu.ch3.sample_buffer_right, APU_DBG_SAMPLE_BUFFER_SIZE,
-                     gb_state->apu.sample_buffer_index, nullptr, -1.0f, 1.0f,
-                     ImVec2(content_region_max.x - label_width, 120));
+    gb_apu_ch_graph(gb_state, "Channel 1", gb_state->apu.ch1.sample_buffer_left, gb_state->apu.ch1.sample_buffer_right);
+    gb_apu_ch_graph(gb_state, "Channel 2", gb_state->apu.ch2.sample_buffer_left, gb_state->apu.ch2.sample_buffer_right);
+    gb_apu_ch_graph(gb_state, "Channel 3", gb_state->apu.ch3.sample_buffer_left, gb_state->apu.ch3.sample_buffer_right);
   }
   ImGui::End();
 }
