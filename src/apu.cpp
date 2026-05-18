@@ -706,7 +706,7 @@ void gb_apu_t::tick() {
 
   if (sample_this_tick) {
     this->sample_buffer_left[this->sample_buffer_index]  = left_sample;
-    this->sample_buffer_right[this->sample_buffer_index] = left_sample;
+    this->sample_buffer_right[this->sample_buffer_index] = right_sample;
 #ifndef GFGB_NO_AUDIO
     SDL_PutAudioStreamData(this->stream, samples, sizeof(samples));
 #endif
