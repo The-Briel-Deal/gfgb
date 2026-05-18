@@ -684,11 +684,13 @@ void gb_apu_t::tick() {
         uint8_t ch3_sample_i = ch.wave_pattern[(int)(ch.phase / 2)];
         if ((ch.phase & 1) == 0) ch3_sample_i >>= 4;
         ch3_sample_i &= 0x0F;
+        switch (ch.vol) {
+          case GB_CH3_VOLUME_MUTE: ch3_sample_i = 0; break;
+          case GB_CH3_VOLUME_FULL: ch3_sample_i >>= 0; break;
+          case GB_CH3_VOLUME_HALF: ch3_sample_i >>= 1; break;
+          case GB_CH3_VOLUME_QUAR: ch3_sample_i >>= 2; break;
+        }
         float ch3_sample = ((float)(ch3_sample_i) / 15.0f) - 0.5f;
-
-        // TODO: Use volume
-        // GB_assert(ch.curr_volume < 16);
-        // ch3_sample *= (float(ch.curr_volume) / 16.0f);
         ch3_sample /= 2;
         if (ch.left_ch_on) {
           ch.sample_buffer_left[this->sample_buffer_index] = ch3_sample;
