@@ -674,6 +674,7 @@ void gb_apu_t::tick() {
       gb_wave_output_channel_t &ch = this->ch3;
       ch.counter -= 2;
       if (ch.counter <= 0) {
+        ch.curr_period = ch.next_period;
         ch.counter += (MAX_PERIOD - ch.curr_period);
         ch.phase++;
         ch.phase %= 32;
