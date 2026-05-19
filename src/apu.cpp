@@ -189,8 +189,15 @@ gb_noise_channel_t::gb_noise_channel() {
 }
 
 void gb_noise_channel_t::start() {
-  this->on     = true;
-  this->length = 64 - this->initial_length;
+  this->on      = true;
+  this->lsfr    = 0;
+  this->counter = 0;
+  this->length  = 64 - this->initial_length;
+
+  this->curr_volume         = this->initial_volume;
+  this->curr_env_dir        = this->next_env_dir;
+  this->curr_env_sweep_pace = this->next_env_sweep_pace;
+  this->env_sweep_ticks     = 0;
 }
 
 void gb_noise_channel_t::stop() {
@@ -198,7 +205,9 @@ void gb_noise_channel_t::stop() {
 }
 
 void gb_noise_channel_t::reset() {
-  this->on = false;
+  this->on      = false;
+  this->lsfr    = 0;
+  this->counter = 0;
   // `NR51`
   this->left_ch_on  = false;
   this->right_ch_on = false;
@@ -209,6 +218,7 @@ void gb_noise_channel_t::reset() {
   this->curr_volume         = 0;
   this->curr_env_dir        = false;
   this->curr_env_sweep_pace = 0;
+  this->env_sweep_ticks     = 0;
 
   // From `NR43`
   this->clock_shift = 0;
@@ -225,6 +235,25 @@ void gb_noise_channel_t::len_tick() {
   if (!this->on) return;
   if (this->length_enabled && !((--this->length) > 0)) {
     this->stop();
+  }
+}
+
+void gb_noise_channel_t::env_sweep_tick() {
+  if (!this->on) return;
+  if (this->curr_env_sweep_pace == 0) return;
+
+  this->env_sweep_ticks++;
+  if (this->env_sweep_ticks < this->curr_env_sweep_pace) return;
+  this->env_sweep_ticks = 0;
+
+  if (this->curr_env_dir) {
+    // Increase Vol
+    if (this->curr_volume >= 15) return;
+    this->curr_volume++;
+  } else {
+    // Decrease Vol
+    if (this->curr_volume == 0) return;
+    this->curr_volume--;
   }
 }
 
@@ -724,7 +753,48 @@ void gb_apu_t::tick() {
         }
       }
     }
-    // TODO: Implement Channel 4
+    // Channel 4
+    if (this->ch4.on) {
+      gb_noise_channel_t &ch = this->ch4;
+      ch.counter--;
+      if (ch.counter <= 0) {
+        /*
+         *           262,144
+         *  ----------------------- Hz
+         *  clock_divider x 2^shift
+         */
+        int period = ch.clock_div * std::exp2(ch.clock_shift) * int((APU_CLOCK) / 262'144);
+
+        ch.counter += period;
+        bool bit0 = (ch.lsfr >> 0) & 1;
+        bool bit1 = (ch.lsfr >> 1) & 1;
+        ch.lsfr >>= 1;
+        if (bit0 == bit1) {
+          // TODO: Check if lsfr length is 8 or 16
+          ch.lsfr |= 1 << 15;
+        }
+        ch.curr_sample = bit0;
+      }
+
+      // TODO: Add debug ui graphs and mute button.
+      if (sample_this_tick /* && !ch.dbg_muted*/) {
+        float ch4_sample = -1.0f;
+        if (ch.curr_sample) {
+          ch4_sample = 1.0f;
+        }
+        // Apply Volume
+        ch4_sample /= 4;
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[this->sample_buffer_index] = ch4_sample;
+          left_sample += ch4_sample;
+        }
+
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[this->sample_buffer_index] = ch4_sample;
+          right_sample += ch4_sample;
+        }
+      }
+    }
   }
 
   if (sample_this_tick) {
@@ -758,5 +828,6 @@ void gb_apu_t::div_tick() {
   if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
     this->ch1.env_sweep_tick();
     this->ch2.env_sweep_tick();
+    this->ch4.env_sweep_tick();
   }
 }
