@@ -129,6 +129,7 @@ typedef struct gb_noise_channel {
   void start();
   void stop();
   void reset();
+  void len_tick();
 #endif
   bool on;
 

@@ -177,6 +177,8 @@ void gb_wave_output_channel_t::reset() {
 
 void gb_wave_output_channel_t::len_tick() {
   if (!this->on) return;
+  // TODO: Since this is 255 at len 0 instead of 256 I think I should change this to this->length-- so that it takes one
+  // more tick. I need to verify this though.
   if (this->length_enabled && !((--this->length) > 0)) {
     this->stop();
   }
@@ -217,6 +219,13 @@ void gb_noise_channel_t::reset() {
   this->length_enabled = false;
   this->initial_length = 0;
   this->length         = 0;
+}
+
+void gb_noise_channel_t::len_tick() {
+  if (!this->on) return;
+  if (this->length_enabled && !((--this->length) > 0)) {
+    this->stop();
+  }
 }
 
 gb_apu_t::gb_apu() {
@@ -738,6 +747,7 @@ void gb_apu_t::div_tick() {
     this->ch1.len_tick();
     this->ch2.len_tick();
     this->ch3.len_tick();
+    this->ch4.len_tick();
   }
   // Period Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
