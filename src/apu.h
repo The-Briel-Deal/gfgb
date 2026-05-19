@@ -126,7 +126,8 @@ typedef struct gb_wave_output_channel {
 typedef struct gb_noise_channel {
 #ifdef __cplusplus
   gb_noise_channel();
-  // TODO: Add start/stop helpers
+  void start();
+  void stop();
   void reset();
 #endif
   bool on;
@@ -149,8 +150,10 @@ typedef struct gb_noise_channel {
   bool    lsfr_width;
   uint8_t clock_div;
 
-  // From `NR44`
-  bool length_enabled;
+  // From `NR41` and `NR44`
+  bool    length_enabled;
+  uint8_t initial_length;
+  uint8_t length;
 } gb_noise_channel_t;
 
 typedef struct gb_apu {

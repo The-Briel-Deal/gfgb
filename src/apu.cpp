@@ -185,6 +185,16 @@ void gb_wave_output_channel_t::len_tick() {
 gb_noise_channel_t::gb_noise_channel() {
   this->reset();
 }
+
+void gb_noise_channel_t::start() {
+  this->on     = true;
+  this->length = 64 - this->initial_length;
+}
+
+void gb_noise_channel_t::stop() {
+  this->on = false;
+}
+
 void gb_noise_channel_t::reset() {
   this->on = false;
   // `NR51`
@@ -203,8 +213,10 @@ void gb_noise_channel_t::reset() {
   this->lsfr_width  = false;
   this->clock_div   = 0;
 
-  // From `NR44`
+  // From `NR41` and `NR44`
   this->length_enabled = false;
+  this->initial_length = 0;
+  this->length         = 0;
 }
 
 gb_apu_t::gb_apu() {
@@ -537,7 +549,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
 
     // Channel 4
     case IO_NR41: {
-      // TODO: Implement Noise Channel Length
+      this->ch4.initial_length = val & 0b0011'1111;
       return;
     }
     case IO_NR42: {
