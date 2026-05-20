@@ -177,16 +177,38 @@ void gb_wave_output_channel_t::reset() {
 
 void gb_wave_output_channel_t::len_tick() {
   if (!this->on) return;
+  // TODO: Since this is 255 at len 0 instead of 256 I think I should change this to this->length-- so that it takes one
+  // more tick. I need to verify this though.
   if (this->length_enabled && !((--this->length) > 0)) {
     this->stop();
   }
 }
 
 gb_noise_channel_t::gb_noise_channel() {
+  this->dbg_muted = false;
   this->reset();
 }
-void gb_noise_channel_t::reset() {
+
+void gb_noise_channel_t::start() {
+  this->on      = true;
+  this->lsfr    = 0;
+  this->counter = 0;
+  this->length  = 64 - this->initial_length;
+
+  this->curr_volume         = this->initial_volume;
+  this->curr_env_dir        = this->next_env_dir;
+  this->curr_env_sweep_pace = this->next_env_sweep_pace;
+  this->env_sweep_ticks     = 0;
+}
+
+void gb_noise_channel_t::stop() {
   this->on = false;
+}
+
+void gb_noise_channel_t::reset() {
+  this->on      = false;
+  this->lsfr    = 0;
+  this->counter = 0;
   // `NR51`
   this->left_ch_on  = false;
   this->right_ch_on = false;
@@ -197,14 +219,43 @@ void gb_noise_channel_t::reset() {
   this->curr_volume         = 0;
   this->curr_env_dir        = false;
   this->curr_env_sweep_pace = 0;
+  this->env_sweep_ticks     = 0;
 
   // From `NR43`
   this->clock_shift = 0;
   this->lsfr_width  = false;
   this->clock_div   = 0;
 
-  // From `NR44`
+  // From `NR41` and `NR44`
   this->length_enabled = false;
+  this->initial_length = 0;
+  this->length         = 0;
+}
+
+void gb_noise_channel_t::len_tick() {
+  if (!this->on) return;
+  if (this->length_enabled && !((--this->length) > 0)) {
+    this->stop();
+  }
+}
+
+void gb_noise_channel_t::env_sweep_tick() {
+  if (!this->on) return;
+  if (this->curr_env_sweep_pace == 0) return;
+
+  this->env_sweep_ticks++;
+  if (this->env_sweep_ticks < this->curr_env_sweep_pace) return;
+  this->env_sweep_ticks = 0;
+
+  if (this->curr_env_dir) {
+    // Increase Vol
+    if (this->curr_volume >= 15) return;
+    this->curr_volume++;
+  } else {
+    // Decrease Vol
+    if (this->curr_volume == 0) return;
+    this->curr_volume--;
+  }
 }
 
 gb_apu_t::gb_apu() {
@@ -367,7 +418,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       uint8_t val = 0;
       val |= 0b1111'0000 & (this->ch4.clock_shift << 4);
       val |= 0b0000'1000 & (this->ch4.lsfr_width << 3);
-      val |= 0b0000'0111 & (this->ch4.next_env_sweep_pace << 0);
+      val |= 0b0000'0111 & (this->ch4.clock_div << 0);
       return val;
     }
     case IO_NR44: {
@@ -537,7 +588,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
 
     // Channel 4
     case IO_NR41: {
-      // TODO: Implement Noise Channel Length
+      this->ch4.initial_length = val & 0b0011'1111;
       return;
     }
     case IO_NR42: {
@@ -545,21 +596,24 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch4.next_env_dir        = (val & 0b0000'1000) >> 3;
       this->ch4.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
       if ((val & 0xF8) == 0) {
-        // TODO: Uncomment once stop is implemented
-        // this->ch4.stop();
+        this->ch4.stop();
       }
       return;
     }
     case IO_NR43: {
       this->ch4.clock_shift = (val & 0b1111'0000) >> 4;
-      this->ch4.lsfr_width  = (val & 0b0000'1000) >> 3;
-      this->ch4.clock_div   = (val & 0b0000'0111) >> 0;
+      if (this->ch4.clock_shift >= 14) {
+        this->ch4.stop();
+      }
+      this->ch4.lsfr_width = (val & 0b0000'1000) >> 3;
+      this->ch4.clock_div  = (val & 0b0000'0111) >> 0;
       return;
     }
     case IO_NR44: {
+      if ((val >> 7) & 1) { // Trigger if this bit is high
+        this->ch4.start();
+      }
       this->ch4.length_enabled = (val & 0b0100'0000) >> 6;
-
-      // TODO: Handle trigger
       return;
     }
 
@@ -610,6 +664,9 @@ void gb_apu_t::tick() {
 
     this->ch3.sample_buffer_left[this->sample_buffer_index]  = 0;
     this->ch3.sample_buffer_right[this->sample_buffer_index] = 0;
+
+    this->ch4.sample_buffer_left[this->sample_buffer_index]  = 0;
+    this->ch4.sample_buffer_right[this->sample_buffer_index] = 0;
 
     this->sample_buffer_left[this->sample_buffer_index]  = 0;
     this->sample_buffer_right[this->sample_buffer_index] = 0;
@@ -703,7 +760,56 @@ void gb_apu_t::tick() {
         }
       }
     }
-    // TODO: Implement Channel 4
+    // Channel 4
+    if (this->ch4.on) {
+      gb_noise_channel_t &ch = this->ch4;
+      ch.counter--;
+      if (ch.counter <= 0) {
+        /*
+         *           262,144
+         *  ----------------------- Hz
+         *  clock_divider x 2^shift
+         */
+        int period = ch.clock_div * std::exp2(ch.clock_shift) * int((APU_CLOCK) / 262'144);
+
+        ch.counter += period;
+        bool bit0 = (ch.lsfr >> 0) & 1;
+        bool bit1 = (ch.lsfr >> 1) & 1;
+        if (ch.lsfr_width) {
+          // 7 Bit LSFR
+          ch.lsfr &= 0b0000'0000'0111'1111;
+          if (bit0 == bit1) {
+            ch.lsfr |= 0b0000'0000'1000'0000;
+          }
+        } else {
+          // 15 Bit LSFR
+          ch.lsfr &= 0b0111'1111'1111'1111;
+          if (bit0 == bit1) {
+            ch.lsfr |= 0b1000'0000'0000'0000;
+          }
+        }
+        ch.lsfr >>= 1;
+        ch.curr_sample = bit0;
+      }
+
+      if (sample_this_tick && !ch.dbg_muted) {
+        float ch4_sample = -1.0f;
+        if (ch.curr_sample) {
+          ch4_sample = 1.0f;
+        }
+        ch4_sample /= 4;
+        ch4_sample *= (float(ch.curr_volume) / 16.0f);
+        if (ch.left_ch_on) {
+          ch.sample_buffer_left[this->sample_buffer_index] = ch4_sample;
+          left_sample += ch4_sample;
+        }
+
+        if (ch.right_ch_on) {
+          ch.sample_buffer_right[this->sample_buffer_index] = ch4_sample;
+          right_sample += ch4_sample;
+        }
+      }
+    }
   }
 
   if (sample_this_tick) {
@@ -726,6 +832,7 @@ void gb_apu_t::div_tick() {
     this->ch1.len_tick();
     this->ch2.len_tick();
     this->ch3.len_tick();
+    this->ch4.len_tick();
   }
   // Period Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
@@ -736,5 +843,6 @@ void gb_apu_t::div_tick() {
   if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
     this->ch1.env_sweep_tick();
     this->ch2.env_sweep_tick();
+    this->ch4.env_sweep_tick();
   }
 }

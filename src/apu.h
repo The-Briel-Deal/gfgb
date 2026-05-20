@@ -126,10 +126,17 @@ typedef struct gb_wave_output_channel {
 typedef struct gb_noise_channel {
 #ifdef __cplusplus
   gb_noise_channel();
-  // TODO: Add start/stop helpers
+  void start();
+  void stop();
   void reset();
+  void len_tick();
+  void env_sweep_tick();
 #endif
   bool on;
+  bool dbg_muted; // Set if muted via the imgui debug ui.
+
+  uint16_t lsfr;        // Current LSFR state.
+  bool     curr_sample; // Last bit shifted out of LSFR.
 
   // From `NR51`
   bool left_ch_on;
@@ -143,14 +150,21 @@ typedef struct gb_noise_channel {
   uint8_t curr_volume;
   bool    curr_env_dir;
   uint8_t curr_env_sweep_pace;
+  uint8_t env_sweep_ticks;
 
   // From `NR43`
   uint8_t clock_shift;
   bool    lsfr_width;
   uint8_t clock_div;
+  int     counter;
 
-  // From `NR44`
-  bool length_enabled;
+  // From `NR41` and `NR44`
+  bool    length_enabled;
+  uint8_t initial_length;
+  uint8_t length;
+
+  gb_apu_sample_buffer_t sample_buffer_left;
+  gb_apu_sample_buffer_t sample_buffer_right;
 } gb_noise_channel_t;
 
 typedef struct gb_apu {

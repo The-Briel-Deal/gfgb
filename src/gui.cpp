@@ -8,7 +8,9 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 #include <format>
+#include <print>
 #include <span>
+#include <sstream>
 
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX
@@ -517,6 +519,46 @@ static void gb_imgui_audio_win(gb_state_t *gb_state) {
 
     gb_apu_ch_graph(gb_state, "Channel 3 (Custom Waveform)", gb_state->apu.ch3.sample_buffer_left,
                     gb_state->apu.ch3.sample_buffer_right, &gb_state->apu.ch3.dbg_muted);
+
+    gb_apu_ch_graph(gb_state, "Channel 4 (Noise)", gb_state->apu.ch4.sample_buffer_left,
+                    gb_state->apu.ch4.sample_buffer_right, &gb_state->apu.ch4.dbg_muted);
+    if (ImGui::TreeNodeEx("Channel 4 State", ImGuiTreeNodeFlags_Framed)) {
+      auto             &ch = gb_state->apu.ch4;
+      std::stringstream state_string;
+
+#define show_field(name, fmt) std::println(state_string, #name ": " fmt, ch.name)
+
+      {
+        show_field(on, "{}");
+        show_field(dbg_muted, "{}");
+
+        show_field(lsfr, "{:#018b}");
+        show_field(curr_sample, "{}");
+
+        show_field(left_ch_on, "{}");
+        show_field(right_ch_on, "{}");
+
+        show_field(initial_volume, "{}");
+        show_field(next_env_dir, "{}");
+        show_field(next_env_sweep_pace, "{}");
+
+        show_field(curr_volume, "{}");
+        show_field(curr_env_dir, "{}");
+        show_field(curr_env_sweep_pace, "{}");
+        show_field(env_sweep_ticks, "{}");
+
+        show_field(clock_shift, "{}");
+        show_field(lsfr_width, "{}");
+        show_field(clock_div, "{}");
+        show_field(counter, "{}");
+
+        show_field(length_enabled, "{}");
+        show_field(initial_length, "{}");
+        show_field(length, "{}");
+      }
+      ImGui::TextUnformatted(state_string.str().c_str());
+      ImGui::TreePop();
+    }
   }
   ImGui::End();
 }
