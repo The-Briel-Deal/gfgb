@@ -19,8 +19,10 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->reset();
 }
 void gb_pulsewave_channel_t::start() {
-  this->on                     = true;
-  this->length                 = 64 - this->initial_length;
+  this->on = true;
+  if (this->length == 0) {
+    this->length = 64 - this->initial_length;
+  }
   this->curr_period            = this->next_period;
   this->curr_volume            = this->initial_volume;
   this->curr_env_dir           = this->next_env_dir;
