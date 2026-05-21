@@ -142,6 +142,40 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
   }
 }
 
+str gb_pulsewave_channel_t::dbg_state_str() {
+  std::stringstream state_stringstream;
+
+#define show_field(name, fmt) std::println(state_stringstream, #name ": " fmt, this->name)
+
+  {
+    show_field(dbg_muted, "{}");
+    show_field(on, "{}");
+    show_field(left_ch_on, "{}");
+    show_field(right_ch_on, "{}");
+    show_field(length_enabled, "{}");
+    show_field(duty_cycle, "{}");
+    show_field(initial_length, "{}");
+    show_field(length, "{}");
+    show_field(phase, "{}");
+    show_field(counter, "{}");
+    show_field(next_period, "{}");
+    show_field(curr_period, "{}");
+    show_field(initial_volume, "{}");
+    show_field(next_env_dir, "{}");
+    show_field(next_env_sweep_pace, "{}");
+    show_field(curr_volume, "{}");
+    show_field(curr_env_dir, "{}");
+    show_field(curr_env_sweep_pace, "{}");
+    show_field(env_sweep_ticks, "{}");
+    show_field(next_period_sweep_pace, "{}");
+    show_field(curr_period_sweep_pace, "{}");
+    show_field(period_sweep_dir, "{}");
+    show_field(period_sweep_step, "{}");
+    show_field(period_sweep_ticks, "{}");
+  }
+  return state_stringstream.str();
+}
+
 gb_wave_output_channel_t::gb_wave_output_channel() {
   this->dbg_muted = false;
   this->reset();

@@ -513,9 +513,19 @@ static void gb_imgui_audio_win(gb_state_t *gb_state) {
 
     gb_apu_ch_graph(gb_state, "Channel 1 (Pulsewave With Freq Sweep)", gb_state->apu.ch1.sample_buffer_left,
                     gb_state->apu.ch1.sample_buffer_right, &gb_state->apu.ch1.dbg_muted);
+    if (ImGui::TreeNodeEx("Channel 1 State", ImGuiTreeNodeFlags_Framed)) {
+      str state_string = gb_state->apu.ch1.dbg_state_str();
+      ImGui::TextUnformatted(state_string.c_str());
+      ImGui::TreePop();
+    }
 
     gb_apu_ch_graph(gb_state, "Channel 2 (Pulsewave)", gb_state->apu.ch2.sample_buffer_left,
                     gb_state->apu.ch2.sample_buffer_right, &gb_state->apu.ch2.dbg_muted);
+    if (ImGui::TreeNodeEx("Channel 2 State", ImGuiTreeNodeFlags_Framed)) {
+      str state_string = gb_state->apu.ch2.dbg_state_str();
+      ImGui::TextUnformatted(state_string.c_str());
+      ImGui::TreePop();
+    }
 
     gb_apu_ch_graph(gb_state, "Channel 3 (Custom Waveform)", gb_state->apu.ch3.sample_buffer_left,
                     gb_state->apu.ch3.sample_buffer_right, &gb_state->apu.ch3.dbg_muted);

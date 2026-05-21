@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL_audio.h>
 #ifdef __cplusplus
+#include <format>
 #include <limits>
 #include <string>
 using str = std::string;
@@ -25,6 +26,20 @@ typedef enum gb_duty_cycle : uint8_t {
   GB_DUTY_CYCLE_THREE_FOURTHS = 0b0111'1110,
 } gb_duty_cycle_t;
 
+#ifdef __cplusplus
+extern "C++" {
+// Simple formatter specialization for the duty cycle enum, this just makes it easier print/format
+template <> struct std::formatter<gb_duty_cycle_t> : formatter<std::string> {
+  constexpr auto parse(std::format_parse_context &ctx) {
+    return ctx.begin();
+  }
+  auto format(gb_duty_cycle_t duty_cycle, format_context &ctx) const {
+    return std::format_to(ctx.out(), "{:#010b}", (uint8_t)duty_cycle);
+  }
+};
+}
+#endif
+
 typedef struct gb_pulsewave_channel {
 #ifdef __cplusplus
   gb_pulsewave_channel();
@@ -37,6 +52,8 @@ typedef struct gb_pulsewave_channel {
   void   len_tick();
   void   env_sweep_tick();
   void   period_sweep_tick();
+
+  str dbg_state_str();
 #endif
   bool dbg_muted; // Set if muted via the imgui debug ui.
 
