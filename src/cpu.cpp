@@ -432,6 +432,13 @@ static inline struct inst _fetch(struct gb_state *gb_state) {
 static void ex_ld(struct gb_state *gb_state, struct inst inst) {
   struct inst_param dest = inst.p1;
   struct inst_param src  = inst.p2;
+
+  if (gb_state->dbg.source_code_break && // ld b, b pauses execution if source code
+      IS_R8(src) && src.r8 == R8_B &&    // breakpoints are enabled
+      IS_R8(dest) && dest.r8 == R8_B) [[unlikely]] {
+    gb_state->dbg.pause();
+  }
+
   if (IS_R16(dest) && IS_IMM16(src)) {
     gb_spend_mcycles(gb_state, 3);
     set_r16(gb_state, dest.r16, src.imm16);

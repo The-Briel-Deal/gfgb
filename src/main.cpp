@@ -137,6 +137,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   gb_cli_exec->add_option("--trace_out", trace_exec_filename,
                           "File to write trace to if execution tracing is enabled.");
 
+  gb_cli_exec->add_flag("--scb,--source_code_breakpoints", gb_state->dbg.source_code_break,
+                        "Enable pausing execution when instruction `ld b, b` is executed.");
+
   // TODO: Bank should be specifiable as well.
   std::vector<std::string> breakpoints;
   gb_cli_exec

@@ -478,6 +478,7 @@ static void gb_imgui_settings_win(gb_state_t *gb_state) {
       gb_state->apu.set_speed(gb_state->dbg.speed_factor);
     }
     ImGui::Checkbox("Pause on Error", &gb_state->dbg.pause_on_err);
+    ImGui::Checkbox("Source Code Breakpoints (ld b, b)", &gb_state->dbg.source_code_break);
     ImGui::Checkbox("Print Instructions", &gb_state->dbg.trace_exec);
     ImGui::Checkbox("Show Scanline", &gb_state->imgui.show_scanline);
   }

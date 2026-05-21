@@ -488,6 +488,7 @@ typedef struct gb_dbg_state {
   bool                headless_mode; // Whether or not there is an actual window to present to.
   bool                test_mode;     // If enabled then use serial_port output to look for a pass/fail string
   bool                trace_exec;
+  bool                source_code_break; // Whether or not ld b, b should stop execution
   float               speed_factor;
   uint32_t            step_inst_count; // the number of instructions to run until breaking
   char                test_mode_pass_regex[16];

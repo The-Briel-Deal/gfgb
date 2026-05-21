@@ -460,6 +460,7 @@ gb_state::gb_state() {
   this->dbg.use_flat_ram            = false;
   this->dbg.headless_mode           = false;
   this->dbg.trace_exec              = false;
+  this->dbg.source_code_break       = false;
   this->dbg.trace_exec_fout         = NULL;
   this->dbg.serial_port_output_file = NULL;
   this->dbg.syms                    = {.syms = NULL, .len = 0, .capacity = 0};
