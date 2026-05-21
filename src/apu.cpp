@@ -221,6 +221,29 @@ void gb_wave_output_channel_t::len_tick() {
     this->stop();
   }
 }
+str gb_wave_output_channel_t::dbg_state_str() {
+  std::stringstream state_stringstream;
+
+#define show_field(name, fmt) std::println(state_stringstream, #name ": " fmt, this->name)
+
+  {
+    show_field(dbg_muted, "{}");
+    show_field(on, "{}");
+    show_field(dac_on, "{}");
+    show_field(right_ch_on, "{}");
+    show_field(left_ch_on, "{}");
+    show_field(length_enabled, "{}");
+    show_field(initial_length, "{}");
+    show_field(length, "{}");
+    show_field(vol, "{}");
+    show_field(next_period, "{}");
+    show_field(curr_period, "{}");
+    show_field(phase, "{}");
+    show_field(counter, "{}");
+    show_field(wave_pattern, "{}");
+  }
+  return state_stringstream.str();
+}
 
 gb_noise_channel_t::gb_noise_channel() {
   this->dbg_muted = false;

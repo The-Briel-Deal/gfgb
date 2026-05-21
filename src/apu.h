@@ -8,6 +8,7 @@
 #include <format>
 #include <limits>
 #include <string>
+#include <utility>
 using str = std::string;
 extern "C" {
 #endif
@@ -105,6 +106,25 @@ typedef enum gb_ch3_volume : uint8_t {
   GB_CH3_VOLUME_HALF = 0b10,
   GB_CH3_VOLUME_QUAR = 0b11,
 } gb_ch3_volume_t;
+#ifdef __cplusplus
+extern "C++" {
+// Simple formatter specialization for the duty cycle enum, this just makes it easier print/format
+template <> struct std::formatter<gb_ch3_volume_t> : formatter<std::string> {
+  constexpr auto parse(std::format_parse_context &ctx) {
+    return ctx.begin();
+  }
+  auto format(gb_ch3_volume_t volume, format_context &ctx) const {
+    switch (volume) {
+      case GB_CH3_VOLUME_MUTE: return std::format_to(ctx.out(), "Mute");
+      case GB_CH3_VOLUME_FULL: return std::format_to(ctx.out(), "Full");
+      case GB_CH3_VOLUME_HALF: return std::format_to(ctx.out(), "Half");
+      case GB_CH3_VOLUME_QUAR: return std::format_to(ctx.out(), "Quarter");
+      default: std::unreachable();
+    }
+  }
+};
+}
+#endif
 
 #define IO_WAVE_PATTERN_RAM_START 0xFF30
 #define IO_WAVE_PATTERN_RAM_LEN   16
@@ -116,6 +136,8 @@ typedef struct gb_wave_output_channel {
   void stop();
   void reset();
   void len_tick();
+
+  str dbg_state_str();
 #endif
   bool dbg_muted; // Set if muted via the imgui debug ui.
   bool on;

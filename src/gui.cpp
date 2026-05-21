@@ -529,6 +529,11 @@ static void gb_imgui_audio_win(gb_state_t *gb_state) {
 
     gb_apu_ch_graph(gb_state, "Channel 3 (Custom Waveform)", gb_state->apu.ch3.sample_buffer_left,
                     gb_state->apu.ch3.sample_buffer_right, &gb_state->apu.ch3.dbg_muted);
+    if (ImGui::TreeNodeEx("Channel 3 State", ImGuiTreeNodeFlags_Framed)) {
+      str state_string = gb_state->apu.ch3.dbg_state_str();
+      ImGui::TextUnformatted(state_string.c_str());
+      ImGui::TreePop();
+    }
 
     gb_apu_ch_graph(gb_state, "Channel 4 (Noise)", gb_state->apu.ch4.sample_buffer_left,
                     gb_state->apu.ch4.sample_buffer_right, &gb_state->apu.ch4.dbg_muted);
