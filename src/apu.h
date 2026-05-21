@@ -6,6 +6,8 @@
 #include <SDL3/SDL_audio.h>
 #ifdef __cplusplus
 #include <limits>
+#include <string>
+using str = std::string;
 extern "C" {
 #endif
 
@@ -131,6 +133,8 @@ typedef struct gb_noise_channel {
   void reset();
   void len_tick();
   void env_sweep_tick();
+
+  str dbg_state_str();
 #endif
   bool on;
   bool dbg_muted; // Set if muted via the imgui debug ui.

@@ -2,6 +2,8 @@
 #include "common.h"
 
 #include <cmath>
+#include <print>
+#include <sstream>
 
 #define MAX_PERIOD           (1 << 11)
 #define APU_CLOCK            DMG_CLOCK_HZ / 4
@@ -258,6 +260,42 @@ void gb_noise_channel_t::env_sweep_tick() {
     if (this->curr_volume == 0) return;
     this->curr_volume--;
   }
+}
+
+str gb_noise_channel_t::dbg_state_str() {
+  std::stringstream state_stringstream;
+
+#define show_field(name, fmt) std::println(state_stringstream, #name ": " fmt, this->name)
+
+  {
+    show_field(on, "{}");
+    show_field(dbg_muted, "{}");
+
+    show_field(lsfr, "{:#018b}");
+    show_field(curr_sample, "{}");
+
+    show_field(left_ch_on, "{}");
+    show_field(right_ch_on, "{}");
+
+    show_field(initial_volume, "{}");
+    show_field(next_env_dir, "{}");
+    show_field(next_env_sweep_pace, "{}");
+
+    show_field(curr_volume, "{}");
+    show_field(curr_env_dir, "{}");
+    show_field(curr_env_sweep_pace, "{}");
+    show_field(env_sweep_ticks, "{}");
+
+    show_field(clock_shift, "{}");
+    show_field(lsfr_width, "{}");
+    show_field(clock_div, "{}");
+    show_field(counter, "{}");
+
+    show_field(length_enabled, "{}");
+    show_field(initial_length, "{}");
+    show_field(length, "{}");
+  }
+  return state_stringstream.str();
 }
 
 gb_apu_t::gb_apu() {
