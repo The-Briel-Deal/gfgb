@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
+#include <imgui_internal.h>
 
 #include <format>
 #include <span>
@@ -563,7 +564,32 @@ void gb_imgui_render(gb_state_t *gb_state) {
   gb_imgui_main_menu_bar(gb_state);
 
   if (imgui_state.fs_dockspace) {
-    ImGui::DockSpaceOverViewport();
+    ImGuiID        dockspace_id = ImGui::GetID("My Dockspace");
+    ImGuiViewport *viewport     = ImGui::GetMainViewport();
+
+    // Create settings
+    if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
+      ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+      ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+      ImGuiID dock_id_bottom = 0;
+      ImGuiID dock_id_main   = dockspace_id;
+      ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.30f, &dock_id_bottom, &dock_id_main);
+      ImGuiID dock_id_top_left  = 0;
+      ImGuiID dock_id_top_right = 0;
+      ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, &dock_id_top_left, &dock_id_top_right);
+      ImGui::DockBuilderDockWindow("Display Viewport", dock_id_top_right);
+
+      ImGui::DockBuilderDockWindow("OAM Viewer", dock_id_top_left);
+
+      ImGui::DockBuilderDockWindow("GB State", dock_id_bottom);
+      ImGui::DockBuilderDockWindow("Audio", dock_id_bottom);
+      ImGui::DockBuilderDockWindow("Cart Info", dock_id_bottom);
+      ImGui::DockBuilderDockWindow("Layers", dock_id_bottom);
+      ImGui::DockBuilderDockWindow("Tiledata Viewer", dock_id_bottom);
+      ImGui::DockBuilderDockWindow("Settings", dock_id_bottom);
+      ImGui::DockBuilderFinish(dockspace_id);
+    }
+    ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
     gb_imgui_display_viewport_win(gb_state);
   }
 
