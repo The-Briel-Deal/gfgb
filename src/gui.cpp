@@ -37,6 +37,8 @@ bool gb_imgui_init(gb_state_t *gb_state) {
   if (!IMGUI_CHECKVERSION()) return false;
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
+  // Disable autosaving imgui.ini settings file
+  io.IniFilename = NULL;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
