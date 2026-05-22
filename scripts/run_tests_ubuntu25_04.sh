@@ -12,8 +12,10 @@ cd /gb_emu/
 sed -Ei 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 
 apt-get -y update
-apt-get -y install ninja-build gcc git python3 python3-pip python3-venv
+apt-get -y install ninja-build gcc-15 g++-15 git python3 python3-pip python3-venv
 apt-get -y build-dep libsdl3-dev
+export CC=gcc-15
+export CXX=g++-15
 
 python3 -m venv /venv
 source /venv/bin/activate
