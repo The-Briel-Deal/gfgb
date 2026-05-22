@@ -50,7 +50,7 @@ struct gb_imgui_state {
 };
 typedef struct gb_imgui_state gb_imgui_state_t;
 
-void gb_imgui_init(gb_state_t *gb_state);
+bool gb_imgui_init(gb_state_t *gb_state);
 void gb_imgui_free(gb_state_t *gb_state);
 bool gb_gui_handle_sdl_event(struct gb_state *gb_state, SDL_Event *event);
 void gb_imgui_render(gb_state_t *gb_state);

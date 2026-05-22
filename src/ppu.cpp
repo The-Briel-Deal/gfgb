@@ -78,8 +78,6 @@ bool gb_video_init(struct gb_state *gb_state) {
                         GB_DISPLAY_WIDTH, GB_DISPLAY_HEIGHT);
   GB_assert(gb_state->video.sdl_composite_target_back != NULL);
 
-  gb_imgui_init(gb_state);
-
   gb_state->video.initialized = true;
 
   return true;

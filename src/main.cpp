@@ -1,6 +1,7 @@
 #include "common.h"
 #include "cpu.h"
 #include "disassemble.h"
+#include "gui.h"
 #include "ppu.h"
 #include "timing.h"
 
@@ -217,6 +218,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       if (!gb_setup_serial_out(gb_state, serial_output_filename_cstr)) return SDL_APP_FAILURE;
       if (!gb_setup_exec_tracing(gb_state, trace_exec_filename_cstr)) return SDL_APP_FAILURE;
       if (!gb_video_init(gb_state)) return SDL_APP_FAILURE;
+      if (!gb_imgui_init(gb_state)) return SDL_APP_FAILURE;
       return SDL_APP_CONTINUE; /* carry on with the program! */
     };
     case DISASSEMBLE: {

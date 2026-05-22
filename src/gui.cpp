@@ -8,9 +8,7 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 #include <format>
-#include <print>
 #include <span>
-#include <sstream>
 
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX
@@ -25,7 +23,7 @@ INCBIN(monocraft_ttf, "fonts/Monocraft-ttf/Monocraft.ttf");
 #define TILEDATA_ATLAS_WIDTH  TILE_PIXEL_WIDTH * 16
 #define TILEDATA_ATLAS_HEIGHT TILE_PIXEL_HEIGHT * 8 * TILEDATA_BLOCKS_COUNT
 
-void gb_imgui_init(gb_state_t *gb_state) {
+bool gb_imgui_init(gb_state_t *gb_state) {
   // This is what is drawn to when using fullscreen dockspace, I use this so that I can do things like draw where the
   // current line is at.
   gb_state->imgui.viewport_target = SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32,
@@ -36,7 +34,7 @@ void gb_imgui_init(gb_state_t *gb_state) {
       SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
                         TILEDATA_ATLAS_WIDTH, TILEDATA_ATLAS_HEIGHT);
   // Initialize ImGui
-  IMGUI_CHECKVERSION();
+  if (!IMGUI_CHECKVERSION()) return false;
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -54,8 +52,8 @@ void gb_imgui_init(gb_state_t *gb_state) {
                                    // automatically overrides this for every window depending on the current monitor)
 
   // Setup Platform/Renderer backends
-  ImGui_ImplSDL3_InitForSDLRenderer(gb_state->video.sdl_window, gb_state->video.sdl_renderer);
-  ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer);
+  if (!ImGui_ImplSDL3_InitForSDLRenderer(gb_state->video.sdl_window, gb_state->video.sdl_renderer)) return false;
+  if (!ImGui_ImplSDLRenderer3_Init(gb_state->video.sdl_renderer)) return false;
 
   ImFontConfig default_font_config;
   default_font_config.PixelSnapH           = true;
@@ -72,6 +70,8 @@ void gb_imgui_init(gb_state_t *gb_state) {
   icons_config.GlyphMinAdvanceX     = icon_font_size;
   icons_config.FontDataOwnedByAtlas = false; // I don't want ImGui to free this static memory.
   io.Fonts->AddFontFromMemoryTTF((void *)lucide_ttf_data, lucide_ttf_size, icon_font_size, &icons_config, icons_ranges);
+
+  return true;
 }
 
 void gb_imgui_free(gb_state_t *gb_state) {
