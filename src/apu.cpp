@@ -359,6 +359,7 @@ gb_apu_t::gb_apu() {
 #ifndef GFGB_NO_AUDIO
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
+  this->on = false;
 
   this->vin_left  = false;
   this->vin_right = false;
