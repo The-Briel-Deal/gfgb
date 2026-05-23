@@ -579,9 +579,9 @@ void gb_imgui_render(gb_state_t *gb_state) {
       ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, &dock_id_top_left, &dock_id_top_right);
       ImGui::DockBuilderDockWindow("Display Viewport", dock_id_top_right);
 
+      ImGui::DockBuilderDockWindow("GB State", dock_id_top_left);
       ImGui::DockBuilderDockWindow("OAM Viewer", dock_id_top_left);
 
-      ImGui::DockBuilderDockWindow("GB State", dock_id_bottom);
       ImGui::DockBuilderDockWindow("Audio", dock_id_bottom);
       ImGui::DockBuilderDockWindow("Cart Info", dock_id_bottom);
       ImGui::DockBuilderDockWindow("Layers", dock_id_bottom);
