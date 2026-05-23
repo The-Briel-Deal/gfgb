@@ -589,6 +589,8 @@ void gb_imgui_render(gb_state_t *gb_state) {
       ImGui::DockBuilderDockWindow("Settings", dock_id_bottom);
 
       ImGui::DockBuilderGetNode(dock_id_top_left)->SelectedTabId = ImHashStr("#TAB", 0, ImHashStr("GB State", 0, 0));
+      ImGui::DockBuilderGetNode(dock_id_top_left)->TabBar->SelectedTabId =
+          ImHashStr("#TAB", 0, ImHashStr("GB State", 0, 0));
       ImGui::DockBuilderFinish(dockspace_id);
     }
     ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
