@@ -577,18 +577,29 @@ void gb_imgui_render(gb_state_t *gb_state) {
       ImGuiID dock_id_top_left  = 0;
       ImGuiID dock_id_top_right = 0;
       ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, &dock_id_top_left, &dock_id_top_right);
-      ImGui::DockBuilderDockWindow("Display Viewport", dock_id_top_right);
 
-      ImGui::DockBuilderDockWindow("GB State", dock_id_top_left);
-      ImGui::DockBuilderDockWindow("OAM Viewer", dock_id_top_left);
+      // TODO: Currently ordering Dockspace tabs is kind of annoying, the order of tabs is based on the order
+      // ImGui::Begin() was first called for that window_name/id. I couldn't find a better way to do this so I'm just
+      // going to call ImGui::Begin()+End() right after declaring the dock window. Maybe once the Dockspace API is in a
+      // better state I'll try to figure out another way to do this.
+#define DockWindow(window_name, docknode_id)                                                                           \
+  {                                                                                                                    \
+    ImGui::DockBuilderDockWindow(window_name, docknode_id);                                                            \
+    ImGui::Begin(window_name);                                                                                         \
+    ImGui::End();                                                                                                      \
+  }
 
-      ImGui::DockBuilderDockWindow("Audio", dock_id_bottom);
-      ImGui::DockBuilderDockWindow("Cart Info", dock_id_bottom);
-      ImGui::DockBuilderDockWindow("Layers", dock_id_bottom);
-      ImGui::DockBuilderDockWindow("Tiledata Viewer", dock_id_bottom);
-      ImGui::DockBuilderDockWindow("Settings", dock_id_bottom);
+      DockWindow("Display Viewport", dock_id_top_right);
 
-      ImGui::DockBuilderGetNode(dock_id_top_left)->SelectedTabId = ImHashStr("#TAB", 0, ImHashStr("GB State", 0, 0));
+      DockWindow("GB State", dock_id_top_left);
+      DockWindow("OAM Viewer", dock_id_top_left);
+
+      DockWindow("Audio", dock_id_bottom);
+      DockWindow("Cart Info", dock_id_bottom);
+      DockWindow("Layers", dock_id_bottom);
+      DockWindow("Tiledata Viewer", dock_id_bottom);
+      DockWindow("Settings", dock_id_bottom);
+
       ImGui::DockBuilderFinish(dockspace_id);
     }
     ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
