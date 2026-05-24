@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="gb_emu" type="CLionNativeAppRunConfigurationType" PROGRAM_PARAMS="exec --no_bootrom &quot;$FilePrompt$&quot;" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gb_emu" TARGET_NAME="gb_emu" CONFIG_NAME="Default" version="1" RUN_TARGET_PROJECT_NAME="gb_emu" RUN_TARGET_NAME="gb_emu">
+  <configuration default="false" name="gb_emu" type="CLionNativeAppRunConfigurationType" PROGRAM_PARAMS="exec --no_bootrom &quot;$FilePrompt$&quot;" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gfgb" TARGET_NAME="gb_emu" CONFIG_NAME="Default" version="1" RUN_TARGET_PROJECT_NAME="gfgb" RUN_TARGET_NAME="gb_emu">
     <method v="2">
       <option name="CLION.COMPOUND.BUILD" enabled="true" />
     </method>
