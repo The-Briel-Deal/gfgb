@@ -26,6 +26,10 @@
 #include <utility>
 #include <vector>
 
+#ifndef NDEBUG
+#include <print>
+#endif
+
 using std::unreachable;
 using str                       = std::string;
 template <typename T> using opt = std::optional<T>;
@@ -51,11 +55,14 @@ enum GB_LogCategory {
 };
 #ifdef NDEBUG
 #define GB_CheckSDLCall(call) call
+#define dbg_print(msg, ...)   static_assert(false, "dbg_print called in a release build")
 #else
 #define GB_CheckSDLCall(call)                                                                                          \
   if (!call) {                                                                                                         \
     LogCritical(__FILE__ "@%d: SDL Call '" #call "' failed due to '%s'", __LINE__, SDL_GetError());                    \
   }
+
+#define dbg_print(msg, ...) std::println("GF_DEBUG: " msg, ##__VA_ARGS__)
 #endif
 
 #define CheckedSDL(fn) GB_CheckSDLCall(SDL_##fn)

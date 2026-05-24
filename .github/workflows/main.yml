@@ -10,12 +10,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: true
-      # TODO: I can probably run tests directly on the runner, I originally
-      # used a container with ubuntu 25.04 so that I could use gcc 14.x.x
-      # instead of gcc 13.x.x. But it turns out there is actually a gcc-14
-      # package on 24.04.
       - run: |
           docker run -i \
             --mount=type=bind,source=$PWD,destination=/gb_emu \
-            --entrypoint=/gb_emu/scripts/run_tests_ubuntu25_04.sh \
-            ubuntu:25.04
+            --entrypoint=/gb_emu/scripts/run_tests_ubuntu26_04.sh \
+            ubuntu:26.04

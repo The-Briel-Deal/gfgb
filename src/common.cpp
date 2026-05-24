@@ -465,6 +465,27 @@ gb_state::gb_state() {
   this->dbg.serial_port_output_file = NULL;
   this->dbg.syms                    = {.syms = NULL, .len = 0, .capacity = 0};
 
+  // When doing a debug build we default the fullscreen debugger and all debug windows to enabled.
+#ifndef NDEBUG
+  this->imgui.fs_dockspace    = true;
+  this->imgui.audio_viewer    = true;
+  this->imgui.cart_info       = true;
+  this->imgui.layer_viewer    = true;
+  this->imgui.oam_viewer      = true;
+  this->imgui.state_inspector = true;
+  this->imgui.tiledata_viewer = true;
+#else
+  this->imgui.fs_dockspace    = false;
+  this->imgui.audio_viewer    = false;
+  this->imgui.cart_info       = false;
+  this->imgui.layer_viewer    = false;
+  this->imgui.oam_viewer      = false;
+  this->imgui.state_inspector = false;
+  this->imgui.tiledata_viewer = false;
+#endif
+  this->imgui.settings      = false;
+  this->imgui.show_scanline = false;
+
   this->breakpoints               = new std::vector<gb_breakpoint_t>;
   this->serial_port_output_string = new std::string;
   this->compiled_pass_regex       = new std::basic_regex<char>;

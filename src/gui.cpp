@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
+#include <imgui_internal.h>
 
 #include <format>
 #include <span>
@@ -37,6 +38,8 @@ bool gb_imgui_init(gb_state_t *gb_state) {
   if (!IMGUI_CHECKVERSION()) return false;
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
+  // Disable autosaving imgui.ini settings file
+  io.IniFilename = NULL;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
@@ -561,7 +564,45 @@ void gb_imgui_render(gb_state_t *gb_state) {
   gb_imgui_main_menu_bar(gb_state);
 
   if (imgui_state.fs_dockspace) {
-    ImGui::DockSpaceOverViewport();
+    ImGuiID        dockspace_id = ImGui::GetID("My Dockspace");
+    ImGuiViewport *viewport     = ImGui::GetMainViewport();
+
+    // Create settings
+    if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
+      ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+      ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+      ImGuiID dock_id_bottom = 0;
+      ImGuiID dock_id_main   = dockspace_id;
+      ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.30f, &dock_id_bottom, &dock_id_main);
+      ImGuiID dock_id_top_left  = 0;
+      ImGuiID dock_id_top_right = 0;
+      ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, &dock_id_top_left, &dock_id_top_right);
+
+      // TODO: Currently ordering Dockspace tabs is kind of annoying, the order of tabs is based on the order
+      // ImGui::Begin() was first called for that window_name/id. I couldn't find a better way to do this so I'm just
+      // going to call ImGui::Begin()+End() right after declaring the dock window. Maybe once the Dockspace API is in a
+      // better state I'll try to figure out another way to do this.
+#define DockWindow(window_name, docknode_id)                                                                           \
+  {                                                                                                                    \
+    ImGui::DockBuilderDockWindow(window_name, docknode_id);                                                            \
+    ImGui::Begin(window_name);                                                                                         \
+    ImGui::End();                                                                                                      \
+  }
+
+      DockWindow("Display Viewport", dock_id_top_right);
+
+      DockWindow("GB State", dock_id_top_left);
+      DockWindow("OAM Viewer", dock_id_top_left);
+
+      DockWindow("Audio", dock_id_bottom);
+      DockWindow("Cart Info", dock_id_bottom);
+      DockWindow("Layers", dock_id_bottom);
+      DockWindow("Tiledata Viewer", dock_id_bottom);
+      DockWindow("Settings", dock_id_bottom);
+
+      ImGui::DockBuilderFinish(dockspace_id);
+    }
+    ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
     gb_imgui_display_viewport_win(gb_state);
   }
 
