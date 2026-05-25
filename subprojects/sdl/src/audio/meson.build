@@ -1,3 +1,5 @@
+subdir('dummy')
+
 if host_machine.system() == 'windows'
   cdata.set('SDL_AUDIO_DRIVER_DSOUND', 1)
   #  cdata.set('SDL_AUDIO_DRIVER_WASAPI', 1)

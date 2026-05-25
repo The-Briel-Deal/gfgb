@@ -1,4 +1,5 @@
 subdir('yuv2rgb')
+subdir('dummy')
 
 if host_machine.system() == 'windows'
   cdata.set('SDL_VIDEO_DRIVER_WINDOWS', 1)
