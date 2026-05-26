@@ -391,6 +391,10 @@ gb_apu_t::gb_apu() {
   GB_memset(this->sample_buffer_right, 0, sizeof(this->sample_buffer_right));
 }
 
+gb_apu_t::~gb_apu() {
+  SDL_QuitSubSystem(SDL_INIT_AUDIO);
+}
+
 uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
   switch (reg) {
     // Global

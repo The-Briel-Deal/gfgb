@@ -214,6 +214,8 @@ typedef struct gb_apu {
 #ifdef __cplusplus
   // I want methods to still be able touch other parts of gameboy state like the audio registers.
   gb_apu();
+  ~gb_apu();
+
 
   // We dispatch APU reg reads/writes to here so that they can be immediately parsed on write and reconstructed on read.
   // This prevents
