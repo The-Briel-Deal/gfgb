@@ -192,6 +192,30 @@ foreach test : blargg_mem_timing_tests
   )
 endforeach
 
+blargg_apu_tests = [
+  '01-registers.gb',
+# '02-len ctr.gb',
+# '03-trigger.gb',
+# '04-sweep.gb',
+# '05-sweep details.gb',
+# '06-overflow on trigger.gb',
+# '07-len sweep period sync.gb',
+# '08-len ctr during power.gb',
+# '09-wave read while on.gb',
+# '10-wave trigger while on.gb',
+# '11-regs after power.gb',
+# '12-wave write while on.gb',
+]
+
+foreach test : blargg_apu_tests
+  test(
+    'blargg_apu_' + test,
+    exe,
+    args : ['exec', current_src_dir / 'test/blargg/dmg_sound/rom_singles/' / test, '--test_mode', '--exec_speed=100', test_flags],
+    env : test_env,
+  )
+endforeach
+
 test(
   'blargg_instr_timing',
   exe,
