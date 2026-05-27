@@ -97,9 +97,9 @@ double gb_pulsewave_channel_t::tone_freq() {
 }
 
 void gb_pulsewave_channel_t::len_tick() {
-  if (!this->on) return;
-  if (this->length_enabled && !((--this->length) > 0)) {
-    this->stop();
+  if (this->length_enabled) {
+    if (this->length > 0) this->length--;
+    if (this->length == 0) this->stop();
   }
 }
 
