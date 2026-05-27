@@ -252,10 +252,13 @@ gb_noise_channel_t::gb_noise_channel() {
 }
 
 void gb_noise_channel_t::start() {
+  if (!this->dac_on) return;
   this->on      = true;
   this->lsfr    = 0;
   this->counter = 0;
-  this->length  = 64 - this->initial_length;
+  if (this->length == 0) {
+    this->length = 64;
+  }
 
   this->curr_volume         = this->initial_volume;
   this->curr_env_dir        = this->next_env_dir;
@@ -269,6 +272,7 @@ void gb_noise_channel_t::stop() {
 
 void gb_noise_channel_t::reset() {
   this->on      = false;
+  this->dac_on  = false;
   this->lsfr    = 0;
   this->counter = 0;
   // `NR51`
@@ -295,9 +299,9 @@ void gb_noise_channel_t::reset() {
 }
 
 void gb_noise_channel_t::len_tick() {
-  if (!this->on) return;
-  if (this->length_enabled && !((--this->length) > 0)) {
-    this->stop();
+  if (this->length_enabled) {
+    if (this->length > 0) this->length--;
+    if (this->length == 0) this->stop();
   }
 }
 
@@ -694,16 +698,16 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
 
     // Channel 4
     case IO_NR41: {
-      this->ch4.initial_length = val & 0b0011'1111;
+      this->ch4.initial_length = (val >> 0) & 0b0011'1111;
+      this->ch4.length         = 64 - this->ch4.initial_length;
       return;
     }
     case IO_NR42: {
       this->ch4.initial_volume      = (val & 0b1111'0000) >> 4;
       this->ch4.next_env_dir        = (val & 0b0000'1000) >> 3;
       this->ch4.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
-      if ((val & 0xF8) == 0) {
-        this->ch4.stop();
-      }
+      this->ch4.dac_on              = (val & 0b1111'1000) != 0;
+      if (!this->ch4.dac_on) this->ch4.stop();
       return;
     }
     case IO_NR43: {

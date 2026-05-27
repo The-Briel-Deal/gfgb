@@ -177,6 +177,7 @@ typedef struct gb_noise_channel {
   str dbg_state_str();
 #endif
   bool on;
+  bool dac_on;
   bool dbg_muted; // Set if muted via the imgui debug ui.
 
   uint16_t lsfr;        // Current LSFR state.
