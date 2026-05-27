@@ -188,11 +188,8 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
 }
 
 void gb_wave_output_channel_t::start() {
-  this->on = true;
-  // TODO: I need to verify if it should be 256 - initial_length or 255 - initial_length. If I had this set to 256 then
-  // an initial length of 0 would overflow the 8 bit length field but maybe they use a bigger internal register to hold
-  // length in a real gameboy.
-  this->length      = 255 - this->initial_length;
+  this->on          = true;
+  this->length      = 256 - this->initial_length;
   this->curr_period = this->next_period;
 }
 
@@ -217,11 +214,9 @@ void gb_wave_output_channel_t::reset() {
 }
 
 void gb_wave_output_channel_t::len_tick() {
-  if (!this->on) return;
-  // TODO: Since this is 255 at len 0 instead of 256 I think I should change this to this->length-- so that it takes one
-  // more tick. I need to verify this though.
-  if (this->length_enabled && !((--this->length) > 0)) {
-    this->stop();
+  if (this->length_enabled) {
+    if (this->length > 0) this->length--;
+    if (this->length == 0) this->stop();
   }
 }
 str gb_wave_output_channel_t::dbg_state_str() {

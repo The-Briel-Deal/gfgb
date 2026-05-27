@@ -148,7 +148,7 @@ typedef struct gb_wave_output_channel {
 
   bool    length_enabled;
   uint8_t initial_length;
-  uint8_t length;
+  uint16_t length;
 
   gb_ch3_volume_t vol;
 
