@@ -611,9 +611,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch1.next_env_dir        = (val & 0b0000'1000) >> 3;
       this->ch1.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
       this->ch1.dac_on              = (val & 0b1111'1000) != 0;
-      if (!this->ch1.dac_on) {
-        this->ch1.stop();
-      }
+      if (!this->ch1.dac_on) this->ch1.stop();
       return;
     }
     case IO_NR13: {
@@ -648,7 +646,8 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch2.initial_volume      = (val & 0b1111'0000) >> 4;
       this->ch2.next_env_dir        = (val & 0b0000'1000) >> 3;
       this->ch2.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
-      if ((val & 0xF8) == 0) this->ch2.stop();
+      this->ch2.dac_on              = (val & 0b1111'1000) != 0;
+      if (!this->ch2.dac_on) this->ch2.stop();
       return;
     }
     case IO_NR23: {
