@@ -59,6 +59,7 @@ typedef struct gb_pulsewave_channel {
   bool dbg_muted; // Set if muted via the imgui debug ui.
 
   bool            on;
+  bool            dac_on;
   bool            left_ch_on;
   bool            right_ch_on;
   bool            length_enabled;
@@ -215,7 +216,6 @@ typedef struct gb_apu {
   // I want methods to still be able touch other parts of gameboy state like the audio registers.
   gb_apu();
   ~gb_apu();
-
 
   // We dispatch APU reg reads/writes to here so that they can be immediately parsed on write and reconstructed on read.
   // This prevents

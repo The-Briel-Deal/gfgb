@@ -21,6 +21,8 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->reset();
 }
 void gb_pulsewave_channel_t::start() {
+  if (!this->dac_on) return;
+
   this->on = true;
   if (this->length == 0) {
     this->length = 64;
@@ -39,6 +41,7 @@ void gb_pulsewave_channel_t::stop() {
 }
 void gb_pulsewave_channel_t::reset() {
   this->stop();
+  this->dac_on         = false;
   this->left_ch_on     = false;
   this->right_ch_on    = false;
   this->phase          = 0;
@@ -607,7 +610,10 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch1.initial_volume      = (val & 0b1111'0000) >> 4;
       this->ch1.next_env_dir        = (val & 0b0000'1000) >> 3;
       this->ch1.next_env_sweep_pace = (val & 0b0000'0111) >> 0;
-      if ((val & 0xF8) == 0) this->ch1.stop();
+      this->ch1.dac_on              = (val & 0b1111'1000) != 0;
+      if (!this->ch1.dac_on) {
+        this->ch1.stop();
+      }
       return;
     }
     case IO_NR13: {
