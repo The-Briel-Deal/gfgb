@@ -188,8 +188,11 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
 }
 
 void gb_wave_output_channel_t::start() {
-  this->on          = true;
-  this->length      = 256 - this->initial_length;
+  if (!this->dac_on) return;
+  this->on = true;
+  if (this->length == 0) {
+    this->length = 256;
+  }
   this->curr_period = this->next_period;
 }
 
@@ -667,6 +670,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
     }
     case IO_NR31: {
       this->ch3.initial_length = val;
+      this->ch3.length         = 256 - this->ch3.initial_length;
       return;
     }
     case IO_NR32: {
