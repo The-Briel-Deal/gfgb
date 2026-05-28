@@ -626,10 +626,19 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       this->ch1.length_enabled = (val >> 6) & 1;
       this->ch1.next_period &= 0x00FF;
       this->ch1.next_period |= (val & 0b0000'0111) << 8;
+      // TODO: I don't like this at all. I'm handling `!prev_length_enabled` and length_reset as two separate cases but
+      // I have a feeling these two cases have the same root cause. I should look into why these two cases allow a tick
+      // when the `div_apu` bit 0 isn't about to fall.
+      bool length_reset = false;
       if ((val >> 7) & 1) { // Trigger if this bit is high
+        uint8_t old_len = this->ch1.length;
         this->ch1.start();
+        uint8_t new_len = this->ch1.length;
+        if (old_len == 0 && new_len == 64) {
+          length_reset = true;
+        }
       }
-      if (!prev_length_enabled && !falling_edge_bit(0, this->div, (this->div + 1))) {
+      if ((!prev_length_enabled || length_reset) && !falling_edge_bit(0, this->div, (this->div + 1))) {
         this->ch1.len_tick();
       }
       return;
