@@ -622,11 +622,15 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR14: {
+      bool prev_length_enabled = this->ch1.length_enabled;
       this->ch1.length_enabled = (val >> 6) & 1;
       this->ch1.next_period &= 0x00FF;
       this->ch1.next_period |= (val & 0b0000'0111) << 8;
       if ((val >> 7) & 1) { // Trigger if this bit is high
         this->ch1.start();
+      }
+      if (!prev_length_enabled && !falling_edge_bit(0, this->div, (this->div + 1))) {
+        this->ch1.len_tick();
       }
       return;
     }
