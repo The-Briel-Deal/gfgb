@@ -514,6 +514,11 @@ static void gb_apu_ch_graph(gb_state_t *gb_state, const char *name, gb_apu_sampl
 static void gb_imgui_audio_win(gb_state_t *gb_state) {
   if (ImGui::Begin("Audio")) {
     gb_apu_ch_graph(gb_state, "Mixed", gb_state->apu.sample_buffer_left, gb_state->apu.sample_buffer_right);
+    if (ImGui::TreeNodeEx("Global APU State", ImGuiTreeNodeFlags_Framed)) {
+      // TODO: Add `dbg_state_str()` method for apu.
+      ImGui::TextUnformatted(std::format("Div: {:b}", gb_state->apu.div).c_str());
+      ImGui::TreePop();
+    }
 
     gb_apu_ch_graph(gb_state, "Channel 1 (Pulsewave With Freq Sweep)", gb_state->apu.ch1.sample_buffer_left,
                     gb_state->apu.ch1.sample_buffer_right, &gb_state->apu.ch1.dbg_muted);
