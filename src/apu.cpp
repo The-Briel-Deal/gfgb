@@ -144,6 +144,38 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
   }
 }
 
+void gb_pulsewave_channel_t::set_NRx4(uint8_t apu_div, uint8_t val) {
+
+  /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
+  //
+  // Extra length clocking occurs when writing to NRx4 when the DIV-APU next step is one that doesn’t clock the
+  // length timer. In this case, if the length timer was PREVIOUSLY disabled and now enabled and the length timer is
+  // not zero, it is decremented. If this decrement makes it zero and trigger is clear, the channel is disabled. On
+  // the CGB-02, the length timer only has to have been disabled before; the current length enable state doesn’t
+  // matter. This breaks at least one game (Prehistorik Man), and was fixed on CGB-04 and CGB-05.
+
+  bool prev_length_enabled = this->length_enabled;
+  this->length_enabled     = (val >> 6) & 1;
+  if ((!prev_length_enabled) && !falling_edge_bit(0, apu_div, (apu_div + 1))) {
+    this->len_tick();
+  }
+  this->next_period &= 0x00FF;
+  this->next_period |= (val & 0b0000'0111) << 8;
+  if ((val >> 7) & 1) { // Trigger if this bit is high
+    this->start();
+    /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
+    //
+    // If a channel is triggered when the DIV-APU next step is one that doesn’t clock the length timer and the
+    // length timer is now enabled and length is being set to 64 (256 for wave channel) because it was previously
+    // zero, it is set to 63 instead (255 for wave channel).
+    if (this->length == 64) {
+      if (!falling_edge_bit(0, apu_div, (apu_div + 1))) {
+        this->len_tick();
+      }
+    }
+  }
+}
+
 str gb_pulsewave_channel_t::dbg_state_str() {
   std::stringstream state_stringstream;
 
@@ -545,6 +577,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     }
   }
 }
+
 void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
   if (!this->on && reg != IO_NR52) return;
   switch (reg) {
@@ -621,34 +654,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR14: {
-      /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
-      //
-      // Extra length clocking occurs when writing to NRx4 when the DIV-APU next step is one that doesn’t clock the
-      // length timer. In this case, if the length timer was PREVIOUSLY disabled and now enabled and the length timer is
-      // not zero, it is decremented. If this decrement makes it zero and trigger is clear, the channel is disabled. On
-      // the CGB-02, the length timer only has to have been disabled before; the current length enable state doesn’t
-      // matter. This breaks at least one game (Prehistorik Man), and was fixed on CGB-04 and CGB-05.
-
-      bool prev_length_enabled = this->ch1.length_enabled;
-      this->ch1.length_enabled = (val >> 6) & 1;
-      if ((!prev_length_enabled) && !falling_edge_bit(0, this->div, (this->div + 1))) {
-        this->ch1.len_tick();
-      }
-      this->ch1.next_period &= 0x00FF;
-      this->ch1.next_period |= (val & 0b0000'0111) << 8;
-      if ((val >> 7) & 1) { // Trigger if this bit is high
-        this->ch1.start();
-        /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
-        //
-        // If a channel is triggered when the DIV-APU next step is one that doesn’t clock the length timer and the
-        // length timer is now enabled and length is being set to 64 (256 for wave channel) because it was previously
-        // zero, it is set to 63 instead (255 for wave channel).
-        if (this->ch1.length == 64) {
-          if (!falling_edge_bit(0, this->div, (this->div + 1))) {
-            this->ch1.len_tick();
-          }
-        }
-      }
+      this->ch1.set_NRx4(this->div, val);
       return;
     }
 
@@ -679,12 +685,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR24: {
-      this->ch2.length_enabled = (val >> 6) & 1;
-      this->ch2.next_period &= 0x00FF;
-      this->ch2.next_period |= (val & 0b0000'0111) << 8;
-      if ((val >> 7) & 1) { // Trigger if this bit is high
-        this->ch2.start();
-      }
+      this->ch2.set_NRx4(this->div, val);
       return;
     }
     // Channel 3

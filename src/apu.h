@@ -54,6 +54,8 @@ typedef struct gb_pulsewave_channel {
   void   env_sweep_tick();
   void   period_sweep_tick();
 
+  void set_NRx4(uint8_t apu_div, uint8_t val);
+
   str dbg_state_str();
 #endif
   bool dbg_muted; // Set if muted via the imgui debug ui.
