@@ -144,7 +144,7 @@ void gb_pulsewave_channel_t::env_sweep_tick() {
   }
 }
 
-void gb_pulsewave_channel_t::set_NRx4(uint8_t apu_div, uint8_t val) {
+template <typename T> void set_NRx4(T ch, uint8_t apu_div, uint8_t val) {
 
   /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
   //
@@ -154,26 +154,39 @@ void gb_pulsewave_channel_t::set_NRx4(uint8_t apu_div, uint8_t val) {
   // the CGB-02, the length timer only has to have been disabled before; the current length enable state doesn’t
   // matter. This breaks at least one game (Prehistorik Man), and was fixed on CGB-04 and CGB-05.
 
-  bool prev_length_enabled = this->length_enabled;
-  this->length_enabled     = (val >> 6) & 1;
+  bool prev_length_enabled = ch->length_enabled;
+  ch->length_enabled       = (val >> 6) & 1;
   if ((!prev_length_enabled) && !falling_edge_bit(0, apu_div, (apu_div + 1))) {
-    this->len_tick();
+    ch->len_tick();
   }
-  this->next_period &= 0x00FF;
-  this->next_period |= (val & 0b0000'0111) << 8;
+  ch->next_period &= 0x00FF;
+  ch->next_period |= (val & 0b0000'0111) << 8;
   if ((val >> 7) & 1) { // Trigger if this bit is high
-    this->start();
+    ch->start();
     /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
     //
     // If a channel is triggered when the DIV-APU next step is one that doesn’t clock the length timer and the
     // length timer is now enabled and length is being set to 64 (256 for wave channel) because it was previously
     // zero, it is set to 63 instead (255 for wave channel).
-    if (this->length == 64) {
+    if (ch->length == 64) {
       if (!falling_edge_bit(0, apu_div, (apu_div + 1))) {
-        this->len_tick();
+        ch->len_tick();
       }
     }
   }
+}
+void gb_pulsewave_channel_t::set_NRx4(uint8_t apu_div, uint8_t val) {
+  ::set_NRx4(this, apu_div, val);
+}
+
+template <typename T> uint8_t get_NRx4(T ch) {
+  uint8_t val = 0b1011'1111;
+  val |= (ch->length_enabled & 1) << 6;
+  return val;
+}
+
+uint8_t gb_pulsewave_channel_t::get_NRx4() {
+  return ::get_NRx4(this);
 }
 
 str gb_pulsewave_channel_t::dbg_state_str() {
@@ -253,6 +266,14 @@ void gb_wave_output_channel_t::len_tick() {
     if (this->length == 0) this->stop();
   }
 }
+
+uint8_t gb_wave_output_channel_t::get_NRx4() {
+  return ::get_NRx4(this);
+}
+void gb_wave_output_channel_t::set_NRx4(uint8_t apu_div, uint8_t val) {
+  ::set_NRx4(this, apu_div, val);
+}
+
 str gb_wave_output_channel_t::dbg_state_str() {
   std::stringstream state_stringstream;
 
@@ -494,9 +515,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     }
     case IO_NR13: return 0xFF; // Write only
     case IO_NR14: {
-      uint8_t val = 0b1011'1111;
-      val |= (this->ch1.length_enabled & 1) << 6;
-      return val;
+      return this->ch1.get_NRx4();
     }
 
     // Channel 2
@@ -519,9 +538,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     }
     case IO_NR23: return 0xFF; // Write only
     case IO_NR24: {
-      uint8_t val = 0b1011'1111;
-      val |= (this->ch2.length_enabled & 1) << 6;
-      return val;
+      return this->ch2.get_NRx4();
     }
 
     // Channel 3
@@ -538,9 +555,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     }
     case IO_NR33: return 0xFF; // Write only
     case IO_NR34: {
-      uint8_t val = 0b1011'1111;
-      val |= (this->ch3.length_enabled & 1) << 6;
-      return val;
+      return this->ch3.get_NRx4();
     }
 
     // Channel 4
@@ -709,12 +724,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR34: {
-      this->ch3.next_period &= 0x00FF;
-      this->ch3.next_period |= (val & 0b0000'0111) << 8;
-      this->ch3.length_enabled = (val >> 6) & 1;
-      if ((val >> 7) & 1) { // Trigger if this bit is high
-        this->ch3.start();
-      }
+      this->ch3.set_NRx4(this->div, val);
       return;
     }
 

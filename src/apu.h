@@ -54,7 +54,8 @@ typedef struct gb_pulsewave_channel {
   void   env_sweep_tick();
   void   period_sweep_tick();
 
-  void set_NRx4(uint8_t apu_div, uint8_t val);
+  void    set_NRx4(uint8_t apu_div, uint8_t val);
+  uint8_t get_NRx4();
 
   str dbg_state_str();
 #endif
@@ -139,6 +140,9 @@ typedef struct gb_wave_output_channel {
   void stop();
   void reset();
   void len_tick();
+
+  void    set_NRx4(uint8_t apu_div, uint8_t val);
+  uint8_t get_NRx4();
 
   str dbg_state_str();
 #endif
