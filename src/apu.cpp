@@ -168,7 +168,7 @@ template <typename T> void set_NRx4(T ch, uint8_t apu_div, uint8_t val) {
     // If a channel is triggered when the DIV-APU next step is one that doesn’t clock the length timer and the
     // length timer is now enabled and length is being set to 64 (256 for wave channel) because it was previously
     // zero, it is set to 63 instead (255 for wave channel).
-    if (ch->length == 64) {
+    if (ch->length == ch->MAX_LENGTH) {
       if (!falling_edge_bit(0, apu_div, (apu_div + 1))) {
         ch->len_tick();
       }
@@ -232,8 +232,7 @@ gb_wave_output_channel_t::gb_wave_output_channel() {
 }
 
 void gb_wave_output_channel_t::start() {
-  if (!this->dac_on) return;
-  this->on = true;
+  this->on = this->dac_on;
   if (this->length == 0) {
     this->length = 256;
   }

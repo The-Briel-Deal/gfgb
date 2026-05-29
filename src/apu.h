@@ -58,6 +58,8 @@ typedef struct gb_pulsewave_channel {
   uint8_t get_NRx4();
 
   str dbg_state_str();
+
+  static constexpr int MAX_LENGTH = 64;
 #endif
   bool dbg_muted; // Set if muted via the imgui debug ui.
 
@@ -145,6 +147,8 @@ typedef struct gb_wave_output_channel {
   uint8_t get_NRx4();
 
   str dbg_state_str();
+
+  static constexpr int MAX_LENGTH = 256;
 #endif
   bool dbg_muted; // Set if muted via the imgui debug ui.
   bool on;
