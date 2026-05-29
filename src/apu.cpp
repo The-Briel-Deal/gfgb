@@ -21,9 +21,8 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->reset();
 }
 void gb_pulsewave_channel_t::start() {
-  if (!this->dac_on) return;
 
-  this->on = true;
+  this->on = this->dac_on;
   if (this->length == 0) {
     this->length = 64;
   }
@@ -622,24 +621,33 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR14: {
+      /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
+      //
+      // Extra length clocking occurs when writing to NRx4 when the DIV-APU next step is one that doesn’t clock the
+      // length timer. In this case, if the length timer was PREVIOUSLY disabled and now enabled and the length timer is
+      // not zero, it is decremented. If this decrement makes it zero and trigger is clear, the channel is disabled. On
+      // the CGB-02, the length timer only has to have been disabled before; the current length enable state doesn’t
+      // matter. This breaks at least one game (Prehistorik Man), and was fixed on CGB-04 and CGB-05.
+
       bool prev_length_enabled = this->ch1.length_enabled;
       this->ch1.length_enabled = (val >> 6) & 1;
+      if ((!prev_length_enabled) && !falling_edge_bit(0, this->div, (this->div + 1))) {
+        this->ch1.len_tick();
+      }
       this->ch1.next_period &= 0x00FF;
       this->ch1.next_period |= (val & 0b0000'0111) << 8;
-      // TODO: I don't like this at all. I'm handling `!prev_length_enabled` and length_reset as two separate cases but
-      // I have a feeling these two cases have the same root cause. I should look into why these two cases allow a tick
-      // when the `div_apu` bit 0 isn't about to fall.
-      bool length_reset = false;
       if ((val >> 7) & 1) { // Trigger if this bit is high
-        uint8_t old_len = this->ch1.length;
         this->ch1.start();
-        uint8_t new_len = this->ch1.length;
-        if (old_len == 0 && new_len == 64) {
-          length_reset = true;
+        /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
+        //
+        // If a channel is triggered when the DIV-APU next step is one that doesn’t clock the length timer and the
+        // length timer is now enabled and length is being set to 64 (256 for wave channel) because it was previously
+        // zero, it is set to 63 instead (255 for wave channel).
+        if (this->ch1.length == 64) {
+          if (!falling_edge_bit(0, this->div, (this->div + 1))) {
+            this->ch1.len_tick();
+          }
         }
-      }
-      if ((!prev_length_enabled || length_reset) && !falling_edge_bit(0, this->div, (this->div + 1))) {
-        this->ch1.len_tick();
       }
       return;
     }
