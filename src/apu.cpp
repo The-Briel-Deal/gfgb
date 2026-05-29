@@ -21,7 +21,6 @@ gb_pulsewave_channel_t::gb_pulsewave_channel() {
   this->reset();
 }
 void gb_pulsewave_channel_t::start() {
-
   this->on = this->dac_on;
   if (this->length == 0) {
     this->length = 64;
@@ -303,8 +302,7 @@ gb_noise_channel_t::gb_noise_channel() {
 }
 
 void gb_noise_channel_t::start() {
-  if (!this->dac_on) return;
-  this->on      = true;
+  this->on      = this->dac_on;
   this->lsfr    = 0;
   this->counter = 0;
   if (this->length == 0) {
@@ -372,6 +370,27 @@ void gb_noise_channel_t::env_sweep_tick() {
     // Decrease Vol
     if (this->curr_volume == 0) return;
     this->curr_volume--;
+  }
+}
+
+uint8_t gb_noise_channel_t::get_NRx4() {
+  return ::get_NRx4(this);
+}
+// Mostly the same as the template all the other channels use, except there is no period portion so I couldn't use the
+// template for setting NR44.
+void gb_noise_channel_t::set_NRx4(uint8_t apu_div, uint8_t val) {
+  bool prev_length_enabled = this->length_enabled;
+  this->length_enabled     = (val >> 6) & 1;
+  if ((!prev_length_enabled) && !falling_edge_bit(0, apu_div, (apu_div + 1))) {
+    this->len_tick();
+  }
+  if ((val >> 7) & 1) { // Trigger if this bit is high
+    this->start();
+    if (this->length == this->MAX_LENGTH) {
+      if (!falling_edge_bit(0, apu_div, (apu_div + 1))) {
+        this->len_tick();
+      }
+    }
   }
 }
 
@@ -574,9 +593,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
       return val;
     }
     case IO_NR44: {
-      uint8_t val = 0b1011'1111;
-      val |= 0b0100'0000 & (this->ch4.length_enabled << 6);
-      return val;
+      return this->ch4.get_NRx4();
     }
 
     default: {
@@ -751,10 +768,7 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR44: {
-      if ((val >> 7) & 1) { // Trigger if this bit is high
-        this->ch4.start();
-      }
-      this->ch4.length_enabled = (val & 0b0100'0000) >> 6;
+      this->ch4.set_NRx4(this->div, val);
       return;
     }
 

@@ -184,7 +184,12 @@ typedef struct gb_noise_channel {
   void len_tick();
   void env_sweep_tick();
 
+  void    set_NRx4(uint8_t apu_div, uint8_t val);
+  uint8_t get_NRx4();
+
   str dbg_state_str();
+
+  static constexpr int MAX_LENGTH = 64;
 #endif
   bool on;
   bool dac_on;
