@@ -44,6 +44,7 @@ void gb_pulsewave_channel_t::period_sweep_trigger() {
   if (this->period_sweep_step != 0) {
     // TODO: Pandocs reads like I should only be doing the overflow check so I don't think I should set the shadow reg
     // here. It wouldn't hurt to verify though.
+    this->period_sweep_check();
   }
 }
 int gb_pulsewave_channel_t::period_sweep_calculate() {
@@ -147,9 +148,12 @@ void gb_pulsewave_channel_t::period_sweep_tick() {
     return;
   }
 
-  this->period_sweep_check();
-  if (this->on) this->period = this->period_sweep_calculate();
-  this->period_sweep_check();
+  if (this->period_sweep_step != 0) {
+    this->period_sweep_check();
+    if (this->on) this->period_sweep_shadow_period = this->period_sweep_calculate();
+    this->period_sweep_check();
+    this->period = this->period_sweep_shadow_period;
+  }
 }
 
 void gb_pulsewave_channel_t::env_sweep_tick() {
