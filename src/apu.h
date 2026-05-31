@@ -43,16 +43,20 @@ template <> struct std::formatter<gb_duty_cycle_t> : formatter<std::string> {
 
 typedef struct gb_pulsewave_channel {
 #ifdef __cplusplus
-  gb_pulsewave_channel();
+  gb_pulsewave_channel(bool has_period_sweep_unit);
   bool   waveform_step();
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
-  void   start();
-  void   stop();
-  void   reset();
-  void   len_tick();
-  void   env_sweep_tick();
-  void   period_sweep_tick();
+  // TODO: Rename all the start() methods to trigger().
+  void start();
+  void stop();
+  void reset();
+  void len_tick();
+  void env_sweep_tick();
+  void period_sweep_tick();
+  void period_sweep_trigger();
+  int  period_sweep_calculate();
+  void period_sweep_check();
 
   void    set_NRx4(uint8_t apu_div, uint8_t val);
   uint8_t get_NRx4();
@@ -87,13 +91,16 @@ typedef struct gb_pulsewave_channel {
 
   uint8_t env_sweep_ticks;
 
-  uint8_t period_sweep_pace;
-  uint8_t period_sweep_dir;
-  uint8_t period_sweep_step;
+  // This pretty much just indicates that this is channel one, this could be a constexpr but if I make this a template
+  // then I have hide this entire struct from the C FFI.
+  const bool has_period_sweep_unit;
+  uint8_t    period_sweep_pace;
+  uint8_t    period_sweep_dir;
+  uint8_t    period_sweep_step;
 
-  bool    period_sweep_enabled; // Controls if sweep unit is active. This should always be false for channel 2.
-  uint8_t period_sweep_timer;
-  uint8_t period_sweep_shadow_freq;
+  bool     period_sweep_enabled; // Controls if sweep unit is active. This should always be false for channel 2.
+  uint8_t  period_sweep_timer;
+  uint16_t period_sweep_shadow_period;
 
   // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.

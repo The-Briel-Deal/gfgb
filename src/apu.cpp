@@ -16,7 +16,8 @@
 // portions of registers always return high bits I think my current implementation will rewrite those write only fields
 // to all high. I'm not sure how actual hardware behaves.
 
-gb_pulsewave_channel_t::gb_pulsewave_channel() {
+gb_pulsewave_channel_t::gb_pulsewave_channel(bool has_period_sweep_unit)
+    : has_period_sweep_unit(has_period_sweep_unit) {
   this->dbg_muted = false;
   this->reset();
 }
@@ -29,9 +30,37 @@ void gb_pulsewave_channel_t::start() {
   this->curr_env_dir        = this->next_env_dir;
   this->curr_env_sweep_pace = this->next_env_sweep_pace;
 
-  this->env_sweep_ticks    = 0;
-  this->period_sweep_timer = 0;
+  this->env_sweep_ticks = 0;
+  if (this->has_period_sweep_unit) {
+    this->period_sweep_trigger();
+  }
 }
+
+// This should only be called on channel 1
+void gb_pulsewave_channel_t::period_sweep_trigger() {
+  this->period_sweep_shadow_period = this->period;
+  this->period_sweep_timer         = this->period_sweep_pace;
+  this->period_sweep_enabled       = (this->period_sweep_pace != 0) || (this->period_sweep_step != 0);
+  if (this->period_sweep_step != 0) {
+    // TODO: Pandocs reads like I should only be doing the overflow check so I don't think I should set the shadow reg
+    // here. It wouldn't hurt to verify though.
+  }
+}
+int gb_pulsewave_channel_t::period_sweep_calculate() {
+  GB_assert(this->period_sweep_step != 0);
+  int result = this->period_sweep_shadow_period;
+  result >>= this->period_sweep_step;
+  if (this->period_sweep_dir) {
+    result *= -1;
+  }
+  return this->period_sweep_shadow_period + result;
+}
+void gb_pulsewave_channel_t::period_sweep_check() {
+  int new_period = this->period_sweep_calculate();
+  GB_assert(new_period >= 0); // Something has gone very wrong if the new period is less than 0.
+  if (new_period >= 2048) this->stop();
+}
+
 void gb_pulsewave_channel_t::stop() {
   this->on = false;
 }
@@ -63,9 +92,9 @@ void gb_pulsewave_channel_t::reset() {
   this->period_sweep_step  = 0;
   this->period_sweep_timer = 0;
 
-  this->period_sweep_enabled     = false;
-  this->period_sweep_timer       = 0;
-  this->period_sweep_shadow_freq = 0;
+  this->period_sweep_enabled       = false;
+  this->period_sweep_timer         = 0;
+  this->period_sweep_shadow_period = 0;
 
   // Audio buffer for graph in ImGui debugger.
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
@@ -105,23 +134,20 @@ void gb_pulsewave_channel_t::len_tick() {
 }
 
 void gb_pulsewave_channel_t::period_sweep_tick() {
-  if (!this->on) return;
-  if (this->period_sweep_pace == 0) return;
-  this->period_sweep_timer++;
-  if (this->period_sweep_timer < this->period_sweep_pace) return;
-  this->period_sweep_timer = 0;
-
-  int addend = (this->period / (std::pow(2, this->period_sweep_step)));
-  if (this->period_sweep_dir) {
-    // Shouldn't be possible unless I have crazybonesitis
-    GB_assert(this->period >= addend);
-    addend *= -1;
-  }
-  if ((this->period + addend) > 0x7FF) {
-    this->stop();
+  GB_assert(this->on);                     // This should never be called if the channel is off.
+  GB_assert(this->period_sweep_enabled);
+  GB_assert(this->period_sweep_pace > 0);  // This should never be called if the sweep pace is 0.
+  GB_assert(this->period_sweep_timer > 0); // This should never be called with a timer already equal to 0. If that
+                                           // happens the timer will underflow and rollover.
+  if (--this->period_sweep_timer == 0) {
+    this->period_sweep_timer = this->period_sweep_pace;
+  } else {
     return;
   }
-  this->period += addend;
+
+  this->period_sweep_check();
+  if (this->on) this->period = this->period_sweep_calculate();
+  this->period_sweep_check();
 }
 
 void gb_pulsewave_channel_t::env_sweep_tick() {
@@ -425,7 +451,7 @@ str gb_noise_channel_t::dbg_state_str() {
   return state_stringstream.str();
 }
 
-gb_apu_t::gb_apu() {
+gb_apu_t::gb_apu() : ch1(true), ch2(false) {
 #ifndef GFGB_NO_AUDIO
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
@@ -987,7 +1013,9 @@ void gb_apu_t::div_tick() {
   // Period Sweep
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
     // Period Sweep only on Channel 1
-    this->ch1.period_sweep_tick();
+    if (this->ch1.on && this->ch1.period_sweep_enabled) {
+      this->ch1.period_sweep_tick();
+    }
   }
   // Envelope Sweep
   if (falling_edge_bit(2, old_div_apu, new_div_apu)) {
