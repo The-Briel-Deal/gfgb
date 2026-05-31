@@ -30,7 +30,7 @@ void gb_pulsewave_channel_t::start() {
   this->curr_env_sweep_pace = this->next_env_sweep_pace;
 
   this->env_sweep_ticks    = 0;
-  this->period_sweep_ticks = 0;
+  this->period_sweep_timer = 0;
 }
 void gb_pulsewave_channel_t::stop() {
   this->on = false;
@@ -61,7 +61,11 @@ void gb_pulsewave_channel_t::reset() {
   this->period_sweep_pace  = 0;
   this->period_sweep_dir   = 0;
   this->period_sweep_step  = 0;
-  this->period_sweep_ticks = 0;
+  this->period_sweep_timer = 0;
+
+  this->period_sweep_enabled     = false;
+  this->period_sweep_timer       = 0;
+  this->period_sweep_shadow_freq = 0;
 
   // Audio buffer for graph in ImGui debugger.
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
@@ -103,9 +107,9 @@ void gb_pulsewave_channel_t::len_tick() {
 void gb_pulsewave_channel_t::period_sweep_tick() {
   if (!this->on) return;
   if (this->period_sweep_pace == 0) return;
-  this->period_sweep_ticks++;
-  if (this->period_sweep_ticks < this->period_sweep_pace) return;
-  this->period_sweep_ticks = 0;
+  this->period_sweep_timer++;
+  if (this->period_sweep_timer < this->period_sweep_pace) return;
+  this->period_sweep_timer = 0;
 
   int addend = (this->period / (std::pow(2, this->period_sweep_step)));
   if (this->period_sweep_dir) {
@@ -211,7 +215,7 @@ str gb_pulsewave_channel_t::dbg_state_str() {
     show_field(period_sweep_pace, "{}");
     show_field(period_sweep_dir, "{}");
     show_field(period_sweep_step, "{}");
-    show_field(period_sweep_ticks, "{}");
+    show_field(period_sweep_timer, "{}");
   }
   return state_stringstream.str();
 }
@@ -789,6 +793,7 @@ void gb_apu_t::spend_mcycles(uint16_t m_cycles) {
 }
 
 void gb_apu_t::tick() {
+  GB_assert(!this->ch2.period_sweep_enabled);
   bool apu_powered_on = (this->on);
 
   float  samples[2]   = {0.0f, 0.0f};

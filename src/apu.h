@@ -91,7 +91,9 @@ typedef struct gb_pulsewave_channel {
   uint8_t period_sweep_dir;
   uint8_t period_sweep_step;
 
-  uint8_t period_sweep_ticks;
+  bool    period_sweep_enabled; // Controls if sweep unit is active. This should always be false for channel 2.
+  uint8_t period_sweep_timer;
+  uint8_t period_sweep_shadow_freq;
 
   // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
