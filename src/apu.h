@@ -73,8 +73,7 @@ typedef struct gb_pulsewave_channel {
   uint8_t         length;
   uint8_t         phase;
   uint16_t        counter;
-  uint16_t        next_period;
-  uint16_t        curr_period;
+  uint16_t        period;
 
   // From `NRx2`, these don't take effect until a next trigger.
   uint8_t initial_volume;
@@ -162,8 +161,7 @@ typedef struct gb_wave_output_channel {
 
   gb_ch3_volume_t vol;
 
-  uint16_t next_period;
-  uint16_t curr_period;
+  uint16_t period;
   uint8_t  phase;
   int32_t  counter;
 

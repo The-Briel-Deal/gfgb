@@ -25,7 +25,6 @@ void gb_pulsewave_channel_t::start() {
   if (this->length == 0) {
     this->length = 64;
   }
-  this->curr_period            = this->next_period;
   this->curr_volume            = this->initial_volume;
   this->curr_env_dir           = this->next_env_dir;
   this->curr_env_sweep_pace    = this->next_env_sweep_pace;
@@ -44,8 +43,7 @@ void gb_pulsewave_channel_t::reset() {
   this->right_ch_on    = false;
   this->phase          = 0;
   this->counter        = MAX_PERIOD;
-  this->next_period    = 0;
-  this->curr_period    = 0;
+  this->period         = 0;
   this->initial_length = 0;
   this->length         = 0;
   this->length_enabled = false;
@@ -83,9 +81,9 @@ double gb_pulsewave_channel_t::samp_freq() {
    *  ------------- Hz
    *  2048 - period
    */
-  GB_assert(this->curr_period < 2048);
+  GB_assert(this->period < 2048);
 
-  return 1'048'576.0 / (2048 - this->curr_period);
+  return 1'048'576.0 / (2048 - this->period);
 }
 double gb_pulsewave_channel_t::tone_freq() {
   /*
@@ -111,17 +109,17 @@ void gb_pulsewave_channel_t::period_sweep_tick() {
   if (this->period_sweep_ticks < this->curr_period_sweep_pace) return;
   this->period_sweep_ticks = 0;
 
-  int addend = (this->curr_period / (std::pow(2, this->period_sweep_step)));
+  int addend = (this->period / (std::pow(2, this->period_sweep_step)));
   if (this->period_sweep_dir) {
     // Shouldn't be possible unless I have crazybonesitis
-    GB_assert(this->curr_period >= addend);
+    GB_assert(this->period >= addend);
     addend *= -1;
   }
-  if ((this->curr_period + addend) > 0x7FF) {
+  if ((this->period + addend) > 0x7FF) {
     this->stop();
     return;
   }
-  this->curr_period += addend;
+  this->period += addend;
 }
 
 void gb_pulsewave_channel_t::env_sweep_tick() {
@@ -158,8 +156,8 @@ template <typename T> void set_NRx4(T ch, uint8_t apu_div, uint8_t val) {
   if ((!prev_length_enabled) && !falling_edge_bit(0, apu_div, (apu_div + 1))) {
     ch->len_tick();
   }
-  ch->next_period &= 0x00FF;
-  ch->next_period |= (val & 0b0000'0111) << 8;
+  ch->period &= 0x00FF;
+  ch->period |= (val & 0b0000'0111) << 8;
   if ((val >> 7) & 1) { // Trigger if this bit is high
     ch->start();
     /// From https://gbdev.io/pandocs/Audio_details.html#obscure-behavior:
@@ -204,8 +202,7 @@ str gb_pulsewave_channel_t::dbg_state_str() {
     show_field(length, "{}");
     show_field(phase, "{}");
     show_field(counter, "{}");
-    show_field(next_period, "{}");
-    show_field(curr_period, "{}");
+    show_field(period, "{}");
     show_field(initial_volume, "{}");
     show_field(next_env_dir, "{}");
     show_field(next_env_sweep_pace, "{}");
@@ -235,7 +232,6 @@ void gb_wave_output_channel_t::start() {
   if (this->length == 0) {
     this->length = 256;
   }
-  this->curr_period = this->next_period;
 }
 
 void gb_wave_output_channel_t::stop() {
@@ -251,11 +247,10 @@ void gb_wave_output_channel_t::reset() {
   this->initial_length = 0;
   // TODO: Investigate when length timers aren't reset
   // (https://gbdev.io/pandocs/Audio_Registers.html#footnote-dmg_apu_off)
-  this->length      = 0;
-  this->next_period = 0;
-  this->curr_period = 0;
-  this->counter     = MAX_PERIOD;
-  this->vol         = GB_CH3_VOLUME_MUTE;
+  this->length  = 0;
+  this->period  = 0;
+  this->counter = MAX_PERIOD;
+  this->vol     = GB_CH3_VOLUME_MUTE;
 }
 
 void gb_wave_output_channel_t::len_tick() {
@@ -287,8 +282,7 @@ str gb_wave_output_channel_t::dbg_state_str() {
     show_field(initial_length, "{}");
     show_field(length, "{}");
     show_field(vol, "{}");
-    show_field(next_period, "{}");
-    show_field(curr_period, "{}");
+    show_field(period, "{}");
     show_field(phase, "{}");
     show_field(counter, "{}");
     show_field(wave_pattern, "{}");
@@ -680,8 +674,8 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR13: {
-      this->ch1.next_period &= 0xFF00;
-      this->ch1.next_period |= (val & 0x00FF);
+      this->ch1.period &= 0xFF00;
+      this->ch1.period |= (val & 0x00FF);
       return;
     }
     case IO_NR14: {
@@ -711,8 +705,8 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR23: {
-      this->ch2.next_period &= 0xFF00;
-      this->ch2.next_period |= (val & 0x00FF);
+      this->ch2.period &= 0xFF00;
+      this->ch2.period |= (val & 0x00FF);
       return;
     }
     case IO_NR24: {
@@ -735,8 +729,8 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
       return;
     }
     case IO_NR33: {
-      this->ch3.next_period &= 0xFF00;
-      this->ch3.next_period |= (val & 0x00FF);
+      this->ch3.period &= 0xFF00;
+      this->ch3.period |= (val & 0x00FF);
       return;
     }
     case IO_NR34: {
@@ -832,7 +826,7 @@ void gb_apu_t::tick() {
       gb_pulsewave_channel_t &ch = this->ch1;
       ch.counter--;
       if (ch.counter == 0) {
-        ch.counter = MAX_PERIOD - ch.curr_period;
+        ch.counter = MAX_PERIOD - ch.period;
         ch.phase++;
         ch.phase %= 8;
       }
@@ -858,7 +852,7 @@ void gb_apu_t::tick() {
       gb_pulsewave_channel_t &ch = this->ch2;
       ch.counter--;
       if (ch.counter == 0) {
-        ch.counter = MAX_PERIOD - ch.curr_period;
+        ch.counter = MAX_PERIOD - ch.period;
         ch.phase++;
         ch.phase %= 8;
       }
@@ -886,8 +880,7 @@ void gb_apu_t::tick() {
       gb_wave_output_channel_t &ch = this->ch3;
       ch.counter -= 2;
       if (ch.counter <= 0) {
-        ch.curr_period = ch.next_period;
-        ch.counter += (MAX_PERIOD - ch.curr_period);
+        ch.counter += (MAX_PERIOD - ch.period);
         ch.phase++;
         ch.phase %= 32;
       }
