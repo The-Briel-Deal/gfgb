@@ -25,10 +25,9 @@ void gb_pulsewave_channel_t::start() {
   if (this->length == 0) {
     this->length = 64;
   }
-  this->curr_volume            = this->initial_volume;
-  this->curr_env_dir           = this->next_env_dir;
-  this->curr_env_sweep_pace    = this->next_env_sweep_pace;
-  this->curr_period_sweep_pace = this->next_period_sweep_pace;
+  this->curr_volume         = this->initial_volume;
+  this->curr_env_dir        = this->next_env_dir;
+  this->curr_env_sweep_pace = this->next_env_sweep_pace;
 
   this->env_sweep_ticks    = 0;
   this->period_sweep_ticks = 0;
@@ -59,11 +58,10 @@ void gb_pulsewave_channel_t::reset() {
   this->env_sweep_ticks     = 0;
 
   // `NR10` (only on channel 1)
-  this->next_period_sweep_pace = 0;
-  this->curr_period_sweep_pace = 0;
-  this->period_sweep_dir       = 0;
-  this->period_sweep_step      = 0;
-  this->period_sweep_ticks     = 0;
+  this->period_sweep_pace  = 0;
+  this->period_sweep_dir   = 0;
+  this->period_sweep_step  = 0;
+  this->period_sweep_ticks = 0;
 
   // Audio buffer for graph in ImGui debugger.
   GB_memset(this->sample_buffer_left, 0, sizeof(this->sample_buffer_left));
@@ -104,9 +102,9 @@ void gb_pulsewave_channel_t::len_tick() {
 
 void gb_pulsewave_channel_t::period_sweep_tick() {
   if (!this->on) return;
-  if (this->curr_period_sweep_pace == 0) return;
+  if (this->period_sweep_pace == 0) return;
   this->period_sweep_ticks++;
-  if (this->period_sweep_ticks < this->curr_period_sweep_pace) return;
+  if (this->period_sweep_ticks < this->period_sweep_pace) return;
   this->period_sweep_ticks = 0;
 
   int addend = (this->period / (std::pow(2, this->period_sweep_step)));
@@ -210,8 +208,7 @@ str gb_pulsewave_channel_t::dbg_state_str() {
     show_field(curr_env_dir, "{}");
     show_field(curr_env_sweep_pace, "{}");
     show_field(env_sweep_ticks, "{}");
-    show_field(next_period_sweep_pace, "{}");
-    show_field(curr_period_sweep_pace, "{}");
+    show_field(period_sweep_pace, "{}");
     show_field(period_sweep_dir, "{}");
     show_field(period_sweep_step, "{}");
     show_field(period_sweep_ticks, "{}");
@@ -503,7 +500,7 @@ uint8_t gb_apu_t::read_io_reg(io_reg_addr_t reg) {
     // Channel 1
     case IO_NR10: {
       uint8_t val = 0b1000'0000;
-      val |= 0b0111'0000 & (this->ch1.next_period_sweep_pace << 4);
+      val |= 0b0111'0000 & (this->ch1.period_sweep_pace << 4);
       val |= 0b0000'1000 & (this->ch1.period_sweep_dir << 3);
       val |= 0b0000'0111 & (this->ch1.period_sweep_step << 0);
       return val;
@@ -648,9 +645,9 @@ void gb_apu_t::write_io_reg(io_reg_addr_t reg, uint8_t val) {
 
     // Channel 1
     case IO_NR10: {
-      this->ch1.next_period_sweep_pace = (val & 0b0111'0000) >> 4;
-      this->ch1.period_sweep_dir       = (val & 0b0000'1000) >> 3;
-      this->ch1.period_sweep_step      = (val & 0b0000'0111) >> 0;
+      this->ch1.period_sweep_pace = (val & 0b0111'0000) >> 4;
+      this->ch1.period_sweep_dir  = (val & 0b0000'1000) >> 3;
+      this->ch1.period_sweep_step = (val & 0b0000'0111) >> 0;
       return;
     }
     case IO_NR11: {
