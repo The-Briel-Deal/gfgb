@@ -269,6 +269,7 @@ void gb_wave_output_channel_t::stop() {
 
 void gb_wave_output_channel_t::reset() {
   this->stop();
+  this->on             = false;
   this->dac_on         = false;
   this->right_ch_on    = false;
   this->left_ch_on     = false;
@@ -278,6 +279,7 @@ void gb_wave_output_channel_t::reset() {
   // (https://gbdev.io/pandocs/Audio_Registers.html#footnote-dmg_apu_off)
   this->length  = 0;
   this->period  = 0;
+  this->phase   = 0;
   this->counter = MAX_PERIOD;
   this->vol     = GB_CH3_VOLUME_MUTE;
 }
@@ -458,6 +460,8 @@ gb_apu_t::gb_apu() : ch1(true), ch2(false) {
   CheckedSDL(Init(SDL_INIT_AUDIO));
 #endif
   this->on = false;
+
+  this->div = 0;
 
   this->vin_left  = false;
   this->vin_right = false;
