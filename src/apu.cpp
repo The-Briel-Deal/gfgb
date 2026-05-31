@@ -48,7 +48,6 @@ void gb_pulsewave_channel_t::period_sweep_trigger() {
   }
 }
 int gb_pulsewave_channel_t::period_sweep_calculate() {
-  GB_assert(this->period_sweep_step != 0);
   int result = this->period_sweep_shadow_period;
   result >>= this->period_sweep_step;
   if (this->period_sweep_dir) {
@@ -137,19 +136,16 @@ void gb_pulsewave_channel_t::len_tick() {
 void gb_pulsewave_channel_t::period_sweep_tick() {
   GB_assert(this->on); // This should never be called if the channel is off.
   GB_assert(this->period_sweep_enabled);
-  GB_assert(this->period_sweep_pace > 0);  // This should never be called if the sweep pace is 0.
-  GB_assert(this->period_sweep_timer > 0); // This should never be called with a timer already equal to 0. If that
-                                           // happens the timer will underflow and rollover.
-  // TODO: I'm not sure if the I should be incrementing period sweep timer if `period_sweep_enabled` is false. I should
-  // verify this.
-  if (--this->period_sweep_timer == 0) {
+  GB_assert(this->period_sweep_pace > 0); // This should never be called if the sweep pace is 0.
+  if (this->period_sweep_timer > 0) this->period_sweep_timer--;
+  if (this->period_sweep_timer == 0) {
     this->period_sweep_timer = this->period_sweep_pace;
   } else {
     return;
   }
 
+  this->period_sweep_check();
   if (this->period_sweep_step != 0) {
-    this->period_sweep_check();
     if (this->on) this->period_sweep_shadow_period = this->period_sweep_calculate();
     this->period_sweep_check();
     this->period = this->period_sweep_shadow_period;
