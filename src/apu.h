@@ -43,16 +43,20 @@ template <> struct std::formatter<gb_duty_cycle_t> : formatter<std::string> {
 
 typedef struct gb_pulsewave_channel {
 #ifdef __cplusplus
-  gb_pulsewave_channel();
+  gb_pulsewave_channel(bool has_period_sweep_unit);
   bool   waveform_step();
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
-  void   start();
-  void   stop();
-  void   reset();
-  void   len_tick();
-  void   env_sweep_tick();
-  void   period_sweep_tick();
+  // TODO: Rename all the start() methods to trigger().
+  void start();
+  void stop();
+  void reset();
+  void len_tick();
+  void env_sweep_tick();
+  void period_sweep_tick();
+  void period_sweep_trigger();
+  int  period_sweep_calculate();
+  void period_sweep_check();
 
   void    set_NRx4(uint8_t apu_div, uint8_t val);
   uint8_t get_NRx4();
@@ -73,8 +77,7 @@ typedef struct gb_pulsewave_channel {
   uint8_t         length;
   uint8_t         phase;
   uint16_t        counter;
-  uint16_t        next_period;
-  uint16_t        curr_period;
+  uint16_t        period;
 
   // From `NRx2`, these don't take effect until a next trigger.
   uint8_t initial_volume;
@@ -88,17 +91,16 @@ typedef struct gb_pulsewave_channel {
 
   uint8_t env_sweep_ticks;
 
-  // TODO: Once I add channel 2 I need to add a field which indicates whether or not the channel has a period sweep.
+  // This pretty much just indicates that this is channel one, this could be a constexpr but if I make this a template
+  // then I have hide this entire struct from the C FFI.
+  const bool has_period_sweep_unit;
+  uint8_t    period_sweep_pace;
+  uint8_t    period_sweep_dir;
+  uint8_t    period_sweep_step;
 
-  // From `NRx0`, these don't take effect until a next trigger.
-  uint8_t next_period_sweep_pace;
-  uint8_t curr_period_sweep_pace;
-  // I'm struggling to find info on if these only take effect on trigger. It looks like resetting sweep direction from
-  // 1->0 stops the channel however.
-  uint8_t period_sweep_dir;
-  uint8_t period_sweep_step;
-
-  uint8_t period_sweep_ticks;
+  bool     period_sweep_enabled; // Controls if sweep unit is active. This should always be false for channel 2.
+  uint8_t  period_sweep_timer;
+  uint16_t period_sweep_shadow_period;
 
   // Two circular buffers of the last APU_DBG_SAMPLE_BUFFER_SIZE samples which are displayed.
   // TODO: Instead of having a buffer of 10,000 samples, I could reduce how often samples are put into this buffer.
@@ -162,8 +164,7 @@ typedef struct gb_wave_output_channel {
 
   gb_ch3_volume_t vol;
 
-  uint16_t next_period;
-  uint16_t curr_period;
+  uint16_t period;
   uint8_t  phase;
   int32_t  counter;
 

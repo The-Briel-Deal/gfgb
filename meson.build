@@ -196,7 +196,7 @@ blargg_apu_tests = [
   '01-registers.gb',
   '02-len ctr.gb',
   '03-trigger.gb',
-# '04-sweep.gb',
+  '04-sweep.gb',
 # '05-sweep details.gb',
 # '06-overflow on trigger.gb',
 # '07-len sweep period sync.gb',
