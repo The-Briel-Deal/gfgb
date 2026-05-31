@@ -34,6 +34,9 @@ bool gb_imgui_init(gb_state_t *gb_state) {
   gb_state->imgui.tile_atlas =
       SDL_CreateTexture(gb_state->video.sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
                         TILEDATA_ATLAS_WIDTH, TILEDATA_ATLAS_HEIGHT);
+
+  gb_state->imgui.tile_atlas_palette = GB_TILEDATA_VIEWER_PALETTE_BGP;
+
   // Initialize ImGui
   if (!IMGUI_CHECKVERSION()) return false;
   ImGui::CreateContext();
