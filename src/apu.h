@@ -56,7 +56,7 @@ typedef struct gb_pulsewave_channel {
   void period_sweep_tick();
   void period_sweep_trigger();
   int  period_sweep_calculate();
-  void period_sweep_check();
+  bool period_sweep_check();
 
   void    set_NRx4(uint8_t apu_div, uint8_t val);
   uint8_t get_NRx4();

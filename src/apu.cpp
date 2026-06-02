@@ -40,7 +40,10 @@ void gb_pulsewave_channel_t::start() {
 void gb_pulsewave_channel_t::period_sweep_trigger() {
   this->period_sweep_shadow_period = this->period;
   this->period_sweep_timer         = this->period_sweep_pace;
-  this->period_sweep_enabled       = (this->period_sweep_pace != 0) || (this->period_sweep_step != 0);
+  if (this->period_sweep_pace == 0) { // The volume envelope and sweep timers treat a period of 0 as 8.
+    this->period_sweep_timer = 8;
+  }
+  this->period_sweep_enabled = (this->period_sweep_pace != 0) || (this->period_sweep_step != 0);
   if (this->period_sweep_step != 0) {
     // TODO: Pandocs reads like I should only be doing the overflow check so I don't think I should set the shadow reg
     // here. It wouldn't hurt to verify though.
@@ -55,10 +58,14 @@ int gb_pulsewave_channel_t::period_sweep_calculate() {
   }
   return this->period_sweep_shadow_period + result;
 }
-void gb_pulsewave_channel_t::period_sweep_check() {
+bool gb_pulsewave_channel_t::period_sweep_check() {
   int new_period = this->period_sweep_calculate();
   GB_assert(new_period >= 0); // Something has gone very wrong if the new period is less than 0.
-  if (new_period >= 2048) this->stop();
+  if (new_period >= 2048) {
+    this->stop();
+    return false;
+  }
+  return true;
 }
 
 void gb_pulsewave_channel_t::stop() {
@@ -136,17 +143,20 @@ void gb_pulsewave_channel_t::len_tick() {
 void gb_pulsewave_channel_t::period_sweep_tick() {
   GB_assert(this->on); // This should never be called if the channel is off.
   GB_assert(this->period_sweep_enabled);
-  GB_assert(this->period_sweep_pace > 0); // This should never be called if the sweep pace is 0.
   if (this->period_sweep_timer > 0) this->period_sweep_timer--;
   if (this->period_sweep_timer == 0) {
     this->period_sweep_timer = this->period_sweep_pace;
+    if (this->period_sweep_pace == 0) { // The volume envelope and sweep timers treat a period of 0 as 8.
+      this->period_sweep_timer = 8;
+    }
   } else {
     return;
   }
 
-  this->period_sweep_check();
-  if (this->period_sweep_step != 0) {
-    if (this->on) this->period_sweep_shadow_period = this->period_sweep_calculate();
+  bool next_sweep_valid = this->period_sweep_check();
+  // If this->period_sweep_pace is 0 then we
+  if (next_sweep_valid && this->period_sweep_step != 0 && this->period_sweep_pace != 0) {
+    this->period_sweep_shadow_period = this->period_sweep_calculate();
     this->period_sweep_check();
     this->period = this->period_sweep_shadow_period;
   }
@@ -1020,7 +1030,7 @@ void gb_apu_t::div_tick() {
   if (falling_edge_bit(1, old_div_apu, new_div_apu)) {
     // Period Sweep only on Channel 1
     // TODO: I'm not sure if `this->ch1.on` needs to be checked.
-    if (this->ch1.on && this->ch1.period_sweep_enabled && this->ch1.period_sweep_pace > 0) {
+    if (this->ch1.on && this->ch1.period_sweep_enabled) {
       this->ch1.period_sweep_tick();
     }
   }
