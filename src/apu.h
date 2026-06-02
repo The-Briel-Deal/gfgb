@@ -95,10 +95,11 @@ typedef struct gb_pulsewave_channel {
   // then I have hide this entire struct from the C FFI.
   const bool has_period_sweep_unit;
   uint8_t    period_sweep_pace;
-  uint8_t    period_sweep_dir;
+  bool       period_sweep_dir;
   uint8_t    period_sweep_step;
 
   bool     period_sweep_enabled; // Controls if sweep unit is active. This should always be false for channel 2.
+  bool     period_sweep_sub_since_trigger;
   uint8_t  period_sweep_timer;
   uint16_t period_sweep_shadow_period;
 
