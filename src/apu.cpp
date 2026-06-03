@@ -157,6 +157,8 @@ void gb_pulsewave_channel_t::period_sweep_tick() {
     return;
   }
 
+  if (this->period_sweep_pace == 0) return;
+
   bool next_sweep_valid = this->period_sweep_check();
   if (next_sweep_valid && this->period_sweep_step != 0 && this->period_sweep_pace != 0) {
     this->period_sweep_shadow_period = this->period_sweep_calculate();
