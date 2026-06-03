@@ -47,12 +47,11 @@ void gb_pulsewave_channel_t::period_sweep_trigger() {
   }
   this->period_sweep_enabled = (this->period_sweep_pace != 0) || (this->period_sweep_step != 0);
   if (this->period_sweep_step != 0) {
-    // TODO: Pandocs reads like I should only be doing the overflow check so I don't think I should set the shadow reg
-    // here. It wouldn't hurt to verify though.
-    this->period_sweep_check();
+    uint16_t calculated = this->period_sweep_calculate();
+    this->period_sweep_check(calculated);
   }
 }
-int gb_pulsewave_channel_t::period_sweep_calculate() {
+uint16_t gb_pulsewave_channel_t::period_sweep_calculate() {
   int result = this->period_sweep_shadow_period;
   result >>= this->period_sweep_step;
   if (this->period_sweep_dir) {
@@ -61,10 +60,8 @@ int gb_pulsewave_channel_t::period_sweep_calculate() {
   }
   return this->period_sweep_shadow_period + result;
 }
-bool gb_pulsewave_channel_t::period_sweep_check() {
-  int new_period = this->period_sweep_calculate();
-  GB_assert(new_period >= 0); // Something has gone very wrong if the new period is less than 0.
-  if (new_period >= 2048) {
+bool gb_pulsewave_channel_t::period_sweep_check(uint16_t period) {
+  if (period >= 2048) {
     this->stop();
     return false;
   }
@@ -157,13 +154,15 @@ void gb_pulsewave_channel_t::period_sweep_tick() {
     return;
   }
 
-  if (this->period_sweep_pace == 0) return;
-
-  bool next_sweep_valid = this->period_sweep_check();
-  if (next_sweep_valid && this->period_sweep_step != 0 && this->period_sweep_pace != 0) {
-    this->period_sweep_shadow_period = this->period_sweep_calculate();
-    this->period_sweep_check();
-    this->period = this->period_sweep_shadow_period;
+  if (this->period_sweep_pace != 0) {
+    uint16_t calculated       = this->period_sweep_calculate();
+    bool     next_sweep_valid = this->period_sweep_check(calculated);
+    if (next_sweep_valid && this->period_sweep_step != 0) {
+      this->period_sweep_shadow_period = calculated;
+      calculated                       = this->period_sweep_calculate();
+      this->period_sweep_check(calculated);
+      this->period = this->period_sweep_shadow_period;
+    }
   }
 }
 

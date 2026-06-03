@@ -48,15 +48,15 @@ typedef struct gb_pulsewave_channel {
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
   // TODO: Rename all the start() methods to trigger().
-  void start();
-  void stop();
-  void reset();
-  void len_tick();
-  void env_sweep_tick();
-  void period_sweep_tick();
-  void period_sweep_trigger();
-  int  period_sweep_calculate();
-  bool period_sweep_check();
+  void     start();
+  void     stop();
+  void     reset();
+  void     len_tick();
+  void     env_sweep_tick();
+  void     period_sweep_tick();
+  void     period_sweep_trigger();
+  uint16_t period_sweep_calculate();
+  bool     period_sweep_check(uint16_t period);
 
   void    set_NRx4(uint8_t apu_div, uint8_t val);
   uint8_t get_NRx4();
