@@ -48,15 +48,15 @@ typedef struct gb_pulsewave_channel {
   double samp_freq(); // How many times a second the APU changes phase
   double tone_freq(); // this->samp_freq() / 8
   // TODO: Rename all the start() methods to trigger().
-  void start();
-  void stop();
-  void reset();
-  void len_tick();
-  void env_sweep_tick();
-  void period_sweep_tick();
-  void period_sweep_trigger();
-  int  period_sweep_calculate();
-  bool period_sweep_check();
+  void     start();
+  void     stop();
+  void     reset();
+  void     len_tick();
+  void     env_sweep_tick();
+  void     period_sweep_tick();
+  void     period_sweep_trigger();
+  uint16_t period_sweep_calculate();
+  bool     period_sweep_check(uint16_t period);
 
   void    set_NRx4(uint8_t apu_div, uint8_t val);
   uint8_t get_NRx4();
@@ -95,10 +95,11 @@ typedef struct gb_pulsewave_channel {
   // then I have hide this entire struct from the C FFI.
   const bool has_period_sweep_unit;
   uint8_t    period_sweep_pace;
-  uint8_t    period_sweep_dir;
+  bool       period_sweep_dir;
   uint8_t    period_sweep_step;
 
   bool     period_sweep_enabled; // Controls if sweep unit is active. This should always be false for channel 2.
+  bool     period_sweep_sub_since_trigger;
   uint8_t  period_sweep_timer;
   uint16_t period_sweep_shadow_period;
 
