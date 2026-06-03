@@ -255,6 +255,7 @@ str gb_pulsewave_channel_t::dbg_state_str() {
     show_field(env_sweep_ticks, "{}");
     show_field(period_sweep_pace, "{}");
     show_field(period_sweep_dir, "{}");
+    show_field(period_sweep_sub_since_trigger, "{}");
     show_field(period_sweep_step, "{}");
     show_field(period_sweep_timer, "{}");
   }
