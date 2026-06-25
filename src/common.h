@@ -118,7 +118,7 @@ enum GB_LogCategory {
     gb_state->dbg.err = true;                                                                                          \
   }
 
-// Set dbg.err without logging. Used if you want to log seperately to prevent noise in the ERROR severity.
+// Set dbg.err without logging. Used if you want to log separately to prevent noise in the ERROR severity.
 #define ErrQuiet(gb_state)                                                                                             \
   {                                                                                                                    \
     if (gb_state->dbg.pause_on_err) {                                                                                  \
