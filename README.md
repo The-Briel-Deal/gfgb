@@ -2,8 +2,8 @@
 
 A scriptable GameBoy Emulator written in C.
 
-This project is in early stages and may never be completed. But if you want to
-use it anyway you can build with meson:
+This project is mostly completed. If you want to
+use it you can build with meson:
 
 ```sh
 meson setup ./build/
